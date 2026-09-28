@@ -8,6 +8,7 @@ import json
 from pathlib import Path
 import re
 import stat
+from types import MappingProxyType
 
 try:
     from safe_yaml import safe_load
@@ -81,6 +82,42 @@ def _record():
     return parse(raw)
 
 
+def _freeze_projection_rules():
+    """Freeze only inverse recipes; current authority bytes are never cached."""
+    record = _record()
+    require(set(record["metaRecipes"]) == HISTORY_PATHS, "exact historical routing")
+    return MappingProxyType({
+        path: (
+            rule["beforeSha256"],
+            rule["afterSha256"],
+            tuple((row["before"], row["after"], row["count"])
+                  for row in rule["replacements"]),
+        )
+        for path, rule in record["metaRecipes"].items()
+    })
+
+
+_PROJECTION_RULES = _freeze_projection_rules()
+
+
+def _checked_projection_rule(path):
+    # Preserve a complete fresh regular-file read and SHA on every projection.
+    raw = regular_bytes(ROOT, RECORD_PATH)
+    require(digest(raw) == RECORD_FILE_SHA256, "exact fresh authority bytes")
+    frozen = _PROJECTION_RULES.get(path)
+    if frozen is None:
+        return None
+    before_sha, after_sha, replacements = frozen
+    return {
+        "beforeSha256": before_sha,
+        "afterSha256": after_sha,
+        "replacements": [
+            {"before": before, "after": after, "count": count}
+            for before, after, count in replacements
+        ],
+    }
+
+
 def apply_recipe(before, rule):
     require(type(before) is bytes and type(rule) is dict
             and set(rule) == {"beforeSha256", "afterSha256", "replacements"}
@@ -104,8 +141,7 @@ def historical_bytes(path, raw):
     # Unchanged inputs still receive the predecessor caller's exact hash check.
     if path not in HISTORY_PATHS:
         return raw
-    record = _record()
-    rule = record["metaRecipes"].get(path)
+    rule = _checked_projection_rule(path)
     if rule is None:
         return raw
     require(type(raw) is bytes and digest(raw) == rule["afterSha256"], "current bytes changed: " + path)
@@ -269,7 +305,7 @@ def validate_authority(packets,record,inputs):
         for path,checksum in pins.items():
             require(type(inputs[path]) is bytes and digest(transport_history(path,inputs[path]))==checksum, 'source drift: '+path)
         old=historical_catalog(packets)
-        require(len(old)==170 and len(packets)==188 and 'CONF-PERF-006' not in old, 'historical planning boundary')
+        require(len(old)==170 and len(packets)==189 and 'CONF-PERF-006' not in old, 'historical planning boundary')
         for name in transport_catalog(packets):
             require(canonical(packets[name])==canonical(safe_load(inputs['task-packets/'+name+'.yaml'])), 'raw packet parity')
         meta=packets['MET-PERF-012']; prior=packets['MET-PERF-011']
@@ -305,4 +341,4 @@ if __name__=='__main__':
     errors=validate_authority(packets,*load_inputs(ROOT))
     if errors:
         print('\n'.join(errors)); raise SystemExit(1)
-    print('Historical document repair execution valid:188 current specifications;173-packet projection; product and comparison not run.')
+    print('Historical document repair execution valid:189 current specifications;173-packet projection; product and comparison not run.')

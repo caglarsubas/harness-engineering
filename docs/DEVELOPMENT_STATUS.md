@@ -1,5 +1,13 @@
 # Development checkpoint — Phase 0 to Alpha 2
 
+## Current source status — MET-UNIFY-005 roadmap candidate
+
+The [unified master development plan](MASTER_DEVELOPMENT_PLAN.md) is the current-first roadmap entry point in this publication candidate. This document preserves recorded development checkpoints and evidence; its older "current" headings describe their respective historical revisions, not today's packet eligibility or execution authority.
+
+Accepted baseline `7a353b253bb257aa0abe2148e7fa62d7570f0b5a` contains 188 published packet specifications. `MET-UNIFY-005` is a source-only successor under preparation; publication, CI, merge and exact-main evidence are separate pending gates. The unpublished MET-UNIFY-003 PR #139 retains LOCAL-1 PASS, a pre-run GitHub GET failure under CI-1, and a 15-minute job cancellation under CI-2; both CI allowances are consumed and its runner was retired. Unpublished MET-UNIFY-004 retained a local commit and failed all three bounded LOCAL attempts: LOCAL-1 at the status-document packet-ID check, LOCAL-2 and LOCAL-3 at the unchanged 750-second ceiling while pytest was still active; no CI or merge followed. This successor does not inherit any prior allowances. Its projection-speed repair preserves every fresh authority digest check, inherited command, test identity and zero-bill scan. Alpha 2 remains open: W01 design gates and host enforcement are unresolved, W02–W07 are not dispatchable on labels alone, and no native Linux, integrated-profile or tenant acceptance is implied. `CONF-FIX-009` retains exhausted local allowances; `CONF-FIX-010` remains blocked on safe design and bounded authority. No phase-end model-effort change is due.
+
+The historical checkpoints below are retained verbatim for provenance and must not be counted as repeated completed deliverables.
+
 ## Current reviewed interface candidate — MET-ENFORCE-003
 
 [W01 reviewed candidate and unresolved gates](alpha-2/HOST_INTERFACE_PUBLICATION.md): Alpha2 ONGOING.

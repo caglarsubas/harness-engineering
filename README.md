@@ -1,5 +1,18 @@
 # Harness Engineering
 
+## Current product roadmap — MET-UNIFY-005
+
+The [single current development roadmap](docs/MASTER_DEVELOPMENT_PLAN.md)
+tracks Phase 0 through Alpha 4, proposed extension work, all sixteen harnesses,
+and the evidence required before runtime development. Its
+[traceability ledger](docs/alpha-2/UNIFIED_ROADMAP_TRACEABILITY.md) and
+[accepted-source index](architecture/unified-roadmap-source-index.json) retain
+requirements and historical provenance. MET-UNIFY-005 is a source-only
+publication candidate; Alpha 2 remains open and its W01/native gates are
+unchanged. The sections below record earlier checkpoints.
+
+## Earlier publication checkpoints
+
 ## Current reviewed interface candidate — MET-ENFORCE-003
 
 [W01 reviewed candidate and unresolved gates](docs/alpha-2/HOST_INTERFACE_PUBLICATION.md): Alpha2 ONGOING.

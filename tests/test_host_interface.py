@@ -14,10 +14,10 @@ def authority():
 def test_exact_current_publication_and_history(authority):
     packets, record, inputs = authority
     assert module.validate_authority(*authority) == []
-    assert len(packets) == 188 and len(module.historical_catalog(packets)) == 187
+    assert len(packets) == 189 and len(module.historical_catalog(packets)) == 187
     for path, rule in record['metaRecipes'].items():
         before = module.historical_bytes(path, inputs[path])
-        assert module.apply_recipe(before, rule) == inputs[path]
+        assert module.apply_recipe(before, rule) == module.unified_history(path, inputs[path])
         if path.startswith('tests/'):
             assert module.test_ids(before) == module.test_ids(inputs[path])
             assert module.current_test_bytes(before) == inputs[path]
@@ -111,6 +111,81 @@ def test_parser_rejects_duplicate_and_nonfinite_data():
     for raw in (b'{"a":1,"a":2}', b'{"a":NaN}', b'{"a":Infinity}'):
         with pytest.raises(ValueError): module.parse(raw)
 
+
+@pytest.mark.parametrize("name", [
+    "validate_backend_timing",
+    "validate_benchmark_transport",
+    "validate_conformance_performance_followup",
+    "validate_accounting_scope",
+    "validate_conformance_publication",
+    "validate_guard_cost_repair",
+    "validate_conformance_performance",
+    "validate_conformance_consumer_closure",
+    "validate_guard_traversal",
+    "validate_observation_enforcement",
+    "validate_conformance_completion",
+    "validate_canonical_repair_plan",
+    "validate_host_interface",
+    "validate_factory_diagnostics",
+    "validate_enforcement_integration",
+    "validate_completion_profiling",
+    "validate_proxy_diagnostics",
+    "validate_catalog_traversal",
+    "validate_completion_integration",
+    "validate_research_adoption",
+    "validate_document_repair_execution",
+    "validate_validation_performance",
+    "validate_local_acceptance",
+    "validate_conformance_successor_checkpoint",
+    "validate_provider_adoption",
+])
+def test_each_frozen_inverse_rechecks_complete_authority(name, monkeypatch):
+    from importlib import import_module
+
+    owner = import_module("scripts." + name)
+    path = sorted(owner._PROJECTION_RULES)[0]
+    expected = owner._record()["metaRecipes"][path]
+    first = owner._checked_projection_rule(path)
+    assert first == expected
+    with pytest.raises(TypeError):
+        owner._PROJECTION_RULES[path] = ()
+    first["afterSha256"] = "0" * 64
+    assert owner._checked_projection_rule(path) == expected
+
+    original = owner.regular_bytes
+    authority_raw = original(owner.ROOT, owner.RECORD_PATH)
+    reads = []
+
+    def changed(root, selected):
+        if selected == owner.RECORD_PATH:
+            reads.append(selected)
+            return authority_raw + b" "
+        return original(root, selected)
+
+    monkeypatch.setattr(owner, "regular_bytes", changed)
+    with pytest.raises(ValueError, match="exact fresh authority bytes"):
+        owner._checked_projection_rule(path)
+    assert reads == [owner.RECORD_PATH]
+
+
+def test_public_history_rejects_late_host_authority_change(monkeypatch):
+    path = "docs/MASTER_DEVELOPMENT_PLAN.md"
+    current = (module.ROOT / path).read_bytes()
+    original = module.regular_bytes
+    authority_raw = original(module.ROOT, module.RECORD_PATH)
+    reads = []
+
+    def changed(root, selected):
+        if selected == module.RECORD_PATH:
+            reads.append(selected)
+            return authority_raw + b" "
+        return original(root, selected)
+
+    monkeypatch.setattr(module, "regular_bytes", changed)
+    with pytest.raises(ValueError, match="exact fresh authority bytes"):
+        module.historical_bytes(path, current)
+    assert reads == [module.RECORD_PATH]
+
 @pytest.mark.parametrize('label', ['original', 'corrected'])
 def test_review_subject_cannot_be_replaced(authority, label):
     packets, record, inputs = deepcopy(authority)
@@ -148,7 +223,7 @@ def test_new_link_has_one_successor_and_fresh_local_authority(authority, monkeyp
     current = deepcopy(authority[0])
     result = getattr(prior, entry)(current)
     assert result == ([] if entry == 'validate_additions' else
-                      {k: v for k, v in current.items() if k not in ('MET-ENFORCE-003', 'MET-PERF-018')})
+                      {k: v for k, v in current.items() if k not in ('MET-UNIFY-005', 'MET-ENFORCE-003', 'MET-PERF-018')})
     assert current == authority[0]
     assert len(calls) == 1 and len(reads) == (1 if entry == 'validate_additions' else 2)
     prior.validate_call_structure(authority[2]['scripts/validate_catalog_traversal.py'], 'integration_catalog')

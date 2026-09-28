@@ -250,7 +250,8 @@ def validate_credential_lifecycle(packets, record, inputs):
         pinned(record)
         errors = validate_additions(packets)
         old = {Path(p).stem for p in record["protectedFiles"] if p.startswith("task-packets/")}
-        require(len(old) == 139 and len(packets) == 188 and set(packets) == old | set(ADDITIONS),
+        require(len(old) == 139 and len(packets) == 189
+                and set(packets) == old | set(ADDITIONS) | {"MET-UNIFY-005"},
                 "139 predecessors plus two credential packets and exact ordering authority required")
         pins = {**record["protectedFiles"], **record["inputFiles"]}
         require(type(inputs) is dict and set(inputs) == set(pins), "exact input map required")
@@ -319,7 +320,7 @@ def main():
     for error in errors:
         print("ERROR: " + error)
     if not errors:
-        print("Credential lifecycle authority valid: 188 packets; exact performance/test reconciliation; 127/305 checkpoint; DATA_CHECK_ONLY, product/native NOT_RUN.")
+        print("Credential lifecycle authority valid: 189 packets; exact performance/test reconciliation; 127/305 checkpoint; DATA_CHECK_ONLY, product/native NOT_RUN.")
     return int(bool(errors))
 
 

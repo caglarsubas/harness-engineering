@@ -1,5 +1,13 @@
 # Implementation Readiness Index
 
+## Current source status — MET-UNIFY-005 roadmap candidate
+
+Read the [unified master development plan](MASTER_DEVELOPMENT_PLAN.md) for current phase position, blockers, ownership and the next eligible work. This index retains implementation-readiness requirements and historical evidence references; earlier "current" sections are revision-local checkpoints, not present execution authority.
+
+The accepted source baseline is `7a353b253bb257aa0abe2148e7fa62d7570f0b5a` with 188 published packet specifications. `MET-UNIFY-005` is a proposed source-only publication until its isolated local acceptance, required self-hosted CI, merge and exact-main verification are recorded separately. W01 design is still open; Linux AMD64 qualification, installed foundations, integrated read-only profile and tenant acceptance are not established by roadmap consolidation. `CONF-FIX-009` remains allowance-exhausted, and `CONF-FIX-010` remains blocked on safe design. Alpha 2 is open, so model-effort transition is not due.
+
+The retained checkpoint sections below remain historical evidence and are not additional current checklist completions.
+
 ## Current reviewed interface candidate — MET-ENFORCE-003
 
 [W01 reviewed candidate and unresolved gates](alpha-2/HOST_INTERFACE_PUBLICATION.md): Alpha2 ONGOING.

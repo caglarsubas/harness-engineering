@@ -1,5 +1,7 @@
 # Alpha 2 — independently reviewed W01 interface candidate
 
+> Current-status note for MET-UNIFY-005: this is a retained W01 source-review subject, not an adopted host ABI or native enforcement result. The [unified master roadmap](../MASTER_DEVELOPMENT_PLAN.md) gives the current packet and phase status. PR #138 recorded the MET-ENFORCE-003 source publication on accepted main; G04–G07/G09 and E01–E12 remain open.
+
 MET-ENFORCE-003 · ONGOING_SOURCE_PUBLICATION. W01 remains ONGOING_DESIGN.
 
 ## Current position

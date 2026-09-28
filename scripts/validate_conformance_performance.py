@@ -8,6 +8,7 @@ import json
 from pathlib import Path
 import re
 import stat
+from types import MappingProxyType
 
 try:
     from safe_yaml import safe_load
@@ -84,6 +85,42 @@ def _record():
     return parse(raw)
 
 
+def _freeze_projection_rules():
+    """Freeze only inverse recipes; current authority bytes are never cached."""
+    record = _record()
+    require(set(record["metaRecipes"]) == HISTORY_PATHS, "exact historical routing")
+    return MappingProxyType({
+        path: (
+            rule["beforeSha256"],
+            rule["afterSha256"],
+            tuple((row["before"], row["after"], row["count"])
+                  for row in rule["replacements"]),
+        )
+        for path, rule in record["metaRecipes"].items()
+    })
+
+
+_PROJECTION_RULES = _freeze_projection_rules()
+
+
+def _checked_projection_rule(path):
+    # Preserve a complete fresh regular-file read and SHA on every projection.
+    raw = regular_bytes(ROOT, RECORD_PATH)
+    require(digest(raw) == RECORD_FILE_SHA256, "exact fresh authority bytes")
+    frozen = _PROJECTION_RULES.get(path)
+    if frozen is None:
+        return None
+    before_sha, after_sha, replacements = frozen
+    return {
+        "beforeSha256": before_sha,
+        "afterSha256": after_sha,
+        "replacements": [
+            {"before": before, "after": after, "count": count}
+            for before, after, count in replacements
+        ],
+    }
+
+
 def apply_recipe(before, rule):
     require(type(before) is bytes and type(rule) is dict
             and set(rule) == {"beforeSha256", "afterSha256", "replacements"}
@@ -106,8 +143,7 @@ def historical_bytes(path, raw):
     # Successor history above is always validated before this identity route.
     if path not in HISTORY_PATHS:
         return raw
-    record = _record()
-    rule = record["metaRecipes"].get(path)
+    rule = _checked_projection_rule(path)
     if rule is None:
         return raw
     require(type(raw) is bytes and digest(raw) == rule["afterSha256"], "current bytes changed: " + path)
@@ -296,7 +332,7 @@ def validate_authority(packets, record, inputs):
         for path, checksum in pins.items():
             require(type(inputs[path]) is bytes and digest(followup_history(path, inputs[path])) == checksum, "current source changed: " + path)
         old = {Path(p).stem for p in record["protectedFiles"] if p.startswith("task-packets/") and p.endswith(".yaml")}
-        require(len(old) == 144 and len(packets) == 188 and set(packets) == old | set(NEW_IDS) | {"MET-PERF-003", "CONF-PERF-002", "MET-PERF-004", "CONF-PERF-003", "MET-PERF-005", "CONF-PERF-004", "CONF-BENCH-001", "MET-REPAIR-016", "CONF-FIX-006", "MET-ADOPT-001", "MET-PERF-006", "CONF-DIAG-001", "MET-PERF-007", "MET-PERF-008", "CONF-DIAG-002", "MET-ACCEPT-001", "MET-PUBLISH-001", "MET-REPAIR-017", "CONF-FIX-007", "MET-ADOPT-002", "MET-PERF-010", "MET-PERF-009", "CONF-DIAG-003", "MET-PERF-011", "MET-PERF-012", "CONF-PERF-006", "CONF-BENCH-002", "MET-PERF-013", "CONF-BENCH-003", "MET-REPAIR-018", "CONF-FIX-008", "MET-PERF-014", "CONF-DIAG-004", "MET-PERF-015", "CONF-FIX-009", "MET-PERF-016", "MET-PERF-017", "MET-REPAIR-019", "MET-ENFORCE-001", "MET-PERF-018", "MET-ENFORCE-003", "CONF-FIX-010"}, "exact148 catalog")
+        require(len(old) == 144 and len(packets) == 189 and set(packets) == old | set(NEW_IDS) | {"MET-PERF-003", "CONF-PERF-002", "MET-PERF-004", "CONF-PERF-003", "MET-PERF-005", "CONF-PERF-004", "CONF-BENCH-001", "MET-REPAIR-016", "CONF-FIX-006", "MET-ADOPT-001", "MET-PERF-006", "CONF-DIAG-001", "MET-PERF-007", "MET-PERF-008", "CONF-DIAG-002", "MET-ACCEPT-001", "MET-PUBLISH-001", "MET-REPAIR-017", "CONF-FIX-007", "MET-ADOPT-002", "MET-PERF-010", "MET-PERF-009", "CONF-DIAG-003", "MET-PERF-011", "MET-PERF-012", "CONF-PERF-006", "CONF-BENCH-002", "MET-PERF-013", "CONF-BENCH-003", "MET-REPAIR-018", "CONF-FIX-008", "MET-PERF-014", "CONF-DIAG-004", "MET-PERF-015", "CONF-FIX-009", "MET-PERF-016", "MET-PERF-017", "MET-REPAIR-019", "MET-ENFORCE-001", "MET-PERF-018", "MET-ENFORCE-003", "CONF-FIX-010", "MET-UNIFY-005"}, "exact148 catalog")
         for name in old | set(NEW_IDS):
             require(canonical(packets[name]) == canonical(safe_load(inputs["task-packets/"+name+".yaml"])), "packet raw/semantic mismatch")
         packet, product = (packets[name] for name in NEW_IDS)
@@ -338,7 +374,7 @@ def main():
     for error in errors:
         print("ERROR: "+error)
     if not errors:
-        print("Conformance performance authority valid: 188 packets; 144 immutable YAML; 127/327 checkpoint; product/native NOT_RUN.")
+        print("Conformance performance authority valid: 189 packets; 144 immutable YAML; 127/327 checkpoint; product/native NOT_RUN.")
     return int(bool(errors))
 
 

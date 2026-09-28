@@ -1,5 +1,7 @@
 # Research-led harness implementation roadmap
 
+> Current-status note for MET-UNIFY-005: this is the retained research/adoption mapping, not a claim that any named upstream is installed or qualified. The [unified master roadmap](../MASTER_DEVELOPMENT_PLAN.md) is the current phase/backlog entry point; proposed adoption IDs still need exact owner packets, release locks and independent qualification.
+
 Owner: `MET-ADOPT-002` · Alpha2 · META_PLANNING_ONLY · 2026-09-15.
 
 Require **at least one qualified baseline for every released harness capability** at the first enterprise release.

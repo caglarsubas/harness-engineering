@@ -8,11 +8,27 @@ import json
 from pathlib import Path
 import re
 import stat
+from types import MappingProxyType
 
 try:
     from safe_yaml import safe_load
 except ImportError:
     from scripts.safe_yaml import safe_load
+
+try:
+    from validate_unified_roadmap import (
+        authority as unified_authority,
+        historical_bytes as unified_history,
+        historical_catalog as unified_catalog,
+        current_test_bytes as unified_current_test,
+    )
+except ImportError:
+    from scripts.validate_unified_roadmap import (
+        authority as unified_authority,
+        historical_bytes as unified_history,
+        historical_catalog as unified_catalog,
+        current_test_bytes as unified_current_test,
+    )
 
 ROOT = Path(__file__).resolve().parents[1]
 RECORD_PATH = 'architecture/host-interface-authority.json'
@@ -76,6 +92,42 @@ def _record():
     return parse(raw)
 
 
+def _freeze_projection_rules():
+    """Freeze only inverse recipes; current authority bytes are never cached."""
+    record = _record()
+    require(set(record["metaRecipes"]) == HISTORY_PATHS, "exact historical routing")
+    return MappingProxyType({
+        path: (
+            rule["beforeSha256"],
+            rule["afterSha256"],
+            tuple((row["before"], row["after"], row["count"])
+                  for row in rule["replacements"]),
+        )
+        for path, rule in record["metaRecipes"].items()
+    })
+
+
+_PROJECTION_RULES = _freeze_projection_rules()
+
+
+def _checked_projection_rule(path):
+    # Preserve a complete fresh regular-file read and SHA on every projection.
+    raw = regular_bytes(ROOT, RECORD_PATH)
+    require(digest(raw) == RECORD_FILE_SHA256, "exact fresh authority bytes")
+    frozen = _PROJECTION_RULES.get(path)
+    if frozen is None:
+        return None
+    before_sha, after_sha, replacements = frozen
+    return {
+        "beforeSha256": before_sha,
+        "afterSha256": after_sha,
+        "replacements": [
+            {"before": before, "after": after, "count": count}
+            for before, after, count in replacements
+        ],
+    }
+
+
 def apply_recipe(before, rule):
     require(type(before) is bytes and type(rule) is dict
             and set(rule) == {"beforeSha256", "afterSha256", "replacements"}
@@ -94,12 +146,12 @@ def apply_recipe(before, rule):
 
 
 def historical_bytes(path, raw):
+    raw = unified_history(path, raw)
     # A closed code-pinned routing table, not an acceptance/result cache.
     # Unchanged inputs still receive the predecessor caller's exact hash check.
     if path not in HISTORY_PATHS:
         return raw
-    record = _record()
-    rule = record["metaRecipes"].get(path)
+    rule = _checked_projection_rule(path)
     if rule is None:
         return raw
     require(type(raw) is bytes and digest(raw) == rule["afterSha256"], "current bytes changed: " + path)
@@ -120,9 +172,9 @@ def current_test_bytes(before):
                if p.startswith("tests/") and r["beforeSha256"] == input_digest]
     if not matches:
         require(input_digest in record["unchangedTests"].values(), "unreviewed unchanged test")
-        return before
+        return unified_current_test(before)
     require(len(matches) == 1, "unique predecessor")
-    return apply_recipe(before, matches[0])
+    return unified_current_test(apply_recipe(before, matches[0]))
 
 
 def validate_additions(packets):
@@ -155,6 +207,7 @@ MEMBER_DIGESTS = {'schemaVersion': '252b492b9252e691126632a93823dc54c98193daa182
 
 
 def historical_catalog(packets):
+    packets = unified_catalog(packets)
     record = _record(); pinned(record)
     require(type(packets) is dict and validate_additions(packets) == [], 'exact new META packet')
     old = {Path(p).stem for p in record['protectedFiles']
@@ -264,6 +317,10 @@ def load_inputs(root):
 def validate_authority(packets, record, inputs):
     try:
         pinned(record); old = historical_catalog(packets)
+        packets = unified_catalog(packets)
+        changed = unified_authority()['changedFiles']
+        inputs = {path: unified_history(path, raw) if path in changed else raw
+                  for path, raw in inputs.items()}
         require(HISTORY_PATHS == set(record['metaRecipes']), 'closed history routing')
         pins = {**record['protectedFiles'], **record['inputFiles'],
                 **{p: r['afterSha256'] for p, r in record['metaRecipes'].items()}}

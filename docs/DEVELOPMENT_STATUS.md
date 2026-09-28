@@ -1,5 +1,13 @@
 # Development checkpoint — Phase 0 to Alpha 2
 
+## Current source status — MET-UNIFY-003 roadmap candidate
+
+The [unified master development plan](MASTER_DEVELOPMENT_PLAN.md) is the current-first roadmap entry point in this publication candidate. This document preserves recorded development checkpoints and evidence; its older "current" headings describe their respective historical revisions, not today's packet eligibility or execution authority.
+
+Accepted baseline `7a353b253bb257aa0abe2148e7fa62d7570f0b5a` contains 188 published packet specifications. `MET-UNIFY-003` is a source-only successor under preparation; publication, CI, merge and exact-main evidence are separate pending gates. Alpha 2 remains open: W01 design gates and host enforcement are unresolved, W02–W07 are not dispatchable on labels alone, and no native Linux, integrated-profile or tenant acceptance is implied. `CONF-FIX-009` retains exhausted local allowances; `CONF-FIX-010` remains blocked on safe design and bounded authority. No phase-end model-effort change is due.
+
+The historical checkpoints below are retained verbatim for provenance and must not be counted as repeated completed deliverables.
+
 ## Current reviewed interface candidate — MET-ENFORCE-003
 
 [W01 reviewed candidate and unresolved gates](alpha-2/HOST_INTERFACE_PUBLICATION.md): Alpha2 ONGOING.

@@ -1,5 +1,7 @@
 # Alpha 2 — canonicalization repair decision and remaining readiness gate
 
+> Current-status note for MET-UNIFY-003: this document retains the exact historical repair investigation and no-go disposition. The [unified master roadmap](../MASTER_DEVELOPMENT_PLAN.md) is the current phase/backlog entry point. Earlier “current” headings below are revision-local checkpoints; they do not authorize canonicalization repair, reset attempt budgets or establish W01/native readiness.
+
 ## Current reviewed interface candidate — MET-ENFORCE-003
 
 [W01 reviewed candidate and unresolved gates](HOST_INTERFACE_PUBLICATION.md): Alpha2 ONGOING.

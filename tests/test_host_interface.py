@@ -14,10 +14,10 @@ def authority():
 def test_exact_current_publication_and_history(authority):
     packets, record, inputs = authority
     assert module.validate_authority(*authority) == []
-    assert len(packets) == 188 and len(module.historical_catalog(packets)) == 187
+    assert len(packets) == 189 and len(module.historical_catalog(packets)) == 187
     for path, rule in record['metaRecipes'].items():
         before = module.historical_bytes(path, inputs[path])
-        assert module.apply_recipe(before, rule) == inputs[path]
+        assert module.apply_recipe(before, rule) == module.unified_history(path, inputs[path])
         if path.startswith('tests/'):
             assert module.test_ids(before) == module.test_ids(inputs[path])
             assert module.current_test_bytes(before) == inputs[path]
@@ -148,7 +148,7 @@ def test_new_link_has_one_successor_and_fresh_local_authority(authority, monkeyp
     current = deepcopy(authority[0])
     result = getattr(prior, entry)(current)
     assert result == ([] if entry == 'validate_additions' else
-                      {k: v for k, v in current.items() if k not in ('MET-ENFORCE-003', 'MET-PERF-018')})
+                      {k: v for k, v in current.items() if k not in ('MET-UNIFY-003', 'MET-ENFORCE-003', 'MET-PERF-018')})
     assert current == authority[0]
     assert len(calls) == 1 and len(reads) == (1 if entry == 'validate_additions' else 2)
     prior.validate_call_structure(authority[2]['scripts/validate_catalog_traversal.py'], 'integration_catalog')

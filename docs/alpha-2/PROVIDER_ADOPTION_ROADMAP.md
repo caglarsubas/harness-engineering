@@ -1,5 +1,13 @@
 # Product adoption and multi-repository roadmap
 
+## Current source status — MET-UNIFY-003 roadmap candidate
+
+The [unified master development plan](../MASTER_DEVELOPMENT_PLAN.md) is the current-first roadmap entry point. This document remains a detailed source for provider adoption, repository ownership and retained decisions; its older "current" headings are historical publication checkpoints and must not override the master or authorize a packet.
+
+Accepted baseline `7a353b253bb257aa0abe2148e7fa62d7570f0b5a` has 188 published packet specifications. The `MET-UNIFY-003` source-only publication is pending its own acceptance and merge gates. Named upstreams are adoption directions, not provider availability or qualification. The 23 extension/adoption proposals, plus semantic and evolution proposals, require separately published owner packets before implementation; no provider selection may be inferred from catalog presence. W01 design and host-enforcement gates remain open, and Alpha 2 has not reached integrated-profile or tenant acceptance. No phase-end model-effort change is due.
+
+All pre-existing sections below are retained for traceability rather than counted again as current completed work.
+
 ## Current reviewed interface candidate — MET-ENFORCE-003
 
 [W01 reviewed candidate and unresolved gates](HOST_INTERFACE_PUBLICATION.md): Alpha2 ONGOING.

@@ -1,5 +1,16 @@
 # Repository Plan: `Harness-Engineering`
 
+## Current roadmap publication — MET-UNIFY-003
+
+The [master plan](../MASTER_DEVELOPMENT_PLAN.md) is the current roadmap and
+progress entry point. The [source traceability record](../alpha-2/UNIFIED_ROADMAP_TRACEABILITY.md)
+and accepted-source index preserve the earlier requirements, owner mapping and
+packet history. MET-UNIFY-003 owns only source publication and its closed
+validation bridge; no W01 runtime or native qualification is claimed. The
+following checkpoint headings are retained historical records.
+
+## Earlier publication checkpoints
+
 ## Current reviewed interface candidate — MET-ENFORCE-003
 
 [W01 reviewed candidate and unresolved gates](../alpha-2/HOST_INTERFACE_PUBLICATION.md): Alpha2 ONGOING.
@@ -587,6 +598,7 @@ Every packet uses branch `codex/<packet-id>`, changes only named paths, opens a 
 60. `MET-ENFORCE-001`: assign separate host-module source ownership and interface work; no runtime adoption.
 61. `MET-PERF-018`: repair duplicate catalog traversal; preserve blocked PR136 and its consumed allowances.
 62. `MET-ENFORCE-003`: explicitly reconcile the blocked reviewed-interface publication on repaired main; preserve its failed lineage and unresolved gates.
+63. `MET-UNIFY-003`: publish the single current roadmap, complete accepted-source traceability and exact predecessor-history bridge; source only.
 
 ## Testing, verification, and acceptance
 

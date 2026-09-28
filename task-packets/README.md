@@ -1,5 +1,9 @@
 # Sol-High Task Packet Catalog
 
+## Current source status — MET-UNIFY-003 roadmap candidate
+
+The [unified master roadmap](../docs/MASTER_DEVELOPMENT_PLAN.md) is the current phase/status entry point. The accepted baseline has 188 published packet specifications; this branch adds `MET-UNIFY-003` as the 189th source-only packet, pending its own isolated acceptance, required CI, merge and exact-main verification. Older “current” headings below are historical snapshots, not dispatch authority. The [item-level backlog](../architecture/unified-roadmap-backlog.json) distinguishes packet publication, proposals and counted checklist projections; no packet is approved for execution by appearing in this catalog.
+
 ## Current reviewed interface candidate — MET-ENFORCE-003
 
 [W01 reviewed candidate and unresolved gates](../docs/alpha-2/HOST_INTERFACE_PUBLICATION.md): Alpha2 ONGOING.
@@ -888,3 +892,4 @@ acceptance is claimed. Alpha2 ONGOING; model-effort transition NOT_DUE.
 | 186 | `MET-ENFORCE-001` | `Harness-Engineering` | Host enforcement ownership and interface direction |
 | 187 | `MET-PERF-018` | `Harness-Engineering` | Single-traversal validation repair; no draft retry |
 | 188 | `MET-ENFORCE-003` | `Harness-Engineering` | Independently reviewed host-interface candidate and unresolved gates |
+| 189 | `MET-UNIFY-003` | `Harness-Engineering` | Unified current roadmap, accepted-source traceability and reversible predecessor history |

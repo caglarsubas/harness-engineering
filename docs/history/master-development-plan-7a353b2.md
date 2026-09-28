@@ -1,12 +1,4 @@
-# Implementation Readiness Index
-
-## Current source status — MET-UNIFY-003 roadmap candidate
-
-Read the [unified master development plan](MASTER_DEVELOPMENT_PLAN.md) for current phase position, blockers, ownership and the next eligible work. This index retains implementation-readiness requirements and historical evidence references; earlier "current" sections are revision-local checkpoints, not present execution authority.
-
-The accepted source baseline is `7a353b253bb257aa0abe2148e7fa62d7570f0b5a` with 188 published packet specifications. `MET-UNIFY-003` is a proposed source-only publication until its isolated local acceptance, required self-hosted CI, merge and exact-main verification are recorded separately. W01 design is still open; Linux AMD64 qualification, installed foundations, integrated read-only profile and tenant acceptance are not established by roadmap consolidation. `CONF-FIX-009` remains allowance-exhausted, and `CONF-FIX-010` remains blocked on safe design. Alpha 2 is open, so model-effort transition is not due.
-
-The retained checkpoint sections below remain historical evidence and are not additional current checklist completions.
+# Master Development Plan
 
 ## Current reviewed interface candidate — MET-ENFORCE-003
 
@@ -328,259 +320,307 @@ Publish016, then separate CONF-FIX-006 two-path source correction; preserve354 I
 Draft12 failed one inherited127-file assertion at its approved135-file stage; no full acceptance or native promotion.
 Accepted MET-PERF-001 main e367e89463b86ebc1b1e20563d677bdfe6694060 is preserved; this reconciliation runs both complete replays and all twenty commands.
 
-This index is the entry point for a coding agent. The architecture is planning-
-ready; product implementation, release, deployment, runtime, assurance, and
-tenant-acceptance evidence remain `NOT_STARTED` until their task packets run.
+## Purpose
 
-## Execution entry point
+This is the program-level contract for building the Planeon Enterprise MAS
+Harness Platform. Detailed implementation decisions live in the thirteen
+repository plans, sixteen harness specifications, the planned provider/module
+catalog, and versioned task packets.
 
-Current checkpoint: Phase-0 closure is recorded; Alpha-2 model implementation
-requires the observation, contracts/status corrections and shared-model-contract
-prerequisites. Production overview integration has its own later live gate. See
-[Development status](DEVELOPMENT_STATUS.md) and
-[Model prerequisites](alpha-2/MODEL_PREREQUISITES.md). The historical Phase-0
-report records 107 packets; that historical publication recorded 142; the first repair retains its 114-packet snapshot. This index is a plan,
-not proof that every packet or live evidence gate has passed.
+The platform guides a tenant through deployment sovereignty, business outcomes,
+risk, domain semantics, data readiness, integration, intelligence, execution,
+assurance, and acceptance. The deterministic compiler resolves the tenant's
+explicitly accepted demand into the smallest valid dependency closure and a
+signed OCI profile referencing only selected immutable modules.
 
-Prerequisite: publish this planning corpus and pinned workflow once to the public
-default branch, then attach the preprovisioned no-cost self-hosted runner with
-the complete locked wheelhouse/tool cache. Missing prerequisites are `BLOCKED`;
-there is no hosted-runner or online-fetch fallback. This is the sole initial
-planning-publication exception to the packet/PR rule.
-The runner image must contain the root-owned, integrity-pinned
-`/opt/planeon/bin/harness-offline-launch`; after checkout it is the workflow's
-only `run` command and establishes isolation before any checked-out file executes.
-Its machine state is `EXTERNAL_PREREQUISITE_NOT_PROVEN`; CI remains blocked until
-the signed manifest, launcher digest/version, preflight evidence, and exact runner
-labels satisfy [`TRUSTED_RUNNER_CONTRACT.md`](TRUSTED_RUNNER_CONTRACT.md).
+## Delivery milestones
 
-1. Read the repository-root `AGENTS.md` and `BILLING_POLICY.md`.
-2. Select exactly one schema-valid YAML file from `task-packets/` whose
-   predecessors have merged evidence.
-3. Open the owning repository plan and every harness spec named by that packet.
-4. Treat all current warm-source trees/blobs as reference-only. Use clean-room
-   implementation and independent parity; no current packet authorizes copying.
-5. Use the packet branch and touch only `allowedPaths`. Set
-   `HARNESS_TASK_PACKET` to the hash-pinned YAML path and invoke
-   `offlineExecution.wrapperArgv`; it runs local-cache-only `prefetchCommands`
-   and acceptance in one deny-all-outbound process tree, hides the authority path
-   from children, rechecks its digest after each command, and retains every
-   requested evidence item.
-   A packet with `liveCampaignExecution` still completes PR acceptance under
-   deny-all. Its live argv may run only later through the externally installed,
-   root-owned `/opt/planeon/bin/harness-live-campaign-launch` after that launcher
-   reads only `HARNESS_LIVE_EXECUTION_ENVELOPE`; verifies independent
-   `PLATFORM_RELEASE` and `TENANT_LIVE_EXECUTION` signatures over the same RFC
-   8785 payload; verifies every referenced digest and embedded pre-existing
-   endpoint against the two fixed local trust mounts; and verifies the separate
-   digest-bound `CAPACITY_OPERATOR` authorization, proxy policy, and active
-   server-side zero-cost mutation admission. It is forbidden as GitHub CI
-   evidence, cannot discover or provision endpoints, and reports missing target
-   capacity as `NOT_RUN_ENV_UNAVAILABLE`. The checked-out
-   `ci/verify-live-campaign.sh` is an inner runner and cannot establish the trust
-   boundary itself. See
-   [`TRUSTED_LIVE_CAMPAIGN_RUNNER_CONTRACT.md`](TRUSTED_LIVE_CAMPAIGN_RUNNER_CONTRACT.md).
-6. The protected runner supplies every mounted warm snapshot as an exact
-   canonical entry in newline-delimited `HARNESS_WARM_SOURCE_ROOTS`. The launcher
-   refuses undeclared detected roots, denies their read/metadata/write access,
-   and scrubs their paths before implementation commands. `NONE` is valid only
-   when the runner proves no warm source is mounted.
-7. Merge only after all required self-hosted checks are green. A local pass, PR,
-   merge, artifact, deployment, runtime check, assurance result, and tenant
-   acceptance are different states.
+### Alpha 1: business and data foundations
 
-The first executable packet is `MET-001`; subsequent work follows the predecessor
-DAG, not Markdown list order alone.
+- Catalog all sixteen harnesses.
+- Implement the questionnaire, readiness engine, compiler, white-goods pack,
+  identity/policy/telemetry foundation, domain semantics, data integration,
+  provenance, minimal operator, profile OCI composition, and the tenant
+  organization harness-status overview.
+- Certify questionnaire-to-installed-foundation behavior, accurate
+  organization/plane/harness projections, accessible drill-down, and neutral
+  treatment of unselected harnesses before adding an agent.
 
-The packet predecessor DAG is an implementation-order graph. For a live
-conformance packet, merged source plus passing deny-all offline evidence can
-unblock the next coding packet even when the environment result is
-`NOT_RUN_ENV_UNAVAILABLE`. That unavailable result never satisfies release,
-platform-certification, assurance, tenant-acceptance, or production-promotion
-requirements; those remain blocked until their exact fresh live `PASS` evidence
-exists.
-Live statuses are only `PASS`, `FAIL`, `WARN`, `NOT_APPLICABLE`, and
-`NOT_RUN_ENV_UNAVAILABLE`; platform and architecture are result dimensions, not
-`LIVE_*` aliases. Live axes are drawn only from `DEPLOYMENT`, `RUNTIME`,
-`SECURITY`, `ASSURANCE`, and `TENANT_ACCEPTANCE_CANDIDATE`, with the exact
-per-packet ordered list enforced by the validator. `TENANT_ACCEPTANCE` is never
-an envelope axis. `CONF-WG-001` creates an unsigned tenant-acceptance candidate
-only; a separate authorized tenant signature is required for actual acceptance.
+### Alpha 2: read-only intelligence
 
-## Machine-readable authorities
+- Entry repair: publish `MET-A2-001`, then execute the separately authorized
+  `MET-OBS-MODEL-001` usage-schema observation and `CON-MODEL-001` API/usage
+  contract release before `MODEL-001`. Structural facts and independent
+  conformance never imply an original-source test pass. See
+  [prerequisite details](alpha-2/MODEL_PREREQUISITES.md) and the
+  [phase-labelled checkpoint](DEVELOPMENT_STATUS.md).
+- Before continuing model API coding, complete `MET-REPAIR-001`, `MET-REPAIR-002`, `CON-FIX-001`
+  and `CTRL-FIX-003`. `CTRL-INTEGRATE-001` owns the production overview carryover
+  and is a prerequisite of `CONF-A2-001`; fresh Alpha-1 installed evidence remains
+  required independently. See [corrective scope](alpha-2/READINESS_REPAIRS.md).
+  The second amendment admits two legacy registry-test corrections and only
+  the implementation fix for documented blocked-selection precedence, without
+  changing public semantics or weakening command-owner admission.
+- Add retrieval/context, local inference, AI gateway, MCP/A2A mediation, and a
+  read-only durable task.
+- Certify a cited white-goods task with no write authority.
 
-| Concern | Authority |
-|---|---|
-| Attached-input provenance and authority | [`architecture/base-scope-sources.yaml`](../architecture/base-scope-sources.yaml) |
-| Repository ownership and dependency DAG | [`architecture/repositories.yaml`](../architecture/repositories.yaml) |
-| Sixteen-harness taxonomy and four deployment modes | [`architecture/taxonomy.yaml`](../architecture/taxonomy.yaml) |
-| 87-record provider/module selection, dependency, and admission catalog | [`architecture/providers.yaml`](../architecture/providers.yaml) |
-| 28-unit service graph, state and startup waves | [`architecture/services.yaml`](../architecture/services.yaml) |
-| Cross-plane runtime-path rules | [`architecture/dependency-graph.yaml`](../architecture/dependency-graph.yaml) |
-| Warm-start source commits and destinations | [`architecture/reuse-map.yaml`](../architecture/reuse-map.yaml) |
-| Closed warm-source path states | [`architecture/reuse-path-index.yaml`](../architecture/reuse-path-index.yaml), [`schemas/reuse-path-index.schema.json`](../schemas/reuse-path-index.schema.json) |
-| Future two-repository port authorizations (currently empty and admission-disabled) | [`architecture/porting-authorization-index.yaml`](../architecture/porting-authorization-index.yaml), [`schemas/porting-authorization.schema.json`](../schemas/porting-authorization.schema.json) |
-| Destination `PORTING.yaml` record shape | [`schemas/porting-record.schema.json`](../schemas/porting-record.schema.json) |
-| Source authorization | [`legal/source-reuse-authorization.yaml`](../legal/source-reuse-authorization.yaml) |
-| Executable warm-snapshot integrity lock | [`ci/lock_warm_snapshot.py`](../ci/lock_warm_snapshot.py) |
-| Third-party licensing | [`legal/third-party-license-policy.yaml`](../legal/third-party-license-policy.yaml), [`docs/phase-0/dependency-license-inventory.json`](phase-0/dependency-license-inventory.json) |
-| Phase-0 cross-check and evidence boundaries | [`docs/phase-0/phase-0-backtest.json`](phase-0/phase-0-backtest.json), [`docs/phase-0/PHASE_0_BACKTEST.md`](phase-0/PHASE_0_BACKTEST.md) |
-| Zero-bill defaults and prohibitions | [`policies/zero-bill-policy.yaml`](../policies/zero-bill-policy.yaml) |
-| Provider/module and deterministic-profile-example shape | [`schemas/provider-module.schema.json`](../schemas/provider-module.schema.json) |
-| Executable packet shape | [`schemas/task-packet.schema.json`](../schemas/task-packet.schema.json) |
-| Readiness repair ownership and implementation gates | [`architecture/readiness-repairs.json`](../architecture/readiness-repairs.json), [`READINESS_REPAIRS.md`](alpha-2/READINESS_REPAIRS.md) |
-| Approved cumulative-test and status-precedence amendment | [`architecture/readiness-repair-amendment.json`](../architecture/readiness-repair-amendment.json), [`MET-REPAIR-002`](../task-packets/MET-REPAIR-002.yaml) |
-| Alpha-2 model source/destination evidence separation | [`architecture/model-evidence-boundary.json`](../architecture/model-evidence-boundary.json), [`MODEL_PREREQUISITES.md`](alpha-2/MODEL_PREREQUISITES.md) |
-| External trusted-runner manifest shape | [`schemas/trusted-runner-manifest.schema.json`](../schemas/trusted-runner-manifest.schema.json), [`TRUSTED_RUNNER_CONTRACT.md`](TRUSTED_RUNNER_CONTRACT.md) |
-| Closed live execution-envelope shape | [`schemas/live-campaign-execution-envelope.schema.json`](../schemas/live-campaign-execution-envelope.schema.json) |
-| External trusted live-campaign boundary, dual signatures, endpoints/proxies, zero-cost admission, statuses, and evidence axes | [`TRUSTED_LIVE_CAMPAIGN_RUNNER_CONTRACT.md`](TRUSTED_LIVE_CAMPAIGN_RUNNER_CONTRACT.md) |
+### Alpha 3: governed action and interaction
 
-The public reuse authority currently contains 905 `TREE_DISCOVERY` records and
-4,202 `BLOB_PENDING` records across all five exact-commit warm-start
-repositories. It contains zero `BLOB_COPY_AUTHORIZED` paths, and the
-porting-authorization index contains zero records. Direct reuse is therefore not
-an executable option in any current packet; legal input and a future packet
-revision are required first. The first two repositories are indexed from the
-closed packet-reference closure; the other three are indexed from signed,
-metadata-only full-tree observations that exposed no source text to the
-implementation identity. Every warm-source path remains unavailable to product
-implementation runs.
+- Add memory, tool classification, sandbox providers, decision intelligence,
+  approval UI, autonomy policy, AgentOps registry, compensation, and tenant
+  isolation campaigns.
 
-The Phase-0 dependency inventory is
-[`docs/phase-0/dependency-license-inventory.json`](phase-0/dependency-license-inventory.json).
-It records all thirteen planned repositories, distinguishes the three
-repositories that are not yet created, and classifies every SPDX expression
-discovered in the exact control-plane lock and root-owned offline wheel
-inventories. Classification does not imply release: SBOM, notices, and approved
-LGPL disposition remain mandatory release gates.
+### Alpha 4: enterprise release
 
-The provider authority is `PLANNED`: it defines 59 packet-owned implementation
-plans, 23 tenant-supplied external prerequisites (twenty `external.*` records
-plus three Kubernetes distribution choices), five contract-only
-non-installables, closed public-demand/environment-fact/selector admission,
-coverage of all sixteen canonical harnesses, and four deterministic profile
-examples with explicit accepted selectors. Missing immutable release digests and
-the absence of implementation evidence prevent any catalog record or example
-from being treated as built, installable, released, deployed, or certified.
+- Add trace-based assurance, upgrade/rollback/uninstall, physical air-gap
+  transfer, upstream Kubernetes, K3s, OpenShift, AMD64, ARM64, adversarial, and
+  full white-goods acceptance certification.
 
-The two taxonomy production gates are fail-closed contracts, not current
-assurance evidence. Each binds a closed control set with
-`ALL_REQUIRED_CONTROLS`, an immutable `PRODUCTION_PROMOTION` evidence plan and
-campaign, a signed trusted-producer policy/release, and the exact
-tenant/profile/bundle/route/subject scope. A waiver must target the same control
-and complete scope, but is documentation-only and never satisfies production
-promotion. Until every required control has fresh `PASS` evidence, production
-promotion remains blocked even when a waiver or source, CI, merge, artifact,
-deployment, or runtime-health evidence is present.
+## Global architecture rules
 
-## Repository plans
+- The control plane is never on the synchronous runtime request path.
+- Browser status reads use local authenticated projections; the browser never
+  fans out to product-plane services, and stale/source-unavailable data never
+  becomes current health.
+- Retrieval, persistent memory, and durable workflow state are separate stores
+  and contracts.
+- Data access never inherits tool execution authority.
+- Governance defines permissible autonomy; runtime guardrails enforce decisions.
+- AI gateway and inference engine have separate ownership and scaling.
+- Asynchronous delivery is at least once with transactional outbox/inbox
+  idempotency.
+- Every provider declares configuration, secret references, RBAC, network intent,
+  storage, migrations, evidence, resource envelope, compatibility, license,
+  upgrade, rollback, and removal behavior.
+- Every release consumes immutable upstream versions and SHA-256 digests.
 
-1. [`Harness-Engineering`](repositories/00-harness-engineering.md)
-2. [`mas-harness-contracts`](repositories/01-mas-harness-contracts.md)
-3. [`mas-harness-sdks`](repositories/02-mas-harness-sdks.md)
-4. [`mas-harness-industry-packs`](repositories/03-mas-harness-industry-packs.md)
-5. [`mas-harness-control-plane`](repositories/04-mas-harness-control-plane.md)
-6. [`mas-harness-runtime-plane`](repositories/05-mas-harness-runtime-plane.md)
-7. [`mas-harness-model-plane`](repositories/06-mas-harness-model-plane.md)
-8. [`mas-harness-knowledge-plane`](repositories/07-mas-harness-knowledge-plane.md)
-9. [`mas-harness-execution-plane`](repositories/08-mas-harness-execution-plane.md)
-10. [`mas-harness-trust-plane`](repositories/09-mas-harness-trust-plane.md)
-11. [`mas-harness-operator`](repositories/10-mas-harness-operator.md)
-12. [`mas-harness-distribution`](repositories/11-mas-harness-distribution.md)
-13. [`mas-harness-conformance-labs`](repositories/12-mas-harness-conformance-labs.md)
+## Deployment modes and billing boundary
 
-## Harness specifications
+The same contracts and independently packaged harness modules support four
+deployment modes. `architecture/taxonomy.yaml#/deploymentModes` is the
+machine-readable authority.
 
-Runtime:
+| Mode | Infrastructure and isolation | Required certification path |
+|---|---|---|
+| Operator-hosted SaaS | A shared asynchronous control plane on pre-authorized operator capacity; tenant identity is server-derived, data uses RLS, and each runtime uses the policy-selected namespace or dedicated-cluster boundary. | Control-plane tenant/security checks, cross-tenant adversarial certification, and lifecycle certification. |
+| Tenant public cloud | A pre-existing tenant-managed Kubernetes or OpenShift API; the platform receives capability facts and least-privilege access but no cloud-account or provisioning credentials. | Live Kubernetes/OpenShift plus security certification. |
+| Self-managed | Tenant-owned upstream Kubernetes, K3s on plain VMs, or OpenShift, connected or in a network silo. | The matching live platform campaign plus security certification. |
+| Air-gapped | A physically disconnected tenant environment supplied through custody-controlled OCI transfer, local trust, models, dependencies, data, identity, and observability. | Physical two-zone air-gap, security, and lifecycle certification. |
 
-- [`runtime.infrastructure`](harnesses/runtime.infrastructure.md)
-- [`runtime.model-inference`](harnesses/runtime.model-inference.md)
-- [`runtime.ai-gateway`](harnesses/runtime.ai-gateway.md)
-- [`runtime.experience`](harnesses/runtime.experience.md)
+In every mode, billable provisioning is `FORBIDDEN`. Existing operator or tenant
+capacity may have separately approved ownership costs, but the platform cannot
+create, purchase, resize, or enroll it; invoke cloud management or billing APIs;
+or turn an optional integration into a paid dependency. SaaS describes the
+operating and tenancy model, not a mandatory external SaaS dependency.
 
-Knowledge:
+## Provider and module composition authority
 
-- [`knowledge.domain-semantic`](harnesses/knowledge.domain-semantic.md)
-- [`knowledge.data-integration`](harnesses/knowledge.data-integration.md)
-- [`knowledge.retrieval-context`](harnesses/knowledge.retrieval-context.md)
-- [`knowledge.memory-state`](harnesses/knowledge.memory-state.md)
+[`architecture/providers.yaml`](../architecture/providers.yaml), constrained by
+[`schemas/provider-module.schema.json`](../schemas/provider-module.schema.json),
+is the deterministic provider/module selection authority. Its current status is
+`PLANNED`. The catalog covers 87 module/provider records, twenty stable
+`external.*` prerequisite IDs, and all sixteen canonical harnesses. Three
+Kubernetes platform choices are also EXTERNAL-scope provider records, so they do
+not increase the external-prerequisite count.
 
-Execution:
+The catalog includes a closed capability-admission partition for public demand,
+signed environment facts, and explicit provider selectors; every unclassified
+registered token is internal-only. Four schema-constrained deterministic profile
+examples state requested capabilities and accepted selectors, selected modules,
+external prerequisites, exclusions, expected fixed-point closure, and
+`UNRESOLVED_UNTIL_RELEASE` digest disposition. These examples test selection and
+minimality only; they are not released bundles.
 
-- [`execution.protocol-interoperability`](harnesses/execution.protocol-interoperability.md)
-- [`execution.orchestration`](harnesses/execution.orchestration.md)
-- [`execution.tool-skill-sandbox`](harnesses/execution.tool-skill-sandbox.md)
-- [`execution.ml-decision`](harnesses/execution.ml-decision.md)
+Every catalog record has exactly one implementation disposition: 59 name a
+repository packet, an implementation path inside that packet's `allowedPaths`,
+and an owning deliverable; 23 are pinned tenant-supplied external prerequisites
+(twenty `external.*` records plus three Kubernetes distribution choices); and
+five are `CONTRACT_ONLY` non-installables. The compiler rejects a contract-only
+selection with `PROVIDER_UNAVAILABLE` before dependency closure or bundle
+construction. Activating one requires a future packet and catalog revision,
+not documentation or an unowned repository directory.
 
-Trust:
+The compiler may select only explicitly accepted public capabilities, exactly one
+accepted selector per active exclusive group, and their transitive closure.
+Provider ranking can propose a selector but cannot mutate a profile, select a
+fallback, or satisfy missing tenant input. Every record declares configuration,
+forbidden fields, secret-reference mode, default-deny network intent, RBAC, storage/retention,
+platform/architecture, resource/accelerator envelope, health, license/custody,
+cost disposition, and upgrade/rollback/uninstall behavior. Admission accepts
+only self-hosted or tenant-supplied open-source non-metered dispositions and
+rejects paid/metered services, provider API keys, undeclared egress, mutable
+references, hosted CI/storage dependencies, and runtime package/model downloads.
 
-- [`trust.security-safety`](harnesses/trust.security-safety.md)
-- [`trust.governance-agentops`](harnesses/trust.governance-agentops.md)
-- [`trust.observability-finops`](harnesses/trust.observability-finops.md)
-- [`trust.evaluation-assurance`](harnesses/trust.evaluation-assurance.md)
+Immutable digest requirement is not immutable release evidence. Planned install
+units may have `digestStatus: MISSING_PLANNED`; they cannot be fetched, installed,
+promoted, or included in a released profile until version/digest, SPDX/custody,
+SBOM, vulnerability disposition, signature/revocation, and offline verification
+evidence exist. None of the 87 catalog records currently proves implementation,
+CI, merge, artifact, deployment, runtime, assurance, or tenant acceptance. See
+[`PROVIDER_MODULE_CATALOG.md`](PROVIDER_MODULE_CATALOG.md) for the complete
+interpretation and handoff boundary.
 
-## Supporting explanations
+## Open-source and support boundary
 
-- [`MASTER_DEVELOPMENT_PLAN.md`](MASTER_DEVELOPMENT_PLAN.md): program milestones,
-  invariants, guided gates, and evidence axes.
-- [`MICROSERVICE_CATALOG.md`](MICROSERVICE_CATALOG.md): dependency modes,
-  desired/observed/release state machines, propagation, and 28-unit matrix.
-- [`PROVIDER_MODULE_CATALOG.md`](PROVIDER_MODULE_CATALOG.md): the planned
-  provider/module inventory, deterministic closure, zero-bill admission,
-  lifecycle/security/resource metadata, and immutable-release boundary.
-- [`SCOPE_PROVENANCE.md`](SCOPE_PROVENANCE.md): adopted/rejected source patterns
-  and the boundary between user requirements and attached-document content.
-- [`TENANT_HARNESS_OVERVIEW.md`](TENANT_HARNESS_OVERVIEW.md): the approved
-  organization/plane/harness status projection, authorization, navigation,
-  responsive interaction, accessibility, and frontend delivery contract.
-- [`task-packets/README.md`](../task-packets/README.md): the 136-packet execution
-  catalog and topological delivery guidance.
+The platform core, contracts, reference providers, operator, distribution tools,
+industry-pack framework, and conformance kit are Apache-2.0 open source. A future
+enterprise-support offer is a human/service relationship, not a runtime feature:
+the platform contains no license server, feature lock, phone-home check, billing
+client, commercial API key, or support entitlement dependency. Pricing, SLAs,
+indemnity, and certified-support matrices remain deliberately outside the coding
+scope until the project adopts a separate business decision.
 
-## Early Linux readiness publication
+## Guided setup gates
 
-[LINUX_READINESS.md](alpha-2/LINUX_READINESS.md) defines MET-LINUX-001,
-MET-LINUX-002 and CONF-LINUX-001; the closed policy is
-[linux-readiness.json](../architecture/linux-readiness.json). The dedicated
-validator runs in MET-LINUX-001's signed seven-command offline session.
-The source-only predecessor rule does not bypass the explicitly stricter
-fresh native Linux gate for runtime coding. The 115-packet amendment remains
-historical; that publication contained 118 packets; the current approved catalog contains 139.
+1. Deployment sovereignty and isolation.
+2. Business objectives, owner, workflow, and measurable KPI.
+3. Risk, regulation, classification, and autonomy.
+4. Domain vocabulary and canonical entities.
+5. Data ownership, quality, completeness, freshness, provenance, and access.
+6. Integrations, protocols, tools, credentials, and side effects.
+7. Retrieval, memory, model, ML, and orchestration requirements.
+8. SLO, recovery, observability, evaluation, and tenant acceptance.
 
-## Conformance readiness amendment
+No dependent stage may be approved while a mandatory preceding finding is
+`OPEN`, `FAIL`, or `STALE`. Waivers require an approver, justification,
+compensating control, and expiry.
 
-[MET-REPAIR-003](../task-packets/MET-REPAIR-003.yaml),
-[closed amendment](../architecture/linux-readiness-amendment.json),
-[repair guide](alpha-2/LINUX_READINESS_REPAIRS.md) and
-[negative validator](../scripts/validate_linux_repair.py) bind R1-R4 to exact
-source-reviewed paths. CONF-FIX-001 owns the offline-wrapper/transport/canary
-correction and retires insecure live-adapter execution. CONF-LINUX-001 owns the
-additive handler-contract extension and named suite/campaign integration.
-No missing test suite, fixture PASS or caller-provided boundary marker can
-satisfy Linux qualification. Prior Linux policy bytes remain immutable.
+## Evidence model
 
-## Assertion-only Linux legacy-test closure
+The program records these independently:
 
-- [MET-REPAIR-004](../task-packets/MET-REPAIR-004.yaml): one exact additional test path and assertion-only constraints.
-- [Closed amendment](../architecture/linux-test-ownership-amendment.json): immutable predecessor source/CI/main pins, exact statement replacement and preserved native/live gates.
-- [Guide and phase checkpoint](alpha-2/LINUX_TEST_OWNERSHIP_REPAIR.md): publication only; CONF-LINUX-001 implementation and native qualification remain independent.
+1. Source and porting provenance.
+2. Contract and unit verification.
+3. Pull-request checks.
+4. Merge state.
+5. Reproducible artifact and SBOM.
+6. Signature and release state.
+7. Deployment reconciliation.
+8. Runtime health and behavior.
+9. Security and assurance.
+10. Tenant acceptance.
 
-Current catalog: 136 packets; the prior 121-packet record remains historical. Historical 118/120-packet publications remain byte-identical.
+A later state never retroactively proves an earlier or different evidence axis.
+Live environment campaigns are manual post-merge runs on a preinstalled
+target-local ephemeral runner. Before checked-out code runs, the external
+root-owned `/opt/planeon/bin/harness-live-campaign-launch` reads only
+`HARNESS_LIVE_EXECUTION_ENVELOPE`; verifies independent `PLATFORM_RELEASE` and
+`TENANT_LIVE_EXECUTION` signatures over the same RFC 8785 payload; recomputes
+the immutable packet/command/kit/campaign/release/launcher/bundle/trust digests
+and embedded pre-existing endpoints; and verifies the separate digest-bound
+`CAPACITY_OPERATOR` authorization. It establishes the host OS deny-all-except-
+envelope boundary and proves an active server-side zero-cost mutation policy.
+Dynamic workloads are probed only through signed `KUBERNETES_API_PROXY` or
+`CAMPAIGN_PROXY` endpoints; discovered addresses never broaden egress. GitHub PR checks remain deny-all and cannot consume a live result.
+Missing pre-existing capacity is `NOT_RUN_ENV_UNAVAILABLE`, never a reason to
+provision or an inferred pass. The complete contract is
+[`TRUSTED_LIVE_CAMPAIGN_RUNNER_CONTRACT.md`](TRUSTED_LIVE_CAMPAIGN_RUNNER_CONTRACT.md).
 
-## Model fixture scope — preserved authority
+Live result states are exactly `PASS`, `FAIL`, `WARN`, `NOT_APPLICABLE`, and
+`NOT_RUN_ENV_UNAVAILABLE`; live/platform/architecture are dimensions. The
+dual-signed envelope restricts each campaign to its exact validator-declared
+subset of `DEPLOYMENT`, `RUNTIME`, `SECURITY`, `ASSURANCE`, and
+`TENANT_ACCEPTANCE_CANDIDATE`. `TENANT_ACCEPTANCE` is forbidden. It cannot
+originate source, unit, PR, merge, artifact/SBOM, signature/release, or actual
+tenant-acceptance evidence. `CONF-WG-001` produces only an unsigned acceptance
+candidate; a separate authorized tenant decision is required for acceptance.
 
-- [MET-REPAIR-005](../task-packets/MET-REPAIR-005.yaml): exact helper-only grant.
-- [Closed record](../architecture/model-fixture-scope-amendment.json): pinned
-  baseline, helper transformation and independent evidence boundaries.
-- [Development instructions](alpha-2/MODEL_FIXTURE_SCOPE_REPAIR.md): source-only
-  checklist, strict verification, rollback and unchanged native runtime gate.
+Production promotion is also scope-exact. Each taxonomy production gate owns a
+closed control list and uses `ALL_REQUIRED_CONTROLS`; no single passing control
+or unrelated campaign can satisfy it. Admissible evidence comes only from an
+immutable `PRODUCTION_PROMOTION` campaign and binds the SHA-256 evidence-plan,
+control-set, campaign, trusted-producer-policy, producer-release, profile,
+bundle, route, and subject digests plus tenant, route, and subject identity.
+Signed waivers are short-lived records for one required control and the same
+complete scope. They document an approved exception but never satisfy a
+production control: promotion still requires fresh `PASS` evidence for every
+required control. A waiver cannot broaden scope, convert any non-`PASS` status,
+or replace `FAIL`/`STALE` evidence.
 
-## Model API inventory scope — current authority
+Make-based acceptance has packet-local ownership. Each product bootstrap owns
+the repository `Makefile` and closed `ci/run_make_target.py` dispatcher. A later
+packet owns only `ci/targets/<lowercase-packet-id>.json`, which registers its
+exact target names, closed values for `BACKEND`, `CAMPAIGN`, `MODULE`, `PACK`,
+or `PROVIDERS`, and direct argv templates. Matching handlers run cumulatively in
+lexical packet order; missing, ambiguous, duplicate, shell-based, or undeclared
+handlers fail. The only predecessor-owned exception is the `CONF-001` generic
+campaign/evidence/acceptance dispatch. The readiness validator proves every Make
+target has one of these authorities. Bootstrap packets alone seed inert
+`PORTING.yaml` ledgers; ordinary reference-only packets cannot edit them.
 
-- [MET-REPAIR-006](../task-packets/MET-REPAIR-006.yaml): exact predicate-only grant.
-- [Closed record](../architecture/model-api-inventory-amendment.json): immutable passing baseline, failed draft and predicate/outside-byte bindings.
-- [Development instructions](alpha-2/MODEL_API_INVENTORY_REPAIR.md): historical 123-packet checkpoint, negative tests and then-pending product/native gates.
+## Sol-high handoff rule
 
-The cancelled draft CI is not PASS; no model-product acceptance is recorded.
+Each coding run implements exactly one YAML packet from `task-packets/`. Broad
+repository or harness documents are not themselves coding prompts. A packet is
+ready only when every predecessor exists, all public contracts are pinned, its
+allowed paths and exclusions are explicit, and its acceptance commands execute
+offline.
+
+`predecessors` orders implementation contracts, not certification claims.
+Merged code and passing offline evidence—including an honest live-environment
+`NOT_RUN_ENV_UNAVAILABLE`—may unblock later source work except the stricter
+early Linux runtime-coding gates below. Release and production
+promotion remain separately blocked until every required live campaign has its
+fresh, scope-exact `PASS` evidence.
+
+## Alpha-2 early Linux prerequisite amendment
+
+MET-LINUX-001 publishes the [early Linux plan](alpha-2/LINUX_READINESS.md).
+After the completed CON-FIX-001 correction, continue CTRL-FIX-003, then
+MET-LINUX-002 and CONF-LINUX-001. Their source completion is separate from
+the fresh native Linux AMD64 PASS required before CTRL-INTEGRATE-001,
+MODEL-001, EXEC-001 or RUN-001 runtime coding. CON-MODEL-001 remains a pure
+contract exception. Use macOS for development; build release dependencies and
+images in pinned Linux targets, never reuse macOS native output. ARM64 needs
+separate native qualification before release. No new billable capacity or
+download is authorized. This early baseline does not replace the full Alpha-4
+Kubernetes/OpenShift/K3s/air-gap and tenant acceptance matrix.
+
+## Approved pre-campaign correction — MET-REPAIR-003
+
+The [R1-R4 readiness amendment](alpha-2/LINUX_READINESS_REPAIRS.md) supersedes the
+unamended conformance dispatch order above: MET-LINUX-002 (source complete),
+MET-REPAIR-003 (authority), CONF-FIX-001 (source boundary repair), then
+CONF-LINUX-001 (campaign source and separately authorized native evidence).
+That publication contained 120 packets; the current queue contains 141 across the same thirteen repositories/sixteen harnesses.
+Explicit full-suite discovery and closed result-handler additions are mandatory.
+Retiring the untrusted live-adapter path does not build or install a trusted live
+backend. Neither amendment nor corrected source opens the fresh native AMD64
+gate. No cloud/VM provisioning, new keys or automatic OS authentication is added.
+
+## Assertion-only pre-Linux test repair — MET-REPAIR-004
+
+The completed CONF-FIX-001 source correction exposed one remaining ownership
+gap: the existing canonical vocabulary regression requires five handlers but
+CONF-LINUX-001 must add one. MET-REPAIR-004 permits only replacing that assertion
+with the exact ordered six-handler tuple, not weakening it or editing other
+legacy vectors. Its [closed publication](alpha-2/LINUX_TEST_OWNERSHIP_REPAIR.md)
+preserves the consumed 118/120-packet records and advances the current catalog
+to 121. Order: MET-REPAIR-004 publication, CONF-LINUX-001 source, then separately
+authorized native Linux qualification; runtime coding and later tenant acceptance
+remain gated. No product or host installation occurs in the meta publication.
+
+## Model fixture-copy authority — MET-REPAIR-005
+
+That publication contained 122 packets; that historical publication recorded 142. The preceding
+121-packet Linux test publication is historical; its consumed bytes are unchanged.
+The [exact helper-copy grant](alpha-2/MODEL_FIXTURE_SCOPE_REPAIR.md) completed
+localhost PR CI and exact-main replay before the model draft started.
+It changes no predecessor assertion. The untouched baseline passed 758 tests;
+that fixture integration finding remains source inspection, not an executed
+failure. The later inventory exception is separately bounded below.
+Linux runtime gates remain closed.
+
+## Model API inventory authority — MET-REPAIR-006
+
+That publication had 123 packets. [The exact inventory amendment](alpha-2/MODEL_API_INVENTORY_REPAIR.md)
+preserves the 122-packet fixture publication and its exact helper grant.
+The model draft reproduced a second fixed inventory: 1048 passed, one failed,
+zero skipped. Permit only required-five API membership instead of exact equality,
+without changing the test identity or any following safety check. Publish and
+accept this meta packet before resuming product PR 9 and its normal completeness
+review. Source, offline, CI, merge, native Linux and tenant gates stay separate.
 
 ## Approved trusted live backend enablement — MET-LIVE-001
 

@@ -323,4 +323,4 @@ if __name__ == '__main__':
     errors = validate_authority(packets,*load_inputs(ROOT))
     if errors:
         print('\n'.join(errors)); raise SystemExit(1)
-    print('Historical benchmark transport valid:188 current specifications;175-packet projection; original comparison allowance unchanged.')
+    print('Historical benchmark transport valid:189 current specifications;175-packet projection; original comparison allowance unchanged.')

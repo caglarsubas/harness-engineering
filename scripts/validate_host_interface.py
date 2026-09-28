@@ -14,6 +14,21 @@ try:
 except ImportError:
     from scripts.safe_yaml import safe_load
 
+try:
+    from validate_unified_roadmap import (
+        authority as unified_authority,
+        historical_bytes as unified_history,
+        historical_catalog as unified_catalog,
+        current_test_bytes as unified_current_test,
+    )
+except ImportError:
+    from scripts.validate_unified_roadmap import (
+        authority as unified_authority,
+        historical_bytes as unified_history,
+        historical_catalog as unified_catalog,
+        current_test_bytes as unified_current_test,
+    )
+
 ROOT = Path(__file__).resolve().parents[1]
 RECORD_PATH = 'architecture/host-interface-authority.json'
 RECORD_SHA256 = '091d3f16a58771bba884f4e78cfd911eb6173cc69f2032bd77481449f5149952'
@@ -94,6 +109,7 @@ def apply_recipe(before, rule):
 
 
 def historical_bytes(path, raw):
+    raw = unified_history(path, raw)
     # A closed code-pinned routing table, not an acceptance/result cache.
     # Unchanged inputs still receive the predecessor caller's exact hash check.
     if path not in HISTORY_PATHS:
@@ -120,9 +136,9 @@ def current_test_bytes(before):
                if p.startswith("tests/") and r["beforeSha256"] == input_digest]
     if not matches:
         require(input_digest in record["unchangedTests"].values(), "unreviewed unchanged test")
-        return before
+        return unified_current_test(before)
     require(len(matches) == 1, "unique predecessor")
-    return apply_recipe(before, matches[0])
+    return unified_current_test(apply_recipe(before, matches[0]))
 
 
 def validate_additions(packets):
@@ -155,6 +171,7 @@ MEMBER_DIGESTS = {'schemaVersion': '252b492b9252e691126632a93823dc54c98193daa182
 
 
 def historical_catalog(packets):
+    packets = unified_catalog(packets)
     record = _record(); pinned(record)
     require(type(packets) is dict and validate_additions(packets) == [], 'exact new META packet')
     old = {Path(p).stem for p in record['protectedFiles']
@@ -264,6 +281,10 @@ def load_inputs(root):
 def validate_authority(packets, record, inputs):
     try:
         pinned(record); old = historical_catalog(packets)
+        packets = unified_catalog(packets)
+        changed = unified_authority()['changedFiles']
+        inputs = {path: unified_history(path, raw) if path in changed else raw
+                  for path, raw in inputs.items()}
         require(HISTORY_PATHS == set(record['metaRecipes']), 'closed history routing')
         pins = {**record['protectedFiles'], **record['inputFiles'],
                 **{p: r['afterSha256'] for p, r in record['metaRecipes'].items()}}

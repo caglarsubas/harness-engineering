@@ -1,5 +1,39 @@
 # Development checkpoint — Phase 0 to Alpha 2
 
+## Current source status — MET-UNIFY-008 native gate staging
+
+The [unified master roadmap](MASTER_DEVELOPMENT_PLAN.md) is the current status
+entry point. `MET-UNIFY-005` is accepted on main at `945de93`. The unpublished
+`MET-UNIFY-006` candidate is retained at local commit `2e705d4` with LOCAL1
+and LOCAL2 exhausted: the first lacked the pinned offline Python environment;
+the second reached inherited readiness validation and failed 21 history/test-
+identity checks. It has no PR, CI, merge or exact-main evidence, and its
+allowances do not transfer. The separate unpublished `MET-UNIFY-007` candidate
+is retained at local commit `47e775afd87443e9826e2f2e496cf2eae768399f`;
+LOCAL1 stopped at the old status validator's treatment of the unpublished 006
+ID, LOCAL2 passed earlier history/custody checks but stopped at document-repair
+raw packet parity, and LOCAL3 stopped at host-interface current-source drift on
+`CTRL-INTEGRATE-001`. All three slots are consumed. Its exact packet and
+authority hashes are in the item-level backlog; no PR, CI, merge or exact-main
+evidence exists. `MET-UNIFY-008` is a separate source-only replacement directly
+from accepted `MET-UNIFY-005`, with its own finite LOCAL3/CI2/exact-main1
+allowance. LOCAL1 passed the first 50 source validators; command 51, the outer
+pytest suite, reported five failures, 5096 passes and ten skips (one failure
+was a derivative nested suite). The final zero-bill command was not reached.
+The failed count/hash assertions were repaired within the packet's
+allowed paths. LOCAL2 then passed all 52 isolated commands, with 5101 outer
+tests passing, ten existing skips and the final zero-bill scan passing. LOCAL3
+is reserved to revalidate this exact source-status synchronization; CI, merge
+and exact-main evidence remain pending. Its
+[versioned gate decision](alpha-2/SOURCE_NATIVE_GATE_STAGING.md)
+allows clean-room source and isolated offline work on four existing product
+packets after their other predecessors, while fresh native Linux AMD64
+foundation and exact artifact proof still gate Linux release deployment,
+runtime qualification and promotion. `CONF-LINUX-001` remains
+`NOT_RUN_ENV_UNAVAILABLE`; no product, installed runtime or tenant acceptance
+is claimed. Alpha 2 remains open. All earlier “current” headings below are
+retained revision-local checkpoints, not present packet eligibility.
+
 ## Current source status — MET-UNIFY-005 roadmap candidate
 
 The [unified master development plan](MASTER_DEVELOPMENT_PLAN.md) is the current-first roadmap entry point in this publication candidate. This document preserves recorded development checkpoints and evidence; its older "current" headings describe their respective historical revisions, not today's packet eligibility or execution authority.

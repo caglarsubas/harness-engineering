@@ -30,6 +30,11 @@ except ImportError:
         current_test_bytes as unified_current_test,
     )
 
+try:
+    from validate_native_gate_staging import authority as gate_authority
+except ImportError:
+    from scripts.validate_native_gate_staging import authority as gate_authority
+
 ROOT = Path(__file__).resolve().parents[1]
 RECORD_PATH = 'architecture/host-interface-authority.json'
 RECORD_SHA256 = '091d3f16a58771bba884f4e78cfd911eb6173cc69f2032bd77481449f5149952'
@@ -318,7 +323,8 @@ def validate_authority(packets, record, inputs):
     try:
         pinned(record); old = historical_catalog(packets)
         packets = unified_catalog(packets)
-        changed = unified_authority()['changedFiles']
+        changed = (set(unified_authority()['changedFiles'])
+                   | set(gate_authority()['changedFiles']))
         inputs = {path: unified_history(path, raw) if path in changed else raw
                   for path, raw in inputs.items()}
         require(HISTORY_PATHS == set(record['metaRecipes']), 'closed history routing')

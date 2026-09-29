@@ -16,6 +16,13 @@ try:
 except ModuleNotFoundError:
     from scripts.safe_yaml import safe_load as safe_yaml_load
 
+try:
+    from validate_native_gate_staging import (GATED_PATHS, historical_bytes as gate_historical_bytes,
+                                             historical_catalog as gate_historical_catalog)
+except ImportError:
+    from scripts.validate_native_gate_staging import (GATED_PATHS, historical_bytes as gate_historical_bytes,
+                                                     historical_catalog as gate_historical_catalog)
+
 ROOT = Path(__file__).resolve().parents[1]
 RECORD_PATH = "architecture/successor-inventory-amendment.json"
 RECORD_SHA256 = "491c3ee536b0be231be7f29e3580f357659c7012ec54077268e23aa1f08f48e0"
@@ -233,6 +240,7 @@ def validate_successor_inventory(packets, record, inputs):
         pinned(record)
         if type(packets) is not dict or type(inputs) is not dict:
             return ["packet and input maps required"]
+        previous_packets = gate_historical_catalog(packets)
         errors = validate_additions(packets)
         try:
             from validate_proxy_contract import ADDITIONS as PROXY_ADDITIONS, validate_additions as validate_proxy_additions
@@ -241,15 +249,17 @@ def validate_successor_inventory(packets, record, inputs):
         errors.extend(validate_proxy_additions(packets))
         pins = {**record["protectedFiles"], **record["inputFiles"], **record["packetDigests"]}
         old_ids = {Path(p).stem for p in record["protectedFiles"] if p.startswith("task-packets/")}
-        if len(old_ids) != 132 or len(record["protectedFiles"]) != 170 or set(packets) != old_ids | set(ADDITIONS) | set(PROXY_ADDITIONS) | {"MET-UNIFY-005"}:
+        if len(old_ids) != 132 or len(record["protectedFiles"]) != 170 or set(packets) != old_ids | set(ADDITIONS) | set(PROXY_ADDITIONS) | {"MET-UNIFY-005", "MET-UNIFY-008"}:
             errors.append("exact historical 132 plus two inventory and one proxy prerequisite packets required")
         if set(inputs) != set(pins):
             errors.append("exact 188 authority inputs required")
         for path, expected in pins.items():
             raw = inputs.get(path)
+            if path in GATED_PATHS and type(raw) is bytes:
+                raw = gate_historical_bytes(path, raw)
             if type(raw) is not bytes or digest(raw) != expected:
                 errors.append("immutable authority input changed: " + path)
-            elif path.startswith("task-packets/") and canonical(packets.get(Path(path).stem)) != packet_semantics(raw):
+            elif path.startswith("task-packets/") and canonical(previous_packets.get(Path(path).stem)) != packet_semantics(raw):
                 errors.append("packet semantic/byte mismatch: " + path)
         baseline = parse(inputs[BASELINE_PATH])
         if len(baseline["files"]) != 106 or sum(map(len, baseline["tests"].values())) != 150:
@@ -276,7 +286,7 @@ def main():
     for error in errors:
         print("ERROR: " + error)
     if not errors:
-        print("Successor inventory authority valid: 189 packets; 188 predecessor files unchanged; product correction NOT_RUN; native gate closed.")
+        print("Successor inventory authority valid: 190 packets; historical protected inputs unchanged; product correction NOT_RUN; native gate closed.")
     return int(bool(errors))
 
 

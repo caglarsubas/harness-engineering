@@ -16,6 +16,17 @@ try:
 except ModuleNotFoundError:
     from scripts.safe_yaml import safe_load as safe_yaml_load
 
+try:
+    from validate_native_gate_staging import (
+        historical_bytes as gate_historical_bytes,
+        historical_catalog as gate_historical_catalog,
+    )
+except ModuleNotFoundError:
+    from scripts.validate_native_gate_staging import (
+        historical_bytes as gate_historical_bytes,
+        historical_catalog as gate_historical_catalog,
+    )
+
 ROOT = Path(__file__).resolve().parents[1]
 RECORD_PATH = "architecture/live-backend-roadmap.json"
 RECORD_SHA256 = "f2e4bb2ac04b96da29cea06283f2c0e2b800a9209726036cede7383acf68e378"
@@ -68,7 +79,11 @@ def load_live_inputs(root: Path) -> tuple[dict[str, Any], dict[str, bytes]]:
     # Verify before trusting even a local record as a path inventory.
     if digest(canonical(record)) != RECORD_SHA256:
         raise ValueError("live-backend roadmap authority changed")
-    return record, {path: regular_bytes(root, path) for path in record["protectedFiles"]}
+    protected = {path: regular_bytes(root, path) for path in record["protectedFiles"]}
+    if root == ROOT:
+        protected = {path: gate_historical_bytes(path, raw)
+                     for path, raw in protected.items()}
+    return record, protected
 
 
 @lru_cache(maxsize=256)
@@ -99,8 +114,9 @@ def validate_live_backend_readiness(
             from scripts.validate_successor_inventory import ADDITIONS as SUCCESSORS, validate_additions as validate_successors
             from scripts.validate_proxy_contract import ADDITIONS as PROXY_ADDITIONS, validate_additions as validate_proxy_additions
         if (set(packets) != old_ids | set(NEW_IDS) | set(ADDITIONS) | set(SUCCESSORS)
-                | set(PROXY_ADDITIONS) | {"MET-UNIFY-005"} or len(packets) != 189):
-            errors.append("current roadmap requires exactly 189 named packets; historical authority remains 130")
+                | set(PROXY_ADDITIONS) | {"MET-UNIFY-005", "MET-UNIFY-008"} or len(packets) != 190):
+            errors.append("current roadmap requires exactly 190 named packets; historical authority remains 130")
+        predecessor_packets = gate_historical_catalog(packets)
         errors.extend(validate_additions(packets))
         errors.extend(validate_successors(packets))
         errors.extend(validate_proxy_additions(packets))
@@ -113,7 +129,7 @@ def validate_live_backend_readiness(
                 continue
             if path.startswith("task-packets/"):
                 packet_id = Path(path).stem
-                if digest(canonical(packets.get(packet_id))) != _packet_semantic_digest(raw):
+                if digest(canonical(predecessor_packets.get(packet_id))) != _packet_semantic_digest(raw):
                     errors.append("consumed packet authority changed: " + packet_id)
         for packet_id in NEW_IDS:
             if canonical(packets.get(packet_id)) != canonical(record["packetSpecifications"][packet_id]):
@@ -152,7 +168,7 @@ def main() -> int:
     for error in errors:
         print("ERROR: " + error)
     if not errors:
-        print("Live backend roadmap valid: 189 packets; historical 130-packet authority and 156 predecessor files unchanged; source-only, native gate closed.")
+        print("Live backend roadmap valid: 190 packets; historical 130-packet authority and 156 predecessor files unchanged; source-only, native release gate closed.")
     return bool(errors)
 
 

@@ -20,10 +20,19 @@ def inputs():
     return packets, boundary
 
 
-def test_model_prerequisite_chain_and_checkpoint_are_closed():
+def test_model_prerequisite_chain_and_checkpoint_are_closed(tmp_path):
     packets, boundary = inputs()
     assert validate_model_authority(packets, boundary) == []
     assert validate_checkpoint(ROOT, packets) == []
+    checkpoint = (ROOT / "docs/DEVELOPMENT_STATUS.md").read_text()
+    assert "`MET-UNIFY-006`" in checkpoint
+    assert "`MET-UNIFY-007`" in checkpoint
+    (tmp_path / "docs").mkdir()
+    for failed in ("MET-UNIFY-006", "MET-UNIFY-007"):
+        (tmp_path / "docs/DEVELOPMENT_STATUS.md").write_text(
+            checkpoint.replace("`" + failed + "`", "`UNKNOWN-001`", 1)
+        )
+        assert "status checkpoint names unknown packet IDs" in validate_checkpoint(tmp_path, packets)
 
 
 @pytest.mark.parametrize("packet_id", ["MET-A2-001", "MET-OBS-MODEL-001", "CON-MODEL-001", "MODEL-001"])
@@ -83,4 +92,4 @@ def test_historical_phase_zero_cardinality_is_not_rewritten():
     audit = json.loads((ROOT / "docs/phase-0/phase-0-backtest.json").read_text())
     assert audit["cardinality"]["taskPackets"] == 107
     packets, _ = inputs()
-    assert len(packets) == 189
+    assert len(packets) == 190

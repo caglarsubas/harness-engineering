@@ -16,6 +16,13 @@ try:
 except ModuleNotFoundError:
     from scripts.safe_yaml import safe_load as safe_yaml_load
 
+try:
+    from validate_native_gate_staging import (GATED_PATHS, historical_bytes as gate_historical_bytes,
+                                             historical_catalog as gate_historical_catalog)
+except ImportError:
+    from scripts.validate_native_gate_staging import (GATED_PATHS, historical_bytes as gate_historical_bytes,
+                                                     historical_catalog as gate_historical_catalog)
+
 ROOT = Path(__file__).resolve().parents[1]
 RECORD_PATH = "architecture/packet-scalar-amendment.json"
 RECORD_SHA256 = "cc083e1bc1b1551ba88a85316074a09434e73d8271355b6011e8f11dbce6a8e0"
@@ -111,6 +118,7 @@ def validate_scalar_repair(packets: Any, record: Any, inputs: Any) -> list[str]:
             return ["scalar authority must equal the exact reviewed amendment"]
         if type(packets) is not dict or type(inputs) is not dict:
             return ["packet and input mappings required"]
+        previous_packets = gate_historical_catalog(packets)
         errors = validate_additions(packets)
         pins = {**record["protectedFiles"], **record["inputFiles"], **record["packetDigests"]}
         if set(inputs) != set(pins):
@@ -122,16 +130,18 @@ def validate_scalar_repair(packets: Any, record: Any, inputs: Any) -> list[str]:
         except ImportError:
             from scripts.validate_successor_inventory import ADDITIONS as SUCCESSORS, validate_additions as validate_successors
             from scripts.validate_proxy_contract import ADDITIONS as PROXY_ADDITIONS, validate_additions as validate_proxy_additions
-        if len(old_ids) != 130 or set(packets) != old_ids | set(ADDITIONS) | set(SUCCESSORS) | set(PROXY_ADDITIONS) | {"MET-UNIFY-005"}:
+        if len(old_ids) != 130 or set(packets) != old_ids | set(ADDITIONS) | set(SUCCESSORS) | set(PROXY_ADDITIONS) | {"MET-UNIFY-005", "MET-UNIFY-008"}:
             errors.append("exact historical 132 plus three cumulative correction packets required")
         errors.extend(validate_successors(packets))
         errors.extend(validate_proxy_additions(packets))
         for path, expected in pins.items():
             raw = inputs.get(path)
+            if path in GATED_PATHS and type(raw) is bytes:
+                raw = gate_historical_bytes(path, raw)
             if type(raw) is not bytes or digest(raw) != expected:
                 errors.append("immutable input changed: " + path)
             elif path.startswith("task-packets/"):
-                if digest(canonical(packets.get(Path(path).stem))) != _packet_digest(raw):
+                if digest(canonical(previous_packets.get(Path(path).stem))) != _packet_digest(raw):
                     errors.append("packet semantics differ from exact bytes: " + path)
         baseline = json.loads(inputs["architecture/packet-scalar-inputs/baseline.json"])
         if (len(baseline["files"]) != 103 or sum(map(len, baseline["tests"].values())) != 120
@@ -166,7 +176,7 @@ def main() -> int:
     for error in errors:
         print("ERROR: " + error)
     if not errors:
-        print("Scalar repair authority valid: 189 packets; historical 132-packet record and 164 predecessor files unchanged.")
+        print("Scalar repair authority valid: 190 packets; historical 132-packet record and 164 predecessor files unchanged.")
     return int(bool(errors))
 
 

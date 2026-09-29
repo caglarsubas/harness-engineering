@@ -25,6 +25,13 @@ try:
 except ImportError:
     from scripts.validate_credential_ordering import historical_bytes, current_test_bytes, validate_additions as ordering_additions
 
+try:
+    from validate_native_gate_staging import (GATED_PATHS, historical_bytes as gate_historical_bytes,
+                                             historical_catalog as gate_historical_catalog)
+except ImportError:
+    from scripts.validate_native_gate_staging import (GATED_PATHS, historical_bytes as gate_historical_bytes,
+                                                     historical_catalog as gate_historical_catalog)
+
 ROOT = Path(__file__).resolve().parents[1]
 RECORD_PATH = "architecture/policy-observation-amendment.json"
 RECORD_SHA256 = "a579f7464ddd1b8de2e888734b9c249f13e9fccc02ad3001e6114f1d74332734"
@@ -142,18 +149,22 @@ def validate_observation_contract(packets, record, inputs):
     try:
         if digest(canonical(record)) != RECORD_SHA256 or type(inputs) is not dict:
             return ["exact observation authority required"]
+        previous_packets = gate_historical_catalog(packets)
         errors = validate_additions(packets)
         old_ids = {Path(p).stem for p in record["protectedFiles"] if p.startswith("task-packets/")}
-        if len(old_ids) != 135 or set(packets) != old_ids | set(ADDITIONS) | {"MET-UNIFY-005"}:
+        if len(old_ids) != 135 or set(packets) != old_ids | set(ADDITIONS) | {"MET-UNIFY-005", "MET-UNIFY-008"}:
             errors.append("135 immutable predecessors plus exact observation and custody packets required")
         pins = {**record["protectedFiles"], **record["inputFiles"]}
         if set(inputs) != set(pins):
             errors.append("exact observation input inventory required")
         for path, checksum in pins.items():
-            raw = historical_bytes(path, inputs.get(path))
+            current_raw = inputs.get(path)
+            if path in GATED_PATHS and type(current_raw) is bytes:
+                current_raw = gate_historical_bytes(path, current_raw)
+            raw = historical_bytes(path, current_raw)
             if type(raw) is not bytes or digest(raw) != checksum:
                 errors.append("immutable observation input changed: " + path)
-            elif path.startswith("task-packets/") and canonical(packets.get(Path(path).stem)) != canonical(safe_yaml_load(raw)):
+            elif path.startswith("task-packets/") and canonical(previous_packets.get(Path(path).stem)) != canonical(safe_yaml_load(raw)):
                 errors.append("predecessor packet differs: " + path)
         baseline = parse(inputs["architecture/proxy-contract-inputs/baseline.json"])
         if len(baseline["files"]) != 127 or baseline["testCount"] != 279 or sum(map(len, baseline["tests"].values())) != 279:
@@ -184,7 +195,7 @@ def main():
     for error in errors:
         print("ERROR: " + error)
     if not errors:
-        print("Policy observation authority valid: 189 packets; unchanged 127-file/279-ID baseline; DATA_CHECK_ONLY, product/native NOT_RUN.")
+        print("Policy observation authority valid: 190 packets; unchanged 127-file/279-ID baseline; DATA_CHECK_ONLY, product/native NOT_RUN.")
     return int(bool(errors))
 
 

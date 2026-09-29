@@ -17,6 +17,25 @@ try:
 except ImportError:
     from scripts.safe_yaml import safe_load
 
+try:
+    from validate_native_gate_staging import (
+        authority as gate_authority,
+        current_test_bytes as gate_current_test_bytes,
+        historical_bytes as gate_historical_bytes,
+        historical_catalog as gate_historical_catalog,
+        historical_test_bytes as gate_historical_test_bytes,
+        validate as validate_native_gate_staging,
+    )
+except ImportError:
+    from scripts.validate_native_gate_staging import (
+        authority as gate_authority,
+        current_test_bytes as gate_current_test_bytes,
+        historical_bytes as gate_historical_bytes,
+        historical_catalog as gate_historical_catalog,
+        historical_test_bytes as gate_historical_test_bytes,
+        validate as validate_native_gate_staging,
+    )
+
 
 ROOT = Path(__file__).resolve().parents[1]
 AUTHORITY_PATH = "architecture/unified-roadmap-authority.json"
@@ -356,30 +375,35 @@ def _project_changed(path: str, raw: bytes, rule: Mapping[str, Any], current_dig
 
 
 def historical_bytes(path: str, raw: bytes) -> bytes:
-    """Project only a pinned current file to its accepted predecessor bytes."""
+    """Project 006 current bytes through exact 005 and then its predecessor."""
     _checked_authority_raw()
+    gate_authority()
     require(type(raw) is bytes, "source bytes required")
-    if path not in CHANGED_PATHS:
-        return raw
     rule = _PROJECTION_RULES.get(path)
+    if rule is not None and digest(raw) == rule["beforeSha256"]:
+        return raw
+    previous_current = gate_historical_bytes(path, raw)
+    if path not in CHANGED_PATHS:
+        return previous_current
     require(rule is not None, "code-pinned changed-source route")
-    return _project_changed(path, raw, rule, digest(raw))
+    return _project_changed(path, previous_current, rule, digest(previous_current))
 
 
 def historical_test_bytes(raw: bytes) -> bytes:
     """Map a current test to its old bytes without guessing a filename."""
     _checked_authority_raw()
     require(type(raw) is bytes, "test bytes required")
-    current_digest = digest(raw)
+    previous_current = gate_historical_test_bytes(raw)
+    current_digest = digest(previous_current)
     matches = [
         path for path, rule in _TEST_PROJECTION_RULES.items()
         if current_digest == rule["afterSha256"]
     ]
     require(len(matches) <= 1, "ambiguous current test")
     if not matches:
-        return raw
+        return previous_current
     path = matches[0]
-    return _project_changed(path, raw, _TEST_PROJECTION_RULES[path], current_digest)
+    return _project_changed(path, previous_current, _TEST_PROJECTION_RULES[path], current_digest)
 
 
 def current_test_bytes(before: bytes) -> bytes:
@@ -393,39 +417,44 @@ def current_test_bytes(before: bytes) -> bytes:
     ]
     require(len(matches) <= 1, "ambiguous accepted test")
     if not matches:
-        return before
+        return gate_current_test_bytes(before)
     path = matches[0]
-    raw = regular_bytes(path)
+    raw = gate_historical_bytes(path, regular_bytes(path))
     require(digest(raw) == _TEST_PROJECTION_RULES[path]["afterSha256"], "current test drift")
-    return raw
+    return gate_current_test_bytes(raw)
 
 
 def historical_catalog(packets: dict[str, Any]) -> dict[str, Any]:
     """Check and remove exactly this successor for the inherited 188-packet chain."""
     record = authority()
     require(isinstance(packets, dict), "packet mapping")
+    previous_current = gate_historical_catalog(packets)
     old_ids = set(record["baselinePackets"])
     require(
         len(old_ids) == 188,
         "exact accepted catalog identities",
     )
-    require(set(packets) == old_ids | {NEW_PACKET}, "unexpected packet addition or loss")
+    require(set(previous_current) == old_ids | {NEW_PACKET}, "unexpected packet addition or loss")
     successor_raw = regular_bytes("task-packets/" + NEW_PACKET + ".yaml")
     require(digest(successor_raw) == record["packetSha256"], "changed successor YAML")
     require(
-        digest(canonical(packets[NEW_PACKET]))
+        digest(canonical(previous_current[NEW_PACKET]))
         == digest(canonical(safe_load(successor_raw))),
         "changed successor packet",
     )
-    return {name: packets[name] for name in old_ids}
+    return {name: previous_current[name] for name in old_ids}
 
 
 def validate() -> None:
+    validate_native_gate_staging()
     record = authority()
     require(CHANGED_PATHS == set(record["changedFiles"]), "changed-source routing drift")
     # The authority cannot hash its own bytes. Normalize only the single embedded
     # authority literal to bind this validator without a digest cycle.
-    validator_raw = regular_bytes("scripts/validate_unified_roadmap.py")
+    validator_raw = gate_historical_bytes(
+        "scripts/validate_unified_roadmap.py",
+        regular_bytes("scripts/validate_unified_roadmap.py"),
+    )
     authority_literal = b'AUTHORITY_SHA256 = "' + AUTHORITY_SHA256.encode("ascii") + b'"'
     placeholder_literal = b'AUTHORITY_SHA256 = "TO_BE_PINNED_AFTER_SOURCE_FREEZE"'
     require(validator_raw.count(authority_literal) == 1, "unique authority literal")
@@ -441,10 +470,11 @@ def validate() -> None:
     )
     old_ids = set(record["baselinePackets"])
     packet_files = sorted((ROOT / "task-packets").glob("*.yaml"))
-    require(len(packet_files) == 189, "189 current packets")
-    require({path.stem for path in packet_files} == old_ids | {NEW_PACKET}, "closed packet catalog")
+    require(len(packet_files) == 190, "190 current packets")
+    require({path.stem for path in packet_files} == old_ids | {NEW_PACKET, "MET-UNIFY-008"}, "closed packet catalog")
     for name, expected in record["baselinePackets"].items():
-        raw = regular_bytes("task-packets/" + name + ".yaml")
+        path = "task-packets/" + name + ".yaml"
+        raw = gate_historical_bytes(path, regular_bytes(path))
         require(digest(raw) == expected, "changed predecessor YAML: " + name)
     successor_raw = regular_bytes("task-packets/" + NEW_PACKET + ".yaml")
     require(digest(successor_raw) == record["packetSha256"], "changed successor YAML")
@@ -477,11 +507,14 @@ def validate() -> None:
         "unreviewed or omitted packet path",
     )
     for path, rule in record["changedFiles"].items():
-        raw = regular_bytes(path)
+        raw = gate_historical_bytes(path, regular_bytes(path))
         require(digest(raw) == rule["afterSha256"], "current source drift: " + path)
         require(digest(historical_bytes(path, raw)) == rule["beforeSha256"], "failed exact inverse")
     for path, expected in record["newFiles"].items():
-        require(digest(regular_bytes(path)) == expected, "new source drift: " + path)
+        require(
+            digest(gate_historical_bytes(path, regular_bytes(path))) == expected,
+            "new source drift: " + path,
+        )
     archive = regular_bytes(ARCHIVE_PATH)
     require(
         digest(archive) == record["acceptedMasterSha256"]
@@ -554,7 +587,7 @@ def validate() -> None:
         and dispositions["counts"]["reconciledOpenReviewSpans"] == 51,
         "hidden unresolved source units",
     )
-    backlog = parse(regular_bytes(BACKLOG_PATH))
+    backlog = parse(gate_historical_bytes(BACKLOG_PATH, regular_bytes(BACKLOG_PATH)))
     items = backlog["items"]
     ids = [row["id"] for row in items]
     require(
@@ -596,7 +629,7 @@ def validate() -> None:
             and not (set(proposed) & old_ids),
             "proposal presented as published delivery",
         )
-    master = regular_bytes(MASTER_PATH).decode("utf-8")
+    master = gate_historical_bytes(MASTER_PATH, regular_bytes(MASTER_PATH)).decode("utf-8")
     for phrase in (
         "Require **at least one qualified baseline for every released harness capability**",
         "MET-UNIFY-005", "W01", "G04", "G09", "E01", "E12",
@@ -616,4 +649,4 @@ if __name__ == "__main__":
     except (ValueError, TypeError, KeyError, OSError, UnicodeError) as exc:
         print("Unified roadmap publication invalid: " + str(exc))
         raise SystemExit(1)
-    print("Unified roadmap source valid: 189 packets; 188 immutable predecessor YAML; no product acceptance.")
+    print("Unified roadmap source valid: 190 current packets; 189 accepted previous and 188 immutable original predecessor YAML; no product acceptance.")

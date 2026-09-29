@@ -1,6 +1,6 @@
 # Harness-Onion — unified development roadmap
 
-Accepted source baseline: 7a353b253bb257aa0abe2148e7fa62d7570f0b5a (PR #138). The roadmap-publication successor is MET-UNIFY-005; its presence in this branch is source work, not merged acceptance. The unpublished MET-UNIFY-001 local candidate at `2cb0b949ee82` exhausted LOCAL-1 and LOCAL-2. The separate unpublished MET-UNIFY-002 candidate exhausted LOCAL-1/2/3; its last isolated suite exposed a stale inherited 204-file assertion after the current YAML corpus became 205. Unpublished MET-UNIFY-003 [PR #139](https://github.com/caglarsubas/harness-onion/pull/139) passed LOCAL-1, then consumed CI-1 on a GitHub API failure before runner registration and CI-2 on a 15-minute cancellation; its runner was retired with zero registrations remaining. The CI log has a failure marker about 420 seconds after the nested predecessor test began, but cancellation prevented a final traceback; pytest was still active when the job stopped. Unpublished MET-UNIFY-004 local commit `8dbfdac` failed LOCAL-1 on a status-document packet-ID check and LOCAL-2/3 at the unchanged 750-second ceiling during outer pytest; no 004 CI or PR was started. These four candidates and their receipts remain historical evidence, none is a merged predecessor or the live 189th packet, and no allowance transfers to MET-UNIFY-005. Current development phase: **Alpha 2, open**. This page is the single current roadmap and progress entry point. The [indexed source crosswalk](alpha-2/UNIFIED_ROADMAP_TRACEABILITY.md), [accepted source index](../architecture/unified-roadmap-source-index.json), and [exact preceding master](history/master-development-plan-7a353b2.md) retain the implementation detail and history.
+Accepted source baseline: `945de93f89c94f42f1d63bff7997e3d0fa704fc4` (MET-UNIFY-005, PR #140). MET-UNIFY-006 and MET-UNIFY-007 are unpublished local candidates with exhausted LOCAL attempts; neither has PR, CI, merge or exact-main acceptance. MET-UNIFY-008 is their independently bounded replacement from accepted MET-UNIFY-005, not a 006/007 predecessor; its local acceptance, CI, merge and exact-main evidence are separate and pending. The exhausted MET-UNIFY-001/002/003/004/006/007 attempts remain recorded history with no transferred allowance. Current development phase: **Alpha 2, open**. This page is the current roadmap and progress entry point. The [native gate staging decision](alpha-2/SOURCE_NATIVE_GATE_STAGING.md), [source crosswalk](alpha-2/UNIFIED_ROADMAP_TRACEABILITY.md), [accepted source index](../architecture/unified-roadmap-source-index.json) and [preceding master](history/master-development-plan-7a353b2.md) retain their distinct scope and history.
 
 ## Product goal and first enterprise release
 
@@ -83,9 +83,9 @@ After the first enterprise release, consider E1 governed evidence-to-improvement
 
 ## Phase roadmap and current position
 
-The following is a **source-status checkpoint**, not proof of installed runtime or tenant acceptance. PR #138 placed MET-ENFORCE-003 on accepted source main. Its old “ongoing publication” headers are historical. Alpha 2 is still open.
+The following is a **source-status checkpoint**, not proof of installed runtime or tenant acceptance. PR #140 placed MET-UNIFY-005 on accepted source main at `945de93`; its old “ongoing publication” headers are historical. Alpha 2 is still open.
 
-The [item-level backlog](../architecture/unified-roadmap-backlog.json) records phase, owner, status, predecessors, blocker and planned evidence reference for every published packet and proposal; the [requirement dispositions](../architecture/unified-requirement-dispositions.json) join indexed source sections to ownership and unresolved delivery mappings. All accepted source sections now have reviewed delivery and acceptance-plan dispositions; 38 explicit unresolved markers retain actual future design, packet, native-qualification or provider obligations. They do not count as implementation or acceptance, and the affected work cannot advance until its exact owner packet closes them.
+The [item-level backlog](../architecture/unified-roadmap-backlog.json) records phase, owner, status, predecessors, blocker and planned evidence reference; the [requirement dispositions](../architecture/unified-requirement-dispositions.json) retain accepted source accounting. The MET-UNIFY-008 delta changes only the four named product packets' source-coding order. The 38 previously indexed unresolved markers still identify future design, packet, native-qualification or provider obligations, not implementation or acceptance.
 
 | Phase | ID or workstream | Current status | Deliverable / blocking fact |
 |---|---|---|---|
@@ -95,12 +95,17 @@ The [item-level backlog](../architecture/unified-roadmap-backlog.json) records p
 | Alpha 2 preparation | MET-UNIFY-002 | BLOCKED_LOCAL_ALLOWANCE_EXHAUSTED | Unpublished candidate; three LOCAL attempts consumed, stale 204-file assertion retained |
 | Alpha 2 preparation | MET-UNIFY-003 | BLOCKED_CI_ALLOWANCE_EXHAUSTED | PR #139 unmerged; LOCAL PASS, CI-1 transport failure and CI-2 15-minute cancellation; no runner remains |
 | Alpha 2 preparation | MET-UNIFY-004 | BLOCKED_LOCAL_ALLOWANCE_EXHAUSTED | Local commit only; LOCAL-1 status-check failure and LOCAL-2/3 750-second timeouts; no PR, CI or merge |
-| Alpha 2 preparation | MET-UNIFY-005 | ONGOING_SOURCE_PUBLICATION | This one-master crosswalk successor; publish and verify exact 188-packet history |
+| Alpha 2 preparation | MET-UNIFY-005 | MERGED_SOURCE_RECORDED | PR #140 at 945de93; roadmap publication, no product or native acceptance |
+| Alpha 2 preparation | MET-UNIFY-006 | BLOCKED_LOCAL_ALLOWANCE_EXHAUSTED | Unpublished commit `2e705d4`; LOCAL1 missing pinned offline Python environment, LOCAL2 failed inherited readiness at 21 history/test-identity checks; no PR, CI or merge; no allowance transfer |
+| Alpha 2 preparation | MET-UNIFY-007 | BLOCKED_LOCAL_ALLOWANCE_EXHAUSTED | Unpublished commit `47e775afd87443e9826e2f2e496cf2eae768399f`; LOCAL1 failed old status-checkpoint handling of unpublished 006, LOCAL2 failed document-repair raw parity, LOCAL3 failed host-interface current-source drift on `CTRL-INTEGRATE-001`; no PR, CI, merge or allowance transfer |
+| Alpha 2 preparation | MET-UNIFY-008 | ONGOING_SOURCE_PUBLICATION | Separate replacement from accepted 005; stage native AMD64 as a qualification gate with exact historical inverse. LOCAL1 failed outer pytest; LOCAL2 passed all 52 commands (5101 tests passed, ten existing skips, zero-bill PASS). LOCAL3 is reserved to revalidate this status synchronization; CI, merge and exact-main evidence are pending |
 | Alpha 2A | W01 | ONGOING_DESIGN | Resolve G04–G07/G09; E01–E12 remain OPEN_UNPROVEN |
 | Alpha 2A | W02–W07 | WAITING_EXACT_PACKETS | Interface, implementation, packaging and native proof labels, not executable YAML |
 | Alpha 2A | CONF-FIX-010 | BLOCKED_SAFE_DESIGN | Zero product attempts; requires separately reviewed safe design and bounded packet authority |
 | Alpha 2A | CONF-LIVE-004/005/006 | WAITING_PREREQUISITES | Native probes, package handoff and trusted campaign integration |
-| Alpha 2A | CONF-LINUX-001 native AMD64 | NOT_RUN_ENV_UNAVAILABLE | Fresh real-Linux PASS gates runtime coding of CTRL-INTEGRATE-001, MODEL-001, EXEC-001 and RUN-001; ARM64 separate |
+| Alpha 2 source | CTRL-INTEGRATE-001 / MODEL-001 / EXEC-001 / RUN-001 | WAITING_OTHER_PREDECESSORS | Source and isolated offline coding may proceed after each packet's remaining predecessors; no Linux readiness claim |
+| Alpha 2 qualification | CONF-LINUX-001 native AMD64 | NOT_RUN_ENV_UNAVAILABLE | Fresh foundation and exact product-artifact native evidence gate Linux promotion; ARM64 separate |
+| Alpha 2 qualification | Product-native binding work | WAITING_EXACT_PACKET | R12 must own independent native evidence for each selected R04/R05/R06/R08 artifact and R11 must verify the exact release-lock bindings before promotion; foundation PASS alone is insufficient |
 | Alpha 2B | Seven EXT proposal IDs | WAITING_PACKET_PUBLICATION | Contract-first provider/adapter/binding qualification, registry, UI, packaging and mode-aware reconciliation |
 | Alpha 2B onward | Sixteen OSS adoption proposal IDs | WAITING_PACKET_PUBLICATION | Owner-specific actual pinned upstream integrations and qualification |
 | Alpha 2B onward | JEV/Laya/SemIF SEM proposals | WAITING_PACKET_PUBLICATION | Optional local semantic contracts, adapters and independent evidence |
@@ -117,25 +122,26 @@ These checkboxes count only the named deliverable at the stated evidence level. 
 
 - [x] Phase 0 / Alpha 1 · MET-P0-002 · Record the five-source, license and provenance foundation in historical source evidence.
 - [x] Alpha 2 · MET-ENFORCE-003 · Merge the reviewed host-interface source candidate as PR #138 on accepted main.
-- [ ] Alpha 2 · MET-UNIFY-005 · Publish this unified roadmap with exact historical inverse, independent review, declared offline acceptance, required CI and exact-main evidence.
+- [x] Alpha 2 · MET-UNIFY-005 · Publish the unified roadmap on accepted source main as PR #140.
+- [ ] Alpha 2 · MET-UNIFY-008 · Publish the source/native gate amendment with exact historical inverse, isolated acceptance, required CI and exact-main evidence.
 - [ ] Alpha 2A · W01 · Resolve G04–G07/G09 and adopt a versioned host interface only after the required independent review.
 - [ ] Alpha 2A · CONF-FIX-010 · Complete safe design and exact authority before any product attempt.
 - [ ] Alpha 2A · CONF-LIVE-004 · Produce the exact native-probe source implementation and separately qualify it.
 - [ ] Alpha 2A · CONF-LIVE-005 · Produce a reproducible selected package and operator handoff.
 - [ ] Alpha 2A · CONF-LIVE-006 · Integrate the external trusted campaign path.
-- [ ] Alpha 2A · CONF-LINUX-001 · Obtain fresh native Linux AMD64 PASS for the blocked runtime-coding gate.
-- [ ] Alpha 2 · CTRL-INTEGRATE-001 · Complete production tenant overview and durable status projection after its Linux gate.
+- [ ] Alpha 2 · CTRL-INTEGRATE-001 · Complete production tenant overview and durable status projection after its remaining source predecessors.
+- [ ] Alpha 2A · CONF-LINUX-001 · Obtain fresh native Linux AMD64 PASS for the foundation and exact product artifacts before Linux qualification or promotion.
 - [ ] Alpha 2 · CONF-A2-001 · Qualify the exact integrated read-only profile and inherited foundation evidence.
 - [ ] Alpha 3 · CONF-A3-001 · Qualify governed action and interaction.
 - [ ] Alpha 4 · CONF-WG-001 · Produce an unsigned white-goods tenant-acceptance candidate after required enterprise campaigns.
 
 ## Launch order and acceptance boundaries
 
-1. Finish MET-UNIFY-005 as one source-only packet against accepted main: exact allowed paths, 188 predecessor YAML hashes, historical archive/inverse, source index, inherited checks and bounded attempts.
-2. Complete its declared isolated localhost acceptance and required self-hosted CI. Merge only after required checks pass, then verify exact main separately. Dashboard source registration is a later, separately owned orchestrator packet; it must show source revision and observation time without duplicating status authority.
-3. Continue W01 design and the existing conformance correction chain under their exact approved packet boundaries. W02–W07 and unpublished EXT/OSS/SEM proposals are not dispatch targets.
-4. Run native Linux campaigns only with the external trusted signed launcher, pre-existing authorized capacity and the exact server-side zero-cost admission. Missing target/backend is NOT_RUN_ENV_UNAVAILABLE, never PASS or permission to provision.
-5. Start an eligible product packet only after its published predecessor contracts, immutable locks, required native gate and repository policy are satisfied. Release qualification and tenant acceptance require their own exact evidence.
+1. Publish MET-UNIFY-008 against accepted `945de93` with the exact four-packet delta and lossless historical projection. Complete its declared isolated acceptance and required self-hosted CI; merge only on green checks and verify exact main separately.
+2. Continue W01 design and the conformance correction chain under their own packet boundaries. W02–W07 and unpublished EXT/OSS/SEM proposals are not dispatch targets; `CONF-FIX-010` remains blocked on safe design.
+3. Start an eligible product source packet after its remaining published predecessors, source locks and repository policy close. Its macOS/offline source, CI and merge evidence do not qualify Linux or authorize deployment.
+4. Run native Linux campaigns only through the external trusted signed launcher on pre-existing authorized zero-incremental-cost capacity with server-side admission. Missing target/backend is `NOT_RUN_ENV_UNAVAILABLE`, never PASS or permission to provision.
+5. Before Linux qualification or promotion, bind fresh foundation and each new product artifact to exact native AMD64 evidence. ARM64, other enterprise targets and tenant acceptance require their own independent evidence.
 
 All local packet acceptance runs use the preinstalled deny-all-outbound OS-isolated launcher, direct argv and the same process tree for prefetch and acceptance. Warm snapshots remain denied. Live campaign evidence may cover only declared deployment, runtime, security, assurance and unsigned tenant-candidate axes. Source, unit, PR, merge, SBOM/artifact, signature/release, deployment, runtime, assurance and tenant acceptance are independently recorded. A waiver never replaces a fresh required production PASS.
 

@@ -16,6 +16,13 @@ try:
 except ModuleNotFoundError:
     from scripts.safe_yaml import safe_load as safe_yaml_load
 
+try:
+    from validate_native_gate_staging import (GATED_PATHS, historical_bytes as gate_historical_bytes,
+                                             historical_catalog as gate_historical_catalog)
+except ImportError:
+    from scripts.validate_native_gate_staging import (GATED_PATHS, historical_bytes as gate_historical_bytes,
+                                                     historical_catalog as gate_historical_catalog)
+
 ROOT = Path(__file__).resolve().parents[1]
 RECORD_PATH = "architecture/proxy-contract-amendment.json"
 RECORD_SHA256 = "bf9b679d00e7ecd98b9d8c576ecd17201145a281c0019c2ca718607483048733"
@@ -217,18 +224,21 @@ def validate_proxy_contract(packets, record, inputs):
     try:
         if digest(canonical(record)) != RECORD_SHA256 or type(inputs) is not dict:
             return ["exact reviewed proxy authority required"]
+        previous_packets = gate_historical_catalog(packets)
         errors = validate_additions(packets)
         pins = {**record["protectedFiles"], **record["inputFiles"]}
         old_ids = {Path(p).stem for p in record["protectedFiles"] if p.startswith("task-packets/")}
-        if len(old_ids) != 134 or len(record["protectedFiles"]) != 176 or set(packets) != old_ids | set(ADDITIONS) | {"MET-UNIFY-005"}:
+        if len(old_ids) != 134 or len(record["protectedFiles"]) != 176 or set(packets) != old_ids | set(ADDITIONS) | {"MET-UNIFY-005", "MET-UNIFY-008"}:
             errors.append("exact historical 134 plus exact proxy, observation and custody prerequisites required")
         if set(inputs) != set(pins):
             errors.append("exact proxy authority input inventory required")
         for path, checksum in pins.items():
             raw = inputs.get(path)
+            if path in GATED_PATHS and type(raw) is bytes:
+                raw = gate_historical_bytes(path, raw)
             if type(raw) is not bytes or digest(raw) != checksum:
                 errors.append("immutable proxy input changed: " + path)
-            elif path.startswith("task-packets/") and canonical(packets.get(Path(path).stem)) != canonical(safe_yaml_load(raw)):
+            elif path.startswith("task-packets/") and canonical(previous_packets.get(Path(path).stem)) != canonical(safe_yaml_load(raw)):
                 errors.append("packet semantics/bytes differ: " + path)
         baseline = parse(inputs["architecture/proxy-contract-inputs/baseline.json"])
         if (baseline["commit"] != record["sourceBaseline"]["commit"] or len(baseline["files"]) != 127
@@ -257,7 +267,7 @@ def main():
     for error in errors:
         print("ERROR: " + error)
     if not errors:
-        print("Proxy prerequisite valid: 189 packets; 176 immutable authority files; 127-file/279-ID source checkpoint; product/native NOT_RUN.")
+        print("Proxy prerequisite valid: 190 packets; 176 immutable authority files; 127-file/279-ID source checkpoint; product/native NOT_RUN.")
     return int(bool(errors))
 
 

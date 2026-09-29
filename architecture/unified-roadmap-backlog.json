@@ -2,15 +2,16 @@
   "schemaVersion": "planeon.internal.unified-roadmap-backlog/v1",
   "evidenceClass": "SOURCE_BACKLOG_NOT_EXECUTION_AUTHORITY_OR_ACCEPTANCE",
   "acceptedBase": "7a353b253bb257aa0abe2148e7fa62d7570f0b5a",
-  "interpretation": "Published packet rows preserve the accepted YAML and exact predecessor set, not current implementation or qualification. Checklist rows are projections and alone form the counted denominator. Unpublished proposals and work labels are never dispatch targets.",
+  "interpretation": "The accepted 7a353b2 source census remains recoverable through the MET-UNIFY-005 authority. MET-UNIFY-006 and MET-UNIFY-007 are unpublished failed local candidates with exhausted attempts, neither predecessors nor counted completions. Current packet rows reflect the independent MET-UNIFY-008 source/native timing replacement directly from accepted 005; neither specification publication nor a checklist claim proves product implementation, native qualification or tenant acceptance. Checklist rows alone form the counted denominator. Unpublished proposals and work labels are never dispatch targets.",
   "counts": {
-    "publishedPackets": 188,
+    "publishedPackets": 189,
     "unpublishedAdoptionAndExtensionProposals": 23,
     "currentPacketCandidateNotAcceptedBaseline": 1,
-    "countedChecklistProjections": 13,
+    "failedUnpublishedLocalCandidate": 2,
+    "countedChecklistProjections": 14,
     "unpublishedSemanticProposals": 11,
     "postReleaseEvolutionMilestones": 3,
-    "totalItems": 239
+    "totalItems": 243
   },
   "items": [
     {
@@ -1392,14 +1393,13 @@
       "harnessIds": [
         "CROSS_HARNESS"
       ],
-      "status": "WAITING_NATIVE_LINUX_GATE",
+      "status": "WAITING_OTHER_PREDECESSORS",
       "predecessorIds": [
-        "CTRL-FIX-003",
-        "CONF-LINUX-001"
+        "CTRL-FIX-003"
       ],
-      "blockingReason": "Fresh native AMD64 PASS and published predecessor contracts are required.",
+      "blockingReason": "Source implementation waits for its remaining predecessor and exact approved packet; fresh native AMD64 foundation and product-artifact proof still gate Linux release deployment, runtime qualification and promotion.",
       "evidenceRefs": [
-        "task-packets/CTRL-INTEGRATE-001.yaml@28441f4febf41c7228b516ca8f674785d28842aa6c3443f8fefebeb4a6e7de95",
+        "task-packets/CTRL-INTEGRATE-001.yaml@7f729da54e0375afe05d7eed676fcdd508d2978fb7fbf92c4f1e3d29818e1986",
         "task-packets/README.md#order-114"
       ],
       "publishedPacket": true,
@@ -1587,17 +1587,16 @@
       "harnessIds": [
         "CROSS_HARNESS"
       ],
-      "status": "WAITING_NATIVE_LINUX_GATE",
+      "status": "WAITING_OTHER_PREDECESSORS",
       "predecessorIds": [
         "SDK-004",
         "TRUST-001",
         "KN-001",
-        "MET-003",
-        "CONF-LINUX-001"
+        "MET-003"
       ],
-      "blockingReason": "Fresh native AMD64 PASS and published predecessor contracts are required.",
+      "blockingReason": "Source implementation waits for its remaining predecessors and exact approved packet; fresh native AMD64 foundation and product-artifact proof still gate Linux release deployment, runtime qualification and promotion.",
       "evidenceRefs": [
-        "task-packets/EXEC-001.yaml@7a6a95f429315d157c8f2ee4bcfb63584bbfd2ae9dcfb26420adaf30fbf76108",
+        "task-packets/EXEC-001.yaml@525c65dc04375f6b8476a0af81119b6bde23349c58eede8e45107d00f9b70be0",
         "task-packets/README.md#order-122"
       ],
       "publishedPacket": true,
@@ -3410,18 +3409,17 @@
       "harnessIds": [
         "H2"
       ],
-      "status": "WAITING_NATIVE_LINUX_GATE",
+      "status": "WAITING_OTHER_PREDECESSORS",
       "predecessorIds": [
         "SDK-003",
         "CON-006",
         "MET-002",
         "MET-003",
-        "CON-MODEL-001",
-        "CONF-LINUX-001"
+        "CON-MODEL-001"
       ],
-      "blockingReason": "Fresh native AMD64 PASS and published predecessor contracts are required.",
+      "blockingReason": "Source implementation waits for its remaining predecessors and exact approved packet; fresh native AMD64 foundation and product-artifact proof still gate Linux release deployment, runtime qualification and promotion.",
       "evidenceRefs": [
-        "task-packets/MODEL-001.yaml@753847ad57b2247a281b23c8f7db1956da3ae5d33f32433b25e80d44585160c0",
+        "task-packets/MODEL-001.yaml@8e9784fa38229cf6bef73da92d26adbdf71a59d9d87e0c7cd1a5d10c4dd37610",
         "task-packets/README.md#order-115"
       ],
       "publishedPacket": true,
@@ -3717,16 +3715,15 @@
       "harnessIds": [
         "CROSS_HARNESS"
       ],
-      "status": "WAITING_NATIVE_LINUX_GATE",
+      "status": "WAITING_OTHER_PREDECESSORS",
       "predecessorIds": [
         "SDK-004",
         "TRUST-001",
-        "MET-003",
-        "CONF-LINUX-001"
+        "MET-003"
       ],
-      "blockingReason": "Fresh native AMD64 PASS and published predecessor contracts are required.",
+      "blockingReason": "Source implementation waits for its remaining predecessors and exact approved packet; fresh native AMD64 foundation and product-artifact proof still gate Linux release deployment, runtime qualification and promotion.",
       "evidenceRefs": [
-        "task-packets/RUN-001.yaml@4fa60ad4793d2268ccd5f84e0cbc4ce3d45340abf2ba824b30cc895b5a618457",
+        "task-packets/RUN-001.yaml@0ba7c24b066bede43f21abfa0a6feffc9b9ac96edc556523e86a64b6f07f050a",
         "task-packets/README.md#order-125"
       ],
       "publishedPacket": true,
@@ -4665,21 +4662,78 @@
     },
     {
       "id": "MET-UNIFY-005",
-      "kind": "CURRENT_PACKET_CANDIDATE_NOT_ACCEPTED_BASELINE",
+      "kind": "PUBLISHED_PACKET",
       "description": "Publish a single current Harness-Onion roadmap and complete requirement traceability with exact reversible predecessor history; source-only planning, no product or runtime adoption.",
       "phase": "ALPHA_2",
       "ownerRepoId": "R00",
       "harnessIds": [
         "CROSS_HARNESS"
       ],
-      "status": "ONGOING_SOURCE_PUBLICATION",
+      "status": "MERGED_SOURCE_RECORDED",
       "predecessorIds": [
         "MET-ENFORCE-003"
       ],
-      "blockingReason": "Independent source review, declared isolated local acceptance, required CI, protected merge and exact-main verification remain separate gates.",
+      "blockingReason": "PR #140 accepted source at 945de93; product implementation, native qualification and tenant acceptance remain separate.",
       "evidenceRefs": [
-        "task-packets/MET-UNIFY-005.yaml",
+        "task-packets/MET-UNIFY-005.yaml@25ee74d61707dbb4b0ac7009dc1c8190848890eae084276fa2fe7986e15e66a2",
+        "accepted-main@945de93f89c94f42f1d63bff7997e3d0fa704fc4",
         "docs/MASTER_DEVELOPMENT_PLAN.md#phase-roadmap-and-current-position"
+      ],
+      "publishedPacket": true,
+      "executionAuthority": "NOT_GRANTED_BY_THIS_RECORD"
+    },
+    {
+      "id": "MET-UNIFY-006",
+      "kind": "FAILED_UNPUBLISHED_LOCAL_CANDIDATE",
+      "description": "Retain the first source/native gate amendment candidate and its two failed isolated local attempts; it was never published or accepted and grants no execution authority.",
+      "phase": "ALPHA_2",
+      "ownerRepoId": "R00",
+      "harnessIds": ["CROSS_HARNESS"],
+      "status": "BLOCKED_LOCAL_ALLOWANCE_EXHAUSTED",
+      "predecessorIds": ["MET-UNIFY-005"],
+      "blockingReason": "LOCAL1 stopped before product validation because the fresh worktree lacked the pinned offline PyYAML environment. LOCAL2 used the preinstalled exact toolchain, passed the network canary and YAML measurement, then failed inherited readiness validation at 21 historical-projection/test-identity errors. Both LOCAL allowances were consumed; no CI, PR, merge or exact-main evidence exists. MET-UNIFY-008 has separate bounded authority and does not inherit or replay these attempts.",
+      "evidenceRefs": [
+        "local-unpublished-commit@2e705d421b0bef21b0bc37fa62e4b5a6b63c468d",
+        "task-packets/MET-UNIFY-006.yaml@18ba1a60e91965ac35d8a877ce5c57568f879f91b6374af8c4ed157c0b7101e4",
+        "architecture/native-gate-staging-authority.json@0725433bf15caa3756e01970f07e43d4e9d6e9cc1e84dc4b178fa96584e25162",
+        "architecture/native-gate-staging.json@adeaced2569b41f583199e0a3dfdee9b704ae5b7132d18eea4597f8963ddeb71",
+        "docs/alpha-2/SOURCE_NATIVE_GATE_STAGING.md#retained-failed-candidates"
+      ],
+      "publishedPacket": false,
+      "executionAuthority": "NONE"
+    },
+    {
+      "id": "MET-UNIFY-007",
+      "kind": "FAILED_UNPUBLISHED_LOCAL_CANDIDATE",
+      "description": "Retain the second source/native gate amendment candidate and all three failed isolated local attempts; it was never published or accepted and grants no execution authority.",
+      "phase": "ALPHA_2",
+      "ownerRepoId": "R00",
+      "harnessIds": ["CROSS_HARNESS"],
+      "status": "BLOCKED_LOCAL_ALLOWANCE_EXHAUSTED",
+      "predecessorIds": ["MET-UNIFY-005"],
+      "blockingReason": "LOCAL1 stopped at historical status validation of the unpublished MET-UNIFY-006 ID. LOCAL2 passed earlier history/custody checks but stopped at document-repair raw packet parity. LOCAL3 stopped at host-interface current-source drift on CTRL-INTEGRATE-001. All three LOCAL allowances were consumed; no CI, PR, merge or exact-main evidence exists. MET-UNIFY-008 is a separate bounded replacement directly from accepted 005, not a successor or allowance transfer.",
+      "evidenceRefs": [
+        "local-unpublished-commit@47e775afd87443e9826e2f2e496cf2eae768399f",
+        "task-packets/MET-UNIFY-007.yaml@f4ae338db253af3d25c11568c5574808bbec5ef9df1258c1e0caecab960f3599",
+        "architecture/native-gate-staging-authority.json@9652193ef581f740f1aec5f0270efd7705d1b6b4281fbaf005af6254b60fa83f",
+        "docs/alpha-2/SOURCE_NATIVE_GATE_STAGING.md#retained-failed-candidates"
+      ],
+      "publishedPacket": false,
+      "executionAuthority": "NONE"
+    },
+    {
+      "id": "MET-UNIFY-008",
+      "kind": "CURRENT_PACKET_CANDIDATE_NOT_ACCEPTED_BASELINE",
+      "description": "Stage native Linux AMD64 as an exact Linux release/qualification gate instead of a clean-room source-coding predecessor, with lossless accepted-source projection.",
+      "phase": "ALPHA_2",
+      "ownerRepoId": "R00",
+      "harnessIds": ["CROSS_HARNESS"],
+      "status": "ONGOING_SOURCE_PUBLICATION",
+      "predecessorIds": ["MET-UNIFY-005"],
+      "blockingReason": "Separate source-only replacement directly from accepted MET-UNIFY-005. Failed 006 LOCAL1/2 and 007 LOCAL1/2/3 remain exhausted and cannot transfer. Its own LOCAL1 passed commands 1-50, failed command 51 outer pytest at five assertions, and did not reach command 52. The count/history assertions were repaired in allowed paths. LOCAL2 passed all 52 isolated commands: 5101 tests passed, ten existing skips, zero-bill PASS. LOCAL3 is reserved for exact-byte status synchronization; required self-hosted CI, protected merge and exact-main verification remain pending.",
+      "evidenceRefs": [
+        "task-packets/MET-UNIFY-008.yaml",
+        "docs/alpha-2/SOURCE_NATIVE_GATE_STAGING.md"
       ],
       "publishedPacket": false,
       "executionAuthority": "NOT_GRANTED_BY_THIS_RECORD"
@@ -4736,14 +4790,29 @@
       "harnessIds": [
         "CROSS_HARNESS"
       ],
-      "status": "ONGOING_SOURCE_PUBLICATION",
+      "status": "MERGED_SOURCE_RECORDED",
       "predecessorIds": [
 
       ],
-      "blockingReason": "Read the matching current phase row and exact packet gate; a checkbox alone grants no action.",
+      "blockingReason": "Recorded source-level completion does not prove product, native or tenant acceptance.",
       "evidenceRefs": [
         "docs/MASTER_DEVELOPMENT_PLAN.md#counted-near-term-checklist"
       ],
+      "publishedPacket": false,
+      "executionAuthority": "NONE"
+    },
+    {
+      "id": "CHECKLIST:MET-UNIFY-008",
+      "deliverableId": "MET-UNIFY-008",
+      "kind": "COUNTED_MASTER_CHECKLIST_PROJECTION",
+      "description": "Publish the source/native gate amendment with exact historical inverse, isolated acceptance, required CI and exact-main evidence.",
+      "phase": "Alpha 2",
+      "ownerRepoId": "R00",
+      "harnessIds": ["CROSS_HARNESS"],
+      "status": "ONGOING_SOURCE_PUBLICATION",
+      "predecessorIds": ["MET-UNIFY-005"],
+      "blockingReason": "Read the matching current phase row and exact packet gate; a checkbox alone grants no action.",
+      "evidenceRefs": ["docs/MASTER_DEVELOPMENT_PLAN.md#counted-near-term-checklist"],
       "publishedPacket": false,
       "executionAuthority": "NONE"
     },
@@ -4858,7 +4927,7 @@
       "id": "CHECKLIST:CONF-LINUX-001",
       "deliverableId": "CONF-LINUX-001",
       "kind": "COUNTED_MASTER_CHECKLIST_PROJECTION",
-      "description": "Obtain fresh native Linux AMD64 PASS for the blocked runtime-coding gate.",
+      "description": "Obtain fresh native Linux AMD64 foundation and exact product-artifact proof before Linux release deployment, runtime qualification or promotion.",
       "phase": "Alpha 2A",
       "ownerRepoId": "R12",
       "harnessIds": [
@@ -4883,16 +4952,15 @@
       "id": "CHECKLIST:CTRL-INTEGRATE-001",
       "deliverableId": "CTRL-INTEGRATE-001",
       "kind": "COUNTED_MASTER_CHECKLIST_PROJECTION",
-      "description": "Complete production tenant overview and durable status projection after its Linux gate.",
+      "description": "Complete source and offline production tenant overview after remaining predecessors; qualify the Linux installation separately.",
       "phase": "Alpha 2",
       "ownerRepoId": "R04",
       "harnessIds": [
         "CROSS_HARNESS"
       ],
-      "status": "WAITING_NATIVE_LINUX_GATE",
+      "status": "WAITING_OTHER_PREDECESSORS",
       "predecessorIds": [
-        "CTRL-FIX-003",
-        "CONF-LINUX-001"
+        "CTRL-FIX-003"
       ],
       "blockingReason": "Read the matching current phase row and exact packet gate; a checkbox alone grants no action.",
       "evidenceRefs": [

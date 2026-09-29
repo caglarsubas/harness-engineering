@@ -1,5 +1,15 @@
 # Repository Plan: `mas-harness-control-plane`
 
+## Current source/native gate — MET-UNIFY-008
+
+`CTRL-INTEGRATE-001` may proceed with clean-room source and isolated offline
+acceptance after its remaining predecessor under the
+[versioned gate decision](../alpha-2/SOURCE_NATIVE_GATE_STAGING.md). The older
+early-Linux-before-coding section below is retained history. Fresh native
+AMD64 foundation and exact Next.js artifact proof still gate Linux release
+deployment, runtime qualification and promotion; no tenant overview runtime
+or acceptance is claimed here.
+
 ## Current research-led implementation direction — MET-ADOPT-002
 
 [Harness / paper / upstream repository map](../alpha-2/HARNESS_PAPER_REPOSITORY_MAP.md)

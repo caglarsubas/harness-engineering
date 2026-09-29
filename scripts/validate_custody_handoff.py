@@ -26,6 +26,13 @@ try:
 except ImportError:
     from scripts.validate_credential_ordering import historical_bytes, current_test_bytes, validate_additions as ordering_additions
 
+try:
+    from validate_native_gate_staging import (GATED_PATHS, historical_bytes as gate_historical_bytes,
+                                             historical_catalog as gate_historical_catalog)
+except ImportError:
+    from scripts.validate_native_gate_staging import (GATED_PATHS, historical_bytes as gate_historical_bytes,
+                                                     historical_catalog as gate_historical_catalog)
+
 ROOT = Path(__file__).resolve().parents[1]
 RECORD_PATH = "architecture/custody-handoff-amendment.json"
 RECORD_SHA256 = "26d0301045c60908850ec225fa497d73da4c4125c377e74a931d41c83d57c491"
@@ -255,16 +262,20 @@ def validate_delta(after, proof, record, before_raw):
 def validate_custody_handoff(packets, record, inputs):
     try:
         pinned(record)
+        previous_packets = gate_historical_catalog(packets)
         errors = validate_additions(packets)
         old = {Path(p).stem for p in record["protectedFiles"] if p.startswith("task-packets/")}
-        require(len(old) == 136 and set(packets) == old | set(ADDITIONS) | {"MET-UNIFY-005"}, "136 predecessors plus two custody packets required")
+        require(len(old) == 136 and set(packets) == old | set(ADDITIONS) | {"MET-UNIFY-005", "MET-UNIFY-008"}, "136 predecessors plus two custody packets required")
         pins = {**record["protectedFiles"], **record["inputFiles"]}
         require(type(inputs) is dict and set(inputs) == set(pins), "exact custody input inventory required")
         for path, checksum in pins.items():
-            raw = historical_bytes(path, inputs[path])
+            current_raw = inputs[path]
+            if path in GATED_PATHS and type(current_raw) is bytes:
+                current_raw = gate_historical_bytes(path, current_raw)
+            raw = historical_bytes(path, current_raw)
             require(type(raw) is bytes and digest(raw) == checksum, "immutable input changed: " + path)
             if path.startswith("task-packets/"):
-                require(canonical(packets[Path(path).stem]) == packet_semantics(raw), "packet bytes/semantics mismatch")
+                require(canonical(previous_packets[Path(path).stem]) == packet_semantics(raw), "packet bytes/semantics mismatch")
         baseline = parse(inputs[record["sourceBaseline"]["path"]])
         before = parse(inputs[BEFORE_PATH])
         require(len(baseline["files"]) == 127 and baseline["testCount"] == 279
@@ -292,7 +303,7 @@ def main():
     for error in errors:
         print("ERROR: " + error)
     if not errors:
-        print("Custody handoff authority valid: 189 packets; 127-file/279-ID history preserved; product/native NOT_RUN.")
+        print("Custody handoff authority valid: 190 packets; 127-file/279-ID history preserved; product/native NOT_RUN.")
     return int(bool(errors))
 
 

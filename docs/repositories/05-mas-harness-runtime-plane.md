@@ -1,5 +1,14 @@
 # Repository Plan: `mas-harness-runtime-plane`
 
+## Current source/native gate — MET-UNIFY-008
+
+`RUN-001` may proceed with clean-room source and isolated offline acceptance
+after its remaining predecessors under the
+[versioned gate decision](../alpha-2/SOURCE_NATIVE_GATE_STAGING.md). The older
+early-Linux-before-coding section below is retained history. Fresh native
+AMD64 foundation and exact runtime artifact proof still gate Linux release
+deployment, runtime qualification and promotion.
+
 ## Current research-led implementation direction — MET-ADOPT-002
 
 [Harness / paper / upstream repository map](../alpha-2/HARNESS_PAPER_REPOSITORY_MAP.md)

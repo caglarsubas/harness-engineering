@@ -1,8 +1,8 @@
 # Sol-High Task Packet Catalog
 
-## Current source status — MET-UNIFY-005 roadmap candidate
+## Current source status — MET-UNIFY-008 native gate staging
 
-The [unified master roadmap](../docs/MASTER_DEVELOPMENT_PLAN.md) is the current phase/status entry point. The accepted baseline has 188 published packet specifications; this branch adds `MET-UNIFY-005` as the 189th source-only packet, pending its own isolated acceptance, required CI, merge and exact-main verification. Older “current” headings below are historical snapshots, not dispatch authority. The [item-level backlog](../architecture/unified-roadmap-backlog.json) distinguishes packet publication, proposals and counted checklist projections; no packet is approved for execution by appearing in this catalog.
+The [unified master roadmap](../docs/MASTER_DEVELOPMENT_PLAN.md) is the current phase/status entry point. Accepted `945de93` contains 189 packet specifications. Unpublished `MET-UNIFY-006` exhausted LOCAL1/2; unpublished `MET-UNIFY-007` at `47e775afd87443e9826e2f2e496cf2eae768399f` exhausted LOCAL1/2/3. Neither has PR, CI, merge or exact-main evidence; their attempts and hashes remain in the [item-level backlog](../architecture/unified-roadmap-backlog.json), but their YAML is not added to the current catalog. This separate branch proposes `MET-UNIFY-008` as the 190th source-only packet directly from accepted `MET-UNIFY-005`, with its own finite LOCAL3/CI2/exact-main1 budget and all acceptance, CI, merge and exact-main verification pending. The [current gate decision](../docs/alpha-2/SOURCE_NATIVE_GATE_STAGING.md) removes native AMD64 PASS from the four named product packets' coding predecessors while retaining exact native qualification before Linux promotion. Older “current” headings and their old coding-order statements below are historical snapshots. The backlog distinguishes publication, failed candidates, proposals and counted checklist projections; catalog presence grants no execution authority.
 
 ## Current reviewed interface candidate — MET-ENFORCE-003
 
@@ -650,7 +650,12 @@ corrections. Production integration is independently required by CONF-A2-001.
 
 This table is a valid topological order. Parallel execution is permitted only when all predecessors are complete and the packet boundaries do not conflict.
 
-## Early Linux runtime coding gate
+## Historical early Linux runtime coding gate
+
+The following section records the original `MET-LINUX-001` timing rule. Its
+native-before-coding requirement is superseded only for the four named product
+packets by [MET-UNIFY-008](../docs/alpha-2/SOURCE_NATIVE_GATE_STAGING.md).
+Native AMD64 evidence still gates Linux qualification and promotion.
 
 MET-LINUX-001 adds a stricter gate described in
 [Linux readiness](../docs/alpha-2/LINUX_READINESS.md). CTRL-INTEGRATE-001,
@@ -704,6 +709,9 @@ The draft has 1048 passed, one failed, zero skipped; cancelled CI is not PASS.
 Normal model-contract completeness review and full source/CI/main gates remain.
 
 ## Approved trusted live backend enablement — MET-LIVE-001
+
+The dispatch timing below is historical. The current four-packet source gate and
+native release gate are in [MET-UNIFY-008](../docs/alpha-2/SOURCE_NATIVE_GATE_STAGING.md).
 
 The [coding guide](../docs/alpha-2/LIVE_BACKEND_READINESS.md) and closed
 `architecture/live-backend-roadmap.json` add six sequential conformance packets
@@ -893,3 +901,4 @@ acceptance is claimed. Alpha2 ONGOING; model-effort transition NOT_DUE.
 | 187 | `MET-PERF-018` | `Harness-Engineering` | Single-traversal validation repair; no draft retry |
 | 188 | `MET-ENFORCE-003` | `Harness-Engineering` | Independently reviewed host-interface candidate and unresolved gates |
 | 189 | `MET-UNIFY-005` | `Harness-Engineering` | Unified current roadmap, accepted-source traceability and reversible predecessor history |
+| 190 | `MET-UNIFY-008` | `Harness-Engineering` | Four-packet source/native gate staging with exact historical inverse and unchanged native release qualification |

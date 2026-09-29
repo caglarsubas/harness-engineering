@@ -32,7 +32,7 @@ def test_current_publication_is_authority_only(inputs):
     assert all(target["status"] == "NOT_RUN_ENV_UNAVAILABLE" for target in policy["targets"])
     assert policy["completedCorrection"]["linuxProof"] is False
     assert policy["currentPacketCount"] == 118  # Immutable historical policy.
-    assert len(packets) == 189
+    assert len(packets) == 190
 
 
 @pytest.mark.parametrize(("path", "replacement"), [
@@ -103,7 +103,7 @@ def test_added_write_or_source_authority_rejected(inputs, packet_id):
 def test_runtime_predecessor_and_stricter_evidence_both_required(inputs, packet_id):
     packets, policy = inputs
     modified = deepcopy(packets)
-    modified[packet_id]["predecessors"].remove("CONF-LINUX-001")
+    modified[packet_id]["predecessors"].append("CONF-LINUX-001")
     assert validate_linux_readiness(modified, policy)
     modified = deepcopy(packets)
     modified[packet_id]["expectedEvidence"].pop()

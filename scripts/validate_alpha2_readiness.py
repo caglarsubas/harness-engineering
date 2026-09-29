@@ -78,7 +78,7 @@ def validate_model_authority(packets: dict[str, Any], boundary: Any) -> list[str
         "MET-A2-001": ["MET-P0-002", "CONF-A1-001"],
         "MET-OBS-MODEL-001": ["MET-A2-001"],
         "CON-MODEL-001": ["CON-007", "MET-OBS-MODEL-001", "CON-FIX-001", "CTRL-FIX-003", "MET-REPAIR-005", "MET-REPAIR-006"],
-        "MODEL-001": ["SDK-003", "CON-006", "MET-002", "MET-003", "CON-MODEL-001", "CONF-LINUX-001"],
+        "MODEL-001": ["SDK-003", "CON-006", "MET-002", "MET-003", "CON-MODEL-001"],
     }
     for packet_id, expected in expected_predecessors.items():
         packet = packets.get(packet_id, {})
@@ -125,7 +125,9 @@ def validate_checkpoint(root: Path, packets: dict[str, Any]) -> list[str]:
     text = (root / "docs/DEVELOPMENT_STATUS.md").read_text(encoding="utf-8")
     errors: list[str] = []
     ids = set(re.findall(r"`([A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+)`", text))
-    if ids - set(packets):
+    # The failed 006 and 007 candidates remain in the status ledger, not the
+    # published packet catalog. The current gate validator pins both records.
+    if ids - (set(packets) | {"MET-UNIFY-006", "MET-UNIFY-007"}):
         errors.append("status checkpoint names unknown packet IDs")
     for packet_id in ("MET-A2-001", "MET-OBS-MODEL-001", "CON-MODEL-001", "MODEL-001"):
         if not any(line.startswith("| Alpha 2 |") and f"`{packet_id}`" in line

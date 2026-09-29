@@ -14,7 +14,22 @@ def authority():
 def test_exact_current_publication_and_history(authority):
     packets, record, inputs = authority
     assert module.validate_authority(*authority) == []
-    assert len(packets) == 189 and len(module.historical_catalog(packets)) == 187
+    assert len(packets) == 190 and len(module.historical_catalog(packets)) == 187
+    gate_only = (set(module.gate_authority()['changedFiles']) & set(inputs)
+                 - set(module.unified_authority()['changedFiles']))
+    assert gate_only == {
+        'docs/alpha-2/LIVE_BACKEND_READINESS.md',
+        'task-packets/CTRL-INTEGRATE-001.yaml',
+        'task-packets/MODEL-001.yaml',
+        'task-packets/EXEC-001.yaml',
+        'task-packets/RUN-001.yaml',
+    }
+    pins = {**record['protectedFiles'], **record['inputFiles'],
+            **{path: rule['afterSha256'] for path, rule in record['metaRecipes'].items()}}
+    for path in gate_only:
+        assert module.digest(module.unified_history(path, inputs[path])) == pins[path]
+        with pytest.raises(ValueError):
+            module.unified_history(path, inputs[path] + b' ')
     for path, rule in record['metaRecipes'].items():
         before = module.historical_bytes(path, inputs[path])
         assert module.apply_recipe(before, rule) == module.unified_history(path, inputs[path])
@@ -223,7 +238,8 @@ def test_new_link_has_one_successor_and_fresh_local_authority(authority, monkeyp
     current = deepcopy(authority[0])
     result = getattr(prior, entry)(current)
     assert result == ([] if entry == 'validate_additions' else
-                      {k: v for k, v in current.items() if k not in ('MET-UNIFY-005', 'MET-ENFORCE-003', 'MET-PERF-018')})
+                      {k: v for k, v in module.unified_catalog(current).items()
+                       if k not in ('MET-ENFORCE-003', 'MET-PERF-018')})
     assert current == authority[0]
     assert len(calls) == 1 and len(reads) == (1 if entry == 'validate_additions' else 2)
     prior.validate_call_structure(authority[2]['scripts/validate_catalog_traversal.py'], 'integration_catalog')

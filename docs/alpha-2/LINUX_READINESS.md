@@ -1,5 +1,14 @@
 # Early Linux readiness — MET-LINUX-001
 
+> Current source/native timing is superseded for `CTRL-INTEGRATE-001`,
+> `MODEL-001`, `EXEC-001` and `RUN-001` by
+> [MET-UNIFY-008](SOURCE_NATIVE_GATE_STAGING.md). Those packets may code and
+> test offline after their other predecessors. This historical Linux campaign
+> and its mandatory native AMD64 evidence remain required before Linux release
+> deployment, runtime qualification or promotion; `NOT_RUN_ENV_UNAVAILABLE`
+> is not PASS. Campaign-scoped test deployment is separately signed and is not
+> a release deployment.
+
 Status: roadmap authority, not Linux execution evidence. Published in Alpha 2
 after the contracts correction. The platform targets Linux; macOS remains a
 supported development workstation, not an enterprise runtime dependency.

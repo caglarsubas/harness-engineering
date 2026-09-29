@@ -1,13 +1,27 @@
 # Repository Plan: `Harness-Engineering`
 
-## Current roadmap publication — MET-UNIFY-005
+## Current roadmap publication — MET-UNIFY-008
 
 The [master plan](../MASTER_DEVELOPMENT_PLAN.md) is the current roadmap and
-progress entry point. The [source traceability record](../alpha-2/UNIFIED_ROADMAP_TRACEABILITY.md)
-and accepted-source index preserve the earlier requirements, owner mapping and
-packet history. MET-UNIFY-005 owns only source publication and its closed
-validation bridge; no W01 runtime or native qualification is claimed. The
-following checkpoint headings are retained historical records.
+progress entry point. Accepted `MET-UNIFY-005` at `945de93` preserves the
+[source traceability record](../alpha-2/UNIFIED_ROADMAP_TRACEABILITY.md) and
+accepted-source index. `MET-UNIFY-008` proposes only the four-packet
+[source/native gate amendment](../alpha-2/SOURCE_NATIVE_GATE_STAGING.md): code
+and isolated offline tests may proceed after other predecessors, while exact
+native AMD64 proof remains required before Linux qualification or promotion.
+The unpublished `MET-UNIFY-006` local candidate remains failed with both LOCAL
+attempts exhausted. The separate unpublished `MET-UNIFY-007` candidate at
+`47e775afd87443e9826e2f2e496cf2eae768399f` exhausted LOCAL1 at the old
+status-checkpoint handling of 006, LOCAL2 at document-repair raw parity and
+LOCAL3 at host-interface current-source drift on `CTRL-INTEGRATE-001`; it has
+no PR, CI, merge or exact-main evidence. This 008 candidate is a separately
+bounded replacement directly from accepted `MET-UNIFY-005`, not a successor
+to 006/007 or an allowance transfer. R12 product-native qualification
+and R11 release-lock verification still need exact follow-on packets before
+any new artifact can be promoted.
+The amendment claims no W01 adoption, conformance repair, installed backend,
+native PASS or tenant acceptance. `CONF-FIX-010` remains blocked on safe design.
+The following checkpoint headings are retained historical records.
 
 ## Earlier publication checkpoints
 
@@ -599,6 +613,7 @@ Every packet uses branch `codex/<packet-id>`, changes only named paths, opens a 
 61. `MET-PERF-018`: repair duplicate catalog traversal; preserve blocked PR136 and its consumed allowances.
 62. `MET-ENFORCE-003`: explicitly reconcile the blocked reviewed-interface publication on repaired main; preserve its failed lineage and unresolved gates.
 63. `MET-UNIFY-005`: publish the single current roadmap, complete accepted-source traceability and exact predecessor-history bridge; source only.
+64. `MET-UNIFY-008`: stage native AMD64 at Linux release qualification for four existing product packets, with their earlier bytes and all campaign gates preserved; source only.
 
 ## Testing, verification, and acceptance
 
@@ -665,7 +680,11 @@ not claims made by JSON Schema validation.
 - No cloud CLIs, Terraform providers, paid-provider URLs, external telemetry, API-key variables, or secret values.
 - PRs from forks are never executed on trusted self-hosted runners until reviewed and imported into a trusted branch.
 
-## Early Linux implementation gate
+## Historical early Linux implementation gate
+
+The old source-coding timing below was superseded only for the four named
+product packets by [MET-UNIFY-008](../alpha-2/SOURCE_NATIVE_GATE_STAGING.md).
+The native campaign and release qualification requirements remain.
 
 MET-LINUX-001 owns the closed Linux policy, its validator/tests, catalog and
 phase-labelled checkpoint. MET-LINUX-002 owns ci/linux-runner/,
@@ -712,6 +731,9 @@ routes historical bytes to the pinned old packet and validates only the exact
 current successor. No consumed authority, root installation or product edit.
 
 ## Approved trusted live backend enablement — MET-LIVE-001
+
+The dispatch order below records the historical publication. The current
+source/native timing is [MET-UNIFY-008](../alpha-2/SOURCE_NATIVE_GATE_STAGING.md).
 
 The [coding guide](../alpha-2/LIVE_BACKEND_READINESS.md) and closed
 `architecture/live-backend-roadmap.json` add six sequential conformance packets

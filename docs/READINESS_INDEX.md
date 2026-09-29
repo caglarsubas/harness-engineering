@@ -1,12 +1,12 @@
 # Implementation Readiness Index
 
-## Current source status — MET-UNIFY-005 roadmap candidate
+## Current source status — MET-UNIFY-008 native gate staging
 
 Read the [unified master development plan](MASTER_DEVELOPMENT_PLAN.md) for current phase position, blockers, ownership and the next eligible work. This index retains implementation-readiness requirements and historical evidence references; earlier "current" sections are revision-local checkpoints, not present execution authority.
 
-The accepted source baseline is `7a353b253bb257aa0abe2148e7fa62d7570f0b5a` with 188 published packet specifications. `MET-UNIFY-005` is a proposed source-only publication until its isolated local acceptance, required self-hosted CI, merge and exact-main verification are recorded separately. W01 design is still open; Linux AMD64 qualification, installed foundations, integrated read-only profile and tenant acceptance are not established by roadmap consolidation. `CONF-FIX-009` remains allowance-exhausted, and `CONF-FIX-010` remains blocked on safe design. Alpha 2 is open, so model-effort transition is not due.
+`MET-UNIFY-005` is accepted at `945de93f89c94f42f1d63bff7997e3d0fa704fc4` with 189 packet specifications. `MET-UNIFY-008` is a proposed 190th source-only packet until its isolated local acceptance, required self-hosted CI, merge and exact-main verification are recorded separately. Its [source/native gate decision](alpha-2/SOURCE_NATIVE_GATE_STAGING.md) permits the four named product packets to code and test offline after their other predecessors; exact native AMD64 evidence remains mandatory before Linux qualification or promotion. Current AMD64 and ARM64 status is `NOT_RUN_ENV_UNAVAILABLE`. W01 G04–G07/G09 and E01–E12 remain open; `CONF-FIX-010` remains `BLOCKED_SAFE_DESIGN` with zero product attempts. Alpha 2 is open and model-effort transition is not due.
 
-The retained checkpoint sections below remain historical evidence and are not additional current checklist completions.
+The retained checkpoint sections below remain historical evidence. Their earlier native-before-coding statements are superseded only for `CTRL-INTEGRATE-001`, `MODEL-001`, `EXEC-001` and `RUN-001`; all native campaign, trust, zero-cost and release gates remain in force.
 
 ## Current reviewed interface candidate — MET-ENFORCE-003
 
@@ -538,6 +538,11 @@ Trust:
 
 ## Early Linux readiness publication
 
+This section records the original `MET-LINUX-001` publication. Its coding-order
+rule is superseded for the four product packets by the current
+[MET-UNIFY-008 decision](alpha-2/SOURCE_NATIVE_GATE_STAGING.md). The original
+native cases, exact binding, unavailable result and ARM64 separation remain.
+
 [LINUX_READINESS.md](alpha-2/LINUX_READINESS.md) defines MET-LINUX-001,
 MET-LINUX-002 and CONF-LINUX-001; the closed policy is
 [linux-readiness.json](../architecture/linux-readiness.json). The dedicated
@@ -583,6 +588,9 @@ Current catalog: 136 packets; the prior 121-packet record remains historical. Hi
 The cancelled draft CI is not PASS; no model-product acceptance is recorded.
 
 ## Approved trusted live backend enablement — MET-LIVE-001
+
+The dispatch order below is the historical `MET-LIVE-001` snapshot. The current
+source-versus-native staging rule is [MET-UNIFY-008](alpha-2/SOURCE_NATIVE_GATE_STAGING.md).
 
 The [coding guide](alpha-2/LIVE_BACKEND_READINESS.md) and closed
 `architecture/live-backend-roadmap.json` add six sequential conformance packets

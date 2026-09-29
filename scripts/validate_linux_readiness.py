@@ -531,6 +531,18 @@ EXPECTED_PACKETS = json.loads(r'''{
 }''')
 RUNTIME_PREDECESSORS = json.loads(r'''{"MODEL-001":["SDK-003","CON-006","MET-002","MET-003","CON-MODEL-001","CONF-LINUX-001"],"RUN-001":["SDK-004","TRUST-001","MET-003","CONF-LINUX-001"],"EXEC-001":["SDK-004","TRUST-001","KN-001","MET-003","CONF-LINUX-001"],"CTRL-INTEGRATE-001":["CTRL-FIX-003","CONF-LINUX-001"]}''')
 GATE_REQUIREMENT = "Fresh CONF-LINUX-001 native Linux AMD64 PASS is required before runtime coding; merged source or NOT_RUN_ENV_UNAVAILABLE does not open this gate. Revalidate exact source/image/toolchain/host/trust bindings and freshness under docs/alpha-2/LINUX_READINESS.md."
+CURRENT_RUNTIME_PREDECESSORS = {
+    packet_id: [predecessor for predecessor in predecessors if predecessor != "CONF-LINUX-001"]
+    for packet_id, predecessors in RUNTIME_PREDECESSORS.items()
+}
+CURRENT_GATE_REQUIREMENT = (
+    "Source coding, isolated offline acceptance, CI and merge may proceed after all remaining "
+    "predecessors close; native Linux AMD64 PASS is not a source-coding prerequisite. "
+    "Linux release deployment or promotion and runtime/assurance qualification require fresh, "
+    "independently verified CONF-LINUX-001 foundation PASS plus native evidence bound to this "
+    "product's exact source, image, toolchain, host and trust state. NOT_RUN_ENV_UNAVAILABLE "
+    "never passes; ARM64 requires separate native qualification, and tenant acceptance remains independent."
+)
 
 
 def _same(actual: Any, expected: Any) -> bool:
@@ -549,14 +561,14 @@ def validate_linux_readiness(packets: Any, policy: Any) -> list[str]:
         errors.append("Linux publication policy changed or claims unverified readiness")
     if not isinstance(packets, dict):
         return [*errors, "Linux packet catalog must be an object"]
-    if len(packets) != 189:
-        errors.append("Current catalog requires 189 packets; original Linux policy remains 118")
+    if len(packets) != 190:
+        errors.append("Current catalog requires 190 packets; original Linux policy remains 118")
     for packet_id, expected in EXPECTED_PACKETS.items():
         if packet_id == "CONF-LINUX-001":
             expected = amend_linux_test_packet(amend_linux_packet(expected))
         if not _same(packets.get(packet_id), expected):
             errors.append(f"{packet_id} closed Linux authority changed")
-    for packet_id, predecessors in RUNTIME_PREDECESSORS.items():
+    for packet_id, predecessors in CURRENT_RUNTIME_PREDECESSORS.items():
         packet = packets.get(packet_id)
         if not isinstance(packet, dict):
             errors.append(f"{packet_id} runtime packet missing")
@@ -564,8 +576,8 @@ def validate_linux_readiness(packets: Any, policy: Any) -> list[str]:
         if not _same(packet.get("predecessors"), predecessors):
             errors.append(f"{packet_id} Linux predecessors changed")
         evidence = packet.get("expectedEvidence")
-        if not isinstance(evidence, list) or GATE_REQUIREMENT not in evidence:
-            errors.append(f"{packet_id} must retain the fresh native Linux coding gate")
+        if not isinstance(evidence, list) or CURRENT_GATE_REQUIREMENT not in evidence:
+            errors.append(f"{packet_id} must retain the fresh native Linux release gate")
     return errors
 
 
@@ -581,7 +593,7 @@ def main() -> int:
         for error in errors:
             print(f"ERROR: {error}")
         return 1
-    print("Linux roadmap authority valid: 189 packets; historical 118/120/121-packet authorities preserved; live Linux acceptance remains unproven.")
+    print("Linux roadmap authority valid: 190 packets; historical 118/120/121-packet authorities preserved; live Linux acceptance remains unproven.")
     return 0
 
 

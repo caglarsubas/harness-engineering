@@ -26,7 +26,7 @@ REPAIR_PREDECESSORS = {
     "MET-REPAIR-001": ["MET-OBS-MODEL-001", "CTRL-FIX-002"],
     "CON-FIX-001": ["CON-007", "MET-REPAIR-001", "MET-REPAIR-002"],
     "CTRL-FIX-003": ["CTRL-FIX-002", "CON-FIX-001"],
-    "CTRL-INTEGRATE-001": ["CTRL-FIX-003", "CONF-LINUX-001"],
+    "CTRL-INTEGRATE-001": ["CTRL-FIX-003"],
 }
 PRODUCT_PATHS = {
     "CON-FIX-001": [
@@ -302,7 +302,7 @@ def validate_repair_amendment(
         == EXPECTED_AMENDMENT["historicalRepairRecordSha256"],
         "original repair publication was rewritten",
     )
-    require(len(packets) == 189, "current catalog requires exactly 189 packets; historical amendment remains 115")
+    require(len(packets) == 190, "current catalog requires exactly 190 packets; historical amendment remains 115")
     meta = packets.get("MET-REPAIR-002", {})
     require(isinstance(meta, dict), "repair amendment packet must be an object")
     if not isinstance(meta, dict):

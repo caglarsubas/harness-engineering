@@ -1,5 +1,12 @@
 # Alpha 2 model prerequisites
 
+> Current `MODEL-001` source coding and isolated offline acceptance may begin
+> once its remaining predecessors close under
+> [MET-UNIFY-008](SOURCE_NATIVE_GATE_STAGING.md). Fresh native Linux AMD64
+> foundation and exact model-artifact proof remain separate requirements
+> before Linux release deployment, runtime qualification or promotion. The
+> original-source behavioral baseline remains unavailable, not passed.
+
 Authority: `MET-A2-001`, approved following the 2026-09-04 entry review.
 This publishes work boundaries, not model contracts, observed facts, or test
 results. No new repository, source access, signing key, runner, model download,

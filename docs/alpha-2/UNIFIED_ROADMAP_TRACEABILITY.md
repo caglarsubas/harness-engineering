@@ -1,5 +1,13 @@
 # Unified roadmap traceability and dispositions
 
+`MET-UNIFY-005` was accepted at `945de93` (PR #140). The current
+[MET-UNIFY-008 source/native amendment](SOURCE_NATIVE_GATE_STAGING.md) is a
+separate source-only candidate and adds no native PASS. The `7a353b2` census,
+source-index hashes and the older “current candidate” statements below are
+retained as historical publication inputs; the [master roadmap](../MASTER_DEVELOPMENT_PLAN.md)
+and [current backlog](../../architecture/unified-roadmap-backlog.json) show
+present status and the four effective packet predecessors.
+
 This is the source crosswalk for the [current master roadmap](../MASTER_DEVELOPMENT_PLAN.md), not another current-status roadmap. The accepted input is `7a353b253bb257aa0abe2148e7fa62d7570f0b5a` (PR #138). The exact preceding master is retained at [the history archive](../history/master-development-plan-7a353b2.md), SHA-256 `4c611f70842a14cc9ab74054ade2fa931e96deb96372b9b89022654df594f3e7`.
 
 The unpublished `MET-UNIFY-001` local candidate at `2cb0b949ee82fd1045a605f7b5f33d41742bc971` failed both bounded LOCAL attempts. The separate unpublished `MET-UNIFY-002` candidate exhausted LOCAL-1/2/3; LOCAL-3 finished the nested suite under its time limit but failed a stale inherited 204-file assertion after the current YAML corpus became 205. Unpublished `MET-UNIFY-003` [PR #139](https://github.com/caglarsubas/harness-onion/pull/139) passed LOCAL-1, consumed CI-1 before runner registration on a GitHub GET failure, then consumed CI-2 when its job was cancelled at the 15-minute limit. The CI log contains a failure marker about 420 seconds after nested predecessor testing began, without a final traceback. Its self-hosted runner and home were retired and GitHub reported zero runners. The separate unpublished MET-UNIFY-004 local commit `8dbfdac` consumed LOCAL-1 on a status-document packet-ID failure and LOCAL-2/3 on the unchanged 750-second local bound while outer pytest was active; no PR, CI or merge followed. These sources and attempt receipts remain historical, not accepted predecessors or renewed execution allowances. The current 189th packet candidate is `MET-UNIFY-005`, based directly on accepted `MET-ENFORCE-003`. Publication, CI, merge and exact-main evidence for `MET-UNIFY-005` remain separate pending gates.

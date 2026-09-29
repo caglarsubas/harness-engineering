@@ -213,7 +213,8 @@ def validate_authority(packets,record,inputs):
         require(len(old)==169 and len(packets)==170 and set(packets)==old|set(NEW_IDS), '169 immutable plus one planning packet')
         require('CONF-PERF-006' not in packets and 'CONF-PERF-005' not in packets, 'no product grant')
         for name in packets:
-            require(canonical(packets[name])==canonical(safe_load(inputs['task-packets/'+name+'.yaml'])), 'raw packet parity')
+            path='task-packets/'+name+'.yaml'
+            require(canonical(packets[name])==canonical(safe_load(execution_history(path,inputs[path]))), 'raw packet parity')
         packet=packets['MET-PERF-011']; prior=packets['MET-PERF-009']
         require(packet['repository']=='Harness-Engineering' and packet['predecessors']==['MET-PERF-009']
                 and packet['allowedPaths']==record['ownedPaths'], 'exact META owner')

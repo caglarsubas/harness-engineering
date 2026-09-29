@@ -1,5 +1,11 @@
 # Trusted Linux live-backend readiness — MET-LIVE-001
 
+> The accepted campaign and signing requirements below remain unchanged.
+> Only the four product packets' source-coding order is amended by
+> [MET-UNIFY-008](SOURCE_NATIVE_GATE_STAGING.md). Native AMD64 foundation and
+> exact product-artifact proof still gate Linux release qualification and
+> promotion; this page is not live execution evidence.
+
 ## Current reviewed interface candidate — MET-ENFORCE-003
 
 [W01 reviewed candidate and unresolved gates](HOST_INTERFACE_PUBLICATION.md): Alpha2 ONGOING.

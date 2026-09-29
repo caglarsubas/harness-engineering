@@ -2,7 +2,7 @@
 
 ## Current source status — MET-UNIFY-005 roadmap candidate
 
-The [unified master roadmap](../docs/MASTER_DEVELOPMENT_PLAN.md) is the current phase/status entry point. The accepted baseline has 188 published packet specifications; this branch adds `MET-UNIFY-005` as the 189th source-only packet, pending its own isolated acceptance, required CI, merge and exact-main verification. Older “current” headings below are historical snapshots, not dispatch authority. The [item-level backlog](../architecture/unified-roadmap-backlog.json) distinguishes packet publication, proposals and counted checklist projections; no packet is approved for execution by appearing in this catalog.
+The [unified master roadmap](../docs/MASTER_DEVELOPMENT_PLAN.md) is the current phase/status entry point. The accepted baseline has 189 published packet specifications; this branch proposes `MET-LINUX-003` as the 190th source-only packet, pending its own isolated acceptance, required CI, merge and exact-main verification. Older “current” headings below are historical snapshots, not dispatch authority. The [item-level backlog](../architecture/unified-roadmap-backlog.json) distinguishes packet publication, proposals and counted checklist projections; no packet is approved for execution by appearing in this catalog.
 
 ## Current reviewed interface candidate — MET-ENFORCE-003
 
@@ -893,3 +893,4 @@ acceptance is claimed. Alpha2 ONGOING; model-effort transition NOT_DUE.
 | 187 | `MET-PERF-018` | `Harness-Engineering` | Single-traversal validation repair; no draft retry |
 | 188 | `MET-ENFORCE-003` | `Harness-Engineering` | Independently reviewed host-interface candidate and unresolved gates |
 | 189 | `MET-UNIFY-005` | `Harness-Engineering` | Unified current roadmap, accepted-source traceability and reversible predecessor history |
+| 190 | `MET-LINUX-003` | `Harness-Engineering` | Signed nested-workspace, cross-root system-closure and exact catalog-successor runner contract repair; source only |

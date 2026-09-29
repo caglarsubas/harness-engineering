@@ -63,11 +63,13 @@ def test_environment_constructed_not_filtered(policy, monkeypatch):
 def test_profile_preserves_tools_and_hides_authority_parent(policy):
     text = launcher.profile_bytes(policy).decode()
     for line in ("net none", "nonewprivs", "caps.drop all", "restrict-namespaces", "seccomp.block-secondary",
-                 "seccomp-error-action EPERM", "blacklist /etc/planeon", "blacklist /srv/planeon/warm-snapshots",
-                 "blacklist /srv/planeon/runner-agent", "read-only " + PACKET,
+                 "seccomp-error-action EPERM", "blacklist /etc/planeon",
+                 "private-srv planeon-runner-placeholder", "read-only " + PACKET,
                  "whitelist " + LAUNCHER, "whitelist " + PACKET, "whitelist " + policy["workspace"],
                  "whitelist /opt/planeon/python/3.12.14"):
         assert line in text.splitlines()
+    assert "blacklist /srv" not in text.splitlines()
+    assert not any(root in text for root in policy["warmRoots"])
     assert "shell none" not in text and "noroot" not in text
     assert "connect,sendto,sendmsg" in text and "io_uring_setup" in text
 

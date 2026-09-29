@@ -12,6 +12,7 @@ import pytest
 
 from build import SOURCES, build, candidate_bytes
 from common import Refused, digest
+from scripts.validate_current_catalog_successor import materialize_predecessor
 
 ROOT = Path(__file__).resolve().parents[2]
 KIT = ROOT / "ci/linux-runner"
@@ -94,17 +95,21 @@ def test_standard_library_only_and_no_shell_evaluation():
                             and node.func.value.id == "os" and node.func.attr in ("system", "popen"))
 
 
-def test_full_predecessor_suites_and_validators_remain_green(capsys):
+def test_full_predecessor_suites_and_validators_remain_green(tmp_path, capsys):
     # A nested test process stays in this packet's OS-denied tree. Excluding
     # only this new directory prevents recursion, not legacy-test deselection.
-    env = {**os.environ, "PYTHONDONTWRITEBYTECODE": "1"}
+    # The accepted 189-source predecessor is reconstructed from every checked
+    # baseline byte; newer source may not silently change inherited assertions.
+    predecessor = tmp_path.resolve() / "accepted-189"
+    materialize_predecessor(predecessor)
+    env = {**os.environ, "PYTHONDONTWRITEBYTECODE": "1", "PYTHONPATH": str(predecessor)}
     commands = [[sys.executable, "-m", "pytest", "-rs", "tests", "--ignore=tests/linux_runner", "ci/test_offline_runner.py", "ci/test_warm_snapshot.py"]]
     commands += [[sys.executable, "scripts/" + name] for name in
                  ("validate_readiness.py", "validate_reuse.py", "validate_alpha2_readiness.py",
                   "validate_readiness_repairs.py", "validate_linux_readiness.py")]
     commands += [[sys.executable, "scripts/zero_bill_scan.py", "."]]
     for argv in commands:
-        result = subprocess.run(argv, cwd=ROOT, env=env, capture_output=True, text=True, timeout=420, close_fds=True)
+        result = subprocess.run(argv, cwd=predecessor, env=env, capture_output=True, text=True, timeout=420, close_fds=True)
         with capsys.disabled():
             print("PREDECESSOR_ARGV=" + json.dumps(argv[1:]), flush=True)
             print(result.stdout, flush=True)

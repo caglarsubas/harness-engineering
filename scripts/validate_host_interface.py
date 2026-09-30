@@ -318,9 +318,8 @@ def validate_authority(packets, record, inputs):
     try:
         pinned(record); old = historical_catalog(packets)
         packets = unified_catalog(packets)
-        changed = unified_authority()['changedFiles']
-        inputs = {path: unified_history(path, raw) if path in changed else raw
-                  for path, raw in inputs.items()}
+        unified_authority()
+        inputs = {path: unified_history(path, raw) for path, raw in inputs.items()}
         require(HISTORY_PATHS == set(record['metaRecipes']), 'closed history routing')
         pins = {**record['protectedFiles'], **record['inputFiles'],
                 **{p: r['afterSha256'] for p, r in record['metaRecipes'].items()}}

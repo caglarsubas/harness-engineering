@@ -19,6 +19,35 @@ network, warm-root, packet-write, credential, and socket denial. GitHub Actions
 performs one pinned checkout with credential persistence disabled and invokes
 the absolute launcher as its only `run` step.
 
+MET-RUNNER-001 proposes one narrowly bounded external development-CI capacity
+exception, defined in [CI_CAPACITY_EXCEPTION.md](alpha-2/CI_CAPACITY_EXCEPTION.md).
+Before checkout, the only permitted execution is an externally installed,
+root-owned, nonwritable exact-job admission hook and fixed verifier. The runner
+invokes the hook unprivileged; a narrowly scoped root-owned helper owns the
+signed local packet bytes and atomic durable nonce ledger. The hook needs an
+independent timeout: GitHub does not provide one. It rejects a wrong same-label
+assignment before any checkout or repository-controlled step. The exact
+run/attempt, controller-bound numeric job ID, `GITHUB_JOB` context name,
+repository ID, same-repository PR/ref/head/base/merge identity, approved
+workflow digest and `GITHUB_WORKFLOW_SHA`, packet digest, runner identity and
+expiry are mandatory. An external root-custodied admission trust bundle has a
+reviewed image-pinned public-key digest, the specific development-CI signing
+purpose and domain, valid revocation state, and one active key/one active job
+record. Rotation installs a new reviewed bundle before registration; a stale
+or revoked key cannot be accepted as fallback. The external controller binds
+the numeric GitHub job ID to a signed run/attempt/workflow/`GITHUB_JOB` tuple;
+the hook authenticates that tuple and runner identity, never treating the
+string `GITHUB_JOB` key as the numeric ID. This binding requires the exact
+approved workflow digest to contain one non-matrix job. Availability of every
+required tuple field at pre-job hook time is unproven and requires a controlled
+live Linux host test on the pinned runner build before registration. Any
+unavailable or ambiguous field blocks registration; source inspection cannot
+claim it is available.
+`workflow_dispatch` and forks are denied by default. Event payload text is
+not authority. Registration/session credentials, runner home, event files,
+process handles and logs remain hidden from checked-out code. This hook does
+not replace launcher isolation or authorize a cloud bill by itself.
+
 No launcher binary, signed manifest, public key, or preflight evidence is present
 in this planning repository. Provisioning that root-owned bundle on a matching
 ephemeral runner is the explicit external prerequisite for CI; until then the

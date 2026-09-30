@@ -27,7 +27,7 @@ def authority():
 
 def test_exact_packet_and_preservation_authority(authority):
     packets, record, inputs, current = authority
-    assert len(packets) == CURRENT_PACKET_COUNT == 189
+    assert len(packets) == CURRENT_PACKET_COUNT == 190
     assert len(record["protectedFiles"]) == 236
     assert len(record["mechanicalTestUpdates"]) == 20
     assert digest(canonical(record)) == RECORD_SHA256
@@ -81,7 +81,7 @@ def test_assertion_or_skip_substitution_refuses(authority, change):
     _, record, inputs, current = authority
     path = "tests/test_task_packets.py"
     changed = dict(current)
-    target = b"assert len(files) == EXPECTED_PACKET_COUNT == 189"
+    target = b"assert len(files) == EXPECTED_PACKET_COUNT == 190"
     assert target in changed[path]
     changed[path] = changed[path].replace(target, change, 1)
     assert validate_test_preservation(record, inputs[BEFORE_PATH], changed)

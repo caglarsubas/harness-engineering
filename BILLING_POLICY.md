@@ -1,8 +1,19 @@
 # Zero-Bill Policy
 
-The project must not create or consume anything that can produce a cloud,
-GitHub, paid-provider, metered-provider, or third-party API-key bill. This is an
-absolute admission rule, not merely a default.
+The shipped platform, tenant workloads, provider bindings, live campaigns and
+release acceptance must not create or consume anything that can produce a
+cloud, GitHub, paid-provider, metered-provider, or third-party API-key bill.
+This product admission rule remains absolute, not merely a default. A later
+source-only [development-CI exception](docs/alpha-2/CI_CAPACITY_EXCEPTION.md)
+permits an independently operator-authorized, disposable Linux guest solely
+for one exact self-hosted PR check. It is not product infrastructure or an
+authorization for repository code to provision cloud resources.
+
+The external development-CI exception requires a separate owner's numeric
+all-in charge maximum and a conservative lower preflight estimate. Count guest,
+disk, IP, bounded egress, logs, monitoring, control-plane operations and the
+independent delete watchdog through verified cleanup. Budget alerts are not
+spend caps. Neither this policy source nor a queued check approves that cost.
 
 Public-cloud and SaaS support means deployment onto infrastructure explicitly
 supplied and operated by the adopter. The software never creates cloud accounts,
@@ -23,7 +34,7 @@ layout. Runtime defaults are offline, have an empty host allowlist, and contain
 no required third-party API keys.
 
 The public default branch is seeded before PR work so the pinned verification
-workflow exists when GitHub evaluates a pull request. A no-cost self-hosted
+workflow exists when GitHub evaluates a pull request. A credential-free self-hosted
 runner with the complete locked wheelhouse/tool cache is a hard prerequisite.
 Missing runner/tool custody blocks CI; no GitHub-hosted runner, cache, artifact,
 package, or online dependency-fetch fallback is permitted.
@@ -31,7 +42,10 @@ package, or online dependency-fetch fallback is permitted.
 The runner is ephemeral and credential/socket-free: it has no cloud/provider
 credentials, SSH agent, kubeconfig, Docker or containerd control socket, or
 other ambient broker that checked-out code could use to create a bill. Workflow
-execution after the pinned credential-free checkout is restricted to the
+execution permits only the externally installed root-owned exact-job admission
+hook and narrowly scoped verifier before checkout. They fail closed on a wrong
+assignment, without treating labels as job proof. After the pinned credential-free
+checkout, execution is restricted to the
 preinstalled, root-owned `/opt/planeon/bin/harness-offline-launch`. Checked-out
 shell, Python, Make, tests, and all other repository-controlled code begin only
 after that host launcher establishes OS isolation. The workflow and host-launcher

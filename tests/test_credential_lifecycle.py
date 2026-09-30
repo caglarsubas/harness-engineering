@@ -308,7 +308,7 @@ def test_meta_reconciliation_has_no_broad_test_exemption(authority, kind):
     if kind == "before": before += b" "
     if kind == "record": record["metaReconciliation"]["currentPacketCount"] = 142
     if kind == "assertion":
-        target = b"assert len(paths) == 205"
+        target = b"assert len(paths) == 206"
         assert current[path].count(target) == 1
         current[path] = current[path].replace(target, b"assert True", 1)
     if kind == "skip": current[path] = b"import pytest\npytest.skip('fast', allow_module_level=True)\n" + current[path]

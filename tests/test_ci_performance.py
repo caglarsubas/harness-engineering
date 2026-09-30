@@ -141,7 +141,7 @@ def test_malformed_and_executable_tags_refuse_without_side_effects(raw):
 def test_full_current_corpus_matches_the_python_safe_constructor():
     paths = sorted({p for folder in ("architecture", "legal", "policies", "release", "task-packets")
                     for p in (ROOT / folder).rglob("*.yaml")})
-    assert len(paths) == 205
+    assert len(paths) == 206
     for path in paths:
         raw = path.read_bytes()
         assert shape(safe_yaml.safe_load(raw)) == shape(yaml.load(raw, Loader=yaml.SafeLoader)), path

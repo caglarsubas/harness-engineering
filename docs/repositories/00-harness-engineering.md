@@ -614,6 +614,7 @@ Every packet uses branch `codex/<packet-id>`, changes only named paths, opens a 
 61. `MET-PERF-018`: repair duplicate catalog traversal; preserve blocked PR136 and its consumed allowances.
 62. `MET-ENFORCE-003`: explicitly reconcile the blocked reviewed-interface publication on repaired main; preserve its failed lineage and unresolved gates.
 63. `MET-UNIFY-005`: publish the single current roadmap, complete accepted-source traceability and exact predecessor-history bridge; source only.
+64. `MET-RUNNER-001`: publish the source-only bounded external development-CI capacity and exact-job pre-checkout admission contract; no host activation or CI waiver.
 
 ## Testing, verification, and acceptance
 

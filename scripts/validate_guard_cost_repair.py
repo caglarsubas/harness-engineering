@@ -20,6 +20,11 @@ try:
 except ImportError:
     from scripts.validate_accounting_scope import historical_bytes as accounting_history, current_test_bytes as accounting_current, historical_catalog as accounting_catalog
 
+try:
+    from validate_ci_runner_admission import historical_bytes as runner_history
+except ImportError:
+    from scripts.validate_ci_runner_admission import historical_bytes as runner_history
+
 ROOT = Path(__file__).resolve().parents[1]
 RECORD_PATH = 'architecture/guard-cost-repair-authority.json'
 RECORD_SHA256 = '7dc039d4bfb889b36150cc82383da6fcc133cf32d2f1089f681afef6b1ca2bab'
@@ -285,7 +290,7 @@ def validate_authority(packets,record,inputs):
         require(audit['lastProgress']['callEvents'] == value['diagnostic']['calls']
                 and audit['lastProgress']['returnEvents'] == value['diagnostic']['returns'], 'measured lower bounds only')
         for path,checksum in value['preservedArtifacts'].items():
-            require(digest(inputs[path]) == checksum, 'preserved contracts and locks')
+            require(digest(runner_history(path, inputs[path])) == checksum, 'preserved contracts and locks')
         for path,rule in record['metaRecipes'].items():
             before = historical_bytes(path,inputs[path])
             require(apply_recipe(before,rule) == accounting_history(path,inputs[path]), 'exact reversible metadata')

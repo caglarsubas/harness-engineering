@@ -20,6 +20,11 @@ try:
 except ImportError:
     from scripts.validate_factory_diagnostics import historical_bytes as factory_history, current_test_bytes as factory_current, validate_additions as factory_additions, historical_catalog as factory_catalog
 
+try:
+    from validate_ci_runner_admission import historical_bytes as runner_history
+except ImportError:
+    from scripts.validate_ci_runner_admission import historical_bytes as runner_history
+
 ROOT = Path(__file__).resolve().parents[1]
 RECORD_PATH = 'architecture/completion-integration-authority.json'
 RECORD_SHA256 = '61419d001ed05ab04f23f6e7d1dbc402c655023c71cccb1df6f6e936eafaf747'
@@ -324,7 +329,7 @@ def validate_authority(packets, record, inputs):
                 and accounting['methodException']['id'] == 'DocumentRepairTests.test_consumer_history_preserved'
                 and accounting['currentBeforeHistorical'] is True and accounting['additionalConsumerMigrationAuthorized'] is False, 'named migration only')
         for path,checksum in value['preservedArtifacts'].items():
-            require(digest(inputs[path]) == checksum, 'immutable contract/lock')
+            require(digest(runner_history(path, inputs[path])) == checksum, 'immutable contract/lock')
         for path,rule in record['metaRecipes'].items():
             before = historical_bytes(path, inputs[path])
             require(apply_recipe(before,rule) == factory_history(path,inputs[path]), 'exact reversible metadata')

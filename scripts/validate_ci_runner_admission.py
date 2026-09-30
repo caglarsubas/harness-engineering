@@ -20,7 +20,7 @@ except ImportError:
 
 ROOT = Path(__file__).resolve().parents[1]
 AUTHORITY_PATH = "architecture/ci-runner-admission-authority.json"
-AUTHORITY_SHA256 = "fe4bd6dfb859eb2b13f77c20d827aec7a93dfa035ccc9f58402273ae0d15a2a8"
+AUTHORITY_SHA256 = "7c58796d5a943400ec9bc8fc02b131d3418164be72fa0950d79c24562aad9045"
 BASE_COMMIT = "945de93f89c94f42f1d63bff7997e3d0fa704fc4"
 NEW_PACKET = "MET-RUNNER-001"
 MAX_FILE_BYTES = 16_777_216

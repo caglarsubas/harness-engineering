@@ -19,6 +19,7 @@ except ImportError:
 
 try:
     from validate_ci_runner_admission import (
+        authority as runner_authority,
         historical_bytes as runner_history,
         historical_test_bytes as runner_historical_test,
         current_test_bytes as runner_current_test,
@@ -26,6 +27,7 @@ try:
     )
 except ImportError:
     from scripts.validate_ci_runner_admission import (
+        authority as runner_authority,
         historical_bytes as runner_history,
         historical_test_bytes as runner_historical_test,
         current_test_bytes as runner_current_test,
@@ -372,6 +374,16 @@ def _project_changed(path: str, raw: bytes, rule: Mapping[str, Any], current_dig
 
 def historical_bytes(path: str, raw: bytes) -> bytes:
     """Project only a pinned current file to its accepted predecessor bytes."""
+    require(type(raw) is bytes, "source bytes required")
+    if path in CHANGED_PATHS:
+        rule = _PROJECTION_RULES.get(path)
+        require(rule is not None, "code-pinned changed-source route")
+        if digest(raw) == rule["beforeSha256"]:
+            # This exact predecessor may be passed by an already-projected caller.
+            # Recheck both authorities before treating it as idempotent.
+            _checked_authority_raw()
+            runner_authority()
+            return raw
     raw = runner_history(path, raw)
     _checked_authority_raw()
     require(type(raw) is bytes, "source bytes required")

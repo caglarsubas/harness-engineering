@@ -20,6 +20,11 @@ try:
 except ImportError:
     from scripts.validate_benchmark_transport import historical_bytes as transport_history, current_test_bytes as transport_current, validate_additions as transport_additions, historical_catalog as transport_catalog
 
+try:
+    from validate_ci_runner_admission import historical_bytes as runner_history
+except ImportError:
+    from scripts.validate_ci_runner_admission import historical_bytes as runner_history
+
 ROOT = Path(__file__).resolve().parents[1]
 RECORD_PATH = 'architecture/document-repair-execution-authority.json'
 RECORD_SHA256 = 'bafacca38370813f61965faa9076208b955502304b7245196d2956ad1f7d4617'
@@ -136,7 +141,7 @@ def apply_recipe(before, rule):
 
 
 def historical_bytes(path, raw):
-    raw = transport_history(path, raw)
+    raw = transport_history(path, runner_history(path, raw))
     # A closed code-pinned routing table, not an acceptance/result cache.
     # Unchanged inputs still receive the predecessor caller's exact hash check.
     if path not in HISTORY_PATHS:
@@ -303,7 +308,7 @@ def validate_authority(packets,record,inputs):
         pins={**record['protectedFiles'],**record['inputFiles'],**{p:r['afterSha256'] for p,r in record['metaRecipes'].items()}}
         require(type(inputs) is dict and set(inputs)==set(pins), 'complete fresh source inputs')
         for path,checksum in pins.items():
-            require(type(inputs[path]) is bytes and digest(transport_history(path,inputs[path]))==checksum, 'source drift: '+path)
+            require(type(inputs[path]) is bytes and digest(transport_history(path,runner_history(path,inputs[path])))==checksum, 'source drift: '+path)
         old=historical_catalog(packets)
         require(len(old)==170 and len(packets)==190 and 'CONF-PERF-006' not in old, 'historical planning boundary')
         for name in transport_catalog(packets):
@@ -324,10 +329,10 @@ def validate_authority(packets,record,inputs):
             p=packets[name]
             require(p['sourceReuse']==p['prefetchCommands']==[] and p['warmSourceAccess']=='PROHIBITED_DURING_IMPLEMENTATION'
                     and p['offlineExecution']==prior['offlineExecution'] and 'liveCampaignExecution' not in p, 'no live/warm/online authority')
-        for path,checksum in value['contractPins'].items(): require(digest(inputs[path])==checksum, 'immutable contract')
+        for path,checksum in value['contractPins'].items(): require(digest(runner_history(path,inputs[path]))==checksum, 'immutable contract')
         for path,rule in record['metaRecipes'].items():
             before=historical_bytes(path,inputs[path])
-            require(apply_recipe(before,rule)==transport_history(path,inputs[path]), 'exact reversible metadata')
+            require(apply_recipe(before,rule)==transport_history(path,runner_history(path,inputs[path])), 'exact reversible metadata')
             if path.startswith('tests/'): require(test_ids(before)==test_ids(inputs[path]), 'all inherited test identities')
         for path in record['navigationPaths']:
             require(all(s in inputs[path] for s in (b'DOCUMENT_REPAIR_AUTHORITY.md',b'MET-PERF-012',b'CONF-PERF-006',b'CONF-BENCH-002',b'WAITING_META',b'BLOCKED_LOCAL_BUDGET_EXHAUSTED',b'HARNESS_PAPER_REPOSITORY_MAP.md',b'NOT_DUE')), 'consistent current roadmap')

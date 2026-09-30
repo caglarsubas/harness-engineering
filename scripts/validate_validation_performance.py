@@ -20,6 +20,11 @@ try:
 except ImportError:
     from scripts.validate_completion_profiling import historical_bytes as profiling_history, current_test_bytes as profiling_current, validate_additions as profiling_additions
 
+try:
+    from validate_ci_runner_admission import historical_bytes as runner_history
+except ImportError:
+    from scripts.validate_ci_runner_admission import historical_bytes as runner_history
+
 ROOT = Path(__file__).resolve().parents[1]
 RECORD_PATH = "architecture/validation-performance-authority.json"
 RECORD_SHA256 = "d914c4bbf00fe3d98a1db63c834203ef4452c10ca185a792c364aef0bbd06db4"
@@ -136,7 +141,7 @@ def apply_recipe(before, rule):
 
 
 def historical_bytes(path, raw):
-    raw = profiling_history(path, raw)
+    raw = profiling_history(path, runner_history(path, raw))
     # A closed code-pinned routing table, not an acceptance/result cache.
     # Unchanged inputs still receive the predecessor caller's exact hash check.
     if path not in HISTORY_PATHS:
@@ -232,7 +237,7 @@ def validate_authority(packets, record, inputs):
                 **{p: r["afterSha256"] for p, r in record["metaRecipes"].items()}}
         require(type(inputs) is dict and set(inputs) == set(pins), "fresh complete source inventory")
         for path, checksum in pins.items():
-            require(type(inputs[path]) is bytes and digest(profiling_history(path, inputs[path])) == checksum,
+            require(type(inputs[path]) is bytes and digest(profiling_history(path, runner_history(path, inputs[path]))) == checksum,
                     "changed source: " + path)
         old = {Path(p).stem for p in record["protectedFiles"]
                if p.startswith("task-packets/") and p.endswith(".yaml")}
@@ -257,10 +262,10 @@ def validate_authority(packets, record, inputs):
         spec = parse(inputs[SPEC_PATH])
         validate_spec(spec)
         for path, checksum in spec["contractPins"].items():
-            require(digest(inputs[path]) == checksum, "unchanged contract or lock")
+            require(digest(runner_history(path, inputs[path])) == checksum, "unchanged contract or lock")
         for path, rule in record["metaRecipes"].items():
             before = historical_bytes(path, inputs[path])
-            require(apply_recipe(before, rule) == profiling_history(path, inputs[path]), "exact reversible repair")
+            require(apply_recipe(before, rule) == profiling_history(path, runner_history(path, inputs[path])), "exact reversible repair")
             if path.startswith("tests/"):
                 require(test_ids(before) == test_ids(inputs[path]), "all inherited test identities")
         for path in record["navigationPaths"]:

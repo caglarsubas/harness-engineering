@@ -1,5 +1,28 @@
 # Repository Plan: `Harness-Engineering`
 
+## Current Linux runner source repair — MET-LINUX-004
+
+R00 owns the 191st packet, its independent inverse authority/validator, current
+catalog reconciliation and the ten named Linux runner-kit paths. Accepted base
+is `0314a684ba637fb205856d5fb5e50206071e647a`; all 190 predecessor YAML and
+accepted authority/index/source-lock bytes remain immutable. The new layer
+reconstructs accepted source as data; it does not execute historical code.
+
+The repair adopts the reviewed nested checkout and signed system-alias closure
+from draft PR #142, without importing its unpublished packet or obsolete bridge.
+All inherited Linux test identities remain in the current full suite. LOCAL3,
+CI2 and LOCAL_EXACT_MAIN1 are finite independent limits, never replacement
+allowances for prior failures. The full 53-command suite retains its isolation
+and timeout controls. This source candidate changes no workflow, installed host,
+root policy, public API or native-runtime coding gate.
+
+PR #143 is source-merged under its consumed one-time administrator exception,
+with restored enforcement and LOCAL6-only PASS; required CI was not PASS.
+PR #141 and #142 are conflicting drafts with cancelled checks. See the
+[master checkpoint](../MASTER_DEVELOPMENT_PLAN.md) for current status; all
+following checkpoint headings are historical. Installed Linux, exact-job
+admission, CI, native AMD64 and product acceptance remain separate gates.
+
 ## Current source-only CI admission candidate — MET-RUNNER-001
 
 On accepted main `945de93`, this proposed 190th packet documents a separately
@@ -615,6 +638,7 @@ Every packet uses branch `codex/<packet-id>`, changes only named paths, opens a 
 62. `MET-ENFORCE-003`: explicitly reconcile the blocked reviewed-interface publication on repaired main; preserve its failed lineage and unresolved gates.
 63. `MET-UNIFY-005`: publish the single current roadmap, complete accepted-source traceability and exact predecessor-history bridge; source only.
 64. `MET-RUNNER-001`: publish the source-only bounded external development-CI capacity and exact-job pre-checkout admission contract; no host activation or CI waiver.
+65. `MET-LINUX-004`: reconcile the Linux runner source contract on current main, preserve all 190 accepted packets and add exact 191-to-190 history with inherited acceptance.
 
 ## Testing, verification, and acceptance
 

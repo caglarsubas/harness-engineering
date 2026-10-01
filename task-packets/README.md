@@ -1,6 +1,12 @@
 # Sol-High Task Packet Catalog
 
-## Current source status — MET-RUNNER-001 CI-capacity contract candidate
+## Current source status — MET-LINUX-004 Linux runner repair
+
+The [master roadmap](../docs/MASTER_DEVELOPMENT_PLAN.md) is the current phase/status entry point. Accepted main `0314a684ba637fb205856d5fb5e50206071e647a` contains 190 specifications; MET-LINUX-004 is the 191st, pending isolated local acceptance, required CI, merge and exact-main verification. It owns only its named source paths and preserves all predecessor YAML and authority records. All 52 inherited acceptance commands remain, plus its new validator. LOCAL3/CI2/LOCAL_EXACT_MAIN1 are separate finite budgets with reservation-before-use; old allowances never transfer. Historical source is data, never executed.
+
+PR #143 merged by its consumed PR-specific bootstrap exception, with LOCAL6 source PASS but no required CI PASS; administrator enforcement was restored. PR #141 and #142 are conflicting drafts with cancelled checks. MET-LINUX-004 reconciles only PR #142's scoped runner fixes; PR #141's gate-policy proposal is separate. No runner is registered and no installed-host, native Linux or product acceptance follows from publication. Older headings below are retained publication snapshots.
+
+## Historical source status — MET-RUNNER-001 CI-capacity contract candidate
 
 The [unified master roadmap](../docs/MASTER_DEVELOPMENT_PLAN.md) is the current phase/status entry point. Accepted main `945de93f89c94f42f1d63bff7997e3d0fa704fc4` contains 189 packet specifications after MET-UNIFY-005 PR #140. This branch proposes `MET-RUNNER-001` as the 190th, source-only, pending isolated acceptance, required CI, merge and exact-main verification. It grants no VM creation, runner registration, CI waiver or native Linux qualification. PR #141 and draft PR #142 are queued on the same self-hosted labels with zero registered runners; their queue and outcomes are independent of this packet. Older “current” headings below are historical snapshots, not dispatch authority. The [item-level backlog](../architecture/unified-roadmap-backlog.json) distinguishes packet publication, proposals and counted checklist projections; no packet is approved for execution by appearing in this catalog.
 
@@ -894,3 +900,4 @@ acceptance is claimed. Alpha2 ONGOING; model-effort transition NOT_DUE.
 | 188 | `MET-ENFORCE-003` | `Harness-Engineering` | Independently reviewed host-interface candidate and unresolved gates |
 | 189 | `MET-UNIFY-005` | `Harness-Engineering` | Unified current roadmap, accepted-source traceability and reversible predecessor history |
 | 190 | `MET-RUNNER-001` | `Harness-Engineering` | Source-only bounded external development-CI capacity and exact-job pre-checkout admission contract |
+| 191 | `MET-LINUX-004` | `Harness-Engineering` | Current-main Linux runner contract repair and exact 191-to-190 accepted-history bridge |

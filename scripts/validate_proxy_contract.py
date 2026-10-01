@@ -220,7 +220,7 @@ def validate_proxy_contract(packets, record, inputs):
         errors = validate_additions(packets)
         pins = {**record["protectedFiles"], **record["inputFiles"]}
         old_ids = {Path(p).stem for p in record["protectedFiles"] if p.startswith("task-packets/")}
-        if len(old_ids) != 134 or len(record["protectedFiles"]) != 176 or set(packets) != old_ids | set(ADDITIONS) | {"MET-UNIFY-005", "MET-RUNNER-001"}:
+        if len(old_ids) != 134 or len(record["protectedFiles"]) != 176 or set(packets) != old_ids | set(ADDITIONS) | {"MET-UNIFY-005", "MET-RUNNER-001", "MET-LINUX-004"}:
             errors.append("exact historical 134 plus exact proxy, observation and custody prerequisites required")
         if set(inputs) != set(pins):
             errors.append("exact proxy authority input inventory required")
@@ -257,7 +257,7 @@ def main():
     for error in errors:
         print("ERROR: " + error)
     if not errors:
-        print("Proxy prerequisite valid: 190 packets; 176 immutable authority files; 127-file/279-ID source checkpoint; product/native NOT_RUN.")
+        print("Proxy prerequisite valid: 191 packets; 176 immutable authority files; 127-file/279-ID source checkpoint; product/native NOT_RUN.")
     return int(bool(errors))
 
 

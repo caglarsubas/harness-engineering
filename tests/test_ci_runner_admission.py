@@ -16,14 +16,14 @@ def test_exact_current_packet_and_complete_accepted_history():
     assert runner.validate() is None
     current = packets()
     previous = runner.historical_catalog(current)
-    assert len(current) == 190
+    assert len(current) == 191
     assert len(previous) == 189
-    assert set(previous) == set(current) - {runner.NEW_PACKET}
+    assert set(previous) == set(current) - {runner.NEW_PACKET, runner.successor.NEW_PACKET}
     record = runner.authority()
     assert set(record["baselinePackets"]) == set(previous)
     for path, rule in record["changedFiles"].items():
         current_raw = runner.regular_bytes(path)
-        assert runner.digest(current_raw) == rule["afterSha256"]
+        assert runner.digest(runner.successor.historical_bytes(path, current_raw)) == rule["afterSha256"]
         assert runner.digest(runner.historical_bytes(path, current_raw)) == rule["beforeSha256"]
 
 

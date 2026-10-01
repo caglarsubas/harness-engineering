@@ -1,4 +1,4 @@
-"""Deterministic kit packaging plus the entire unchanged predecessor baseline."""
+"""Deterministic kit packaging plus inherited checks on the current source."""
 import ast
 import io
 import json
@@ -95,8 +95,10 @@ def test_standard_library_only_and_no_shell_evaluation():
 
 
 def test_full_predecessor_suites_and_validators_remain_green(capsys):
-    # A nested test process stays in this packet's OS-denied tree. Excluding
-    # only this new directory prevents recursion, not legacy-test deselection.
+    # The outer current-source suite includes all inherited Linux test identities
+    # with versioned fixtures. This nested process stays in the same OS-denied
+    # tree and excludes Linux only to avoid recursively collecting this function.
+    # It executes current source; retained historical bytes are never executed.
     env = {**os.environ, "PYTHONDONTWRITEBYTECODE": "1"}
     commands = [[sys.executable, "-m", "pytest", "-rs", "tests", "--ignore=tests/linux_runner", "ci/test_offline_runner.py", "ci/test_warm_snapshot.py"]]
     commands += [[sys.executable, "scripts/" + name] for name in

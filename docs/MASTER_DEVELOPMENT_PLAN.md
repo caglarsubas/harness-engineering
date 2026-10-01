@@ -1,5 +1,15 @@
 # Harness-Onion — unified development roadmap
 
+## Current Alpha-2 checkpoint — MET-LINUX-004
+
+Accepted main is `0314a684ba637fb205856d5fb5e50206071e647a` (tree `e94855550e977fe9e87c6016df9c2110d0f28f89`), PR #143 / MET-RUNNER-001. It was merged under the explicitly authorized **one-time PR-143-only administrator bootstrap exception**, with audited source-tree parity and administrator enforcement restored. Its LOCAL6 source acceptance passed; required GitHub `verify` was not PASS. Neither the exception nor that result transfers to another packet or to native/product qualification.
+
+`MET-LINUX-004` is the current **ONGOING_SOURCE_REPAIR** candidate: the 191st specification preserves all 190 accepted packet bytes and adds an exact current-to-accepted source inverse. It reconciles PR #142's reviewed nested-workspace and signed system-alias fixes on current main, retaining the full inherited acceptance suite (53 direct-argv commands). Historical source is verified as data, never executed. The packet's separate finite limits are LOCAL3, CI2 and LOCAL_EXACT_MAIN1; every attempt must be reserved and retained, with no transfer of old allowances.
+
+As observed October 1, PR #141 (MET-UNIFY-008) and PR #142 (MET-LINUX-003) are conflicting drafts with cancelled checks, not queued successes. PR #141's source-before-native gate proposal stays separate and its exhausted LOCAL3 is retained. PR #142 remains an unpublished historical candidate while MET-LINUX-004 reconciles its scoped fixes. PR #139 and #136 are closed as superseded; no historical failure is erased. No runner is registered. The next gate is isolated local acceptance of this repair, then required self-hosted CI and separate exact-main verification. Installation, exact-job admission proof, native AMD64 qualification, W01 and integrated Alpha-2 acceptance remain unpassed. Alpha 2 is **open**; no phase-end model-effort transition is due.
+
+The paragraphs below retain earlier publication checkpoints, not current dispatch or completion status.
+
 Current source baseline: `945de93f89c94f42f1d63bff7997e3d0fa704fc4` on accepted main, the merge of MET-UNIFY-005 PR #140. Alpha 2 remains **open**. `MET-RUNNER-001` is a source-only development-CI capacity exception candidate, not an installed runner or permission to provision one. As observed on September 29, 2026, [PR #141](https://github.com/caglarsubas/harness-onion/pull/141) and [draft PR #142](https://github.com/caglarsubas/harness-onion/pull/142) have queued self-hosted `verify` jobs and the repository has zero registered runners. Their source/CI/merge, Linux native and tenant-acceptance evidence remain separate. The [bounded exception](alpha-2/CI_CAPACITY_EXCEPTION.md) requires an independently authorized cost ceiling, a separately reviewed and installed exact-job pre-checkout admission boundary, queue serialization, a qualified Linux guest and verified teardown; this publication supplies none of those operational facts. The next source packet is MET-RUNNER-001, while native AMD64 qualification and the W01/Alpha-2 product gates remain waiting.
 
 The next paragraph is the retained pre-PR-140 source checkpoint, not current dispatch or completion status.
@@ -97,12 +107,13 @@ The [item-level backlog](../architecture/unified-roadmap-backlog.json) records p
 | Alpha 2 preparation | MET-ENFORCE-003 | MERGED_SOURCE_RECORDED | PR #138 on accepted main; reviewed W01 candidate remains a design, not a native enforcement proof |
 | Alpha 2 preparation | MET-UNIFY-001 | BLOCKED_LOCAL_ALLOWANCE_EXHAUSTED | Unpublished failed local candidate; two LOCAL attempts consumed, no PR/CI/merge or budget transfer |
 | Alpha 2 preparation | MET-UNIFY-002 | BLOCKED_LOCAL_ALLOWANCE_EXHAUSTED | Unpublished candidate; three LOCAL attempts consumed, stale 204-file assertion retained |
-| Alpha 2 preparation | MET-UNIFY-003 | BLOCKED_CI_ALLOWANCE_EXHAUSTED | PR #139 unmerged; LOCAL PASS, CI-1 transport failure and CI-2 15-minute cancellation; no runner remains |
+| Alpha 2 preparation | MET-UNIFY-003 | CLOSED_SUPERSEDED | PR #139 closed after PR #140; exhausted CI history retained: LOCAL PASS, CI-1 transport failure and CI-2 15-minute cancellation |
 | Alpha 2 preparation | MET-UNIFY-004 | BLOCKED_LOCAL_ALLOWANCE_EXHAUSTED | Local commit only; LOCAL-1 status-check failure and LOCAL-2/3 750-second timeouts; no PR, CI or merge |
 | Alpha 2 preparation | MET-UNIFY-005 | MERGED_SOURCE_RECORDED | PR #140 on exact accepted main `945de93`; source history only, not Linux or tenant qualification |
-| Alpha 2 CI capacity | MET-RUNNER-001 | ONGOING_SOURCE_DESIGN | Bounded external CI exception and exact-job admission contract; no VM, runner, CI PASS or native qualification |
-| Alpha 2 CI capacity | MET-UNIFY-008 / PR #141 | BLOCKED_SELF_HOSTED_CI | Source PR open; `verify` queued with no registered runner |
-| Alpha 2 CI capacity | MET-LINUX-003 / PR #142 | BLOCKED_SELF_HOSTED_CI | Draft source PR open; `verify` queued on the same labels; queue must be serialized before one-job admission |
+| Alpha 2 CI capacity | MET-RUNNER-001 / PR #143 | MERGED_SOURCE_EXCEPTION | Exact main `0314a684`; LOCAL6 PASS, one-time merge exception consumed, enforcement restored; required CI not PASS |
+| Alpha 2 CI capacity | MET-LINUX-004 | ONGOING_SOURCE_REPAIR | Current-main nested-workspace/system-alias repair and 191-to-190 history; local/CI/exact-main and installed-host evidence pending |
+| Alpha 2 CI capacity | MET-UNIFY-008 / PR #141 | DRAFT_CONFLICTING | Cancelled CI; exhausted LOCAL3 preserved; separate gate-policy decision not implemented by MET-LINUX-004 |
+| Alpha 2 CI capacity | MET-LINUX-003 / PR #142 | DRAFT_HISTORICAL_CANDIDATE | Cancelled CI, conflicting base; scoped source fixes reconciled by MET-LINUX-004, no inherited acceptance or budget |
 | Alpha 2A | W01 | ONGOING_DESIGN | Resolve G04–G07/G09; E01–E12 remain OPEN_UNPROVEN |
 | Alpha 2A | W02–W07 | WAITING_EXACT_PACKETS | Interface, implementation, packaging and native proof labels, not executable YAML |
 | Alpha 2A | CONF-FIX-010 | BLOCKED_SAFE_DESIGN | Zero product attempts; requires separately reviewed safe design and bounded packet authority |

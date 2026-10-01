@@ -18,12 +18,13 @@ def inputs():
         "firejail": {"path": FIREJAIL, "version": "0.9.76", "root": "/usr/bin", "inventorySha256": "2" * 64},
         "git": {"path": "/usr/bin/git", "version": "2.50.1", "root": "/usr/bin", "inventorySha256": "2" * 64},
     }
-    return {"schemaVersion": "planeon.linux-build-inputs/v1",
+    return {"schemaVersion": "planeon.linux-build-inputs/v3",
             "target": {"os": "linux", "architecture": "amd64", "libc": "glibc", "libcVersion": "2.39",
                        "execution": "NATIVE", "imageDigest": "sha256:" + "3" * 64},
             "tools": tools, "caches": [{"root": "/opt/planeon/cache/python", "inventorySha256": "4" * 64,
                                        "os": "linux", "architecture": "amd64", "libc": "glibc", "tool": "python"}],
-            "systemTrees": [{"root": root, "inventorySha256": "a" * 64} for root in ("/usr/lib", "/etc/firejail")],
+            "systemTrees": [{"root": root, "inventorySha256": "2" * 64 if root == "/usr/bin" else "a" * 64}
+                            for root in ("/usr/bin", "/usr/lib", "/etc/firejail")],
             "systemFiles": {"/etc/ld.so.cache": "b" * 64},
             "source": {"repository": "caglarsubas/harness-onion", "commit": "5" * 40, "treeSha256": "6" * 64},
             "recipes": {"packet": "SIGNED_PACKET_WRAPPER", "nextStandalone": "LINUX_TARGET_BUILD_ONLY",
@@ -34,8 +35,8 @@ def inputs():
 def policy(inputs):
     from launcher import profile_bytes
     from common import digest
-    value = {"schemaVersion": "planeon.linux-runner-policy/v1", "issuedAt": 100, "expiresAt": 200,
-             "operatorUid": 1001, "operatorName": "runner", "workspace": "/opt/planeon/work/candidate",
+    value = {"schemaVersion": "planeon.linux-runner-policy/v3", "issuedAt": 100, "expiresAt": 200,
+             "operatorUid": 1001, "operatorName": "runner", "workspace": "/opt/planeon/work/harness-onion/harness-onion",
              "runnerHome": "/srv/planeon/runner-agent", "packetSha256": "7" * 64,
              "warmContainer": "/srv/planeon/warm-snapshots", "warmRoots": ["/srv/planeon/warm-snapshots/reference"],
              "inputs": inputs, "profileSha256": "8" * 64,

@@ -87,7 +87,7 @@ def inventory(authority, stage=2):
 def test_exact_authority_and_all_historical_bytes(authority):
     packets, record, inputs = authority
     assert validate_credential_lifecycle(*authority) == []
-    assert len(packets) == 190 and len(record["protectedFiles"]) == 245
+    assert len(packets) == 191 and len(record["protectedFiles"]) == 245
     assert len(packets["MET-REPAIR-012"]["offlineAcceptanceCommands"]) == 20
     assert len(packets["CONF-FIX-005"]["allowedPaths"]) == 5
     assert len(packets["CONF-FIX-005"]["offlineAcceptanceCommands"]) == 8

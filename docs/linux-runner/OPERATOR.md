@@ -1,6 +1,11 @@
 # Linux runner candidate / external operator handoff
 
-Phase: Alpha 2 foundation. Packet: MET-LINUX-002. This kit is source work only;
+Phase: Alpha 2 foundation. Packet: MET-LINUX-004, a source-only successor to
+MET-LINUX-002 and MET-RUNNER-001 on accepted main
+`0314a684ba637fb205856d5fb5e50206071e647a`. The unpublished MET-LINUX-003
+candidate in PR #142 supplied reviewed design inputs; its packet, historical
+189-packet bridge and acceptance allowances are not adopted. This kit is source
+work only;
 it does not install root authority or close CONF-LINUX-001. macOS remains the
 development host. Linux runtime, OCP/Kubernetes, air gap and tenant acceptance
 remain independent gates. No root files, GitHub workflows, product repository,
@@ -18,12 +23,17 @@ warm source or existing macOS operator installation may be changed by this PR.
 | ci/linux-runner/prepare.py | Unsigned policy/profile rendering; no root writes |
 | tests/linux_runner/ | Source-only adapters, malformed inputs, published signature vectors, deterministic build and full predecessor baseline |
 
-The only packet acceptance command is the declared offline/frozen uv pytest
-argv in task-packets/MET-LINUX-002.yaml, entered through the existing external
-signed host launcher. It exercises packaging from tests; no product acceptance
-command is run separately on the workstation. Nested predecessor checks stay
-in that same isolated process tree and exclude only this new test directory
-to prevent recursion. The builder is not an installer.
+The accepted MET-LINUX-002 packet declared one offline/frozen uv pytest argv.
+MET-LINUX-004 inherits all 52 MET-RUNNER-001 commands in order and adds its
+current-contract validator before the outer test suite, for 53 commands.
+Enter only through its exact hash-pinned packet and the existing external
+signed host launcher; no acceptance command runs separately on the workstation.
+The outer suite executes all current Linux tests, retaining inherited test
+identities with versioned fixtures. The unchanged nested collector runs the
+current non-Linux suite and validators in the same isolated process tree;
+excluding the Linux directory there prevents recursive collection. Historical
+source is retained and checked as data, never materialized for execution.
+The builder is not an installer.
 
 Reviewed standalone operator packaging argv, to be run only in the operator's
 already authorized offline environment:
@@ -44,20 +54,34 @@ compare complete bytes and inventories, not only version strings.
 
 This sequence describes independent operator responsibilities; no install,
 sudo policy, password collection, key creation or provisioning script is supplied.
-Use only existing authorized zero-incremental-cost native Linux capacity.
+Use only authorized native Linux capacity. The separate development-CI
+exception in [CI_CAPACITY_EXCEPTION.md](../alpha-2/CI_CAPACITY_EXCEPTION.md)
+does not grant installation, registration, spending or product qualification
+through this source packet. It requires its own operator evidence and controls.
 
 1. Independently review the exact candidate source/crypto/profile and package
    digests. A source-test PASS is not security review or Linux qualification.
 2. Prestage Linux-native root-owned Python/tool/cache closures and the clean
    owned-product checkout. Supply complete [BUILD_INPUTS.md](BUILD_INPUTS.md).
+   V3 admits signed, complete cross-root aliases only in explicitly declared
+   root-owned system trees including `/usr/bin`; source, cache, trust and
+   dedicated-tool aliases remain refused.
    Pin Firejail binary, helper libraries and configuration in the immutable host
-   image. Review actual feature support; this kit has no automatic upgrade path.
+   image. Independently verify the booted image digest and derive its actual
+   ELF interpreter, transitive native-library, loader-search and helper closure;
+   the source candidate checks ELF class/machine and signed inventory bytes but
+   does not compute that dependency closure or attest the host image itself.
+   An incomplete/unobservable closure blocks listener registration. Review
+   actual feature support; this kit has no automatic upgrade path.
 3. Keep the runner non-root, ephemeral and free of cloud/provider keys,
    kubeconfig, external credential homes, agent/control sockets and billable
    brokers. GitHub runner registration credentials stay in the separately
    hidden runnerHome, never the workspace or tool/cache inventories. All
    snapshots belong under the named root-owned warm container; reject aliases,
-   extra roots or alternate bind mounts in the host image review.
+   extra roots or alternate bind mounts in the host image review. Before
+   signing, precreate the inert zero-byte root-owned mode-0444 regular file
+   `/srv/planeon-runner-placeholder`. The profile's `private-srv` copies only
+   this direct child into a new `/srv`; it must not copy or expose `planeon`.
 4. Use existing independent operator authority to sign the exact data-only
    policy. Preserve previous installed bytes, modes, signatures and activation
    history as a rollback transaction before any installation.
@@ -94,6 +118,52 @@ HARNESS_WARM_SOURCE_ROOTS equals the exact newline-separated root inventory, or
 NONE only for an externally proven empty container. Values never reach packet
 commands. No setup script or plaintext administrator password is needed by the kit.
 
+### MET-LINUX-004 layout and custody repair (source candidate only)
+
+The signed V3 policy binds `workspace` to exactly
+`/opt/planeon/work/<repository-basename>/<repository-basename>`, where the
+basename comes from the validated `inputs.source.repository`. The operator must
+verify the pinned GitHub runner binary and its configured work root before
+signing. A default or private tracking-file override is not evidence. Root-own
+`/opt`, `/opt/planeon` and `/opt/planeon/work`; precreate the two repository
+directories, `.git`, the sibling runner directories and the separately hidden
+runner home for the dedicated non-root UID without group/world write. The
+checkout and runner may write inside precreated children, but cannot unlink or
+rename an observed top-level sibling or sentinel under the root-owned work
+parent. The launcher rechecks these components with no-follow metadata before
+isolation. Inside Firejail's `/opt` whitelist, the synthetic intermediate
+repository parent must instead be root-owned/non-writable while the bind-mounted
+checkout and `.git` retain the runner UID; their Git
+identity, top-level, absolute Git directory and HEAD are verified again inside
+isolation. Any alias, changed HEAD,
+wrong GitHub context or different checkout path fails closed. Host mount
+inventory must have no mountpoint at `/opt`, `/opt/planeon`, or at/beneath
+`/opt/planeon/work`; a bind mount cannot substitute an ancestor, checkout or
+warm tree there.
+
+Before a native preflight, the operator creates the runner-owned, non-writable-
+by-others sibling directories `_temp`, `_actions`, `_tool` and
+`_PipelineMapping` under `/opt/planeon/work`, plus a root-owned mode-0444
+regular `_planeon-deny-sentinel` there. The root-owned work parent stabilizes
+their names while the runner operates. The host verifies their existence and
+custody; the isolated preflight must deny read, metadata and write access to
+each actual path. An `ENOENT` inside isolation only counts when the path was
+observed outside. The exact signed profile blacklists these siblings and
+whitelists only the selected checkout. A re-created or changed work root
+requires a fresh host observation; no V1/V2 manifest or preflight can be reused.
+
+These changes do not install the candidate, register a runner, resolve PR #141's
+blocked source/CI gates, or certify stock Debian. A later independent root-owned installation,
+signed bundle, pinned tool/cache/image inventory and native negative run are
+still required before any one-job listener can take work.
+The V3 inventory resolves links only through declared root-owned trees. Include
+`/etc/alternatives` when the selected image uses alternatives links; pin its
+full inventory along with `/usr/bin`, `/usr/lib` and `/etc/firejail`. A system
+alias to an undeclared tree, or a symlinked inventory root such as `/lib`, still
+fails. Do not delete or rewrite distribution links merely to manufacture a
+candidate PASS. A selected image needing root aliases requires a separately
+versioned signed contract before qualification.
+
 ## Isolation and evidence semantics
 
 Firejail creates independent network, PID and mount namespaces with no network,
@@ -104,11 +174,18 @@ backend never executes unisolated code. Strict socket creation denial means
 tools requiring even loopback listeners are not compatible with this offline
 profile; live service tests belong behind the separate conformance boundary.
 
-The root-owned generated profile, not argv, contains source roots. The entire
-warm container is hidden as well as its read-only/blacklisted roots: a blacklist
-placeholder whose own stat succeeds cannot prove metadata denial. Probe paths
+The signed policy carries the exact source-root probe set; no warm-root path
+appears in process argv. A private `/srv` view contains only the inert host-observed
+placeholder: the real warm container, every warm root and runnerHome must be
+absent inside, including under metadata probes. A Firejail blacklist by itself
+is insufficient because it leaves the blacklisted path visible. `/opt` is
+whitelisted to the selected checkout and pinned tools; the real runner sibling
+paths must also be absent inside. Probe paths
 are opened only to test access and immediately closed; no source or credential
 contents are read, enumerated or written even if a denial unexpectedly fails.
+The host observes protected directory roots before isolation, but root mount
+points themselves may have visible metadata. No PASS may be inferred from
+their metadata; actual sensitive descendants are probed individually.
 Tests require EPERM/EACCES for socket denial, never a timeout, route failure,
 unsupported address family or DNS failure. IPv4, IPv6, UDP/DNS, loopback, Unix
 pathname and abstract socket creation are tested without sending packets.
@@ -153,16 +230,20 @@ be reported as those operations having run.
 | --- | --- | --- |
 | Alpha 2 authority | MET-LINUX-001 | DONE: PR94 / b1d7478; no Linux proof |
 | Alpha 1 corrective carryover | CTRL-FIX-003 | DONE: control PR10 / 1de7c40; 698 unit + 6 browser tests and exact-main offline replay |
-| Alpha 2 foundation | MET-LINUX-002 | ONGOING: this source candidate; CI/merge/main are separate closure evidence |
+| Alpha 2 foundation | MET-LINUX-002 | DONE: PR95 / c37f2b7; source candidate only, no installed Linux proof |
+| Alpha 2 admission contract | MET-RUNNER-001 | SOURCE MERGED: PR143 / 0314a684 under a consumed administrator exception; required CI was not PASS |
+| Alpha 2 earlier runner proposal | MET-LINUX-003 | RETAINED: unpublished PR142 source candidate; no predecessor status or allowance transfer |
+| Alpha 2 runner repair | MET-LINUX-004 | ONGOING SOURCE: nested checkout/system-alias repair on accepted main; isolated acceptance, required CI, merge and native qualification remain separate gates |
 | Alpha 2 qualification | CONF-LINUX-001 | WAITING: independent Linux host/build/runtime evidence |
 | Alpha 1 integration | CTRL-INTEGRATE-001 | WAITING: native AMD64 gate |
 | Alpha 2 runtime | MODEL-001 / EXEC-001 / RUN-001 | WAITING: native AMD64 gate and own predecessors |
 
 Root installation, native Linux proof and full-phase completion are not outcomes
 of this source packet. No model-effort transition is implied. Earlier published
-meta tables are immutable historical snapshots; this packet may update only its
-three allowed directories. The separately observed control-repository branch
-protection gap remains a governance finding, not permission to edit settings.
+meta tables are immutable historical snapshots; MET-LINUX-004 may change only
+its exact declared allowed paths. The separately observed control-repository
+branch protection gap remains a governance finding, not permission to edit
+settings.
 
 Revert an unconsumed source candidate through a scoped PR. For an independently
 installed candidate, the external operator restores the complete previous

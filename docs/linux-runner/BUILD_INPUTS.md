@@ -1,4 +1,4 @@
-# Closed Linux build inputs — MET-LINUX-002
+# Closed Linux build inputs — MET-LINUX-004 candidate
 
 This specification is local operator-kit configuration, not a tenant wire API
 or a change to `schemas/trusted-runner-manifest.schema.json`. The executable
@@ -12,7 +12,8 @@ explicitly stated. No sample digest in a unit test is operational authority.
 Exactly `schemaVersion`, `target`, `tools`, `caches`, `systemTrees`,
 `systemFiles`, `source`, `recipes`:
 
-- `schemaVersion`: `planeon.linux-build-inputs/v1`.
+- `schemaVersion`: `planeon.linux-build-inputs/v3`. V1/V2 signatures and
+  inventories are not compatible with this source candidate.
 - `target`: exactly `os=linux`, `architecture=amd64|arm64`,
   `libc=glibc|musl`, numeric dotted `libcVersion`, `execution=NATIVE`,
   and `imageDigest=sha256:<64 hex>` for the operator's existing immutable host
@@ -24,11 +25,19 @@ Exactly `schemaVersion`, `target`, `tools`, `caches`, `systemTrees`,
   `/opt/planeon/python/3.12.14/bin/python3.12`; Firejail is `/usr/bin/firejail`.
   Every required tool for the actual packet must be present. Missing executables
   fail; there is no PATH search outside the supplied locked tool directories.
+  Python's root is exactly `/opt/planeon/python/3.12.14`; non-system other
+  tool roots are direct or deeper children of `/opt/planeon/tools`. Tools in
+  `/srv`, `/run`, `/home` or another hidden/private tree are refused.
 - `caches`: nonempty records with exactly `root`, `inventorySha256`, `os`,
   `architecture`, `libc`, `tool`; target fields must match `target`, and `tool`
   must name a supplied pinned tool. No mutable or absent cache is admitted.
+  Cache roots must be below `/opt/planeon/cache`, where the exact signed
+  profile can whitelist them without exposing runner siblings.
 - `systemTrees`: unique `root`/`inventorySha256` records covering at least
-  `/usr/lib` and `/etc/firejail`, optionally `/usr/lib64` and `/usr/libexec`.
+  `/usr/bin`, `/usr/lib` and `/etc/firejail`, optionally `/usr/lib64`,
+  `/usr/libexec` and `/etc/alternatives`.
+  Firejail must use the `/usr/bin` system root. This prevents an unreviewed
+  broad `/usr` tool root from admitting aliases outside the declared closure.
   Pin all helper/native-library/configuration closures for the selected immutable
   host image. The same exhaustive ownership/inventory rules apply.
 - `systemFiles`: exactly `/etc/ld.so.cache` and its byte digest. Global
@@ -46,24 +55,41 @@ Exactly `schemaVersion`, `target`, `tools`, `caches`, `systemTrees`,
   `hostOutputReuse=DENIED`. Build argv come only from the signed packet, not an
   arbitrary recipe string or imported script.
 
-An inventory is a UTF-8-bytewise path-sorted JSON array. Every file entry has
-exactly `path` (relative POSIX), `mode` (four octal digits), `size` (bytes), and
-`sha256` (exact contents). Empty directories and timestamps are excluded.
+An inventory is a UTF-8-bytewise path-sorted JSON array. Source, cache and
+dedicated-tool inventories retain the strict V1 file entry encoding (`path`,
+`mode`, `size`, `sha256`) and reject every symlink and hardlink. Only declared
+root-owned `systemTrees` use a V3 union graph. Directory entries record
+`kind=directory`, `path` and `mode`; regular files add `kind=file`, size,
+digest and a complete absolute-path `hardlinkGroup` across the union. Symlinks
+record `kind=symlink`, exact raw `target` and graph-resolved absolute
+`resolvedPath`. Every observed hardlink count must equal the complete signed
+union group. The verifier inventories every real tree without following links,
+then resolves every alias component-by-component through inventoried real nodes
+and root-owned, non-writable bridge ancestors. Relative and absolute file or
+directory targets may cross only between explicitly declared trees, such as
+`/usr/bin` → `/etc/alternatives` → `/usr/bin`. Missing, untrusted, mutable,
+escaping, cyclic or special-file paths fail; an alias must end at an inventoried
+regular file or real directory. Root-level aliases used as inventory roots,
+such as `/lib` → `/usr/lib`, are not admitted without a separate signed
+root-alias contract. Source/cache/dedicated-tool aliases remain forbidden.
+This permits a reviewed closure, not arbitrary distribution adoption. The
+operator must still pin the target image, all closure bytes and fresh host
+negative evidence; a stock Linux image is not assumed to qualify.
 Canonical inventory encoding uses ASCII-escaped JSON, sorted object keys,
-comma/colon separators and no trailing newline. Hash that encoding. Symlinks,
-hardlinks, FIFOs, sockets, devices and unknown entries fail. Changes during a
-read fail; atime alone is not an integrity field. All tool/cache files and
-directories must be root-owned and not group/world writable. The operator must
-stage regular-file Linux closures, not point at symlinked workstation caches.
-A stock distribution library tree containing SONAME symlinks is not silently
-accepted: the external immutable runner image must supply a reviewed regular-file
-closure. This is a strict candidate prerequisite, not a claim of out-of-box
-compatibility with every distribution.
+comma/colon separators and no trailing newline. Hash that encoding.
 
 Distinct tool/cache roots may not overlap each other, the workspace, runner
 home, trust or warm container. Tools sharing one root must have the same
 exhaustive inventory digest. System helper/configuration/library trees and
 loader-cache bytes are verified too; ELF headers alone do not establish closure.
+The candidate does not parse ELF `PT_INTERP`, `DT_NEEDED`, RPATH/RUNPATH or
+dynamic loader search results, and it cannot independently attest the booted
+host image against `imageDigest`. Before installation or listener registration,
+the external operator must derive and review the actual transitive loader and
+helper closure for the exact immutable Linux image, include every used path in
+the signed inventories, and independently verify the image identity. A signed
+configuration value or source-only test is not that evidence. An undeclared
+dependency or unobservable image identity blocks native qualification.
 
 ## Signed execution policy
 
@@ -71,10 +97,10 @@ Exactly these fields:
 
 | Field | Constraint |
 | --- | --- |
-| schemaVersion | planeon.linux-runner-policy/v1 |
+| schemaVersion | planeon.linux-runner-policy/v3 |
 | issuedAt / expiresAt | Integer epoch seconds; current, ordered, maximum 24 hours |
 | operatorUid / operatorName | Dedicated non-root numeric UID and safe local name |
-| workspace | One canonical direct child of /opt/planeon/work |
+| workspace | Exactly /opt/planeon/work/REPO/REPO, with REPO derived from the already validated signed source repository; no arbitrary extra depth |
 | runnerHome | One canonical direct child of /srv/planeon, disjoint from work/sources |
 | packetSha256 | Exact fixed /opt/planeon/packet/active.yaml bytes |
 | warmContainer | /srv/planeon/warm-snapshots, root-owned and non-writable by runner |
@@ -91,10 +117,12 @@ nor signs, installs, downloads, builds an image, contacts a registry or executes
 a packet.
 
 Detached raw 64-byte Ed25519 policy signature covers:
-`UTF8("planeon.linux-runner-policy/v1\u0000") || exact policy.json bytes`.
+`UTF8("planeon.linux-runner-policy/v3\u0000") || exact policy.json bytes`.
 No RFC 8785 claim is made for this private byte-signed format. Manifest signing
 is unchanged: detached Ed25519 over exact manifest bytes. Public key is strict
 Ed25519 SPKI PEM, pinned by exact PEM-byte SHA-256 in root image custody.
+The changed launcher version/profile, input schema and signature domain require
+a fresh signed policy, manifest and host preflight. No V1/V2 PASS transfers.
 
 ## Native product recipes and evidence
 

@@ -7,6 +7,7 @@ import binascii
 import hashlib
 import json
 import stat
+from functools import lru_cache
 from pathlib import Path
 from types import MappingProxyType
 from typing import Any
@@ -19,7 +20,7 @@ except ImportError:
 
 ROOT = Path(__file__).resolve().parents[1]
 AUTHORITY_PATH = "architecture/linux-runner-contract-authority.json"
-AUTHORITY_SHA256 = "ac01b38bc417d5684d18e9396f9328a0fd0996fb7f7c39fc4da3eb0a98c4e50f"
+AUTHORITY_SHA256 = "d9eaa697b41d3937fc780fd4b837216a436712cf2733ae8ab439fc7ad2c4d312"
 VALIDATOR_PATH = "scripts/validate_linux_runner_contract.py"
 BASE_COMMIT = "0314a684ba637fb205856d5fb5e50206071e647a"
 NEW_PACKET = "MET-LINUX-004"
@@ -170,22 +171,51 @@ def _rules() -> MappingProxyType:
 _PROJECTION_RULES = _rules()
 
 
-def _packet_rules() -> MappingProxyType:
+def _packet_byte_rules() -> MappingProxyType:
     record = authority()
-    expected = dict(record["baselinePackets"], **{NEW_PACKET: record["packetSha256"]})
-    rules = {}
-    for name, checksum in expected.items():
+    return MappingProxyType(dict(record["baselinePackets"],
+                                 **{NEW_PACKET: record["packetSha256"]}))
+
+
+_PACKET_BYTE_RULES = _packet_byte_rules()
+
+
+def _new_packet_rule() -> tuple[str, str]:
+    checksum = _PACKET_BYTE_RULES[NEW_PACKET]
+    raw = regular_bytes("task-packets/" + NEW_PACKET + ".yaml")
+    require(digest(raw) == checksum, "packet YAML drift: " + NEW_PACKET)
+    return checksum, digest(canonical(safe_load(raw)))
+
+
+_NEW_PACKET_RULE = _new_packet_rule()
+
+
+@lru_cache(maxsize=1)
+def _packet_rules_for(source_root: Path, authority_sha: str) -> MappingProxyType:
+    """Freeze expected payload digests once per exact source-root/authority pin."""
+    require(source_root == ROOT and authority_sha == AUTHORITY_SHA256,
+            "packet source identity changed")
+    _checked_authority_raw()
+    own_raw = regular_bytes("task-packets/" + NEW_PACKET + ".yaml")
+    require(digest(own_raw) == _NEW_PACKET_RULE[0],
+            "packet YAML drift: " + NEW_PACKET)
+    rules = {NEW_PACKET: _NEW_PACKET_RULE}
+    for name, checksum in _PACKET_BYTE_RULES.items():
+        if name == NEW_PACKET:
+            continue
         raw = regular_bytes("task-packets/" + name + ".yaml")
         require(digest(raw) == checksum, "packet YAML drift: " + name)
         rules[name] = (checksum, digest(canonical(safe_load(raw))))
     return MappingProxyType(rules)
 
 
-# Only parsed-data digests are retained. Full payload validation rehashes every
-# supplied packet and the complete authority; validate() freshly checks all
-# on-disk packet bytes. Historical traversal checks only this layer's packet so
-# predecessor validators retain their own refusal semantics and traversal cost.
-_PACKET_RULES = _packet_rules()
+def _packet_rules() -> MappingProxyType:
+    return _packet_rules_for(ROOT, AUTHORITY_SHA256)
+
+
+# Only expected parsed-data digests are cached, never a validation verdict.
+# Historical traversal checks just this layer's packet. Full payload validation
+# hashes every supplied packet anew, and validate() rereads every on-disk YAML.
 
 
 def _inverse(raw: bytes, hunks: tuple[tuple[int, bytes, bytes], ...]) -> bytes:
@@ -249,17 +279,17 @@ def historical_catalog(packets: dict[str, Any]) -> dict[str, Any]:
     """Remove only this layer, leaving predecessor checks to their owners."""
     _checked_authority_raw()
     require(type(packets) is dict, "packet mapping")
-    current_ids = set(_PACKET_RULES)
+    current_ids = set(_PACKET_BYTE_RULES)
     require(NEW_PACKET in current_ids and set(packets) == current_ids,
             "unexpected packet addition or loss")
     packet_raw = regular_bytes("task-packets/" + NEW_PACKET + ".yaml")
-    require(digest(packet_raw) == _PACKET_RULES[NEW_PACKET][0],
+    require(digest(packet_raw) == _NEW_PACKET_RULE[0],
             "packet YAML drift: " + NEW_PACKET)
     try:
         supplied_sha = digest(canonical(packets[NEW_PACKET]))
     except (TypeError, ValueError, RecursionError) as exc:
         raise ValueError("changed packet payload: " + NEW_PACKET) from exc
-    require(supplied_sha == _PACKET_RULES[NEW_PACKET][1],
+    require(supplied_sha == _NEW_PACKET_RULE[1],
             "changed packet payload: " + NEW_PACKET)
     return {name: packets[name] for name in current_ids - {NEW_PACKET}}
 
@@ -267,15 +297,16 @@ def historical_catalog(packets: dict[str, Any]) -> dict[str, Any]:
 def validate_packet_payloads(packets: dict[str, Any]) -> None:
     """Check all current payloads separately from the inherited traversal."""
     record = authority()
+    rules = _packet_rules()
     require(type(packets) is dict, "packet mapping")
     old = set(record["baselinePackets"])
     require(set(packets) == old | {NEW_PACKET}, "unexpected packet addition or loss")
-    require(set(_PACKET_RULES) == old | {NEW_PACKET}
-            and all(_PACKET_RULES[name][0] == expected
+    require(set(rules) == old | {NEW_PACKET}
+            and all(rules[name][0] == expected
                     for name, expected in record["baselinePackets"].items())
-            and _PACKET_RULES[NEW_PACKET][0] == record["packetSha256"],
+            and rules[NEW_PACKET][0] == record["packetSha256"],
             "pinned packet data inventory")
-    for name, (_byte_sha, payload_sha) in _PACKET_RULES.items():
+    for name, (_byte_sha, payload_sha) in rules.items():
         try:
             supplied_sha = digest(canonical(packets[name]))
         except (TypeError, ValueError, RecursionError) as exc:

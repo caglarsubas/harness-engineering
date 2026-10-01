@@ -132,6 +132,7 @@ def test_newest_authority_is_freshly_checked_on_every_route(monkeypatch, route):
 
 def test_catalog_uses_only_pinned_parsed_data_and_checks_each_input_again(monkeypatch):
     current = packets()
+    linux._packet_rules()
 
     def unexpected_yaml(_raw):
         pytest.fail("catalog projection must not reparse every predecessor YAML")
@@ -152,6 +153,85 @@ def test_historical_catalog_reuses_frozen_packet_pins_but_rechecks_authority(mon
     monkeypatch.setattr(linux, "authority", unexpected)
     monkeypatch.setattr(linux, "safe_load", unexpected)
     assert len(linux.historical_catalog(current)) == 190
+
+
+def test_historical_catalog_does_not_initialize_predecessor_packet_rules(monkeypatch):
+    current = packets()
+    linux._packet_rules_for.cache_clear()
+    original = linux.regular_bytes
+    packet_reads = []
+
+    def counted(path):
+        if path.startswith("task-packets/"):
+            packet_reads.append(path)
+        return original(path)
+
+    monkeypatch.setattr(linux, "regular_bytes", counted)
+    assert len(linux.historical_catalog(current)) == 190
+    assert packet_reads == ["task-packets/" + linux.NEW_PACKET + ".yaml"]
+    assert linux._packet_rules_for.cache_info().currsize == 0
+
+
+def test_full_packet_expectations_initialize_once_and_remain_immutable(monkeypatch):
+    linux._packet_rules_for.cache_clear()
+    original = linux.safe_load
+    parsed = []
+
+    def counted(raw):
+        parsed.append(raw)
+        return original(raw)
+
+    monkeypatch.setattr(linux, "safe_load", counted)
+    rules = linux._packet_rules()
+    assert len(rules) == 191 and len(parsed) == 190
+    assert linux._packet_rules() is rules and len(parsed) == 190
+    with pytest.raises(TypeError):
+        rules["MET-001"] = ("0" * 64, "0" * 64)
+
+
+def test_first_full_packet_check_refuses_changed_old_yaml(monkeypatch):
+    current = packets()
+    linux._packet_rules_for.cache_clear()
+    original = linux.regular_bytes
+
+    def changed_reader(path):
+        raw = original(path)
+        return raw + b" " if path == "task-packets/MET-001.yaml" else raw
+
+    monkeypatch.setattr(linux, "regular_bytes", changed_reader)
+    with pytest.raises(ValueError, match="packet YAML drift: MET-001"):
+        linux.validate_packet_payloads(current)
+    assert linux._packet_rules_for.cache_info().currsize == 0
+
+
+def test_cached_expected_rules_do_not_cache_payload_or_authority_verdict(monkeypatch):
+    current = packets()
+    linux.validate_packet_payloads(current)
+    current["MET-001"]["objective"] += " unreviewed"
+    with pytest.raises(ValueError, match="changed packet payload: MET-001"):
+        linux.validate_packet_payloads(current)
+    original = linux.regular_bytes
+
+    def changed_reader(path):
+        raw = original(path)
+        return raw + b" " if path == linux.AUTHORITY_PATH else raw
+
+    monkeypatch.setattr(linux, "regular_bytes", changed_reader)
+    with pytest.raises(ValueError, match="Linux runner history authority digest"):
+        linux.validate_packet_payloads(current)
+
+
+def test_cached_expected_rules_are_bound_to_source_root(tmp_path, monkeypatch):
+    current = packets()
+    linux.validate_packet_payloads(current)
+    authority_dir = tmp_path / "architecture"
+    authority_dir.mkdir()
+    (authority_dir / "linux-runner-contract-authority.json").write_bytes(
+        linux.regular_bytes(linux.AUTHORITY_PATH))
+    (tmp_path / "task-packets").mkdir()
+    monkeypatch.setattr(linux, "ROOT", tmp_path)
+    with pytest.raises(FileNotFoundError):
+        linux.validate_packet_payloads(current)
 
 
 @pytest.mark.parametrize("fault", ["opaque", "cycle", "changed"])
@@ -248,7 +328,9 @@ def test_inverse_rules_and_packet_expectations_are_immutable():
     with pytest.raises(TypeError):
         linux._PROJECTION_RULES[path]["afterSha256"] = "0" * 64
     with pytest.raises(TypeError):
-        linux._PACKET_RULES["MET-001"] = ("0" * 64, "0" * 64)
+        linux._PACKET_BYTE_RULES["MET-001"] = "0" * 64
+    with pytest.raises(TypeError):
+        linux._packet_rules()["MET-001"] = ("0" * 64, "0" * 64)
     raw = linux.regular_bytes(path)
     with pytest.raises(ValueError, match="inverse hunk current bytes"):
         linux._inverse(raw, ((0, b"not-current", b"old"),))

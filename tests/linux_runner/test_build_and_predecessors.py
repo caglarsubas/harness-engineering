@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import subprocess
 import sys
+import time
 import zipfile
 
 import pytest
@@ -94,6 +95,63 @@ def test_standard_library_only_and_no_shell_evaluation():
                             and node.func.value.id == "os" and node.func.attr in ("system", "popen"))
 
 
+def _timed_predecessor(argv, env, emit):
+    """Observe the existing command; never retry, swallow failure or grant PASS."""
+    identity = {"argv": argv[1:], "timeoutSeconds": 420,
+                "evidence": "SOURCE_TIMING_ONLY_NOT_ACCEPTANCE"}
+    started = time.monotonic_ns()
+    emit({**identity, "state": "START"})
+    try:
+        result = subprocess.run(argv, cwd=ROOT, env=env, capture_output=True,
+                                text=True, timeout=420, close_fds=True)
+    except (subprocess.TimeoutExpired, OSError) as error:
+        emit({**identity, "state": "END", "elapsedNs": time.monotonic_ns() - started,
+              "outcome": "TIMEOUT" if isinstance(error, subprocess.TimeoutExpired) else "LAUNCH_ERROR",
+              "returnCode": None})
+        raise
+    emit({**identity, "state": "END", "elapsedNs": time.monotonic_ns() - started,
+          "outcome": "COMPLETED" if result.returncode == 0 else "NONZERO_EXIT",
+          "returnCode": result.returncode})
+    return result
+
+
+@pytest.mark.parametrize("outcome", ["completed", "nonzero", "timeout", "launch_error"])
+def test_predecessor_timing_preserves_argv_limits_and_failures(monkeypatch, outcome):
+    # Pure observer tests: no subprocess and no real-run marker is emitted.
+    argv = [sys.executable, "scripts/zero_bill_scan.py", "."]
+    env = {"FIXTURE": "data-only"}
+    events, calls = [], []
+    ticks = iter([100, 350])
+    monkeypatch.setattr(time, "monotonic_ns", lambda: next(ticks))
+    error = (subprocess.TimeoutExpired(argv, 420) if outcome == "timeout"
+             else OSError("synthetic launch refusal"))
+    result = subprocess.CompletedProcess(argv, 1 if outcome == "nonzero" else 0,
+                                         stdout="synthetic stdout", stderr="")
+
+    def fake_run(actual_argv, **kwargs):
+        calls.append((actual_argv, kwargs))
+        assert events == [{"argv": argv[1:], "timeoutSeconds": 420,
+                           "evidence": "SOURCE_TIMING_ONLY_NOT_ACCEPTANCE", "state": "START"}]
+        if outcome in ("timeout", "launch_error"):
+            raise error
+        return result
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    if outcome in ("timeout", "launch_error"):
+        with pytest.raises(type(error)) as caught:
+            _timed_predecessor(argv, env, events.append)
+        assert caught.value is error
+    else:
+        assert _timed_predecessor(argv, env, events.append) is result
+    assert calls == [(argv, {"cwd": ROOT, "env": env, "capture_output": True,
+                            "text": True, "timeout": 420, "close_fds": True})]
+    assert len(events) == 2 and events[1]["state"] == "END"
+    assert events[1]["elapsedNs"] == 250
+    assert events[1]["outcome"] == {"completed": "COMPLETED", "nonzero": "NONZERO_EXIT",
+                                     "timeout": "TIMEOUT", "launch_error": "LAUNCH_ERROR"}[outcome]
+    assert events[1]["returnCode"] == (None if outcome in ("timeout", "launch_error") else result.returncode)
+
+
 def test_full_predecessor_suites_and_validators_remain_green(capsys):
     # The outer current-source suite includes all inherited Linux test identities
     # with versioned fixtures. This nested process stays in the same OS-denied
@@ -105,8 +163,14 @@ def test_full_predecessor_suites_and_validators_remain_green(capsys):
                  ("validate_readiness.py", "validate_reuse.py", "validate_alpha2_readiness.py",
                   "validate_readiness_repairs.py", "validate_linux_readiness.py")]
     commands += [[sys.executable, "scripts/zero_bill_scan.py", "."]]
+
+    def emit(event):
+        prefix = "PREDECESSOR_START=" if event["state"] == "START" else "PREDECESSOR_TIMING="
+        with capsys.disabled():
+            print(prefix + json.dumps(event, sort_keys=True), flush=True)
+
     for argv in commands:
-        result = subprocess.run(argv, cwd=ROOT, env=env, capture_output=True, text=True, timeout=420, close_fds=True)
+        result = _timed_predecessor(argv, env, emit)
         with capsys.disabled():
             print("PREDECESSOR_ARGV=" + json.dumps(argv[1:]), flush=True)
             print(result.stdout, flush=True)

@@ -13,8 +13,11 @@
    only; implement clean-room. A future import requires path-level legal evidence,
    `COPY_AUTHORIZED`, an approved authorizationId/mapping, a revised packet, and
    the matching destination `PORTING.yaml` record.
-5. Do not introduce cloud provisioning, hosted runners, paid APIs, API-key requirements,
-   runtime downloads, mutable artifact references, or external telemetry defaults.
+5. Do not introduce cloud provisioning into product or repository implementation,
+   hosted runners, paid APIs, API-key requirements, runtime downloads, mutable
+   artifact references, or external telemetry defaults. MET-RUNNER-001 documents
+   one externally operated, separately cost-authorized disposable development-CI
+   Linux guest; its source publication grants no provisioning or runner authority.
 6. Run only declared direct-argv `prefetchCommands` as the first phase inside
    the same deny-all-outbound OS-isolated process tree as acceptance. Set
    `HARNESS_TASK_PACKET` to the hash-pinned YAML path and execute the exact
@@ -36,7 +39,17 @@
     warm-start checkout. Packet `sourceReuse` entries are historical provenance
     and clean-room parity requirements only. New source observation requires a
     separately authorized observation packet and execution identity.
-11. CI may perform only the pinned credential-free checkout and then invoke the
+11. The sole pre-checkout exception is an externally installed, root-owned
+    nonwritable exact-job admission hook and verifier with signed one-shot
+    authority, image-pinned public-key trust, atomic nonce reservation and a
+    hard timeout. The external controller binds the numeric GitHub job ID to a
+    signed unique run/attempt/workflow/job-context tuple; a controlled live
+    Linux host test must prove that the pinned hook authenticates every required
+    observable tuple field before registration. It fails a wrong assignment
+    before checkout; shared runner labels never establish job identity. No
+    checked-out repository code runs in
+    that hook. CI then performs
+    only the pinned credential-free checkout and invokes the
     preinstalled absolute host launcher `/opt/planeon/bin/harness-offline-launch`.
     Repository shell/Python begins only after it establishes isolation. The
     ephemeral self-hosted runner and root-owned launcher contain no ambient cloud

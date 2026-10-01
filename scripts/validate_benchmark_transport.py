@@ -20,6 +20,11 @@ try:
 except ImportError:
     from scripts.validate_completion_integration import historical_bytes as integration_history, current_test_bytes as integration_current, validate_additions as integration_additions, historical_catalog as integration_catalog
 
+try:
+    from validate_ci_runner_admission import historical_bytes as runner_history
+except ImportError:
+    from scripts.validate_ci_runner_admission import historical_bytes as runner_history
+
 ROOT = Path(__file__).resolve().parents[1]
 RECORD_PATH = 'architecture/benchmark-transport-authority.json'
 RECORD_SHA256 = '6d81dac9a94a572c9e7c18a68395599434b9967643092c3c97b01751dc5d77c9'
@@ -341,7 +346,7 @@ def validate_authority(packets, record, inputs):
                     and p['warmSourceAccess'] == 'PROHIBITED_DURING_IMPLEMENTATION'
                     and p['offlineExecution'] == prior['offlineExecution'] and 'liveCampaignExecution' not in p, 'unchanged offline boundary')
         for path,checksum in value['preservedArtifacts'].items():
-            require(digest(inputs[path]) == checksum, 'immutable driver, workload and source pins')
+            require(digest(runner_history(path, inputs[path])) == checksum, 'immutable driver, workload and source pins')
         for path,rule in record['metaRecipes'].items():
             before = historical_bytes(path,inputs[path])
             require(apply_recipe(before,rule) == integration_history(path,inputs[path]), 'exact reversible metadata')
@@ -359,4 +364,4 @@ if __name__ == '__main__':
     errors = validate_authority(packets,*load_inputs(ROOT))
     if errors:
         print('\n'.join(errors)); raise SystemExit(1)
-    print('Historical benchmark transport valid:189 current specifications;175-packet projection; original comparison allowance unchanged.')
+    print('Historical benchmark transport valid:190 current specifications;175-packet projection; original comparison allowance unchanged.')

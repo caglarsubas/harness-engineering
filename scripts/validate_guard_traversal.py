@@ -20,6 +20,11 @@ try:
 except ImportError:
     from scripts.validate_observation_enforcement import historical_bytes as observation_history, current_test_bytes as observation_current, historical_catalog as observation_catalog
 
+try:
+    from validate_ci_runner_admission import historical_bytes as runner_history
+except ImportError:
+    from scripts.validate_ci_runner_admission import historical_bytes as runner_history
+
 ROOT = Path(__file__).resolve().parents[1]
 RECORD_PATH = 'architecture/guard-traversal-authority.json'
 RECORD_SHA256 = 'fa935f270d3f92210e73bc7189c1b0e9df67ff08aff6f7e27137e13a41667a5e'
@@ -305,7 +310,7 @@ def validate_authority(packets, record, inputs):
                 and value['designGate']['unprovenEquivalence'] == 'STOP_NOT_WAIVE',
                 'no implicit safe design')
         for path, checksum in value['preservedArtifacts'].items():
-            require(digest(inputs[path]) == checksum, 'preserved contracts and locks')
+            require(digest(runner_history(path, inputs[path])) == checksum, 'preserved contracts and locks')
         for path, rule in record['metaRecipes'].items():
             before = historical_bytes(path, inputs[path])
             require(apply_recipe(before, rule) == observation_history(path,inputs[path]), 'exact reversible metadata')

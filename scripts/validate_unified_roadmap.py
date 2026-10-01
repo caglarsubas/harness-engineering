@@ -17,6 +17,23 @@ try:
 except ImportError:
     from scripts.safe_yaml import safe_load
 
+try:
+    from validate_ci_runner_admission import (
+        authority as runner_authority,
+        historical_bytes as runner_history,
+        historical_test_bytes as runner_historical_test,
+        current_test_bytes as runner_current_test,
+        historical_catalog as runner_catalog,
+    )
+except ImportError:
+    from scripts.validate_ci_runner_admission import (
+        authority as runner_authority,
+        historical_bytes as runner_history,
+        historical_test_bytes as runner_historical_test,
+        current_test_bytes as runner_current_test,
+        historical_catalog as runner_catalog,
+    )
+
 
 ROOT = Path(__file__).resolve().parents[1]
 AUTHORITY_PATH = "architecture/unified-roadmap-authority.json"
@@ -357,6 +374,17 @@ def _project_changed(path: str, raw: bytes, rule: Mapping[str, Any], current_dig
 
 def historical_bytes(path: str, raw: bytes) -> bytes:
     """Project only a pinned current file to its accepted predecessor bytes."""
+    require(type(raw) is bytes, "source bytes required")
+    if path in CHANGED_PATHS:
+        rule = _PROJECTION_RULES.get(path)
+        require(rule is not None, "code-pinned changed-source route")
+        if digest(raw) == rule["beforeSha256"]:
+            # This exact predecessor may be passed by an already-projected caller.
+            # Recheck both authorities before treating it as idempotent.
+            _checked_authority_raw()
+            runner_authority()
+            return raw
+    raw = runner_history(path, raw)
     _checked_authority_raw()
     require(type(raw) is bytes, "source bytes required")
     if path not in CHANGED_PATHS:
@@ -368,6 +396,7 @@ def historical_bytes(path: str, raw: bytes) -> bytes:
 
 def historical_test_bytes(raw: bytes) -> bytes:
     """Map a current test to its old bytes without guessing a filename."""
+    raw = runner_historical_test(raw)
     _checked_authority_raw()
     require(type(raw) is bytes, "test bytes required")
     current_digest = digest(raw)
@@ -393,15 +422,16 @@ def current_test_bytes(before: bytes) -> bytes:
     ]
     require(len(matches) <= 1, "ambiguous accepted test")
     if not matches:
-        return before
+        return runner_current_test(before)
     path = matches[0]
-    raw = regular_bytes(path)
+    raw = runner_history(path, regular_bytes(path))
     require(digest(raw) == _TEST_PROJECTION_RULES[path]["afterSha256"], "current test drift")
-    return raw
+    return runner_current_test(raw)
 
 
 def historical_catalog(packets: dict[str, Any]) -> dict[str, Any]:
     """Check and remove exactly this successor for the inherited 188-packet chain."""
+    packets = runner_catalog(packets)
     record = authority()
     require(isinstance(packets, dict), "packet mapping")
     old_ids = set(record["baselinePackets"])
@@ -425,7 +455,10 @@ def validate() -> None:
     require(CHANGED_PATHS == set(record["changedFiles"]), "changed-source routing drift")
     # The authority cannot hash its own bytes. Normalize only the single embedded
     # authority literal to bind this validator without a digest cycle.
-    validator_raw = regular_bytes("scripts/validate_unified_roadmap.py")
+    validator_raw = runner_history(
+        "scripts/validate_unified_roadmap.py",
+        regular_bytes("scripts/validate_unified_roadmap.py"),
+    )
     authority_literal = b'AUTHORITY_SHA256 = "' + AUTHORITY_SHA256.encode("ascii") + b'"'
     placeholder_literal = b'AUTHORITY_SHA256 = "TO_BE_PINNED_AFTER_SOURCE_FREEZE"'
     require(validator_raw.count(authority_literal) == 1, "unique authority literal")
@@ -441,8 +474,8 @@ def validate() -> None:
     )
     old_ids = set(record["baselinePackets"])
     packet_files = sorted((ROOT / "task-packets").glob("*.yaml"))
-    require(len(packet_files) == 189, "189 current packets")
-    require({path.stem for path in packet_files} == old_ids | {NEW_PACKET}, "closed packet catalog")
+    require(len(packet_files) == 190, "190 current packets")
+    require({path.stem for path in packet_files} == old_ids | {NEW_PACKET, "MET-RUNNER-001"}, "closed packet catalog")
     for name, expected in record["baselinePackets"].items():
         raw = regular_bytes("task-packets/" + name + ".yaml")
         require(digest(raw) == expected, "changed predecessor YAML: " + name)
@@ -477,11 +510,11 @@ def validate() -> None:
         "unreviewed or omitted packet path",
     )
     for path, rule in record["changedFiles"].items():
-        raw = regular_bytes(path)
+        raw = runner_history(path, regular_bytes(path))
         require(digest(raw) == rule["afterSha256"], "current source drift: " + path)
         require(digest(historical_bytes(path, raw)) == rule["beforeSha256"], "failed exact inverse")
     for path, expected in record["newFiles"].items():
-        require(digest(regular_bytes(path)) == expected, "new source drift: " + path)
+        require(digest(runner_history(path, regular_bytes(path))) == expected, "new source drift: " + path)
     archive = regular_bytes(ARCHIVE_PATH)
     require(
         digest(archive) == record["acceptedMasterSha256"]
@@ -616,4 +649,4 @@ if __name__ == "__main__":
     except (ValueError, TypeError, KeyError, OSError, UnicodeError) as exc:
         print("Unified roadmap publication invalid: " + str(exc))
         raise SystemExit(1)
-    print("Unified roadmap source valid: 189 packets; 188 immutable predecessor YAML; no product acceptance.")
+    print("Unified roadmap source valid: 190 packets; 188 immutable predecessor YAML; no product acceptance.")

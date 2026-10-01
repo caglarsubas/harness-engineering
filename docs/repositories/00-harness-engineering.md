@@ -1,5 +1,18 @@
 # Repository Plan: `Harness-Engineering`
 
+## Current source-only CI admission candidate — MET-RUNNER-001
+
+On accepted main `945de93`, this proposed 190th packet documents a separately
+operator-authorized, disposable development-CI Linux guest and root-owned
+pre-checkout exact-run admission. See
+[the bounded exception](../alpha-2/CI_CAPACITY_EXCEPTION.md). It changes no
+workflow, runner binary, root installation, product billing rule, warm-source
+boundary or native qualification claim. Its local acceptance, required PR CI,
+merge, exact-main and installed-host evidence remain distinct and pending.
+The numeric GitHub job ID comparison in the pre-job hook remains unproven until
+a controlled live Linux host test on the pinned runner build succeeds.
+Older checkpoint headings below are historical source records.
+
 ## Current roadmap publication — MET-UNIFY-005
 
 The [master plan](../MASTER_DEVELOPMENT_PLAN.md) is the current roadmap and
@@ -342,7 +355,9 @@ Non-goals:
 
 - No application, operator, runtime, chart, container image, CRD, or tenant data.
 - No duplicated product schemas; it pins released `mas-harness-contracts` artifacts by digest.
-- No cloud provisioning, registry hosting, runner creation, secret storage, or paid-service integration.
+- No product or repository-driven cloud provisioning, registry hosting, runner
+  creation, secret storage, or paid-service integration. MET-RUNNER-001 records
+  a separately authorized external development-CI capacity exception only.
 
 ## Repository structure and exact tree
 
@@ -599,6 +614,7 @@ Every packet uses branch `codex/<packet-id>`, changes only named paths, opens a 
 61. `MET-PERF-018`: repair duplicate catalog traversal; preserve blocked PR136 and its consumed allowances.
 62. `MET-ENFORCE-003`: explicitly reconcile the blocked reviewed-interface publication on repaired main; preserve its failed lineage and unresolved gates.
 63. `MET-UNIFY-005`: publish the single current roadmap, complete accepted-source traceability and exact predecessor-history bridge; source only.
+64. `MET-RUNNER-001`: publish the source-only bounded external development-CI capacity and exact-job pre-checkout admission contract; no host activation or CI waiver.
 
 ## Testing, verification, and acceptance
 
@@ -653,7 +669,11 @@ not claims made by JSON Schema validation.
 
 ## Zero-bill rules
 
-- Only self-hosted ephemeral runners; no scheduled workflows, caches, uploaded artifacts, Packages, GHCR, Git LFS, or cloud-created runners.
+- Only self-hosted ephemeral runners; no scheduled workflows, caches, uploaded
+  artifacts, Packages, GHCR or Git LFS. A cloud guest is allowed only under the
+  external one-job, numeric all-in cost and exact pre-checkout admission contract
+  in [CI_CAPACITY_EXCEPTION.md](../alpha-2/CI_CAPACITY_EXCEPTION.md); the
+  repository does not provision or register it.
 - After pinned credential-free checkout, the workflow invokes only the
   preinstalled root-owned `/opt/planeon/bin/harness-offline-launch`. The runner
   exposes no cloud credentials, SSH agent, kubeconfig, Docker/containerd socket,

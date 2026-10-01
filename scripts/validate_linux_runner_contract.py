@@ -19,7 +19,7 @@ except ImportError:
 
 ROOT = Path(__file__).resolve().parents[1]
 AUTHORITY_PATH = "architecture/linux-runner-contract-authority.json"
-AUTHORITY_SHA256 = "0616584d096c3df602f4df07e47f88038c4296aba2436ce0978749823cdc813e"
+AUTHORITY_SHA256 = "ac01b38bc417d5684d18e9396f9328a0fd0996fb7f7c39fc4da3eb0a98c4e50f"
 VALIDATOR_PATH = "scripts/validate_linux_runner_contract.py"
 BASE_COMMIT = "0314a684ba637fb205856d5fb5e50206071e647a"
 NEW_PACKET = "MET-LINUX-004"
@@ -247,15 +247,21 @@ def current_test_bytes(before: bytes) -> bytes:
 
 def historical_catalog(packets: dict[str, Any]) -> dict[str, Any]:
     """Remove only this layer, leaving predecessor checks to their owners."""
-    record = authority()
+    _checked_authority_raw()
     require(type(packets) is dict, "packet mapping")
-    old = set(record["baselinePackets"])
-    require(set(packets) == old | {NEW_PACKET}, "unexpected packet addition or loss")
+    current_ids = set(_PACKET_RULES)
+    require(NEW_PACKET in current_ids and set(packets) == current_ids,
+            "unexpected packet addition or loss")
     packet_raw = regular_bytes("task-packets/" + NEW_PACKET + ".yaml")
-    require(digest(packet_raw) == record["packetSha256"], "packet YAML drift: " + NEW_PACKET)
-    require(digest(canonical(packets[NEW_PACKET])) == digest(canonical(safe_load(packet_raw))),
+    require(digest(packet_raw) == _PACKET_RULES[NEW_PACKET][0],
+            "packet YAML drift: " + NEW_PACKET)
+    try:
+        supplied_sha = digest(canonical(packets[NEW_PACKET]))
+    except (TypeError, ValueError, RecursionError) as exc:
+        raise ValueError("changed packet payload: " + NEW_PACKET) from exc
+    require(supplied_sha == _PACKET_RULES[NEW_PACKET][1],
             "changed packet payload: " + NEW_PACKET)
-    return {name: packets[name] for name in old}
+    return {name: packets[name] for name in current_ids - {NEW_PACKET}}
 
 
 def validate_packet_payloads(packets: dict[str, Any]) -> None:

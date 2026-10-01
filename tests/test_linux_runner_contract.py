@@ -143,6 +143,17 @@ def test_catalog_uses_only_pinned_parsed_data_and_checks_each_input_again(monkey
         linux.validate_packet_payloads(current)
 
 
+def test_historical_catalog_reuses_frozen_packet_pins_but_rechecks_authority(monkeypatch):
+    current = packets()
+
+    def unexpected(*_args, **_kwargs):
+        pytest.fail("historical traversal must not reparse authority or packet YAML")
+
+    monkeypatch.setattr(linux, "authority", unexpected)
+    monkeypatch.setattr(linux, "safe_load", unexpected)
+    assert len(linux.historical_catalog(current)) == 190
+
+
 @pytest.mark.parametrize("fault", ["opaque", "cycle", "changed"])
 def test_historical_traversal_leaves_predecessor_refusal_to_its_owner(fault):
     current = packets()

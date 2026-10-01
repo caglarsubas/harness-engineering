@@ -1804,9 +1804,9 @@
   "newFiles": {
     "tests/linux_runner/test_system_inventory_v2.py": "598bfa8ea04281d3c04f84dfd32cacd78d943f8b4ddb487a4a7c7bfef97d1bfc",
     "tests/linux_runner/test_workspace_v2.py": "986e02b379be87b581a90b67533593b1306d5e67e59416e1f96bb7f9f91abf24",
-    "tests/test_linux_runner_contract.py": "73c502bb70de5e94195cd7e10e43741e2bd528b299635aba361f812fcd9fe0d3"
+    "tests/test_linux_runner_contract.py": "9ca98c1f85025bf6581b31647f1f8413c75ebc2a9d2a2f7fce59df2fdfe27b71"
   },
   "packetSha256": "043db1aefeb1b1440175c35f5869515a2a5ff9ccedc6f163d7b8548c528f000c",
   "schemaVersion": "harness.planeon.ai/linux-runner-contract-authority/v1",
-  "validatorNormalizedSha256": "58e1a757a765c1617eb7a5f775353500ee12947969f56358a50f9f246e82ec9e"
+  "validatorNormalizedSha256": "2cbffb73609e08c20dc55245499047c89073365aee80a3f7b4cd7226d2f2bdb8"
 }

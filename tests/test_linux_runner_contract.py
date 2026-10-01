@@ -55,17 +55,17 @@ def test_catalog_refuses_all_packet_substitution_and_loss(fault):
         name = linux.NEW_PACKET if fault == "new_payload" else "MET-001"
         current[name]["objective"] += " unreviewed"
     with pytest.raises(ValueError):
-        linux.historical_catalog(current)
+        linux.validate_packet_payloads(current)
 
 
 def test_every_predecessor_payload_is_checked_without_a_verdict_cache():
     current = packets()
-    linux.historical_catalog(current)
+    linux.validate_packet_payloads(current)
     for name in sorted(linux.authority()["baselinePackets"]):
         original = current[name]
         current[name] = dict(original, objective=original["objective"] + " unreviewed")
         with pytest.raises(ValueError, match="changed packet payload"):
-            linux.historical_catalog(current)
+            linux.validate_packet_payloads(current)
         current[name] = original
 
 
@@ -97,7 +97,7 @@ def test_exact_inverse_and_forward_test_round_trip_across_layers():
         linux.historical_bytes(path, current + b" ")
 
 
-@pytest.mark.parametrize("route", ["authority", "changed", "old_bytes", "unchanged", "historical_test", "current_test", "catalog", "runner_old", "roadmap_old"])
+@pytest.mark.parametrize("route", ["authority", "changed", "old_bytes", "unchanged", "historical_test", "current_test", "catalog", "payloads", "runner_old", "roadmap_old"])
 def test_newest_authority_is_freshly_checked_on_every_route(monkeypatch, route):
     path = changed_test()
     raw = linux.regular_bytes(path)
@@ -114,6 +114,7 @@ def test_newest_authority_is_freshly_checked_on_every_route(monkeypatch, route):
         "historical_test": lambda: linux.historical_test_bytes(raw),
         "current_test": lambda: linux.current_test_bytes(before),
         "catalog": lambda: linux.historical_catalog(current_packets),
+        "payloads": lambda: linux.validate_packet_payloads(current_packets),
         "runner_old": lambda: runner.historical_bytes(roadmap.MASTER_PATH, old_runner),
         "roadmap_old": lambda: roadmap.historical_bytes(roadmap.MASTER_PATH, old_roadmap),
     }
@@ -136,9 +137,43 @@ def test_catalog_uses_only_pinned_parsed_data_and_checks_each_input_again(monkey
         pytest.fail("catalog projection must not reparse every predecessor YAML")
 
     monkeypatch.setattr(linux, "safe_load", unexpected_yaml)
-    assert len(linux.historical_catalog(current)) == 190
+    assert linux.validate_packet_payloads(current) is None
     current["MET-001"]["objective"] += " changed after a successful call"
     with pytest.raises(ValueError, match="changed packet payload"):
+        linux.validate_packet_payloads(current)
+
+
+@pytest.mark.parametrize("fault", ["opaque", "cycle", "changed"])
+def test_historical_traversal_leaves_predecessor_refusal_to_its_owner(fault):
+    current = packets()
+    if fault == "opaque":
+        current["MET-001"] = object()
+    elif fault == "cycle":
+        cycle = {}
+        cycle["self"] = cycle
+        current["MET-001"] = cycle
+    else:
+        current["MET-001"]["objective"] += " changed"
+    previous = linux.historical_catalog(current)
+    assert previous["MET-001"] is current["MET-001"]
+    with pytest.raises(ValueError, match="changed packet payload"):
+        linux.validate_packet_payloads(current)
+
+
+@pytest.mark.parametrize("fault", ["payload", "yaml"])
+def test_historical_traversal_freshly_checks_its_own_packet(monkeypatch, fault):
+    current = packets()
+    if fault == "payload":
+        current[linux.NEW_PACKET]["objective"] += " changed"
+    else:
+        original = linux.regular_bytes
+
+        def changed_reader(path):
+            raw = original(path)
+            return raw + b" " if path == "task-packets/" + linux.NEW_PACKET + ".yaml" else raw
+
+        monkeypatch.setattr(linux, "regular_bytes", changed_reader)
+    with pytest.raises(ValueError):
         linux.historical_catalog(current)
 
 

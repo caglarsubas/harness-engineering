@@ -19,7 +19,7 @@ except ImportError:
 
 ROOT = Path(__file__).resolve().parents[1]
 AUTHORITY_PATH = "architecture/linux-runner-contract-authority.json"
-AUTHORITY_SHA256 = "fc52323a4fb5989ffff1bcd5ac8d60eac78826309b61da354d5e81569d5bd5b0"
+AUTHORITY_SHA256 = "0616584d096c3df602f4df07e47f88038c4296aba2436ce0978749823cdc813e"
 VALIDATOR_PATH = "scripts/validate_linux_runner_contract.py"
 BASE_COMMIT = "0314a684ba637fb205856d5fb5e50206071e647a"
 NEW_PACKET = "MET-LINUX-004"
@@ -181,9 +181,10 @@ def _packet_rules() -> MappingProxyType:
     return MappingProxyType(rules)
 
 
-# Only parsed-data digests are retained. Each catalog projection rehashes its
-# supplied payloads and the complete authority; validate() freshly checks all
-# on-disk packet bytes. There is no cached validation result.
+# Only parsed-data digests are retained. Full payload validation rehashes every
+# supplied packet and the complete authority; validate() freshly checks all
+# on-disk packet bytes. Historical traversal checks only this layer's packet so
+# predecessor validators retain their own refusal semantics and traversal cost.
 _PACKET_RULES = _packet_rules()
 
 
@@ -245,6 +246,20 @@ def current_test_bytes(before: bytes) -> bytes:
 
 
 def historical_catalog(packets: dict[str, Any]) -> dict[str, Any]:
+    """Remove only this layer, leaving predecessor checks to their owners."""
+    record = authority()
+    require(type(packets) is dict, "packet mapping")
+    old = set(record["baselinePackets"])
+    require(set(packets) == old | {NEW_PACKET}, "unexpected packet addition or loss")
+    packet_raw = regular_bytes("task-packets/" + NEW_PACKET + ".yaml")
+    require(digest(packet_raw) == record["packetSha256"], "packet YAML drift: " + NEW_PACKET)
+    require(digest(canonical(packets[NEW_PACKET])) == digest(canonical(safe_load(packet_raw))),
+            "changed packet payload: " + NEW_PACKET)
+    return {name: packets[name] for name in old}
+
+
+def validate_packet_payloads(packets: dict[str, Any]) -> None:
+    """Check all current payloads separately from the inherited traversal."""
     record = authority()
     require(type(packets) is dict, "packet mapping")
     old = set(record["baselinePackets"])
@@ -255,9 +270,11 @@ def historical_catalog(packets: dict[str, Any]) -> dict[str, Any]:
             and _PACKET_RULES[NEW_PACKET][0] == record["packetSha256"],
             "pinned packet data inventory")
     for name, (_byte_sha, payload_sha) in _PACKET_RULES.items():
-        require(digest(canonical(packets[name])) == payload_sha,
-                "changed packet payload: " + name)
-    return {name: packets[name] for name in old}
+        try:
+            supplied_sha = digest(canonical(packets[name]))
+        except (TypeError, ValueError, RecursionError) as exc:
+            raise ValueError("changed packet payload: " + name) from exc
+        require(supplied_sha == payload_sha, "changed packet payload: " + name)
 
 
 def validate() -> None:
@@ -278,7 +295,7 @@ def validate() -> None:
         expected = record["packetSha256"] if path.stem == NEW_PACKET else record["baselinePackets"][path.stem]
         require(digest(raw) == expected, "packet YAML drift: " + path.stem)
         packets[path.stem] = safe_load(raw)
-    historical_catalog(packets)
+    validate_packet_payloads(packets)
     packet = packets[NEW_PACKET]
     previous = packets["MET-RUNNER-001"]
     commands = packet["offlineAcceptanceCommands"]

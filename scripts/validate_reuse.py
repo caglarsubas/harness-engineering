@@ -14,7 +14,7 @@ from pathlib import Path, PurePosixPath
 from typing import Any
 
 import jsonschema
-from jsonschema._utils import uniq as _pairwise_unique
+from jsonschema._utils import unbool as _unbool, uniq as _pinned_uniq
 import yaml
 
 try:
@@ -391,16 +391,23 @@ def _json_identity(value: Any) -> Any:
 
 
 def _unique_json(container: Any) -> bool:
+    # Sortable arrays keep pinned uniq exactly, including its sort-then-
+    # adjacent comparison. Only the all-pairs `equal` fallback it takes when
+    # sorting raises is replaced, by hashable identities with the same verdict.
     try:
-        identities = [_json_identity(item) for item in container]
-    except (_UnhashableJson, RecursionError):
-        return _pairwise_unique(container)
-    return len(set(identities)) == len(identities)
+        sorted(_unbool(item) for item in container)
+    except (NotImplementedError, TypeError):
+        try:
+            identities = [_json_identity(item) for item in container]
+        except (_UnhashableJson, RecursionError):
+            return _pinned_uniq(container)
+        return len(set(identities)) == len(identities)
+    return _pinned_uniq(container)
 
 
 def _unique_items(validator: Any, unique: Any, instance: Any, schema: Any) -> Any:
     # Same verdict and message as pinned jsonschema 4.24.0 uniqueItems; only
-    # its quadratic pairwise fallback for arrays of objects is replaced.
+    # its quadratic all-pairs fallback (e.g. arrays of objects) is replaced.
     if unique and validator.is_type(instance, "array") and not _unique_json(instance):
         yield jsonschema.ValidationError(f"{instance!r} has non-unique elements")
 

@@ -131,6 +131,10 @@ UNIQUE_CASES = [
     [{"a": 1, "b": 2}, {"b": 2, "a": 1}], [{"a": True}, {"a": 1}], [{"a": [1]}, {"a": [1]}],
     [{"a": {"b": None}}, {"a": {"b": False}}], [{}, []], [{}, {}], [[], []], [[{}], [{}]],
     [0.0, -0.0], [10 ** 20, 1e20], ["", None, False, 0, [], {}],
+    # Pinned uniq sorts sortable arrays and compares neighbours only; these
+    # stay "unique" there and must stay unique here.
+    [[1], [True], [1]], [[0], [False], [0]], [[True], [1], [True]],
+    [[{"a": 1}], [{"a": True}], [{"a": 1}]], [[1, 2], [1, 2]], [[True], [True]],
 ]
 
 
@@ -151,8 +155,17 @@ def test_unique_json_matches_pinned_semantics_on_seeded_generated_values():
             return [value(depth + 1) for _ in range(generator.randint(0, 3))]
         return {generator.choice("abc"): value(depth + 1) for _ in range(generator.randint(0, 3))}
 
-    for _ in range(4000):
-        container = [value() for _ in range(generator.randint(0, 5))]
+    numbers = [0, 1, 1.0, True, False, 2, -0.0, 0.0]
+
+    def sortable(depth=0):
+        # Nested numbers/booleans keep the array sortable: pinned uniq's sort path.
+        if depth > 2 or generator.random() < 0.5:
+            return generator.choice(numbers)
+        return [sortable(depth + 1) for _ in range(generator.randint(0, 3))]
+
+    for ordinal in range(8000):
+        make = sortable if ordinal % 2 else value
+        container = [make() for _ in range(generator.randint(0, 6))]
         if container and generator.random() < 0.3:
             container.append(json.loads(json.dumps(generator.choice(container))))
         assert reuse._unique_json(container) is pinned_uniq(container), container
@@ -167,12 +180,29 @@ def test_unhashable_or_non_json_values_use_the_pinned_pairwise_fallback(monkeypa
         calls.append(items)
         return pinned_uniq(items)
 
-    monkeypatch.setattr(reuse, "_pairwise_unique", fallback)
+    monkeypatch.setattr(reuse, "_pinned_uniq", fallback)
     assert reuse._unique_json(container) is pinned_uniq(container)
     assert calls == [container]
 
 
-@pytest.mark.parametrize("instance", [[{"a": 1}, {"a": 1.0}], [1, True], [[1], [1]], {"x": [{"a": 1}, {"a": 1}]}])
+def test_only_unsortable_json_arrays_skip_the_pinned_implementation(monkeypatch):
+    calls = []
+
+    def recorded(items):
+        calls.append(items)
+        return pinned_uniq(items)
+
+    monkeypatch.setattr(reuse, "_pinned_uniq", recorded)
+    sortable = [[1], [True], [1]]
+    assert reuse._unique_json(sortable) is True and calls == [sortable]
+    calls.clear()
+    objects = [{"a": 1}, {"a": True}, {"a": 1.0}]
+    assert reuse._unique_json(objects) is False and calls == []
+    assert reuse._unique_json([{"a": 1}, {"a": True}]) is True and calls == []
+
+
+@pytest.mark.parametrize("instance", [[{"a": 1}, {"a": 1.0}], [1, True], [[1], [1]], {"x": [{"a": 1}, {"a": 1}]},
+                                      [[1], [True], [1]], {"x": [[0], [False], [0]]}])
 def test_extended_validator_errors_match_pinned_validator_exactly(instance):
     schema = {"type": ["array", "object"], "uniqueItems": True,
               "properties": {"x": {"type": "array", "uniqueItems": True}}}

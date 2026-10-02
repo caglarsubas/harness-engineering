@@ -504,7 +504,7 @@ These checkboxes count only the named deliverable at the stated evidence level. 
 - [x] Alpha 2 · MET-ENFORCE-003 · Merge the reviewed host-interface source candidate as PR #138 on accepted main.
 - [x] Alpha 2 · MET-UNIFY-005 · Publish this unified roadmap with exact historical inverse, independent review, declared offline acceptance, required CI and exact-main evidence at `945de93`.
 - [ ] Alpha 2 · MET-RUNNER-001 · Publish the source-only bounded development-CI admission contract with exact 189-packet history, isolated acceptance, required CI and exact-main evidence.
-- [ ] Alpha 2 · MET-PERF-028 · Complete exact-bytes authority recheck reuse and linear uniqueItems, independent review and separately authorized full LOCAL/CI/exact-main; preserve failed019–027/PR144 and unresolved native Linux gates.
+- [ ] Alpha 2 · MET-PERF-028 · Complete exact-bytes authority recheck reuse and linear uniqueItems, independent review and separately authorized full LOCAL/CI/exact-main; preserve failed019–027/PR144 and unresolved timing/native Linux gates.
 - [ ] Alpha 2A · W01 · Resolve G04–G07/G09 and adopt a versioned host interface only after the required independent review.
 - [ ] Alpha 2A · CONF-FIX-010 · Complete safe design and exact authority before any product attempt.
 - [ ] Alpha 2A · CONF-LIVE-004 · Produce the exact native-probe source implementation and separately qualify it.

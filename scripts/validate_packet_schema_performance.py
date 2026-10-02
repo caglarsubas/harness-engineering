@@ -24,7 +24,7 @@ except ImportError:
 
 ROOT = Path(__file__).resolve().parents[1]
 AUTHORITY_PATH = "architecture/packet-schema-performance-authority.json"
-AUTHORITY_SHA256 = "228cc14f6bffda374c0b2a9fe4d35b441fbd89be3dc45109eecad24ea9b6838b"
+AUTHORITY_SHA256 = "b22765d800ef757891addcd308570efeefaca1637b806fd28008a800c0cdff4f"
 BASE_COMMIT = "0314a684ba637fb205856d5fb5e50206071e647a"
 NEW_PACKET = "MET-PERF-028"
 MAX_FILE_BYTES = 16_777_216

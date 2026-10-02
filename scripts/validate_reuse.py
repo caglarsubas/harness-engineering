@@ -390,26 +390,39 @@ def _json_identity(value: Any) -> Any:
     raise _UnhashableJson
 
 
-def _unique_json(container: Any) -> bool:
-    # Sortable arrays keep pinned uniq exactly, including its sort-then-
-    # adjacent comparison. Only the all-pairs `equal` fallback it takes when
-    # sorting raises is replaced, by hashable identities with the same verdict.
+def _identity_unique(container: Any) -> bool | None:
+    # Verdict of pinned uniq's all-pairs `equal` fallback, which it takes when
+    # sorting raises; None whenever the pinned uniq itself must decide, i.e.
+    # for sortable arrays (its sort-then-adjacent result is kept exactly),
+    # non-JSON or non-finite values, and recursion-limit cases.
     try:
         sorted(_unbool(item) for item in container)
     except (NotImplementedError, TypeError):
         try:
             identities = [_json_identity(item) for item in container]
         except (_UnhashableJson, RecursionError):
-            return _pinned_uniq(container)
+            return None
         return len(set(identities)) == len(identities)
-    return _pinned_uniq(container)
+    except RecursionError:
+        return None
+    return None
+
+
+def _unique_json(container: Any) -> bool:
+    verdict = _identity_unique(container)
+    return _pinned_uniq(container) if verdict is None else verdict
 
 
 def _unique_items(validator: Any, unique: Any, instance: Any, schema: Any) -> Any:
     # Same verdict and message as pinned jsonschema 4.24.0 uniqueItems; only
     # its quadratic all-pairs fallback (e.g. arrays of objects) is replaced.
-    if unique and validator.is_type(instance, "array") and not _unique_json(instance):
-        yield jsonschema.ValidationError(f"{instance!r} has non-unique elements")
+    if unique and validator.is_type(instance, "array"):
+        verdict = _identity_unique(instance)
+        if verdict is None:
+            # Called at the pinned keyword's own stack depth.
+            verdict = _pinned_uniq(instance)
+        if not verdict:
+            yield jsonschema.ValidationError(f"{instance!r} has non-unique elements")
 
 
 _Draft202012Validator = jsonschema.validators.extend(

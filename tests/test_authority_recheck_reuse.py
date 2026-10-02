@@ -171,9 +171,13 @@ def test_unique_json_matches_pinned_semantics_on_seeded_generated_values():
         assert reuse._unique_json(container) is pinned_uniq(container), container
 
 
-@pytest.mark.parametrize("container", [[math.nan, math.nan], [math.inf, math.inf], [{1: "a"}, {1: "a"}],
-                                       [(1,), (1,)], [b"x", b"x"]], ids=["nan", "inf", "int-key", "tuple", "bytes"])
-def test_unhashable_or_non_json_values_use_the_pinned_pairwise_fallback(monkeypatch, container):
+@pytest.mark.parametrize("container", [
+    # Sortable: decided by the pinned uniq directly.
+    [math.nan, math.nan], [math.inf, math.inf], [(1,), (1,)], [b"x", b"x"],
+    # Unsortable, but not identity-safe: identities refuse, the pinned uniq decides.
+    [{1: "a"}, {1: "a"}], [{"a": math.nan}, {"a": math.nan}], [{"a": math.inf}, {"a": 1}], [{"a": (1,)}, {"a": (1,)}],
+], ids=["nan", "inf", "tuple", "bytes", "int-key", "nested-nan", "nested-inf", "nested-tuple"])
+def test_non_json_or_non_finite_values_are_decided_by_the_pinned_uniq(monkeypatch, container):
     calls = []
 
     def fallback(items):
@@ -183,6 +187,32 @@ def test_unhashable_or_non_json_values_use_the_pinned_pairwise_fallback(monkeypa
     monkeypatch.setattr(reuse, "_pinned_uniq", fallback)
     assert reuse._unique_json(container) is pinned_uniq(container)
     assert calls == [container]
+
+
+def test_recursion_limit_cases_match_the_pinned_keyword_whenever_it_completes():
+    from jsonschema import _keywords
+
+    class Validator:
+        def is_type(self, instance, kind):
+            return isinstance(instance, list)
+
+    def nest(depth, leaf):
+        for _ in range(depth):
+            leaf = [leaf]
+        return leaf
+
+    def outcome(keyword, instance):
+        try:
+            return len(list(keyword(Validator(), True, instance, {})))
+        except RecursionError:
+            return RecursionError
+
+    for depth in (10, 200, 320, 340, 400, 600):
+        for left, right in ((1, 1), (1, 2), (1, True)):
+            instance = [nest(depth, left), nest(depth, right), {}]
+            pinned = outcome(_keywords.uniqueItems, instance)
+            if pinned is not RecursionError:
+                assert outcome(reuse._unique_items, instance) == pinned, (depth, left, right)
 
 
 def test_only_unsortable_json_arrays_skip_the_pinned_implementation(monkeypatch):

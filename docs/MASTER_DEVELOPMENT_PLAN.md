@@ -19,7 +19,8 @@ validate_reuse call to quadratic uniqueItems over3868 path-index objects.
 
 Every authority call still freshly reads complete bytes through unchanged
 custody checks; only a byte-identical read under the identical pin skips a
-repeated digest. uniqueItems keeps the pinned verdict and message. Ten lineage
+repeated digest. uniqueItems keeps the pinned verdict and message wherever the
+pinned check completes; sortable arrays still use it unchanged. Ten lineage
 allowances plus separatePR1443 remain consumed. This packet grants
 LOCAL0/CI0/exact-main0. Keep53argv, both full suites,420/750/900s/15min and32MiB.
 No cloud, root, runner registration, live/native/tenant or model-effort changes.

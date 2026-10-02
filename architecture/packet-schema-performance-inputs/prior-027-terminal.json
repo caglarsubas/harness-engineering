@@ -83,10 +83,12 @@
     "countsArePartialObservationsNotAcceptance": true
   },
   "diagnosis": {
+    "asOf": "MET-PERF-027_TERMINAL_REVIEW",
     "repeatedRecipeDecoding": "SOURCE_ONLY_OPPORTUNITY_NOT_MEASURED_CAUSE",
     "functionLevelCostMeasured": false,
     "speedupEstablished": false,
-    "wholeRunTiming": "UNRESOLVED"
+    "wholeRunTiming": "UNRESOLVED",
+    "laterSuccessorProfiling": "MET-PERF-028 owner-directed profiling outside the launcher attributed cost to per-call authority SHA-256 and quadratic uniqueItems; diagnostic only, recorded in its PROFILING_OBSERVATION."
   },
   "immutableEvidenceSha256": {
     "local1-reservation.json": "c60e8635f18dacc689261e8a652fe60422c5eee47bb773000573787482182f22",

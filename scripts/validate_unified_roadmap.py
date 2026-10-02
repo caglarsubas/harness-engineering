@@ -210,9 +210,19 @@ def regular_bytes(path: str) -> bytes:
     return raw
 
 
+# Exact bytes most recently proven to hash to the pin. Every call still reads
+# the complete file; byte-identical input implies the identical digest, while
+# any other bytes or pin are hashed in full before they are accepted.
+_VERIFIED_AUTHORITY: tuple[str, bytes] | None = None
+
+
 def _checked_authority_raw() -> bytes:
+    global _VERIFIED_AUTHORITY
     raw = regular_bytes(AUTHORITY_PATH)
-    require(digest(raw) == AUTHORITY_SHA256, "unified authority digest")
+    if type(raw) is not bytes or _VERIFIED_AUTHORITY != (AUTHORITY_SHA256, raw):
+        require(digest(raw) == AUTHORITY_SHA256, "unified authority digest")
+        if type(raw) is bytes:
+            _VERIFIED_AUTHORITY = (AUTHORITY_SHA256, raw)
     return raw
 
 
@@ -474,8 +484,8 @@ def validate() -> None:
     )
     old_ids = set(record["baselinePackets"])
     packet_files = sorted((ROOT / "task-packets").glob("*.yaml"))
-    require(len(packet_files) == 190, "190 current packets")
-    require({path.stem for path in packet_files} == old_ids | {NEW_PACKET, "MET-RUNNER-001"}, "closed packet catalog")
+    require(len(packet_files) == 191, "191 current packets")
+    require({path.stem for path in packet_files} == old_ids | {NEW_PACKET, "MET-RUNNER-001", "MET-PERF-028"}, "closed packet catalog")
     for name, expected in record["baselinePackets"].items():
         raw = regular_bytes("task-packets/" + name + ".yaml")
         require(digest(raw) == expected, "changed predecessor YAML: " + name)
@@ -649,4 +659,4 @@ if __name__ == "__main__":
     except (ValueError, TypeError, KeyError, OSError, UnicodeError) as exc:
         print("Unified roadmap publication invalid: " + str(exc))
         raise SystemExit(1)
-    print("Unified roadmap source valid: 190 packets; 188 immutable predecessor YAML; no product acceptance.")
+    print("Unified roadmap source valid: 191 packets; 188 immutable predecessor YAML; no product acceptance.")

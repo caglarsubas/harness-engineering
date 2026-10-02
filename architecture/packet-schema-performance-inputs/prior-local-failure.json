@@ -1,0 +1,63 @@
+{
+  "schemaVersion": "harness.planeon.ai/schema-repair-failed-candidate/v1",
+  "status": "RETAINED_FAILURE_NOT_ACCEPTED_PREDECESSOR",
+  "packetId": "MET-PERF-019",
+  "source": {
+    "commit": "106ae3ec8c4d822e455560e305c5b88baf4c25ae",
+    "tree": "eb1b304be8e381bcd5106ca99bff309a98585be9",
+    "packetSha256": "482cf9870c473d095e3385df17446cd858efa3253e7fa5ad35a3fb2174434ffd",
+    "authoritySha256": "1a629563eb0bebe531205cfbbaddc08ba2addbd3e22b23cc1f8a0c6ba073b581"
+  },
+  "attempt": {
+    "stage": "LOCAL",
+    "packetOrdinal": 1,
+    "lineageOrdinal": 1,
+    "status": "LOCAL_FAILED_OR_INCOMPLETE",
+    "acceptanceElapsedSeconds": 750.2568865419889,
+    "limitSeconds": 750,
+    "exitCode": -15,
+    "commandsReached": 52,
+    "commandsExpected": 53,
+    "outerProgressPercent": 33,
+    "specificFailureCause": "NOT_ESTABLISHED",
+    "completedNestedSummary": false,
+    "completedOuterSummary": false,
+    "cleanupIndependentlyConfirmed": true,
+    "activationSequence": 379
+  },
+  "immutableEvidenceSha256": {
+    "INDEPENDENT_REVIEW.json": "382a8c30cbb60eabf93b971e33e1937d78236059ac3c5e71814887ba94dff9fb",
+    "INDEPENDENT_TERMINAL_REVIEW.json": "18c4366be37d79f57e1f059b09e40d5ebe05ada333cb490733dc5f68d99ff92e",
+    "LOCAL1_AUTHORITY.json": "7147c98a72d36393910180d7d0b97a7548ca28faa876fc2e821122e1c80ba235",
+    "local1-activation-result.log": "beafe8635c7f10f068176dffe222549252e860018547b4edce7df37939de583a",
+    "local1-activation.json": "ed3a04751048d7647323dd8acc16893445184c88fabf26235e3112c1ccb8e9e1",
+    "local1-audit.json": "c0fca1b6a71cba66d4b853ccf62635f566178c5626b4e57c478faaf8a3c986b6",
+    "local1-cleanup.json": "d3062312e1ac85780193d2ac6d04c9a05d78fb8b635a17293d94cec2fc86fa52",
+    "local1-launch.json": "8560e075a7ceb2f505657c2673043a26056ecc2cbcc248e55d4abe51062e2786",
+    "local1-offline.log": "62ce5f9d2d1f80b3f02d813d9ab025e1fce926d20655b0f0fbcfa027cee3c577",
+    "local1-policy.json": "00bed7d6999a19afa11b93c5616fe34519bb3866f3dea00cca4f78ce481d4e9b",
+    "local1-postrun-activation-check.json": "0710c90426079f850b4dba9ced3fdd40876c7cab9abd1b8e929ec9cdb721ecb2",
+    "local1-prelaunch-activation-check.json": "5bc224f5cba2ec54b56e01c86337fb8f00f048afc6142af9283a1a8a2f73477d",
+    "local1-reservation.json": "9e0f9c1fcade43e945540c60f89beb4dd9fbfaaccee3de989ae9baf437643b23",
+    "local1-result.json": "83e1aa985f002524c59e344fb988669433f427542a2e7bdf82e61553a44a5cd2",
+    "local1-transport-check.json": "f9f987a09a47be0fc59cb142a6508d0c07d398304e193088bb26698a876dc68e",
+    "run_local.py": "e127bdee792c4038a33c009310c13638f8308e04a48cdb28208e16c2a0c3df6d"
+  },
+  "successorPolicy": {
+    "packetId": "MET-PERF-020",
+    "cumulativeLocalCeiling": 2,
+    "consumedPrior": 1,
+    "proposedMaximumAdditionalLocal": 1,
+    "proposedPacketOrdinal": 1,
+    "proposedLineageOrdinal": 2,
+    "newExecutionGrants": 0,
+    "budgetReset": false,
+    "automaticCiOrExactMain": false
+  },
+  "evidenceLimits": {
+    "sourceAccepted": false,
+    "ci": false,
+    "nativeLinux": false,
+    "tenantAcceptance": false
+  }
+}

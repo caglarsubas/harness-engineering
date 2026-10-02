@@ -1,5 +1,160 @@
 # Repository Plan: `Harness-Engineering`
 
+## Current source preparation — MET-PERF-028
+
+Exact-bytes authority recheck reuse in three history layers; linear exact-verdict uniqueItems.
+Alpha2 OPEN;190 accepted plus028 only;113 owned paths.027 timed out750s/52of53;
+cleanup confirmed, not acceptance. Ten lineage and separatePR1443 consumed.
+LOCAL0/CI0/exact-main0; same-host measurement only, no native/tenant claim.
+Every call still freshly reads complete authority bytes; any changed byte is hashed.
+Independent source review and finite full acceptance remain separate.
+
+## Historical027 source preparation — MET-PERF-027
+
+Two immutable recipe projections preserve fresh checks and overridden-reader semantics.
+Alpha2 OPEN;190 accepted plus027 only;111 owned paths.026 timed out750s/52of53;
+cleanup confirmed, not acceptance. Nine lineage and separatePR1443 consumed.
+LOCAL0/CI0/exact-main0; no speedup or native/tenant claim.
+Source is prepared; preliminary core/test review found no concrete blocker.
+Final frozen-source/history review and finite full acceptance remain separate.
+
+## Historical026 source preparation — MET-PERF-026
+
+Alpha2 OPEN. Fresh accepted main0314a684 retains190 immutable YAML;026 is
+the sole191st packet. Reuse only immutable decoding of one pinned historical
+snapshot in credential-ordering::_before. Preserve fresh reads and hashes,
+current-record checks, fallback errors, inherited bodies and all53 commands.
+No measured speedup. Frozen025 failed750s/52of53 and nested420s; cleanup is
+confirmed, not acceptance. Cumulative8 and separatePR1443 remain consumed.
+Exactly108 source paths; independent source review/full acceptance still needed.
+ZERO new executions, no CI/cloud/native/tenant or model-effort changes.
+
+## Historical025 source preparation — MET-PERF-025
+
+Alpha2 remains open. Accepted main0314a684 retains190 immutable packets; this
+source adds only025 for191. Amend only CI-performance's semantic expression
+to use the existing exact-byte keyed immutable canonical-byte helper. Preserve
+fresh interleaved checks, fixed pinned parser semantics,256-entry bound and
+all inherited test bodies; no cached authority/acceptance or ordering change.
+
+Frozen024's one LOCAL timed out at750.259927s,52/53 commands. Nested complete
+diagnostics and narrow diagnostic regressions passed, but outer/final scan did
+not complete. Independent cleanup is retained in prior-024-terminal.json.
+Cumulative7 and PR144 separate3 remain consumed. This source grants ZERO runs.
+Independent exact-source review and finite full acceptance remain separate.
+
+Source is prepared for review. Data-only inspection reconciles106 exact paths,
+190 unchanged accepted packets,191 current declarations,192 protected files,
+13 guides and412 ordered predecessor edges. All48 changed accepted test modules
+retain ordered identities. Fifteen new semantic functions declare42 literal
+cases; no collection or execution occurred. Strict AST guards use the pinned
+Python3.12 representation, and import fixtures restore introduced aliases.
+
+## Historical024 source preparation — MET-PERF-024
+
+Alpha 2 remains open. Repair only diagnostic fixture identity generation and the
+nonzero failure-message branch; preserve recorder limits, actual invalid inputs,
+strict exception tests and historical test identities. Accepted main `0314a684`
+retains 190 immutable packets; only `MET-PERF-024` is specification 191 here.
+
+Frozen023 reached 52/53 commands then timed out at 750.244648 seconds. Nested
+5,019 passed/10 skipped assertions returned failure because diagnostic evidence
+was incomplete; no final scan. Independent cleanup and diagnosis reviews are
+retained in `architecture/packet-schema-performance-inputs/prior-023-terminal.json`.
+Shared2/2 plus020/021/022/023 one-run allowances stay consumed (cumulative6).
+This source grants ZERO execution, signing, activation, CI, merge, cloud or
+privilege changes. Whole-run timing remains unresolved. Independent exact-source
+review and separately authorized complete acceptance remain mandatory.
+
+Source is prepared. Author data-only inspection found the exact104-path closure,
+all48 ordered accepted test-module identities, 190 unchanged accepted packets and
+canonical owner/index/root consistency. Seven new test functions declare16
+literal cases; actual collection and execution remain unperformed.
+
+## Historical023 source preparation — MET-PERF-023
+
+Alpha 2 remains open. The new semantic regressions move to a separate owned
+module; the protected task-packet tests retain their exact historical identities
+and bodies apart from the governed catalog scalar. Preserve both full suites,
+all checks and deadlines. Accepted main `0314a684` retains 190 immutable packets;
+only `MET-PERF-023` is current specification 191. Review both raw AST identities
+and projected-byte checks, plus canonical owner/index/root consistency.
+
+Frozen 022 failed readiness at command 2/53 after 16.4475 seconds. Four semantic
+test additions conflicted with exact historical identity checks; pytest never
+ran. Its immutable terminal evidence and independent cleanup pins are retained
+in `architecture/packet-schema-performance-inputs/prior-022-terminal.json`.
+Shared 2/2 plus 020, 021 and 022 exceptions 1/1 each remain consumed. This source
+grants ZERO runs, signing, activation, CI, merge, cloud or privilege changes.
+Source is prepared; author data-only inspection confirms the 102-path closure,
+48 unchanged ordered historical test inventories and exact protected-module
+bytes except the catalog scalar. Moved semantic coverage remains present.
+Independent source review and separately authorized full acceptance remain gates.
+The older checkpoints below are history, not current authority.
+
+## Historical022 source preparation — MET-PERF-022
+
+Alpha 2 remains open. This source-only correction aligns the canonical PR-packet
+declaration and exact root tree with the current YAML/README. It carries the
+unaccepted schema/freshness and bounded test-diagnostic source against accepted
+main `0314a684`. Only `MET-PERF-022` is added to the 190 accepted packet files, for 191.
+The new semantic consistency regressions check exact IDs/owners and root unions;
+counts and reversible source hashes alone cannot establish that consistency.
+
+Frozen 021 failed readiness at command 2 (2/53, four errors, no timeout). Pytest
+and diagnostic hooks never ran. Its exact failure and independent cleanup pins
+are retained in `architecture/packet-schema-performance-inputs/prior-021-terminal.json`.
+The shared 019/020 allowance 2/2, 020 exception 1/1 and 021 LOCAL 1/1 remain consumed. No new execution,
+CI, merge, host activation, cloud or tenant acceptance follows from this source.
+Source is prepared and author data-only semantic checks are complete.
+Independent review and separately authorized full acceptance remain required.
+The older source checkpoints below are history, not current authority.
+
+## Historical021 source preparation — MET-PERF-021
+
+This source-only successor adds bounded per-test phase diagnostics without
+changing the53-command acceptance sequence or the nested capture/timeout contract.
+It carries unaccepted019/020 schema-lifecycle/freshness repairs as newly reviewed
+source against accepted main0314a684; neither failed candidate is a predecessor.
+Only021 joins the190 accepted packets. No speedup, LOCAL PASS, CI or native
+qualification is claimed.
+
+The original019/0202/2 and extra custody exception1/1 are consumed. PR144's
+LOCAL1–3 remain exhausted separately. Current source preparation grants zero
+executions, no runner/privilege/spend change and no automatic CI/main allowance.
+See the [master plan](../MASTER_DEVELOPMENT_PLAN.md) and
+`architecture/packet-schema-performance-inputs/prior-020-terminal.json`.
+Nested diagnostics remain buffered until completion/inner timeout. Preserve all
+inherited tests/limits and identify real failing nodes before choosing optimizations.
+The older checkpoints below are historical source claims, not current authority.
+
+## Historical020 source preparation — MET-PERF-020
+
+Accepted source main `0314a684` contains 190 packets after PR #143's one-time
+source merge exception, not required CI PASS. This packet carries forward the
+unaccepted schema-lifecycle source design, adds bounded diagnostics to the exact
+inherited full-replay test, and avoids redundant authority parsing while freshly
+checking the complete pinned bytes on every route. Preserve original best-match
+diagnostics, all prior tests and 190 accepted packet bytes. No measured speedup
+or passing test result is claimed by source preparation.
+See the [master plan](../MASTER_DEVELOPMENT_PLAN.md) for current phase status.
+
+MET-PERF-019 at `106ae3ec` remains frozen and unaccepted after its consumed LOCAL1
+timed out during outer pytest. The cumulative 019/020 repair limit is two LOCAL
+attempts: one consumed, at most one separately reviewed future allowance, and
+zero new runs authorized by this source. The failure record is retained at
+`architecture/packet-schema-performance-inputs/prior-local-failure.json`.
+
+PR144 / MET-LINUX-004 remains an unaccepted, frozen subject with LOCAL1–3
+consumed. Its Linux runner-kit implementation is not imported here. Source
+preparation grants zero attempts; a later full run needs independently reviewed
+exact-source finite authority, unchanged isolation/deadlines and retained
+reservation/cleanup. The observer runs only within the existing seven-command
+test; no standalone diagnostic or Linux-kit implementation change is included.
+Native Linux, CI capacity and tenant gates remain unpassed.
+If this repair merges, reconcile PR144's old base explicitly before further work.
+Older checkpoint headings below retain historical publication states.
+
 ## Current source-only CI admission candidate — MET-RUNNER-001
 
 On accepted main `945de93`, this proposed 190th packet documents a separately
@@ -374,6 +529,7 @@ Harness-Engineering/
 ├── Makefile
 ├── requirements.lock
 ├── pyproject.toml
+├── conftest.py
 ├── uv.lock
 ├── .github/workflows/verify.yml
 ├── ci/{prefetch.sh,verify-offline.sh,run_packet_argv.py,network_canary.py,test_offline_runner.py}
@@ -615,6 +771,7 @@ Every packet uses branch `codex/<packet-id>`, changes only named paths, opens a 
 62. `MET-ENFORCE-003`: explicitly reconcile the blocked reviewed-interface publication on repaired main; preserve its failed lineage and unresolved gates.
 63. `MET-UNIFY-005`: publish the single current roadmap, complete accepted-source traceability and exact predecessor-history bridge; source only.
 64. `MET-RUNNER-001`: publish the source-only bounded external development-CI capacity and exact-job pre-checkout admission contract; no host activation or CI waiver.
+65. `MET-PERF-028`: exact-bytes authority recheck reuse and linear exact-verdict uniqueItems with fresh reads; frozen027 evidence, source only, no execution grant.
 
 ## Testing, verification, and acceptance
 

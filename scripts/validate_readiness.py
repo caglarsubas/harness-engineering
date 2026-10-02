@@ -132,7 +132,7 @@ EXPECTED_BASE_SOURCES = {
     "harness-onion-raster",
 }
 
-EXPECTED_PACKET_COUNT = 190
+EXPECTED_PACKET_COUNT = 191
 EXPECTED_REUSE_PATH_COUNT = 5107
 LIVE_CAMPAIGN_PACKET_IDS = {
     "CONF-A1-001",
@@ -3998,13 +3998,22 @@ def validate_packets(
         repository["name"]: repository["id"]
         for repository in load_yaml(ROOT / "architecture/repositories.yaml").get("repositories", [])
     }
+    schema_validator = None
 
     for path in packet_files:
         packet = load_yaml(path)
         try:
-            jsonschema.validate(
-                packet, schema, format_checker=SCHEMA_FORMAT_CHECKER
+            if schema_validator is None:
+                validator_class = jsonschema.validators.validator_for(schema)
+                validator_class.check_schema(schema)
+                schema_validator = validator_class(
+                    schema, format_checker=SCHEMA_FORMAT_CHECKER
+                )
+            error = jsonschema.exceptions.best_match(
+                schema_validator.iter_errors(packet)
             )
+            if error is not None:
+                raise error
         except jsonschema.ValidationError as exc:
             validation.error(f"{path}: schema error at {list(exc.absolute_path)}: {exc.message}")
             continue
@@ -4784,6 +4793,10 @@ def validate_packets(
                             for path in packets["MET-RUNNER-001"]["allowedPaths"]
                             if path in authority_owner or path.startswith(("architecture/", "scripts/"))})
     authority_owner["task-packets/MET-RUNNER-001.yaml"] = "MET-RUNNER-001"
+    authority_owner.update({path: "MET-PERF-028"
+                            for path in packets["MET-PERF-028"]["allowedPaths"]
+                            if path in authority_owner or path.startswith(("architecture/", "scripts/"))})
+    authority_owner["task-packets/MET-PERF-028.yaml"] = "MET-PERF-028"
     observation_authority_path = "architecture/observations/data-harness-v1.json"
     if (ROOT / observation_authority_path).is_file():
         authority_owner[observation_authority_path] = "MET-002"

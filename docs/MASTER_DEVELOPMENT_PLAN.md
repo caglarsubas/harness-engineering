@@ -1,5 +1,374 @@
 # Harness-Onion — unified development roadmap
 
+## Current checkpoint — MET-PERF-028 source preparation, October 2, 2026
+
+Alpha2 OPEN. Accepted main0314a684 retains190 immutable packets;028 is the
+sole191st specification. Same-host measurement of frozen027 outside the trusted
+launcher (no allowance consumed) showed the full predecessor suite at485.15s,
+over the420s nested limit. Profiling attributed most of the heaviest tests to
+per-call full SHA-256 of three large history authorities and about4s per
+validate_reuse call to quadratic uniqueItems over3868 path-index objects.
+
+| Phase | ID | Status | Description / gate |
+|---|---|---|---|
+| Alpha2 readiness | MET-PERF-028 | SOURCE_PREPARED_AWAITING_REVIEW | Exact-bytes authority recheck reuse, linear uniqueItems and additive regressions; independent review and separately authorized full acceptance remain |
+| Alpha2 readiness | MET-PERF-027 | FAILED_LOCAL_FROZEN | 750.277658s timeout;52/53 commands; nested420.012s timeout; independently confirmed cleanup |
+| Alpha2 readiness | MET-PERF-019–026 | FAILED_LOCAL_FROZEN | Every previous allowance and failure preserved; no replay |
+| Alpha2 runner | MET-LINUX-004 / PR144 | WAITING | Separate three consumed attempts; CI/capacity/exact-main unresolved |
+| Alpha2 qualification | W01 / CONF-LINUX-001 / CONF-A2-001 | WAITING_PREREQUISITES | Installed host enforcement, fresh native AMD64 and integrated read-only acceptance |
+
+Every authority call still freshly reads complete bytes through unchanged
+custody checks; only a byte-identical read under the identical pin skips a
+repeated digest. uniqueItems keeps the pinned verdict and message. Ten lineage
+allowances plus separatePR1443 remain consumed. This packet grants
+LOCAL0/CI0/exact-main0. Keep53argv, both full suites,420/750/900s/15min and32MiB.
+No cloud, root, runner registration, live/native/tenant or model-effort changes.
+Phase-end effort transition NOT_DUE. Prior checkpoints below are history only.
+
+## Historical027 source checkpoint — MET-PERF-027 source preparation, October 2, 2026
+
+Alpha2 OPEN. Accepted main0314a684 retains190 immutable packets;027 is the
+sole191st specification. Two historical recipe readers reuse immutable decoded
+recipe data only. Every call retains fresh full reads/hash checks, explicit
+overridden-reader semantics, original failure ordering and fresh mutable views.
+No function-level speedup or sufficient headroom has been measured.
+
+| Phase | ID | Status | Description / gate |
+|---|---|---|---|
+| Alpha2 readiness | MET-PERF-027 | SOURCE_PREPARED_AWAITING_REVIEW | Two recipe projections and additive regressions; final frozen-source review and separately authorized full acceptance remain |
+| Alpha2 readiness | MET-PERF-026 | FAILED_LOCAL_FROZEN | 750.261581s timeout;52/53 commands; independently confirmed cleanup |
+| Alpha2 readiness | MET-PERF-019–025 | FAILED_LOCAL_FROZEN | Every previous allowance and failure preserved; no replay |
+| Alpha2 runner | MET-LINUX-004 / PR144 | WAITING | Separate three consumed attempts; CI/capacity/exact-main unresolved |
+| Alpha2 qualification | W01 / CONF-LINUX-001 / CONF-A2-001 | WAITING_PREREQUISITES | Installed host enforcement, fresh native AMD64 and integrated read-only acceptance |
+
+026 nested5128passed/10skipped and7/7 commands completed; outer4981passed with
+zero observed failures had no final report. Its51snapshot/42semantic regression
+passes are partial observations, not acceptance. Final scan did not run. Nine
+lineage allowances plus separatePR1443 remain consumed. This packet grants
+LOCAL0/CI0/exact-main0. Keep53argv, both full suites,420/750/900s/15min and32MiB.
+No cloud, root, runner registration, live/native/tenant or model-effort changes.
+Phase-end effort transition NOT_DUE. Prior checkpoints below are history only.
+
+Data-only inspection reconciles111 exact owned paths,90 accepted-file inverses,
+18 new-file pins and3 closure objects. All190 accepted packets and192 protected
+files remain unchanged. The13 repository guides,191-entry index and412 ordered
+predecessor edges agree;48 accepted test identity inventories are preserved.
+New regression source declares18 functions/50 literal decorator cases;17 use a
+two-module fixture. These are syntax observations, not collection or test results.
+Independent preliminary core/test review found no concrete blocker. Final exact
+commit/tree/history review is separate and remains required before any run.
+
+## Historical026 source checkpoint — MET-PERF-026 source preparation, October 2, 2026
+
+Alpha2 remains OPEN. Accepted main0314a684 has190 immutable YAML; this branch
+adds026 only. The sole new optimization is lazy immutable decoding of one
+pinned290177-byte historical snapshot. Each call still rereads and hashes the
+file, checks the current record and returns a fresh map; other data preserves
+the original parser and refusal order. No measured speedup or timing PASS.
+
+| Phase | ID | Status | Description / gate |
+|---|---|---|---|
+| Alpha2 readiness | MET-PERF-026 | SOURCE_PREPARED_AWAITING_REVIEW | One snapshot decode projection and additive regressions; final exact-source review and every execution gate remain |
+| Alpha2 readiness | MET-PERF-025 | FAILED_LOCAL_FROZEN | Outer750.224819s and nested420.016669s timeout,52/53 commands; cleanup independently confirmed |
+| Alpha2 readiness | MET-PERF-019–024 | FAILED_LOCAL_FROZEN | All previous allowances/evidence preserved; no replay or transfer |
+| Alpha2 runner | MET-LINUX-004 / PR144 | WAITING | Separate three attempts consumed; capacity/CI/exact-main unresolved |
+| Alpha2 qualification | W01 / CONF-LINUX-001 / CONF-A2-001 | WAITING_PREREQUISITES | Installed host enforcement, fresh native AMD64 and integrated read-only acceptance |
+
+025 outer3134passed calls/one failed enclosing call and nestedINCOMPLETE27873
+records/zero observed failed phases are partial observations. The final scan
+did not run. Prior019-025 and separatePR144 remain immutable; cumulative8
+lineage allowances are consumed. This packet grants LOCAL0/CI0/exact-main0.
+Keep53argv, both full suites and420/750/900s/15min limits. No cloud, root,
+runner registration, live/native or tenant effects. Exact-source/helper review
+and finite authority are required before a future full run. Phase-end effort
+transition NOT_DUE; prior checkpoints below are history, not execution grants.
+
+Data-only source inspection reconciles108 exact owned paths,89 accepted-file
+inverses,16 new-file pins and3 closure objects. All190 accepted YAML and192
+protected files are unchanged. The13 repository guides,191 current/indexed
+packets and412 predecessor edges agree;48 accepted test identity inventories
+are preserved. New snapshot regression source declares12 functions/51 literal
+cases, not collected or executed tests. Preliminary independent core/test
+review found no concrete blocker; final frozen-source/history review remains.
+
+## Historical025 source checkpoint — MET-PERF-025 source preparation, October 2, 2026
+
+Alpha2 remains open. Fresh remote main0314a684 retains190 immutable packet YAML;
+this candidate adds only025 for191. Reuse the existing exact-byte-keyed immutable
+canonical serializer at one CI-performance call site under an explicit narrow
+amendment. Preserve interleaved fresh authority/projection/digest checks, every
+inherited test, fixed parser semantics and existing256-entry bound. No changed
+shared helper/parser, two-pass rewrite, cached verdict or new acceptance grant.
+
+| Phase | ID | Status | Description / gate |
+|---|---|---|---|
+| Alpha2 readiness | MET-PERF-025 | SOURCE_PREPARED_AWAITING_REVIEW | One canonical-byte delegation and additive regressions; independent review and finite full acceptance remain |
+| Alpha2 readiness | MET-PERF-024 | FAILED_LOCAL_FROZEN | 750.259927s deadline,52/53, no final scan; diagnostic repairs narrowly exercised, cleanup confirmed |
+| Alpha2 readiness | MET-PERF-019–023 | FAILED_LOCAL_FROZEN | Every prior allowance and evidence retained; no replay/reset/transfer |
+| Alpha2 runner preparation | MET-LINUX-004 / PR144 | WAITING | Separate three LOCAL attempts consumed; CI/capacity/exact-main distinct |
+| Alpha2 qualification | W01 / CONF-LINUX-001 / CONF-A2-001 | WAITING_PREREQUISITES | Installed enforcement, fresh native AMD64 and integrated read-only evidence |
+
+024 nested suite returned0 in385.898376s with COMPLETE30271records,0failed/drop
+and10recorded skips; all seven nested commands passed. Outer4676 passed calls
+and0observed failed phases are incomplete observations, not acceptance. Exact
+failure/cleanup pins are in architecture/packet-schema-performance-inputs/prior-024-terminal.json.
+
+Whole-run timing remains unresolved. Repeated YAML-to-canonical conversion is
+a source-confirmed opportunity, not measured speedup. Fixed pinned parser
+semantics are required; warm cache entries do not detect arbitrary runtime
+parser replacement. Preserve53argv, both full suites,420/750/900s,15min and32MiB.
+Cumulative7 and PR144 separate3 remain consumed. NewLOCAL0/CI0/exact-main0;
+no helper/signing/activation, cloud, root-policy, runner or native/tenant effect.
+Model/effort unchanged; phase-end transition NOT_DUE. Earlier checkpoints below
+are retained history, not current implementation or execution authority.
+
+Author data-only inspection reconciles106 owned paths,89 exact inverses and14
+new-file pins plus the three closure objects; all190 accepted packets and192
+protected files remain unchanged. The13 repository guides,191-entry index and
+412 ordered predecessor edges agree. All48 changed accepted test modules retain
+ordered identities. The additive semantic module declares15 test functions and
+42 literal parameter cases, not collected or executed tests. Pre-freeze review
+caught three AST fingerprints generated with system Python3.9; corrected hashes
+are bound to pinned3.12.14. Import fixtures restore introduced aliases and observe
+the actual loaded authority chain. Independent final review remains required.
+
+## Historical024 source checkpoint — MET-PERF-024 source preparation, October 2, 2026
+
+Alpha 2 remains open. Accepted main `0314a684` retains 190 immutable packet YAML;
+this unaccepted source adds only `MET-PERF-024`, for 191. Preserve the schema,
+freshness, separate semantic-test ownership and historical reconstruction work.
+Correct short explicit IDs for invalid-node fixtures without changing inputs,
+and explicitly raise the existing nonzero failure payload without pytest
+assertion rewriting. No recorder-limit or strict regression relaxation.
+
+| Phase | ID | Status | Description / gate |
+|---|---|---|---|
+| Alpha 2 readiness | MET-PERF-024 | SOURCE_PREPARED_AWAITING_REVIEW | Diagnostic corrections and static regression source prepared; independent review and separately authorized complete acceptance remain |
+| Alpha 2 readiness | MET-PERF-023 | FAILED_LOCAL_FROZEN | LOCAL1/1 consumed; 750-second timeout, invalid diagnostic completion, no final scan |
+| Alpha 2 readiness | MET-PERF-019 / MET-PERF-020 / MET-PERF-021 / MET-PERF-022 | FAILED_LOCAL_FROZEN | All old allowances remain consumed; no replay, reset or transfer |
+| Alpha 2 runner preparation | MET-LINUX-004 / PR #144 | WAITING | Three consumed LOCAL attempts; CI/capacity and exact-main remain separate |
+| Alpha 2 qualification | W01 / native Linux / CONF-A2-001 | WAITING_PREREQUISITES | Host enforcement, target qualification and integrated read-only evidence |
+
+Latest023 reached 52/53 commands. Its nested stdout reports 5,019 passed and10
+declared skips, but return1 reflects INVALID_NODE and4,680 dropped diagnostic
+records. Four outer failed call phases are retained, not a final complete
+report. The negative fixture created a65,633-character real node ID; three exact
+payload regressions conflict with pinned pytest assertion rewriting. The first
+cause is source/log confirmed; the second is a reviewed source-grounded inference
+without a retained final traceback. Actual cleanup and unchanged source/history
+are independently confirmed. Preserve evidence in
+`architecture/packet-schema-performance-inputs/prior-023-terminal.json`.
+
+Whole-run timing is still unresolved. Keep all53 argv, both full suites, nested
+420 / local750 / trusted900 seconds, workflow15minutes and32MiB output. This
+source grants ZERO attempts; the old shared2/2 plus four separate1/1 allowances
+remain consumed at cumulative6. No source/helper execution, CI, merge, cloud,
+runner registration, privilege or native/tenant acceptance follows. Model-effort
+transition remains NOT_DUE. Prior checkpoints below are historical records.
+
+Author data-only inspection found 104 exact changed paths, 190 unchanged accepted
+packets, 191 current entries, 192 protected files, 13 owner guides and 412 ordered
+predecessor edges. All 48 changed accepted test modules retain ordered function
+identities. The new diagnostic-repair module declares seven functions and 16
+literal cases; these are source observations, not executed or collected tests.
+
+## Historical023 source checkpoint — MET-PERF-023 source preparation, October 2, 2026
+
+Alpha 2 remains open. Accepted main `0314a684` has 190 immutable packet YAML;
+this unaccepted candidate adds only `MET-PERF-023`, for 191. Move the four new
+semantic test functions (14 static cases) into a separate owned module while
+restoring the protected file's ten historical identities and bodies. Keep the
+canonical owner/root fixes and all unaccepted schema/freshness/diagnostic work.
+
+| Phase | ID | Status | Description / gate |
+|---|---|---|---|
+| Alpha 2 preparation | MET-PERF-023 | SOURCE_PREPARED_AWAITING_REVIEW | Exact historical identities restored and semantic coverage separated; independent review and separately authorized full acceptance remain |
+| Alpha 2 preparation | MET-PERF-019 / MET-PERF-020 / MET-PERF-021 / MET-PERF-022 | FAILED_LOCAL_FROZEN | Shared 2/2 and three separate 1/1 exceptions consumed; no replay, reset or transfer |
+| Alpha 2 runner preparation | MET-LINUX-004 / PR #144 | WAITING | Three consumed LOCAL attempts; base reconciliation, required CI/capacity and exact-main remain separate |
+| Alpha 2 qualification | W01 / native Linux / CONF-A2-001 | WAITING_PREREQUISITES | Host enforcement, fresh target qualification and integrated read-only evidence |
+
+The latest 022 LOCAL failed readiness command 2/53 after 16.4475 seconds without
+timeout. Projected-byte checks did not replace separate raw AST identity checks:
+adding four functions changed a protected ten-test inventory to fourteen. The
+prior source review missed this exact-equality requirement. Preserve that review
+as history, not acceptance; do not weaken the historical checks. Pytest and new
+diagnostics never ran. Independent terminal review confirmed cleanup and unchanged
+source/history. Retained pins are in
+`architecture/packet-schema-performance-inputs/prior-022-terminal.json`.
+
+Author data-only inspection confirms 102 owned changed paths, 190 unchanged
+accepted packets, 191 current entries, 13 repository guides, 412 predecessor
+edges and matching root unions. All 48 changed accepted test modules retain
+their exact ordered identities. The protected module matches accepted bytes
+apart from the catalog scalar; all four moved semantic functions preserve their
+AST bodies and fourteen static cases. Seven new-module guard/selection cases
+and one retained022-history case are additional source coverage, not executed
+tests. Reversible bytes, locked inputs and old failure records remain intact.
+
+This packet grants ZERO new executions. Source preparation is not qualification,
+and earlier 020 pytest failure identities remain unresolved. Review exact raw
+test inventories as well as reversible source bytes, current canonical owner/ID
+sets, README ordering and all allowed-root unions. Keep all 53 argv, both full
+suites, nested 420 / local 750 / trusted 900 seconds, workflow 15 minutes and
+the 32 MiB output ceiling. No cloud, runner registration, privilege, CI, merge,
+native or tenant-acceptance promotion. Model-effort transition remains NOT_DUE.
+
+The older source-era checkpoints below retain history, not current grants.
+
+## Historical022 source checkpoint — MET-PERF-022 source preparation, October 2, 2026
+
+Alpha 2 remains open. Accepted main `0314a684` has 190 immutable packet YAML; this
+unaccepted source candidate adds only `MET-PERF-022`, for 191. The correction makes the
+canonical owner declaration and root tree agree with the packet catalog and
+adds semantic consistency regression source. Earlier schema/freshness/diagnostic
+work is carried as unaccepted source, not a completed performance improvement.
+
+| Phase | ID | Status | Description / gate |
+|---|---|---|---|
+| Alpha 2 preparation | MET-PERF-022 | SOURCE_PREPARED_AWAITING_REVIEW | Owner/index/tree corrections and regression source prepared; data-only relationships checked, independent review and acceptance still required |
+| Alpha 2 preparation | MET-PERF-019 / MET-PERF-020 / MET-PERF-021 | FAILED_LOCAL_FROZEN | Shared 2/2 plus 020 exception 1/1 and 021 LOCAL 1/1 consumed; no replay or transfer |
+| Alpha 2 runner preparation | MET-LINUX-004 / PR #144 | WAITING | Three consumed LOCAL attempts; base reconciliation, required CI/capacity and exact-main remain separate |
+| Alpha 2 qualification | W01 / native Linux / CONF-A2-001 | WAITING_PREREQUISITES | Host enforcement, fresh target qualification and integrated read-only profile evidence remain unresolved |
+
+The latest 021 LOCAL failed at readiness command 2: 2/53 commands, four errors,
+29.908 seconds, no timeout. The guide named 020 in its canonical PR-packets section and
+omitted `conftest.py` from its exact root tree. The earlier hash/inverse review
+missed these semantic inconsistencies. Pytest, diagnostic hooks and the final
+scan never ran. The frozen source and independent cleanup/result pins are kept
+in `architecture/packet-schema-performance-inputs/prior-021-terminal.json`.
+
+Author data-only inspection now reconciles all 13 guides, 191 physical packet
+owners, 191 indexed entries, 412 predecessor edges and every declared root union.
+It preserves all 190 accepted packet bytes and reproduces the two defects in
+frozen 021 while finding neither in this candidate. This is not test execution,
+an independent security verdict or a full readiness result.
+
+Decision: repair the documents and test the parser-scoped relationships;
+do not weaken validation, drop tests, increase deadlines or edit failed source.
+This packet grants ZERO new executions. Independent exact-source/helper review
+and explicit finite successor authority are prerequisites to any later full run.
+All 53 command arrays, nested 420 / local 750 / trusted 900 seconds and the
+15-minute workflow ceilings remain unchanged.
+No signing, activation, CI, root-policy/cloud/runner or tenant-acceptance change.
+Alpha 2 is open; model-effort transition NOT_DUE.
+
+The older source-era checkpoints below retain history, not current grants.
+
+## Historical021 source checkpoint — MET-PERF-021 source preparation, October 1, 2026
+
+Alpha 2 remains open. Accepted main `0314a684` contains 190 immutable packets.
+This unaccepted candidate adds only `MET-PERF-021` for 191. It carries forward
+reviewed-but-unaccepted schema-lifecycle/fresh-authority work and adds bounded,
+redacted per-test phase diagnostics. This is source preparation, not acceptance
+or a measured performance improvement.
+
+| Phase | ID | Status | Description / gate |
+|---|---|---|---|
+| Alpha 2 preparation | MET-PERF-021 | ONGOING_SOURCE_PREPARATION | Test identity/phase/outcome diagnostics; independent review and static closure pending |
+| Alpha 2 preparation | MET-PERF-019 / MET-PERF-020 | BLOCKED_FROZEN | Original 2/2 plus additional custody exception 1/1 consumed; no replay |
+| Alpha 2 runner preparation | MET-LINUX-004 / PR #144 | WAITING | Existing three LOCAL allowances consumed; CI/capacity and accepted-base reconciliation remain separate |
+| Alpha 2 qualification | Native Linux prerequisites / CONF-A2-001 | WAITING | Required source, installed-host and exact-target evidence remain unresolved |
+
+The last020 exception reached execution but timed out: nested predecessor pytest
+420.016s, outer750.444s,52/53 commands, no final summaries or final scan.
+Two additional outer failure markers have no established test identity.
+Independent terminal review confirmed cleanup and unchanged source/history.
+Sanitized immutable pins are in
+`architecture/packet-schema-performance-inputs/prior-020-terminal.json`;
+the earlier019 record remains byte-for-byte historical data.
+
+Root pytest diagnostics identify setup/call/teardown and outcomes as observed.
+Nested `subprocess.run(capture_output=True)` remains unchanged: its events are
+buffered until return or the420s inner timeout, not live streaming. No raw
+parameter values, traceback locals, exception text or environment are added.
+Byte/count limits and sink failures must be explicit; unmatched START means
+unfinished/unknown. Mock-only tests alone cannot prove real capture integration.
+
+This packet grants ZERO executions. No source rename, reviewed code, pipeline
+availability or installed activation resets old budgets. A future full run needs
+a separately reviewed exact source/helper and explicit finite successor allowance.
+Keep all53 argv, tests/skips,420/750/900s limits,15-minute workflow and32MiB
+outer output limit. No warm-source access, root-policy change, cloud spending,
+runner registration, dispatch, merge or native/tenant promotion is included.
+
+No phase-end effort change is due. Previous source-era checkpoints below are
+retained history, not current grants or completion claims.
+
+## Historical020 source checkpoint — MET-PERF-020 source preparation, October 1, 2026
+
+Alpha 2 remains open. Accepted main `0314a684` has 190 unchanged packets. This
+candidate adds only MET-PERF-020, not failed MET-PERF-019 or unaccepted PR144. It owns
+bounded nested-test diagnostics, fresh authority checks without redundant
+runner-bridge JSON parsing, carried-forward schema-lifecycle parity tests and
+an exact 191-to-190 source inverse. Performance remains unmeasured.
+
+MET-PERF-019 commit `106ae3ec` is frozen, local and unaccepted. LOCAL1 consumed
+the first attempt in the shared schema-performance repair lineage and timed
+out at 750 seconds during outer pytest: 52/53 commands, last visible 33%, one F
+without a final traceback, no completed nested/outer summary. Independent
+cleanup/custody checks closed; no acceptance PASS. The sanitized immutable
+failure record is [retained here](../architecture/packet-schema-performance-inputs/prior-local-failure.json).
+
+Source preparation grants zero runs. The cumulative 019+020 LOCAL ceiling is two:
+019 consumed one and 020 may receive at most one separately reviewed, exact-source,
+finite allowance (packet ordinal 1, lineage ordinal 2), never a reset or automatic
+retry. No CI/exact-main allowance is automatic. Keep nested 420 / local 750 /
+trusted 900 seconds and workflow 15 minutes, full tests and all isolation/freshness
+checks unchanged.
+The diagnostics identify START and report an inner timeout immediately when
+observed; an outer kill can still leave START only. They are not qualification.
+
+PR144/MET-LINUX-004 remains draft with three consumed LOCAL attempts and no
+allowance transfer. Required CI capacity/admission, green merge, exact-main,
+native Linux and product/tenant qualification remain separate open gates.
+No model/effort change is due.
+
+| Phase / ID | Status | Remaining gate |
+|---|---|---|
+| Alpha 2 / MET-PERF-019 | FAILED_LOCAL_FROZEN | Retain source and consumed attempt; no replay |
+| Alpha 2 / MET-PERF-020 | ONGOING_SOURCE_PREPARATION | Freeze and review exact source; no execution grant |
+| Alpha 2 / MET-LINUX-004, PR144 | BLOCKED_ALLOWANCE_EXHAUSTED | Preserve three failed attempts and separate runner work |
+| Alpha 2 / required CI and exact-main | WAITING | Independently admitted capacity, complete checks and merge |
+| Alpha 2 / native Linux and CONF-A2-001 | WAITING_PREREQUISITES | Fresh native and integrated profile evidence |
+
+The following 019 source-era checkpoint is
+retained verbatim as history, not a current execution instruction or PASS.
+
+
+## Historical 019 source checkpoint — October 1, 2026
+
+Accepted source main is `0314a684ba637fb205856d5fb5e50206071e647a`, the PR #143
+source merge under its one-time exception. This is **not** required CI PASS,
+installed Linux evidence or a transferable exception. Alpha 2 remains open.
+`MET-PERF-019` is a separate **ONGOING_SOURCE_PREPARATION** packet on this base:
+one invocation-local task-schema validator, exact error/freshness regressions,
+and a reversible 191-to-190 source-history bridge. All 190 accepted packet YAML
+and historical authority bytes remain unchanged. Speedup is unmeasured.
+
+Draft [PR #144](https://github.com/caglarsubas/harness-onion/pull/144),
+`MET-LINUX-004` at `614a08cfaf34ab0c37788231e03a44972f16727e`, is an unaccepted
+diagnostic subject, not this packet's predecessor. Its three LOCAL attempts are
+consumed. LOCAL3 completed the nested suite (4,902 passes, ten inherited skips)
+but timed out during outer pytest at the installed 900-second boundary; only
+52/53 commands ran. Cleanup is retained; acceptance did not pass. No LOCAL4,
+allowance transfer, test omission or timeout increase is permitted. On October 1,
+its required verify remained queued with zero registered repository runners.
+
+This source preparation grants zero new execution attempts. The proposed finite
+maximum LOCAL2 / CI2 / LOCAL_EXACT_MAIN1 remains inactive until independent
+exact-source review and a finite owner-delegated execution allowance are bound
+before reservation. Installed signed packet activation follows the durable
+reservation and precedes launch; the owner allowance JSON is not a signature.
+Inherited local/main750s, nested420s, trusted900s and workflow15min ceilings stay
+unchanged. The old private930s supervisor is not an inherited allowance.
+An independently merged repair would require explicit reconciliation of PR144's
+old base/inverse before further work there; it does not certify the excluded
+Linux runner-kit changes. Required CI capacity/admission and native Linux
+qualification remain separate unpassed gates.
+
+The next paragraph is the retained pre-PR-143 source checkpoint, not current
+dispatch, runner availability or completion status.
+
 Current source baseline: `945de93f89c94f42f1d63bff7997e3d0fa704fc4` on accepted main, the merge of MET-UNIFY-005 PR #140. Alpha 2 remains **open**. `MET-RUNNER-001` is a source-only development-CI capacity exception candidate, not an installed runner or permission to provision one. As observed on September 29, 2026, [PR #141](https://github.com/caglarsubas/harness-onion/pull/141) and [draft PR #142](https://github.com/caglarsubas/harness-onion/pull/142) have queued self-hosted `verify` jobs and the repository has zero registered runners. Their source/CI/merge, Linux native and tenant-acceptance evidence remain separate. The [bounded exception](alpha-2/CI_CAPACITY_EXCEPTION.md) requires an independently authorized cost ceiling, a separately reviewed and installed exact-job pre-checkout admission boundary, queue serialization, a qualified Linux guest and verified teardown; this publication supplies none of those operational facts. The next source packet is MET-RUNNER-001, while native AMD64 qualification and the W01/Alpha-2 product gates remain waiting.
 
 The next paragraph is the retained pre-PR-140 source checkpoint, not current dispatch or completion status.
@@ -100,7 +469,16 @@ The [item-level backlog](../architecture/unified-roadmap-backlog.json) records p
 | Alpha 2 preparation | MET-UNIFY-003 | BLOCKED_CI_ALLOWANCE_EXHAUSTED | PR #139 unmerged; LOCAL PASS, CI-1 transport failure and CI-2 15-minute cancellation; no runner remains |
 | Alpha 2 preparation | MET-UNIFY-004 | BLOCKED_LOCAL_ALLOWANCE_EXHAUSTED | Local commit only; LOCAL-1 status-check failure and LOCAL-2/3 750-second timeouts; no PR, CI or merge |
 | Alpha 2 preparation | MET-UNIFY-005 | MERGED_SOURCE_RECORDED | PR #140 on exact accepted main `945de93`; source history only, not Linux or tenant qualification |
-| Alpha 2 CI capacity | MET-RUNNER-001 | ONGOING_SOURCE_DESIGN | Bounded external CI exception and exact-job admission contract; no VM, runner, CI PASS or native qualification |
+| Alpha 2 CI capacity | MET-RUNNER-001 / PR #143 | MERGED_SOURCE_EXCEPTION | Source on `0314a684`; one-time merge exception consumed, not required CI PASS, installed runner or native qualification |
+| Alpha 2 validation | MET-PERF-019 | FAILED_LOCAL_FROZEN | Unaccepted source and consumed LOCAL1 retained; no replay or transferred allowance |
+| Alpha 2 validation | MET-PERF-020 | FAILED_LOCAL_FROZEN | Shared allowance and additional custody exception consumed; failure records retained without replay |
+| Alpha 2 validation | MET-PERF-021 | FAILED_LOCAL_FROZEN | LOCAL1/1 failed readiness before pytest; source, evidence and cleanup retained |
+| Alpha 2 validation | MET-PERF-022 | FAILED_LOCAL_FROZEN | LOCAL 1/1 failed historical test identity checks before pytest; source and evidence retained |
+| Alpha 2 validation | MET-PERF-023 | FAILED_LOCAL_FROZEN | LOCAL1/1 timed out with invalid diagnostics; exact failure and cleanup records retained |
+| Alpha 2 validation | MET-PERF-024 | FAILED_LOCAL_FROZEN | Diagnostic fixes narrowly exercised; whole run timed out at52/53, cleanup confirmed |
+| Alpha 2 validation | MET-PERF-025 | FAILED_LOCAL_FROZEN | Nested and outer deadlines exhausted;52/53 commands and independently confirmed cleanup |
+| Alpha 2 validation | MET-PERF-026 | SOURCE_PREPARED_AWAITING_REVIEW | Snapshot decode source prepared; final independent review and full execution gates remain |
+| Alpha 2 runner repair | MET-LINUX-004 / PR #144 | BLOCKED_LOCAL_ALLOWANCE_EXHAUSTED | All three LOCAL attempts consumed; preserve frozen source/results, separately queued CI and unpassed Linux gates |
 | Alpha 2 CI capacity | MET-UNIFY-008 / PR #141 | BLOCKED_SELF_HOSTED_CI | Source PR open; `verify` queued with no registered runner |
 | Alpha 2 CI capacity | MET-LINUX-003 / PR #142 | BLOCKED_SELF_HOSTED_CI | Draft source PR open; `verify` queued on the same labels; queue must be serialized before one-job admission |
 | Alpha 2A | W01 | ONGOING_DESIGN | Resolve G04–G07/G09; E01–E12 remain OPEN_UNPROVEN |
@@ -126,6 +504,7 @@ These checkboxes count only the named deliverable at the stated evidence level. 
 - [x] Alpha 2 · MET-ENFORCE-003 · Merge the reviewed host-interface source candidate as PR #138 on accepted main.
 - [x] Alpha 2 · MET-UNIFY-005 · Publish this unified roadmap with exact historical inverse, independent review, declared offline acceptance, required CI and exact-main evidence at `945de93`.
 - [ ] Alpha 2 · MET-RUNNER-001 · Publish the source-only bounded development-CI admission contract with exact 189-packet history, isolated acceptance, required CI and exact-main evidence.
+- [ ] Alpha 2 · MET-PERF-028 · Complete exact-bytes authority recheck reuse and linear uniqueItems, independent review and separately authorized full LOCAL/CI/exact-main; preserve failed019–027/PR144 and unresolved native Linux gates.
 - [ ] Alpha 2A · W01 · Resolve G04–G07/G09 and adopt a versioned host interface only after the required independent review.
 - [ ] Alpha 2A · CONF-FIX-010 · Complete safe design and exact authority before any product attempt.
 - [ ] Alpha 2A · CONF-LIVE-004 · Produce the exact native-probe source implementation and separately qualify it.
@@ -137,10 +516,10 @@ These checkboxes count only the named deliverable at the stated evidence level. 
 - [ ] Alpha 3 · CONF-A3-001 · Qualify governed action and interaction.
 - [ ] Alpha 4 · CONF-WG-001 · Produce an unsigned white-goods tenant-acceptance candidate after required enterprise campaigns.
 
-## Launch order and acceptance boundaries
+## Retained MET-PERF-019-era launch order (historical; not current dispatch)
 
-1. Complete MET-RUNNER-001 as one source-only packet against accepted main `945de93`: exact allowed paths, all 189 predecessor YAML hashes, reversible current-to-189 projection, inherited checks and bounded attempts. It supplies a reviewed external CI policy, not a host installation or spend authorization.
-2. Complete its declared isolated localhost acceptance and required self-hosted CI. Merge only after required checks pass, then verify exact main separately. A separately authorized operator must first prove the Linux host image, root-owned signed admission, 15-minute throughput, egress/cost bound and automatic plus independent teardown. Serialize the same-label PR #141/#142 queue before registering one exact-job runner. Dashboard source registration is a later, separately owned orchestrator packet; it must show source revision and observation time without duplicating status authority.
+1. Prepare MET-PERF-019 as one source-only packet against accepted main `0314a684`: exact 92 paths, 190 immutable predecessor YAML, reversible current-to-190 projection, inherited 52 commands plus its one declared validator, and source/error-parity review. No executed diagnostic, selected test or new attempt follows from source publication.
+2. Bind independently reviewed exact-source finite execution authority before any reservation. Complete the unchanged full isolated acceptance, required self-hosted CI, protected green merge and separate exact-main evidence. A separately authorized operator must prove Linux host image, root-owned signed admission, throughput, egress/cost bounds and automatic plus independent teardown before runner registration. Refresh and serialize the actual queue before exact-job admission. Preserve PR144's failed history and require its own later base/scope reconciliation. Dashboard source registration remains a separately owned orchestrator packet.
 3. Continue W01 design and the existing conformance correction chain under their exact approved packet boundaries. W02–W07 and unpublished EXT/OSS/SEM proposals are not dispatch targets.
 4. Run native Linux campaigns only with the external trusted signed launcher, pre-existing authorized capacity and the exact server-side zero-cost admission. Missing target/backend is NOT_RUN_ENV_UNAVAILABLE, never PASS or permission to provision.
 5. Start an eligible product packet only after its published predecessor contracts, immutable locks, required native gate and repository policy are satisfied. Release qualification and tenant acceptance require their own exact evidence.

@@ -1,6 +1,27 @@
 # Harness-Onion — unified development roadmap
 
-## Current checkpoint — MET-PERF-028 source preparation, October 2, 2026
+## Current checkpoint — MET-LINUX-005 source preparation, October 3, 2026
+
+Alpha2 OPEN. MET-PERF-028 reached LOCAL_PASS_ONLY (53/53, 600.586 s,
+activation389; independent terminal review confirmed) and PR #145 was merged as
+main f7af83e under a consumed one-time administrator exception; its required
+verify did not run because no self-hosted runner exists. MET-LINUX-005 is the
+sole192nd specification: it carries the reviewed MET-LINUX-004 nested-checkout
+and system-alias runner-contract repair onto that main.
+
+| Phase | ID | Status | Description / gate |
+|---|---|---|---|
+| Alpha2 runner | MET-LINUX-005 | SOURCE_PREPARED_AWAITING_REVIEW | Runner-contract repair as192nd packet; independent review and separately authorized full acceptance remain |
+| Alpha2 readiness | MET-PERF-028 | LOCAL_PASS_MERGED_BY_EXCEPTION | LOCAL pass confirmed; CI and exact-main NOT_RUN |
+| Alpha2 runner | MET-LINUX-004 / PR144 | SUPERSEDED_SOURCE | LOCAL1/2/3 consumed and retained; not a predecessor |
+| Alpha2 qualification | W01 / CONF-LINUX-001 / CONF-A2-001 | WAITING_PREREQUISITES | Installed host enforcement, fresh native AMD64 and integrated read-only acceptance |
+
+This packet grants LOCAL0/CI0/exact-main0. Keep54argv, both full suites,
+420/750/900s/15min and32MiB. No cloud, root, runner registration,
+live/native/tenant or model-effort changes. Phase-end effort transition NOT_DUE.
+Prior checkpoints below are history only.
+
+## Historical028 source checkpoint — MET-PERF-028 source preparation, October 2, 2026
 
 Alpha2 OPEN. Accepted main0314a684 retains190 immutable packets;028 is the
 sole191st specification. Same-host measurement of frozen027 outside the trusted
@@ -506,6 +527,7 @@ These checkboxes count only the named deliverable at the stated evidence level. 
 - [x] Alpha 2 · MET-UNIFY-005 · Publish this unified roadmap with exact historical inverse, independent review, declared offline acceptance, required CI and exact-main evidence at `945de93`.
 - [ ] Alpha 2 · MET-RUNNER-001 · Publish the source-only bounded development-CI admission contract with exact 189-packet history, isolated acceptance, required CI and exact-main evidence.
 - [ ] Alpha 2 · MET-PERF-028 · Complete exact-bytes authority recheck reuse and linear uniqueItems, independent review and separately authorized full LOCAL/CI/exact-main; preserve failed019–027/PR144 and unresolved timing/native Linux gates.
+- [ ] Alpha 2 · MET-LINUX-005 · Complete the runner-contract repair on accepted 028 main, independent review and separately authorized full LOCAL/CI/exact-main; preserve PR144 attempts and unresolved native Linux gates.
 - [ ] Alpha 2A · W01 · Resolve G04–G07/G09 and adopt a versioned host interface only after the required independent review.
 - [ ] Alpha 2A · CONF-FIX-010 · Complete safe design and exact authority before any product attempt.
 - [ ] Alpha 2A · CONF-LIVE-004 · Produce the exact native-probe source implementation and separately qualify it.

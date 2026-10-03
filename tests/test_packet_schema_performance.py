@@ -497,12 +497,12 @@ def test_schema_performance_publication_preserves_complete_source_history():
     assert performance.validate() is None
     current = _current_catalog(performance)
     accepted = performance.historical_catalog(current)
-    assert len(current) == 191 and len(accepted) == 190
-    assert set(accepted) == set(current) - {performance.NEW_PACKET}
+    assert len(current) == 192 and len(accepted) == 190
+    assert set(accepted) == set(current) - {performance.NEW_PACKET, performance.successor.NEW_PACKET}
     assert len(runner.historical_catalog(current)) == 189
     assert len(roadmap.historical_catalog(current)) == 188
     for path, rule in performance._PROJECTION_RULES.items():
-        raw = performance.regular_bytes(path)
+        raw = performance.successor.historical_bytes(path, performance.regular_bytes(path))
         before = performance.historical_bytes(path, raw)
         assert performance.digest(raw) == rule["afterSha256"]
         assert performance.digest(before) == rule["beforeSha256"]
@@ -589,7 +589,8 @@ def test_schema_performance_authority_is_rechecked_through_every_history_route(m
 
 
 @pytest.mark.parametrize("path,message", [
-    ("scripts/validate_packet_schema_performance.py", "schema performance validator drift"),
+    # The newer MET-LINUX-005 layer refuses a mutated validator before this layer.
+    ("scripts/validate_packet_schema_performance.py", "unreviewed current source: scripts/validate_packet_schema_performance.py"),
     ("task-packets/MET-001.yaml", "changed predecessor YAML"),
     ("task-packets/MET-PERF-028.yaml", "schema performance packet YAML drift"),
 ])
@@ -674,7 +675,9 @@ def test_schema_performance_projection_never_imports_predecessor_source():
         if isinstance(node, ast.ImportFrom):
             assert "validate_" not in (node.module or "")
         elif isinstance(node, ast.Import):
-            assert all("validate_" not in alias.name for alias in node.names)
+            # Only the newer successor layer may be imported, never a predecessor.
+            assert all("validate_" not in alias.name or alias.name == "validate_linux_runner_contract"
+                       for alias in node.names)
 
 
 @pytest.mark.parametrize("route", ["guard", "runner_authority", "runner_old_bytes"])
@@ -785,4 +788,4 @@ def test_retained_019_failure_is_not_a_predecessor_or_a_new_execution_grant():
     assert policy["budgetReset"] is False
     assert policy["automaticCiOrExactMain"] is False
     names = {path.stem for path in (performance.ROOT / "task-packets").glob("*.yaml")}
-    assert len(names) == 191 and performance.NEW_PACKET in names and "MET-PERF-019" not in names and "MET-PERF-020" not in names
+    assert len(names) == 192 and performance.NEW_PACKET in names and "MET-PERF-019" not in names and "MET-PERF-020" not in names

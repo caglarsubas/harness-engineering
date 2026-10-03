@@ -1,0 +1,108 @@
+{
+  "schemaVersion": "harness.planeon.ai/linux-runner-terminal-history/v1",
+  "status": "RETAINED_FAILURES_NOT_ACCEPTED_PREDECESSOR",
+  "packetId": "MET-LINUX-004",
+  "pullRequest": "https://github.com/caglarsubas/harness-onion/pull/144",
+  "allowance": {
+    "local": {
+      "maximum": 3,
+      "consumed": 3
+    },
+    "ci": {
+      "maximum": 2,
+      "consumed": 0
+    },
+    "localExactMain": {
+      "maximum": 1,
+      "consumed": 0
+    }
+  },
+  "attempts": [
+    {
+      "label": "PR144-L1",
+      "source": {
+        "commit": "ad795b3a03ce9bda371a18effa74d3bb3c8f3433",
+        "tree": "fc6113803dd14281f8598a9cea26a7be04c59b00",
+        "packetSha256": "043db1aefeb1b1440175c35f5869515a2a5ff9ccedc6f163d7b8548c528f000c",
+        "authoritySha256": "0616584d096c3df602f4df07e47f88038c4296aba2436ce0978749823cdc813e"
+      },
+      "activation": 376,
+      "exitCode": 1,
+      "retainedElapsedSeconds": 902.185942333017,
+      "commandsReached": 52,
+      "commandsExpected": 53,
+      "installedDeadlineSeconds": 900,
+      "status": "LOCAL_FAILED_OR_INCOMPLETE",
+      "immutableEvidenceSha256": {
+        "local1-reservation.json": "5bc3f21c3f31c82b6d7be67b2a81ebfcc2aa910492652aab691f37df75b17992",
+        "local1-result.json": "76521cd99c2c411357f0d3666fd61aea4120fd8f5f560f32ee5cef7d0947000b",
+        "local1-audit.json": "d0ef6ac3d00568e27f474a7afa78d68a0bc936cdf5d0fb36d19e51a6da8fa125",
+        "local1-cleanup.json": "72126d1c281fb28fcdceb4832c1c76cd6621763c267dc0e152dd871e8d7b7888",
+        "local1-offline.log": "537bf1ceda417e365c203924ab7dc8d790bf055337ac35769eaf94c4513f9604"
+      }
+    },
+    {
+      "label": "PR144-L2",
+      "source": {
+        "commit": "caeb834271cb53ce10faf0b0827a88549b3ba7fc",
+        "tree": "2d671e7a8399c255dcc275937556a7e4b921e36b",
+        "packetSha256": "043db1aefeb1b1440175c35f5869515a2a5ff9ccedc6f163d7b8548c528f000c",
+        "authoritySha256": "ac01b38bc417d5684d18e9396f9328a0fd0996fb7f7c39fc4da3eb0a98c4e50f"
+      },
+      "activation": 377,
+      "exitCode": 1,
+      "retainedElapsedSeconds": 902.1562384580029,
+      "commandsReached": 52,
+      "commandsExpected": 53,
+      "installedDeadlineSeconds": 900,
+      "status": "LOCAL_FAILED_OR_INCOMPLETE",
+      "immutableEvidenceSha256": {
+        "local2-reservation.json": "b5215a9e9df182662879a2b32141dfcc4cf3a8d2660dfd54aeebf3bea5d69bf3",
+        "local2-result.json": "befeb4ca3fd64dcfca97d09d889a0e31ec0285ffdeab2c4a92009f144f916db4",
+        "local2-audit.json": "d901e161e77f84c4df5ace68c7172b0d26914102a3bc14b40759192962e01cc9",
+        "local2-cleanup.json": "029d40f920fb1a333b763d3fb07db21179564fdfbec229087085fdc404495a7b",
+        "local2-offline.log": "36cd82edd57e3eadb65265a2c8aae8b161218cb3def51fb1482d3ffb760e61bd"
+      }
+    },
+    {
+      "label": "PR144-L3",
+      "source": {
+        "commit": "614a08cfaf34ab0c37788231e03a44972f16727e",
+        "tree": "75d9768c686f72883aab547e97297dba10b56387",
+        "packetSha256": "043db1aefeb1b1440175c35f5869515a2a5ff9ccedc6f163d7b8548c528f000c",
+        "authoritySha256": "d9eaa697b41d3937fc780fd4b837216a436712cf2733ae8ab439fc7ad2c4d312"
+      },
+      "activation": 378,
+      "exitCode": 1,
+      "retainedElapsedSeconds": 902.4302216249926,
+      "commandsReached": 52,
+      "commandsExpected": 53,
+      "installedDeadlineSeconds": 900,
+      "status": "LOCAL_FAILED_OR_INCOMPLETE",
+      "immutableEvidenceSha256": {
+        "local3-reservation.json": "818135d86297c214a9baa60a4fc3801a4f9df9f70d660a133035734f5e67d476",
+        "local3-result.json": "73a5378e63897f9f14b380ea8f8d995896462748d89b5d848ea314e0b940c743",
+        "local3-audit.json": "a7ef55f4a46721213f2d95b4c86a5b98568903995248de180e44033abaa25541",
+        "local3-cleanup.json": "3322a2ca3a3c0cffc9731523a09a7ff2e3b11bedb160beb6792ea7d90dd13ad5",
+        "local3-offline.log": "b1820a4a32e9ae4c1647bc1293021a6c203c4e7e92befc429144a1d98a7f2c42"
+      }
+    }
+  ],
+  "diagnosis": {
+    "knownNestedFailure": "PR144-L1 nested corpus count 206 versus 207",
+    "timing": "All three exceeded the installed 900 s deadline at 52/53 commands; later MET-PERF-028 profiling attributed the dominant cost to per-call authority SHA-256 and quadratic uniqueItems.",
+    "runnerContractSourceReviewed": true,
+    "acceptance": false
+  },
+  "successorBoundary": {
+    "newPacketId": "MET-LINUX-005",
+    "acceptedBase": "f7af83e1d6f78e7cd9215c703d9bfd0410b7fb24",
+    "carriesReviewedRunnerContractSource": true,
+    "newExecutionGrants": 0,
+    "budgetReset": false,
+    "allowanceTransfer": false,
+    "automaticCiOrExactMain": false,
+    "nativeLinux": false,
+    "tenantAcceptance": false
+  }
+}

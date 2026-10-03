@@ -18,8 +18,10 @@ from typing import Any
 
 try:
     from safe_yaml import safe_load
+    import validate_linux_runner_contract as successor
 except ImportError:
     from scripts.safe_yaml import safe_load
+    from scripts import validate_linux_runner_contract as successor
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -87,6 +89,7 @@ _VERIFIED_AUTHORITY: tuple[str, bytes] | None = None
 
 def _checked_authority_raw() -> bytes:
     global _VERIFIED_AUTHORITY
+    successor._checked_authority_raw()
     raw = regular_bytes(AUTHORITY_PATH)
     if type(raw) is not bytes or _VERIFIED_AUTHORITY != (AUTHORITY_SHA256, raw):
         require(digest(raw) == AUTHORITY_SHA256,
@@ -191,10 +194,15 @@ def _inverse(raw: bytes, hunks: tuple[tuple[int, bytes, bytes], ...]) -> bytes:
 
 
 def historical_bytes(path: str, raw: bytes) -> bytes:
-    """Freshly recheck the whole authority, then undo this successor only."""
+    """Freshly recheck both authorities, undo the newer successor, then this step."""
     _checked_authority_raw()
     require(type(raw) is bytes, "source bytes required")
     rule = _PROJECTION_RULES.get(path)
+    # An exact 190-era byte string is already older than the successor layer.
+    # Both authorities above are still rechecked before this fast return.
+    if rule is not None and digest(raw) == rule["beforeSha256"]:
+        return raw
+    raw = successor.historical_bytes(path, raw)
     if rule is None:
         return raw
     current_sha = digest(raw)
@@ -210,6 +218,7 @@ def historical_bytes(path: str, raw: bytes) -> bytes:
 def historical_test_bytes(raw: bytes) -> bytes:
     _checked_authority_raw()
     require(type(raw) is bytes, "test bytes required")
+    raw = successor.historical_test_bytes(raw)
     current_sha = digest(raw)
     matches = [path for path, rule in _PROJECTION_RULES.items()
                if path.startswith("tests/") and current_sha == rule["afterSha256"]]
@@ -225,16 +234,17 @@ def current_test_bytes(before: bytes) -> bytes:
                if path.startswith("tests/") and before_sha == rule["beforeSha256"]]
     require(len(matches) <= 1, "ambiguous predecessor test")
     if not matches:
-        return before
-    current = regular_bytes(matches[0])
+        return successor.current_test_bytes(before)
+    current = successor.historical_bytes(matches[0], regular_bytes(matches[0]))
     require(digest(current) == _PROJECTION_RULES[matches[0]]["afterSha256"],
             "current test drift")
-    return current
+    return successor.current_test_bytes(current)
 
 
 def historical_catalog(packets: dict[str, Any]) -> dict[str, Any]:
     """Require this exact added packet without pre-validating old fixture payloads."""
     record = authority()
+    packets = successor.historical_catalog(packets)
     require(type(packets) is dict, "packet mapping")
     old = set(record["baselinePackets"])
     require(set(packets) == old | {NEW_PACKET}, "unexpected packet addition or loss")
@@ -248,7 +258,9 @@ def historical_catalog(packets: dict[str, Any]) -> dict[str, Any]:
 
 def validate() -> None:
     record = authority()
-    validator_raw = regular_bytes("scripts/validate_packet_schema_performance.py")
+    validator_raw = successor.historical_bytes(
+        "scripts/validate_packet_schema_performance.py",
+        regular_bytes("scripts/validate_packet_schema_performance.py"))
     literal = b'AUTHORITY_SHA256 = "' + AUTHORITY_SHA256.encode("ascii") + b'"'
     placeholder = b'AUTHORITY_SHA256 = "' + b"TO_BE_PINNED_AFTER_SOURCE_FREEZE" + b'"'
     require(validator_raw.count(literal) == 1
@@ -257,8 +269,9 @@ def validate() -> None:
             "schema performance validator drift")
     paths = sorted((ROOT / "task-packets").glob("*.yaml"))
     old = set(record["baselinePackets"])
-    require(len(paths) == 191 and {path.stem for path in paths} == old | {NEW_PACKET},
-            "closed 191-packet catalog")
+    require(len(paths) == 192
+            and {path.stem for path in paths} == old | {NEW_PACKET, successor.NEW_PACKET},
+            "closed 192-packet catalog retaining the 191-packet checkpoint")
     for name, expected in record["baselinePackets"].items():
         require(digest(regular_bytes("task-packets/" + name + ".yaml")) == expected,
                 "changed predecessor YAML: " + name)
@@ -288,12 +301,13 @@ def validate() -> None:
                "task-packets/" + NEW_PACKET + ".yaml"},
             "unreviewed or omitted schema performance packet path")
     for path, rule in record["changedFiles"].items():
-        current = regular_bytes(path)
+        current = successor.historical_bytes(path, regular_bytes(path))
         require(digest(current) == rule["afterSha256"]
                 and digest(historical_bytes(path, current)) == rule["beforeSha256"],
                 "unreviewed current source: " + path)
     for path, expected in record["newFiles"].items():
-        require(digest(regular_bytes(path)) == expected, "new source drift: " + path)
+        require(digest(successor.historical_bytes(path, regular_bytes(path))) == expected,
+                "new source drift: " + path)
 
 
 if __name__ == "__main__":
@@ -302,4 +316,4 @@ if __name__ == "__main__":
     except (ValueError, TypeError, KeyError, OSError, UnicodeError) as exc:
         print("Schema performance source invalid: " + str(exc))
         raise SystemExit(1)
-    print("Schema performance source valid: 191 packets; 190 immutable predecessors; no runtime acceptance.")
+    print("Schema performance source valid: 192 current packets; 191-packet checkpoint and 190 immutable predecessors; no runtime acceptance.")

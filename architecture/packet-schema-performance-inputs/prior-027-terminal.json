@@ -1,0 +1,115 @@
+{
+  "schemaVersion": "harness.planeon.ai/schema-repair-terminal-history/v1",
+  "status": "RETAINED_FAILURE_NOT_ACCEPTED_PREDECESSOR",
+  "packetId": "MET-PERF-027",
+  "source": {
+    "commit": "33af75369233764004262f4f26f0d029418b1b03",
+    "tree": "2db644411775ba6d1499fcf0d29cc0ff3918fa35",
+    "packetSha256": "5c796d008a816d6d68a1dc3b31ae16b46211d63ae461836e8b74664c449dfa58",
+    "authoritySha256": "ef634ed8cfa8b4b05896884d12d887f9d9b6f89c4892e54eb8faf26614037ed1"
+  },
+  "previousAllowances": {
+    "original019020": {
+      "maximum": 2,
+      "consumed": 2
+    },
+    "separate020CustodyException": {
+      "maximum": 1,
+      "consumed": 1
+    },
+    "separate021Local": {
+      "maximum": 1,
+      "consumed": 1
+    },
+    "separate022Local": {
+      "maximum": 1,
+      "consumed": 1
+    },
+    "separate023Local": {
+      "maximum": 1,
+      "consumed": 1
+    },
+    "separate024Local": {
+      "maximum": 1,
+      "consumed": 1
+    },
+    "separate025Local": {
+      "maximum": 1,
+      "consumed": 1
+    },
+    "separate026Local": {
+      "maximum": 1,
+      "consumed": 1
+    }
+  },
+  "separateLocalException": {
+    "scopeId": "MET-PERF-027-LOCAL-001",
+    "maximum": 1,
+    "consumed": 1,
+    "cumulativeLineageOrdinal": 10,
+    "activation": 388,
+    "status": "LOCAL_FAILED_OR_INCOMPLETE",
+    "commandsStarted": 52,
+    "commandsExpected": 53,
+    "elapsedSeconds": 750.2776579579804,
+    "timedOut": true,
+    "exitCode": -15,
+    "externalHelperExitCode": 1,
+    "pytestStarted": true,
+    "diagnosticHooksExercised": true,
+    "finalScanReached": false,
+    "cleanupIndependentlyConfirmed": true,
+    "sourceAndHistoryUnchanged": true
+  },
+  "nestedSuite": {
+    "returnCode": null,
+    "elapsedSeconds": 420.0121519170352,
+    "failureType": "TimeoutExpired",
+    "diagnosticsStatus": "INCOMPLETE",
+    "diagnosticRecords": 28245,
+    "observedFailedPhases": 0,
+    "commandsCompleted": 0,
+    "commandsExpected": 7,
+    "lastStartedModule": "test_reuse.py",
+    "completeFinalReportAvailable": false,
+    "wholeAcceptancePass": false
+  },
+  "outerSuite": {
+    "observedPassedCallRecords": 3297,
+    "observedFailedCallRecords": 1,
+    "completeFinalPytestReportAvailable": false,
+    "projectionRegressionCallsDirectlyObserved": 0,
+    "snapshotDecodeRegressionCallsDirectlyObserved": 51,
+    "countsArePartialObservationsNotAcceptance": true
+  },
+  "diagnosis": {
+    "asOf": "MET-PERF-027_TERMINAL_REVIEW",
+    "repeatedRecipeDecoding": "SOURCE_ONLY_OPPORTUNITY_NOT_MEASURED_CAUSE",
+    "functionLevelCostMeasured": false,
+    "speedupEstablished": false,
+    "wholeRunTiming": "UNRESOLVED",
+    "laterSuccessorProfiling": "MET-PERF-028 owner-directed profiling outside the launcher attributed cost to per-call authority SHA-256 and quadratic uniqueItems; diagnostic only, recorded in its PROFILING_OBSERVATION."
+  },
+  "immutableEvidenceSha256": {
+    "local1-reservation.json": "c60e8635f18dacc689261e8a652fe60422c5eee47bb773000573787482182f22",
+    "local1-result.json": "360bbcfd2abdcf02245eb53cb0b3b272e8988f81c0a1309200bb677a422b1f37",
+    "local1-audit.json": "0267a779dc8e1a0e81c0be0ca490b74c3e24307d22cf7df0a08bf4659c6efdbb",
+    "local1-cleanup.json": "f96a1b599369b3d911b93a18e84bf906e09ecd4d19c269bef27686dcb2c9d052",
+    "local1-final-output-check.json": "6a8eac9622ca207708ed51c687e69082aa0e07bb70330828242871148953d2c1",
+    "local1-offline.log": "521a7d1d8b0a32ce52183f571a50da2f5c68a790d778f6a4ca204a8649813ebc",
+    "INVOCATION_TERMINAL.json": "550d3856f49f200de9b1e96dd2254e0a2b8ef5cbc0124df22e3639b989a9bca1",
+    "INDEPENDENT_TERMINAL_REVIEW.json": "b10a7ccced9b33a066c40564af9d705838b26f0acceaece0602892dd1cc3b089",
+    "RETAINED_TIMING_ANALYSIS.json": "ab27f3c643486b0f05c936393f9ae6066742d6406516aa731f243ab0269326fd",
+    "SOURCE_TIMING_DIAGNOSIS.md": "e6f591e5fedeefd45c7bb38e500ee658bdd10034d8486d9805bf11a2824d3a67",
+    "HANDOFF.md": "177ace32416726f20a6773c3697a2bbc0e28adac5d377cd02c6b66a142865afe"
+  },
+  "successorBoundary": {
+    "newPacketId": "MET-PERF-028",
+    "newExecutionGrants": 0,
+    "budgetReset": false,
+    "automaticCiOrExactMain": false,
+    "sourceAccepted": false,
+    "nativeLinux": false,
+    "tenantAcceptance": false
+  }
+}

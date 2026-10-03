@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate the source-only CI capacity exception and exact 190-to-189 history."""
+"""Validate the CI exception after the exact 191-to-190-to-189 source chain."""
 from __future__ import annotations
 
 import base64
@@ -16,6 +16,11 @@ try:
     from safe_yaml import safe_load
 except ImportError:
     from scripts.safe_yaml import safe_load
+
+if __package__:
+    from scripts import validate_packet_schema_performance as successor
+else:
+    import validate_packet_schema_performance as successor
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -75,9 +80,19 @@ def regular_bytes(path: str) -> bytes:
     return raw
 
 
+# Exact bytes most recently proven to hash to the pin. Every call still reads
+# the complete file; byte-identical input implies the identical digest, while
+# any other bytes or pin are hashed in full before they are accepted.
+_VERIFIED_AUTHORITY: tuple[str, bytes] | None = None
+
+
 def _checked_authority_raw() -> bytes:
+    global _VERIFIED_AUTHORITY
     raw = regular_bytes(AUTHORITY_PATH)
-    require(digest(raw) == AUTHORITY_SHA256, "CI runner history authority digest")
+    if type(raw) is not bytes or _VERIFIED_AUTHORITY != (AUTHORITY_SHA256, raw):
+        require(digest(raw) == AUTHORITY_SHA256, "CI runner history authority digest")
+        if type(raw) is bytes:
+            _VERIFIED_AUTHORITY = (AUTHORITY_SHA256, raw)
     return raw
 
 
@@ -95,6 +110,10 @@ def authority() -> dict[str, Any]:
             and type(value["changedFiles"]) is dict
             and type(value["newFiles"]) is dict,
             "accepted 189-packet base")
+    # Older idempotent routes call this public authority directly rather than
+    # passing through historical_bytes; they must recheck the newest pin too.
+    # Keep the existing local-authority refusal precedence before that check.
+    successor.fresh_authority()
     return value
 
 
@@ -160,8 +179,21 @@ def _inverse(raw: bytes, hunks: tuple[tuple[int, bytes, bytes], ...]) -> bytes:
 
 
 def historical_bytes(path: str, raw: bytes) -> bytes:
-    """Recheck the whole pinned authority, then undo exactly this successor."""
+    """Undo the current successor first, then this accepted predecessor step."""
+    # The accepted projection is idempotent for its exact 189-era bytes. Keep
+    # that inherited behavior without teaching the new 191-to-190 validator
+    # anything about the older 190-to-189 inverse.
+    rule = _PROJECTION_RULES.get(path)
+    if type(raw) is bytes and rule is not None and digest(raw) == rule["beforeSha256"]:
+        successor.fresh_authority()
+        _checked_authority_raw()
+        return raw
+    previous = successor.historical_bytes(path, raw)
     _checked_authority_raw()
+    return _historical_bytes_this_layer(path, previous)
+
+
+def _historical_bytes_this_layer(path: str, raw: bytes) -> bytes:
     require(type(raw) is bytes, "source bytes required")
     rule = _PROJECTION_RULES.get(path)
     if rule is None:
@@ -177,12 +209,13 @@ def historical_bytes(path: str, raw: bytes) -> bytes:
 
 
 def historical_test_bytes(raw: bytes) -> bytes:
+    previous = successor.historical_test_bytes(raw)
     _checked_authority_raw()
-    require(type(raw) is bytes, "test bytes required")
+    require(type(previous) is bytes, "test bytes required")
     matches = [path for path, rule in _PROJECTION_RULES.items()
-               if path.startswith("tests/") and digest(raw) == rule["afterSha256"]]
+               if path.startswith("tests/") and digest(previous) == rule["afterSha256"]]
     require(len(matches) <= 1, "ambiguous current test")
-    return historical_bytes(matches[0], raw) if matches else raw
+    return _historical_bytes_this_layer(matches[0], previous) if matches else previous
 
 
 def current_test_bytes(before: bytes) -> bytes:
@@ -192,28 +225,32 @@ def current_test_bytes(before: bytes) -> bytes:
                if path.startswith("tests/") and digest(before) == rule["beforeSha256"]]
     require(len(matches) <= 1, "ambiguous predecessor test")
     if not matches:
-        return before
-    current = regular_bytes(matches[0])
+        return successor.current_test_bytes(before)
+    current = successor.historical_bytes(matches[0], regular_bytes(matches[0]))
     require(digest(current) == _PROJECTION_RULES[matches[0]]["afterSha256"],
             "current test drift")
-    return current
+    return successor.current_test_bytes(current)
 
 
 def historical_catalog(packets: dict[str, Any]) -> dict[str, Any]:
+    previous = successor.historical_catalog(packets)
     record = authority()
-    require(type(packets) is dict, "packet mapping")
+    require(type(previous) is dict, "packet mapping")
     old = set(record["baselinePackets"])
-    require(set(packets) == old | {NEW_PACKET}, "unexpected packet addition or loss")
+    require(set(previous) == old | {NEW_PACKET}, "unexpected packet addition or loss")
     packet_raw = regular_bytes("task-packets/" + NEW_PACKET + ".yaml")
     require(digest(packet_raw) == record["packetSha256"]
-            and digest(canonical(packets[NEW_PACKET]))
+            and digest(canonical(previous[NEW_PACKET]))
             == digest(canonical(safe_load(packet_raw))), "changed runner packet")
-    return {name: packets[name] for name in old}
+    return {name: previous[name] for name in old}
 
 
 def validate() -> None:
+    successor.validate()
     record = authority()
-    validator_raw = regular_bytes("scripts/validate_ci_runner_admission.py")
+    validator_raw = successor.historical_bytes(
+        "scripts/validate_ci_runner_admission.py",
+        regular_bytes("scripts/validate_ci_runner_admission.py"))
     literal = b'AUTHORITY_SHA256 = "' + AUTHORITY_SHA256.encode("ascii") + b'"'
     placeholder = b'AUTHORITY_SHA256 = "TO_BE_PINNED_AFTER_SOURCE_FREEZE"'
     require(validator_raw.count(literal) == 1
@@ -221,8 +258,9 @@ def validate() -> None:
             == record["validatorNormalizedSha256"], "runner validator drift")
     paths = sorted((ROOT / "task-packets").glob("*.yaml"))
     old = set(record["baselinePackets"])
-    require(len(paths) == 190 and {path.stem for path in paths} == old | {NEW_PACKET},
-            "closed 190-packet catalog")
+    require(len(paths) == 191
+            and {path.stem for path in paths} == old | {NEW_PACKET, successor.NEW_PACKET},
+            "closed 191-to-190-to-189 packet catalog")
     for name, expected in record["baselinePackets"].items():
         require(digest(regular_bytes("task-packets/" + name + ".yaml")) == expected,
                 "changed predecessor YAML: " + name)
@@ -247,12 +285,13 @@ def validate() -> None:
                                          "task-packets/" + NEW_PACKET + ".yaml"},
             "unreviewed or omitted runner packet path")
     for path, rule in record["changedFiles"].items():
-        current = regular_bytes(path)
+        current = successor.historical_bytes(path, regular_bytes(path))
         require(digest(current) == rule["afterSha256"]
-                and digest(historical_bytes(path, current)) == rule["beforeSha256"],
+                and digest(_historical_bytes_this_layer(path, current)) == rule["beforeSha256"],
                 "unreviewed current source: " + path)
     for path, expected in record["newFiles"].items():
-        require(digest(regular_bytes(path)) == expected, "new source drift: " + path)
+        current = successor.historical_bytes(path, regular_bytes(path))
+        require(digest(current) == expected, "new source drift: " + path)
     for phrase in (b"MET-RUNNER-001", b"pre-checkout", b"single job", b"billing"):
         require(phrase in regular_bytes("docs/alpha-2/CI_CAPACITY_EXCEPTION.md"),
                 "missing CI exception term")
@@ -264,4 +303,4 @@ if __name__ == "__main__":
     except (ValueError, TypeError, KeyError, OSError, UnicodeError) as exc:
         print("CI runner admission source invalid: " + str(exc))
         raise SystemExit(1)
-    print("CI runner admission source valid: 190 packets; 189 immutable predecessors; no host or product acceptance.")
+    print("CI runner admission source valid: 191 current packets; exact 190-to-189 predecessor history; no host or product acceptance.")

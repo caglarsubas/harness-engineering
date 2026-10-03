@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+from functools import lru_cache
 from pathlib import Path
 
 import yaml
@@ -80,9 +81,37 @@ def apply_recipe(before, recipe):
     return result
 
 
+_BEFORE_DECODE_BYTES = 290177
+_BEFORE_DECODE_SHA256 = "5aed1292ff416c92a363ff34e0d570a152fb8029048701bd8b3fe77c69a486ff"
+
+
+@lru_cache(maxsize=1)
+def _decode_before_snapshot(raw):
+    """Pure immutable decoding of one fixed blob, never file or authority state.
+
+    The pinned parser is fixed during a process. A warm entry does not detect
+    arbitrary parser replacement; regression fixtures clear mock entries.
+    """
+    require(type(raw) is bytes and len(raw) == _BEFORE_DECODE_BYTES
+            and digest(raw) == _BEFORE_DECODE_SHA256, "eligible historical decode bytes required")
+    before = parse(raw)
+    baseline, files = before["baseCommit"], before["files"]
+    require(type(baseline) is str and type(files) is dict and len(files) == 23
+            and all(type(path) is str and type(value) is str for path, value in files.items()),
+            "immutable historical decode projection required")
+    return baseline, tuple(files.items())
+
+
 def _before(record):
     raw = regular_bytes(ROOT, BEFORE_PATH)
-    require(digest(raw) == record["inputFiles"][BEFORE_PATH], "exact historical meta bytes required")
+    checksum = digest(raw)
+    require(checksum == record["inputFiles"][BEFORE_PATH], "exact historical meta bytes required")
+    if type(raw) is bytes and len(raw) == _BEFORE_DECODE_BYTES and checksum == _BEFORE_DECODE_SHA256:
+        baseline, files = _decode_before_snapshot(raw)
+        require(baseline == record["metaBaseline"], "meta baseline differs")
+        return dict(files)
+    # Eligibility is not acceptance: all other data retains the original path
+    # and error ordering, including baseline refusal before reading files.
     before = parse(raw)
     require(before["baseCommit"] == record["metaBaseline"], "meta baseline differs")
     return before["files"]
@@ -183,7 +212,7 @@ def validate_credential_ordering(packets, record, inputs):
         for path, checksum in pins.items():
             require(type(inputs[path]) is bytes and digest(broker_history(path, inputs[path])) == checksum, "changed input: " + path)
         old = {Path(p).stem for p in record["protectedFiles"] if p.startswith("task-packets/")}
-        require(len(old) == 141 and len(packets) == 190 and set(packets) == old | {"MET-REPAIR-013", "MET-REPAIR-014", "MET-REPAIR-015", "MET-PERF-002", "CONF-PERF-001", "MET-PERF-003", "CONF-PERF-002", "MET-PERF-004", "CONF-PERF-003", "MET-PERF-005", "CONF-PERF-004", "CONF-BENCH-001", "MET-REPAIR-016", "CONF-FIX-006", "MET-ADOPT-001", "MET-PERF-006", "CONF-DIAG-001", "MET-PERF-007", "MET-PERF-008", "CONF-DIAG-002", "MET-ACCEPT-001", "MET-PUBLISH-001", "MET-REPAIR-017", "CONF-FIX-007", "MET-ADOPT-002", "MET-PERF-010", "MET-PERF-009", "CONF-DIAG-003", "MET-PERF-011", "MET-PERF-012", "CONF-PERF-006", "CONF-BENCH-002", "MET-PERF-013", "CONF-BENCH-003", "MET-REPAIR-018", "CONF-FIX-008", "MET-PERF-014", "CONF-DIAG-004", "MET-PERF-015", "CONF-FIX-009", "MET-PERF-016", "MET-PERF-017", "MET-REPAIR-019", "MET-ENFORCE-001", "MET-PERF-018", "MET-ENFORCE-003", "CONF-FIX-010", "MET-UNIFY-005", "MET-RUNNER-001"},
+        require(len(old) == 141 and len(packets) == 191 and set(packets) == old | {"MET-REPAIR-013", "MET-REPAIR-014", "MET-REPAIR-015", "MET-PERF-002", "CONF-PERF-001", "MET-PERF-003", "CONF-PERF-002", "MET-PERF-004", "CONF-PERF-003", "MET-PERF-005", "CONF-PERF-004", "CONF-BENCH-001", "MET-REPAIR-016", "CONF-FIX-006", "MET-ADOPT-001", "MET-PERF-006", "CONF-DIAG-001", "MET-PERF-007", "MET-PERF-008", "CONF-DIAG-002", "MET-ACCEPT-001", "MET-PUBLISH-001", "MET-REPAIR-017", "CONF-FIX-007", "MET-ADOPT-002", "MET-PERF-010", "MET-PERF-009", "CONF-DIAG-003", "MET-PERF-011", "MET-PERF-012", "CONF-PERF-006", "CONF-BENCH-002", "MET-PERF-013", "CONF-BENCH-003", "MET-REPAIR-018", "CONF-FIX-008", "MET-PERF-014", "CONF-DIAG-004", "MET-PERF-015", "CONF-FIX-009", "MET-PERF-016", "MET-PERF-017", "MET-REPAIR-019", "MET-ENFORCE-001", "MET-PERF-018", "MET-ENFORCE-003", "CONF-FIX-010", "MET-UNIFY-005", "MET-RUNNER-001", "MET-PERF-028"},
                 "141 immutable predecessors and one exact addition required")
         for name in old | {"MET-REPAIR-013"}:
             require(canonical(packets[name]) == canonical(safe_load(inputs["task-packets/" + name + ".yaml"])),
@@ -229,7 +258,7 @@ def main():
     for error in errors:
         print("ERROR: " + error)
     if not errors:
-        print("Credential ordering valid: 190 packets; 127/327 source checkpoint; DATA_CHECK_ONLY; product/native NOT_RUN.")
+        print("Credential ordering valid: 191 packets; 127/327 source checkpoint; DATA_CHECK_ONLY; product/native NOT_RUN.")
     return int(bool(errors))
 
 

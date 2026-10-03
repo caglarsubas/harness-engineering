@@ -1,0 +1,67 @@
+{
+  "schemaVersion": "harness.planeon.ai/schema-repair-terminal-history/v1",
+  "status": "RETAINED_FAILURE_NOT_ACCEPTED_PREDECESSOR",
+  "packetId": "MET-PERF-022",
+  "source": {
+    "commit": "dca0163596a766efa0fabea7f1b5946daf5598cd",
+    "tree": "cd14f167ddb0a5307302a40137affb5ae20d5f65",
+    "packetSha256": "e3caf28221cce5d7b467640337c524802308fa0ccb219432f594c5c19b5ca8d3",
+    "authoritySha256": "e0788ccfbca235525ab97e9b0b2ec966929534c650ad7c2dc2057d9a966119c9"
+  },
+  "previousAllowances": {
+    "original019020": {"maximum": 2, "consumed": 2},
+    "separate020CustodyException": {"maximum": 1, "consumed": 1},
+    "separate021Local": {"maximum": 1, "consumed": 1}
+  },
+  "separateLocalException": {
+    "scopeId": "MET-PERF-022-LOCAL-001",
+    "maximum": 1,
+    "consumed": 1,
+    "cumulativeLineageOrdinal": 5,
+    "activation": 383,
+    "status": "LOCAL_FAILED_AT_READINESS",
+    "commandsStarted": 2,
+    "commandsExpected": 53,
+    "failedCommandOrdinal": 2,
+    "readinessErrors": 4,
+    "elapsedSeconds": 16.44750250002835,
+    "timedOut": false,
+    "exitCode": 1,
+    "externalHelperExitCode": 1,
+    "pytestStarted": false,
+    "diagnosticHooksExercised": false,
+    "finalScanReached": false,
+    "cleanupIndependentlyConfirmed": true,
+    "sourceAndHistoryUnchanged": true
+  },
+  "diagnosis": {
+    "protectedModule": "tests/test_task_packets.py",
+    "acceptedTestFunctions": 10,
+    "failedCurrentTestFunctions": 14,
+    "reviewGap": "RAW_CURRENT_EXACT_IDENTITY_CHECKS_NOT_COVERED_BY_INVERSE_OR_SUBSET_PRESERVATION",
+    "correction": "MOVE_ADDITIVE_SEMANTIC_TESTS_TO_NEW_OWNED_MODULE_WITHOUT_WEAKENING_OLD_CHECKS",
+    "earlierDeclarationErrors": "NOT_REPORTED_IN_THIS_FAILED_RUN_NOT_FULL_READINESS_PASS",
+    "testFailureIdentitiesFromEarlierTimeouts": "STILL_UNKNOWN"
+  },
+  "immutableEvidenceSha256": {
+    "local1-reservation.json": "a12189791fcca76073896bc3488160abcc5b9e6c17fd7529171530d89d0ca1cb",
+    "local1-result.json": "67d5112ee1deaad826aad1e1176e61a0d479b2de453de33661195de6840e59dc",
+    "local1-audit.json": "ca0b79a3b6e7b4f8a51f6546619ec0ec4e9a4e38f72e77b759514c0deed7cbce",
+    "local1-cleanup.json": "8b42545156acd1ac6a99c0989b6aea2598a29587493e04f396250f703a6ab13c",
+    "local1-final-output-check.json": "c721b294c654f37a33b192e9a77afdf634a36bad221b52252cb9fd7ac2955527",
+    "local1-offline.log": "1f95007e00838c38ac461916a60adcf900680114c5e62d9ddde003fefb6d01a4",
+    "INVOCATION_TERMINAL.json": "3fea05dd5811fdb3a5f2644d5b845ecf3a8beb0d562137b00fe6ba0b18765b88",
+    "INDEPENDENT_TERMINAL_REVIEW.json": "53414f05fdf55deadc2ff938fada6ef46f4e4a11a355dc581b4d5e1e33233d89",
+    "READINESS_FAILURE_DIAGNOSIS.md": "3e8cee0a365a4c3fa45b42ff880bd5907969fd9ecfe137a0b96475fc72b8d808",
+    "INDEPENDENT_DIAGNOSIS_REVIEW.md": "1dcfb822f909fa01bb7da6ee2a242f09e7c8682ecc197fcb854db3d82dd82e63"
+  },
+  "successorBoundary": {
+    "newPacketId": "MET-PERF-023",
+    "newExecutionGrants": 0,
+    "budgetReset": false,
+    "automaticCiOrExactMain": false,
+    "sourceAccepted": false,
+    "nativeLinux": false,
+    "tenantAcceptance": false
+  }
+}

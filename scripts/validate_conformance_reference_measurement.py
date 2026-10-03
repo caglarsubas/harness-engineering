@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+from functools import lru_cache
 import hashlib
 import json
 from pathlib import Path
@@ -84,6 +85,67 @@ def _record():
     return parse(raw)
 
 
+_SOURCE_RECORD_READER = _record
+_PROJECTION_BYTES = 200950
+_PROJECTION_SHA256 = "01b97634ff6d8d6251c68413838cadf6dd6b2079cde3794c31ec97cac46fd589"
+
+
+@lru_cache(maxsize=1)
+def _decode_source_projection(raw):
+    """Decode one fixed blob into immutable recipe data, never a verdict.
+
+    The pinned parser is fixed within a process. Mock parser users must clear
+    entries; a warm entry cannot detect arbitrary parser replacement.
+    """
+    require(type(raw) is bytes and len(raw) == _PROJECTION_BYTES
+            and digest(raw) == _PROJECTION_SHA256, "eligible recipe projection bytes")
+    record = parse(raw)
+    recipes, unchanged = record["metaRecipes"], record["unchangedTests"]
+    require(type(recipes) is dict and len(recipes) == 51
+            and type(unchanged) is dict and len(unchanged) == 19,
+            "exact immutable recipe projection inventory")
+    frozen = []
+    for path, rule in recipes.items():
+        require(type(path) is str and type(rule) is dict
+                and set(rule) == {"beforeSha256", "afterSha256", "replacements"}
+                and type(rule["beforeSha256"]) is type(rule["afterSha256"]) is str
+                and type(rule["replacements"]) is list, "immutable recipe projection shape")
+        rows = []
+        for row in rule["replacements"]:
+            require(type(row) is dict and set(row) == {"before", "after", "count"}
+                    and type(row["before"]) is type(row["after"]) is str
+                    and type(row["count"]) is int and row["count"] > 0,
+                    "immutable replacement projection shape")
+            rows.append((row["before"], row["after"], row["count"]))
+        frozen.append((path, rule["beforeSha256"], rule["afterSha256"], tuple(rows)))
+    require(all(type(path) is str and type(value) is str for path, value in unchanged.items()),
+            "immutable unchanged-test projection shape")
+    return tuple(frozen), tuple(unchanged.items())
+
+
+def _source_projection():
+    """Fresh authority observation; only deterministic recipe decoding is reused."""
+    # Preserve the explicit reader seam, including wrapped-reader observations,
+    # supplied duplicate recipes and exceptions, without an extra preceding read.
+    if _record is not _SOURCE_RECORD_READER:
+        return _record()
+    raw = regular_bytes(ROOT, RECORD_PATH)
+    checksum = digest(raw)
+    require(checksum == RECORD_FILE_SHA256, "exact fresh authority bytes")
+    if type(raw) is not bytes or len(raw) != _PROJECTION_BYTES or checksum != _PROJECTION_SHA256:
+        return parse(raw)
+    recipes, unchanged = _decode_source_projection(raw)
+    return {
+        "metaRecipes": {
+            path: {"beforeSha256": before_sha, "afterSha256": after_sha,
+                   "replacements": [{"before": old, "after": new, "count": count}
+                                    for old, new, count in rows]}
+            for path, before_sha, after_sha, rows in recipes
+        },
+        "unchangedTests": dict(unchanged),
+    }
+
+
 def apply_recipe(before, rule):
     require(type(before) is bytes and type(rule) is dict
             and set(rule) == {"beforeSha256", "afterSha256", "replacements"}
@@ -107,7 +169,7 @@ def historical_bytes(path, raw):
     # Unchanged inputs still receive the predecessor caller's exact hash check.
     if path not in HISTORY_PATHS:
         return raw
-    record = _record()
+    record = _source_projection()
     rule = record["metaRecipes"].get(path)
     if rule is None:
         return raw
@@ -123,7 +185,7 @@ def historical_bytes(path, raw):
 
 def current_test_bytes(before):
     require(type(before) is bytes, "test bytes")
-    record = _record()
+    record = _source_projection()
     input_digest = digest(before)
     matches = [r for p, r in record["metaRecipes"].items()
                if p.startswith("tests/") and r["beforeSha256"] == input_digest]
@@ -304,7 +366,7 @@ def validate_authority(packets, record, inputs):
         for path, checksum in pins.items():
             require(type(inputs[path]) is bytes and digest(checkpoint_history(path, inputs[path])) == checksum, "current source changed: " + path)
         old = {Path(p).stem for p in record["protectedFiles"] if p.startswith("task-packets/") and p.endswith(".yaml")}
-        require(len(old) == 150 and len(packets) == 190 and set(packets) == old | set(NEW_IDS) | {"MET-REPAIR-016", "CONF-FIX-006", "MET-ADOPT-001", "MET-PERF-006", "CONF-DIAG-001", "MET-PERF-007", "MET-PERF-008", "CONF-DIAG-002", "MET-ACCEPT-001", "MET-PUBLISH-001", "MET-REPAIR-017", "CONF-FIX-007", "MET-ADOPT-002", "MET-PERF-010", "MET-PERF-009", "CONF-DIAG-003", "MET-PERF-011", "MET-PERF-012", "CONF-PERF-006", "CONF-BENCH-002", "MET-PERF-013", "CONF-BENCH-003", "MET-REPAIR-018", "CONF-FIX-008", "MET-PERF-014", "CONF-DIAG-004", "MET-PERF-015", "CONF-FIX-009", "MET-PERF-016", "MET-PERF-017", "MET-REPAIR-019", "MET-ENFORCE-001", "MET-PERF-018", "MET-ENFORCE-003", "CONF-FIX-010", "MET-UNIFY-005", "MET-RUNNER-001"}, "exact155 catalog")
+        require(len(old) == 150 and len(packets) == 191 and set(packets) == old | set(NEW_IDS) | {"MET-REPAIR-016", "CONF-FIX-006", "MET-ADOPT-001", "MET-PERF-006", "CONF-DIAG-001", "MET-PERF-007", "MET-PERF-008", "CONF-DIAG-002", "MET-ACCEPT-001", "MET-PUBLISH-001", "MET-REPAIR-017", "CONF-FIX-007", "MET-ADOPT-002", "MET-PERF-010", "MET-PERF-009", "CONF-DIAG-003", "MET-PERF-011", "MET-PERF-012", "CONF-PERF-006", "CONF-BENCH-002", "MET-PERF-013", "CONF-BENCH-003", "MET-REPAIR-018", "CONF-FIX-008", "MET-PERF-014", "CONF-DIAG-004", "MET-PERF-015", "CONF-FIX-009", "MET-PERF-016", "MET-PERF-017", "MET-REPAIR-019", "MET-ENFORCE-001", "MET-PERF-018", "MET-ENFORCE-003", "CONF-FIX-010", "MET-UNIFY-005", "MET-RUNNER-001", "MET-PERF-028"}, "exact155 catalog")
         for name in old | set(NEW_IDS):
             require(canonical(packets[name]) == canonical(safe_load(inputs["task-packets/"+name+".yaml"])), "packet raw/semantic mismatch")
         packet, product, reference = (packets[name] for name in NEW_IDS)
@@ -582,7 +644,7 @@ def main():
     for error in errors:
         print("ERROR: "+error)
     if not errors:
-        print("Conformance performance authority valid: 190 packets; 150 immutable YAML; 127/327 checkpoint; product/native NOT_RUN.")
+        print("Conformance performance authority valid: 191 packets; 150 immutable YAML; 127/327 checkpoint; product/native NOT_RUN.")
     return int(bool(errors))
 
 

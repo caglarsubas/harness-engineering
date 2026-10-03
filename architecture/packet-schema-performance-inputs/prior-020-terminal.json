@@ -1,0 +1,57 @@
+{
+  "schemaVersion": "harness.planeon.ai/schema-repair-terminal-history/v1",
+  "status": "RETAINED_FAILURE_NOT_ACCEPTED_PREDECESSOR",
+  "packetId": "MET-PERF-020",
+  "source": {
+    "commit": "50acfd4f2cd5cc070a2dfde4c44f5aff49c8e608",
+    "tree": "e1c0f81cf167a9066e43354705bf586dc3f5e5e0",
+    "packetSha256": "8b37f501315182b0b5f48c62fbc2cf8e99c14dda0b40c307a6fa8da847617f33",
+    "authoritySha256": "aca46343639771c590c75fd0c3e81f1019359c5ba2cacf0cd5d69ecb4a77740e"
+  },
+  "originalAllowance": {
+    "lineage": ["MET-PERF-019", "MET-PERF-020"],
+    "maximum": 2,
+    "consumed": 2,
+    "metPerf020Outcome": "RESERVED_PRELAUNCH_REFUSAL",
+    "metPerf020CommandsStarted": 0,
+    "metPerf020Activation": 380,
+    "terminalReviewSha256": "0737ec62d511948d34cd24116284e793960d8cf34785795da73913c37420aced"
+  },
+  "separateLocalException": {
+    "scopeId": "MET-PERF-020-CUSTODY-EXCEPTION-001",
+    "maximum": 1,
+    "consumed": 1,
+    "cumulativeLineageOrdinal": 3,
+    "activation": 381,
+    "status": "LOCAL_FAILED_OR_INCOMPLETE",
+    "commandsStarted": 52,
+    "commandsExpected": 53,
+    "nestedElapsedSeconds": 420.01627616601763,
+    "outerElapsedSeconds": 750.4435710409889,
+    "exitCode": -15,
+    "externalHelperExitCode": 1,
+    "finalPytestSummary": false,
+    "finalScanReached": false,
+    "additionalFailureIdentities": "UNKNOWN",
+    "cleanupIndependentlyConfirmed": true
+  },
+  "immutableEvidenceSha256": {
+    "exception1-reservation.json": "c0b9ae21278785afa7d266ef2e4d4478e4cfabe164922aacdfce6cbcc58e602a",
+    "exception1-result.json": "428ada28d676274f7537f17986b37728db3ca484f81f0c245ae347861377844b",
+    "exception1-audit.json": "9f394881851df2d8815e0df1f99a425811078d67eec581683c2e2c76e558fa80",
+    "exception1-cleanup.json": "b198d384fb034073f76f89996c666be726490ef3059fc4c76a218f2962666a15",
+    "exception1-final-output-check.json": "b3b5651da2d98c3dada374fc643ce40f0a309c003194afc2fe143eba2b48cc19",
+    "exception1-offline.log": "168ec59dd00e664c8314428d04ffce7cf9d228f3eac93b193ab0517564b2adb9",
+    "INVOCATION_TERMINAL.json": "449535cbf2cc689d981980380a97e31226d1cefb5064999143febbc7b9a0a248",
+    "INDEPENDENT_TERMINAL_REVIEW.json": "78d165cc4336d89ad7d63962163fb1d3af85a518429f7f4f555d471c51fdf675"
+  },
+  "successorBoundary": {
+    "newPacketId": "MET-PERF-021",
+    "newExecutionGrants": 0,
+    "budgetReset": false,
+    "automaticCiOrExactMain": false,
+    "sourceAccepted": false,
+    "nativeLinux": false,
+    "tenantAcceptance": false
+  }
+}

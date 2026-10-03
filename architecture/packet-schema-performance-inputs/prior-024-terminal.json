@@ -1,0 +1,84 @@
+{
+  "schemaVersion": "harness.planeon.ai/schema-repair-terminal-history/v1",
+  "status": "RETAINED_FAILURE_NOT_ACCEPTED_PREDECESSOR",
+  "packetId": "MET-PERF-024",
+  "source": {
+    "commit": "8dd222bafa295b109496827655dfbfdb1fc9fa7e",
+    "tree": "91d06972e4cc6a7fa9aa4828dc0154030a268723",
+    "packetSha256": "4046dea8cd45a73dbb511027f29328f4953e4d487b2ec9546d9551672851680b",
+    "authoritySha256": "0920b5e273d6bf73be8746dde7d2e4c02df7e555813eda6133204541ccbb5b81"
+  },
+  "previousAllowances": {
+    "original019020": {"maximum": 2, "consumed": 2},
+    "separate020CustodyException": {"maximum": 1, "consumed": 1},
+    "separate021Local": {"maximum": 1, "consumed": 1},
+    "separate022Local": {"maximum": 1, "consumed": 1},
+    "separate023Local": {"maximum": 1, "consumed": 1}
+  },
+  "separateLocalException": {
+    "scopeId": "MET-PERF-024-LOCAL-001",
+    "maximum": 1,
+    "consumed": 1,
+    "cumulativeLineageOrdinal": 7,
+    "activation": 385,
+    "status": "LOCAL_FAILED_OR_INCOMPLETE",
+    "commandsStarted": 52,
+    "commandsExpected": 53,
+    "elapsedSeconds": 750.2599267500336,
+    "timedOut": true,
+    "exitCode": -15,
+    "externalHelperExitCode": 1,
+    "pytestStarted": true,
+    "diagnosticHooksExercised": true,
+    "finalScanReached": false,
+    "cleanupIndependentlyConfirmed": true,
+    "sourceAndHistoryUnchanged": true
+  },
+  "nestedSuite": {
+    "returncode": 0,
+    "elapsedSeconds": 385.89837574999547,
+    "diagnosticsStatus": "COMPLETE",
+    "diagnosticRecords": 30271,
+    "reportedFailures": 0,
+    "droppedRecords": 0,
+    "declaredSkips": 10,
+    "stdoutTestCountRetained": false,
+    "allSevenNestedCommandsReturnedZero": true,
+    "wholeAcceptancePass": false
+  },
+  "outerSuite": {
+    "observedPassedCallRecords": 4676,
+    "observedFailedPhaseRecords": 0,
+    "completeFinalPytestReportAvailable": false,
+    "countsArePartialObservationsNotAcceptance": true
+  },
+  "diagnosis": {
+    "priorDiagnosticRepairs": "NARROW_NESTED_AND_OUTER_REGRESSION_OBSERVATIONS",
+    "repeatedCanonicalConversion": "SOURCE_AND_RETAINED_WHOLE_TEST_TIMING_CORRELATION",
+    "functionLevelCostMeasured": false,
+    "speedupEstablished": false,
+    "wholeRunTiming": "UNRESOLVED"
+  },
+  "immutableEvidenceSha256": {
+    "local1-reservation.json": "b1258610217249f24e1d3cb736e7dbf08fec5a5fbc37f622e02871a37f641260",
+    "local1-result.json": "5cb89691880bc1f52615fcdfd6ef8a688cb1196bb3e1095feb4a7eddc327d364",
+    "local1-audit.json": "f29a1f6977c0df67bb584bf4198a69beeddc7397cd9e7d7b58926c899a6146d4",
+    "local1-cleanup.json": "aadc14e5a3d11fd4d661caaeb072ae6b890cff40f08c35c8f9b4003878aeecfc",
+    "local1-final-output-check.json": "2b6ee0b6c6a60e87a9e73f702a738fc6fc07559eb87df0f0750d6ab0762248b7",
+    "local1-offline.log": "fd20416b52f13fdccb486c51ca964b3cd64b7612188a991c36030c10595a8206",
+    "INVOCATION_TERMINAL.json": "c63c3d709905510633f2ca835230b3c948b470f85b09a70056fe88a9e541bd6c",
+    "INDEPENDENT_TERMINAL_REVIEW.json": "04bb86dcb40ca2bc0a54cd50d851e698048024cf6e572a07af6d6cb389145714",
+    "RETAINED_TIMING_ANALYSIS.json": "ca5403761ed1f6eb316826083dbf01d5e06e716ac0ed39759d1fdad29a70b910",
+    "SOURCE_TIMING_DIAGNOSIS.md": "ed609f9f24f31c6a509c2ea5c74584565839504085972bc828acfce0de600d08",
+    "INDEPENDENT_DIAGNOSIS_REVIEW.json": "6c817d86d53e9523dee086ab98ce68d960c083394162e8916b8496a39b699126"
+  },
+  "successorBoundary": {
+    "newPacketId": "MET-PERF-025",
+    "newExecutionGrants": 0,
+    "budgetReset": false,
+    "automaticCiOrExactMain": false,
+    "sourceAccepted": false,
+    "nativeLinux": false,
+    "tenantAcceptance": false
+  }
+}

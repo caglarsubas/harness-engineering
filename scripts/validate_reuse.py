@@ -14,6 +14,7 @@ from pathlib import Path, PurePosixPath
 from typing import Any
 
 import jsonschema
+from jsonschema._utils import unbool as _unbool, uniq as _pinned_uniq
 import yaml
 
 try:
@@ -363,6 +364,72 @@ def _validate_toolchain() -> None:
         _require(actual == expected, f"{package}=={expected} required, found {actual}")
 
 
+class _UnhashableJson(Exception):
+    pass
+
+
+def _json_identity(value: Any) -> Any:
+    # Hashable form whose equality is jsonschema's `equal` for decoded JSON:
+    # booleans stay distinct from numbers, 1 == 1.0, and member order is
+    # irrelevant for objects but significant for arrays.
+    if value is True:
+        return (0,)
+    if value is False:
+        return (1,)
+    if value is None:
+        return (2,)
+    kind = type(value)
+    if kind is str:
+        return (3, value)
+    if kind is int or (kind is float and value == value and value not in (float("inf"), float("-inf"))):
+        return (4, value)
+    if kind is list:
+        return (5, tuple(_json_identity(item) for item in value))
+    if kind is dict and all(type(key) is str for key in value):
+        return (6, frozenset((key, _json_identity(item)) for key, item in value.items()))
+    raise _UnhashableJson
+
+
+def _identity_unique(container: Any) -> bool | None:
+    # Verdict of pinned uniq's all-pairs `equal` fallback, which it takes when
+    # sorting raises; None whenever the pinned uniq itself must decide, i.e.
+    # for sortable arrays (its sort-then-adjacent result is kept exactly),
+    # non-JSON or non-finite values, and recursion-limit cases.
+    try:
+        sorted(_unbool(item) for item in container)
+    except (NotImplementedError, TypeError):
+        try:
+            identities = [_json_identity(item) for item in container]
+        except (_UnhashableJson, RecursionError):
+            return None
+        return len(set(identities)) == len(identities)
+    except RecursionError:
+        return None
+    return None
+
+
+def _unique_json(container: Any) -> bool:
+    verdict = _identity_unique(container)
+    return _pinned_uniq(container) if verdict is None else verdict
+
+
+def _unique_items(validator: Any, unique: Any, instance: Any, schema: Any) -> Any:
+    # Same verdict and message as pinned jsonschema 4.24.0 uniqueItems; only
+    # its quadratic all-pairs fallback (e.g. arrays of objects) is replaced.
+    if unique and validator.is_type(instance, "array"):
+        verdict = _identity_unique(instance)
+        if verdict is None:
+            # Called at the pinned keyword's own stack depth.
+            verdict = _pinned_uniq(instance)
+        if not verdict:
+            yield jsonschema.ValidationError(f"{instance!r} has non-unique elements")
+
+
+_Draft202012Validator = jsonschema.validators.extend(
+    jsonschema.Draft202012Validator, {"uniqueItems": _unique_items},
+)
+
+
 def _validate_schema(
     instance: Any,
     schema_path: Path,
@@ -371,7 +438,7 @@ def _validate_schema(
     schema = load_json(schema_path)
     try:
         jsonschema.Draft202012Validator.check_schema(schema)
-        validator = jsonschema.Draft202012Validator(
+        validator = _Draft202012Validator(
             schema,
             format_checker=jsonschema.FormatChecker(),
         )
@@ -612,7 +679,7 @@ def _validate_task_packet_closure(
     packet_paths = sorted((root / "task-packets").glob("*.yaml"))
     # The Phase-0 report/index are immutable 107-packet historical snapshots.
     # Current closure includes three Alpha-2 entry and four corrective packets.
-    _require(len(packet_paths) == 190, f"expected 190 task packets, found {len(packet_paths)}")
+    _require(len(packet_paths) == 191, f"expected 191 task packets, found {len(packet_paths)}")
     referenced: set[tuple[str, str]] = set()
     for packet_path in packet_paths:
         packet = load_yaml(packet_path)

@@ -1,5 +1,122 @@
 # Sol-High Task Packet Catalog
 
+## Current source preparation — MET-PERF-028
+
+Exact-bytes authority recheck reuse in three history layers; linear exact-verdict uniqueItems.
+Alpha2 OPEN;190 accepted plus028 only;113 owned paths.027 timed out750s/52of53;
+cleanup confirmed, not acceptance. Ten lineage and separatePR1443 consumed.
+LOCAL0/CI0/exact-main0; same-host measurement only, no native/tenant claim.
+Every call still freshly reads complete authority bytes; any changed byte is hashed.
+Independent source review and finite full acceptance remain separate.
+
+## Historical027 source preparation — MET-PERF-027
+
+Two immutable recipe projections preserve fresh checks and overridden-reader semantics.
+Alpha2 OPEN;190 accepted plus027 only;111 owned paths.026 timed out750s/52of53;
+cleanup confirmed, not acceptance. Nine lineage and separatePR1443 consumed.
+LOCAL0/CI0/exact-main0; no speedup or native/tenant claim.
+Source is prepared; preliminary core/test review found no concrete blocker.
+Final frozen-source/history review and finite full acceptance remain separate.
+
+## Historical026 source preparation — MET-PERF-026
+
+Alpha2 OPEN. Fresh accepted main0314a684 retains190 immutable YAML;026 is
+the sole191st packet. Reuse only immutable decoding of one pinned historical
+snapshot in credential-ordering::_before. Preserve fresh reads and hashes,
+current-record checks, fallback errors, inherited bodies and all53 commands.
+No measured speedup. Frozen025 failed750s/52of53 and nested420s; cleanup is
+confirmed, not acceptance. Cumulative8 and separatePR1443 remain consumed.
+Exactly108 source paths; independent source review/full acceptance still needed.
+ZERO new executions, no CI/cloud/native/tenant or model-effort changes.
+
+## Historical025 source preparation — MET-PERF-025
+
+Accepted main0314a684 retains190 packet YAML unchanged. Only025 is added as191:
+one CI semantic-conversion call-site reuse, fresh integrity and rejection order,
+additive regressions and failed024 evidence. Cumulative7 remains consumed;
+ZERO executions granted. No timing PASS or Linux claim. Older checkpoints are
+history, never dispatch authority.
+
+## Historical024 source preparation — MET-PERF-024
+
+Accepted main `0314a684` retains 190 packet YAML unchanged. This candidate adds
+only `MET-PERF-024`, specification 191: diagnostic fixture IDs and exact failure
+payload repair, strict inherited tests and failed023 evidence. All old attempts
+remain consumed at cumulative6; ZERO executions are granted. Timing remains
+unresolved. Older source checkpoints below are history, not current authority.
+
+## Historical023 source preparation — MET-PERF-023
+
+Accepted main `0314a684` retains 190 packet YAML unchanged. This candidate adds
+only `MET-PERF-023`, specification 191: separate semantic regression ownership,
+exact historical test preservation and immutable failed022 evidence. Earlier
+schema/freshness/diagnostic work remains unaccepted source. Shared 2/2 plus 020,
+021 and 022 exceptions 1/1 each remain consumed; ZERO executions are granted.
+Prior source checkpoints below are historical, not current execution authority.
+
+## Historical022 source preparation — MET-PERF-022
+
+Accepted main `0314a684` retains 190 packet YAML unchanged. This branch adds only 022
+as specification 191: canonical owner/root-tree corrections, semantic consistency
+regressions and retained failed021 evidence. It carries unaccepted schema,
+freshness and diagnostic code as source only. Frozen 019/020/021 are not accepted
+predecessors or extra catalog members. Their consumed allowances are unchanged:
+shared 2/2, 020 exception 1/1 and 021 LOCAL 1/1. Source preparation grants ZERO runs.
+Author data-only semantic checks are complete; independent review and the full
+isolated acceptance gates remain pending.
+See the master roadmap's current checkpoint; prior headings below are history.
+
+## Historical021 source preparation — MET-PERF-021
+
+Accepted main `0314a684` retains 190 immutable packet specifications. This
+source-only candidate adds only MET-PERF-021 as specification 191: bounded,
+redacted per-test phase identities/outcomes, inherited nested observations and
+schema-lifecycle/freshness work, and exact reversible 191-to-190 history.
+The [master plan](../docs/MASTER_DEVELOPMENT_PLAN.md) is the current roadmap.
+
+Frozen MET-PERF-019 and MET-PERF-020 are failed, unaccepted subjects—not
+predecessors or new catalog members. Their shared original LOCAL allowance is
+consumed 2/2; the separately authorized020 custody exception is consumed 1/1.
+That exception reached52/53 commands with nested420.016-second and
+outer750.444-second timeouts. Two other failure identities remain unknown.
+All source and attempt evidence is retained; no cached or partial PASS follows.
+
+This publication grants zero executions. New diagnostics, source review and a
+new packet ID do not reset, extend or transfer allowances. Any later full run
+requires independently reviewed exact-source/helper scope and explicit finite
+successor authority. The53 commands, full nested/outer workload,420/750/900-second
+limits and isolation remain unchanged. Nested output remains buffered.
+
+PR144/MET-LINUX-004 retains its three consumed LOCAL attempts. CI admission,
+required green checks, merge, exact-main and native Linux/product/tenant
+qualification remain separate open gates. Alpha2 is open; effort NOT_DUE.
+The older source/status sections below are immutable-context snapshots, not
+current dispatch instructions or unused execution allowances.
+
+## Historical020 source preparation
+
+Accepted source main `0314a684` has 190 immutable packet specifications; PR143's
+one-time source merge exception is not CI PASS. This branch adds MET-PERF-020
+as the 191st source specification: carried-forward local schema-validator
+lifecycle, fresh authority checks without redundant parsing, bounded nested-test
+diagnostics, regressions and an exact inverse. See the
+[master plan](../docs/MASTER_DEVELOPMENT_PLAN.md).
+
+MET-PERF-019 at `106ae3ec` is a frozen unaccepted candidate, not a predecessor.
+Its LOCAL1 failed at the unchanged 750-second limit; 52/53 commands ran without
+a completed pytest summary. It consumes the first of at most two cumulative
+LOCAL attempts in the 019/020 repair lineage. This packet may receive at most
+one separately reviewed exact-source allowance; none is granted here. Its
+diagnostics preserve START and report child outcomes when observed, but cannot
+guarantee captured child output after an earlier outer kill.
+
+PR144 / MET-LINUX-004 is an unaccepted subject with all three LOCAL attempts
+consumed; its source and evidence remain frozen. No Linux runner implementation,
+allowance transfer or retry is included. This source preparation grants zero
+executions. Independent exact-source finite authority precedes any reservation;
+required CI, installed Linux and tenant acceptance remain separate unpassed gates.
+The older status headings below are retained publication checkpoints.
+
 ## Current source status — MET-RUNNER-001 CI-capacity contract candidate
 
 The [unified master roadmap](../docs/MASTER_DEVELOPMENT_PLAN.md) is the current phase/status entry point. Accepted main `945de93f89c94f42f1d63bff7997e3d0fa704fc4` contains 189 packet specifications after MET-UNIFY-005 PR #140. This branch proposes `MET-RUNNER-001` as the 190th, source-only, pending isolated acceptance, required CI, merge and exact-main verification. It grants no VM creation, runner registration, CI waiver or native Linux qualification. PR #141 and draft PR #142 are queued on the same self-hosted labels with zero registered runners; their queue and outcomes are independent of this packet. Older “current” headings below are historical snapshots, not dispatch authority. The [item-level backlog](../architecture/unified-roadmap-backlog.json) distinguishes packet publication, proposals and counted checklist projections; no packet is approved for execution by appearing in this catalog.
@@ -894,3 +1011,4 @@ acceptance is claimed. Alpha2 ONGOING; model-effort transition NOT_DUE.
 | 188 | `MET-ENFORCE-003` | `Harness-Engineering` | Independently reviewed host-interface candidate and unresolved gates |
 | 189 | `MET-UNIFY-005` | `Harness-Engineering` | Unified current roadmap, accepted-source traceability and reversible predecessor history |
 | 190 | `MET-RUNNER-001` | `Harness-Engineering` | Source-only bounded external development-CI capacity and exact-job pre-checkout admission contract |
+| 191 | `MET-PERF-028` | `Harness-Engineering` | Exact-bytes authority recheck reuse and linear uniqueItems; fresh reads and failed027 evidence, zero execution authority |

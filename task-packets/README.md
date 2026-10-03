@@ -1,6 +1,14 @@
 # Sol-High Task Packet Catalog
 
-## Current source preparation — MET-PERF-028
+## Current source preparation — MET-LINUX-005
+
+Reviewed MET-LINUX-004 runner-contract repair carried onto accepted main f7af83e.
+Alpha2 OPEN;191 accepted plus005 only. PR #145 (028) merged under a consumed
+one-time admin exception after LOCAL_PASS_ONLY; its CI did not run (no runner).
+PR144 LOCAL1/2/3 consumed and retained. LOCAL0/CI0/exact-main0 granted here.
+Independent source review, owner grant and finite full acceptance remain separate.
+
+## Historical028 source preparation — MET-PERF-028
 
 Exact-bytes authority recheck reuse in three history layers; linear exact-verdict uniqueItems.
 Alpha2 OPEN;190 accepted plus028 only;113 owned paths.027 timed out750s/52of53;
@@ -1012,3 +1020,4 @@ acceptance is claimed. Alpha2 ONGOING; model-effort transition NOT_DUE.
 | 189 | `MET-UNIFY-005` | `Harness-Engineering` | Unified current roadmap, accepted-source traceability and reversible predecessor history |
 | 190 | `MET-RUNNER-001` | `Harness-Engineering` | Source-only bounded external development-CI capacity and exact-job pre-checkout admission contract |
 | 191 | `MET-PERF-028` | `Harness-Engineering` | Exact-bytes authority recheck reuse and linear uniqueItems; fresh reads and failed027 evidence, zero execution authority |
+| 192 | `MET-LINUX-005` | `Harness-Engineering` | Linux runner nested-checkout and system-alias contract repair on accepted 028 main; zero execution authority |

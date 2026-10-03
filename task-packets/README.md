@@ -1,6 +1,14 @@
 # Sol-High Task Packet Catalog
 
-## Current source preparation — MET-LINUX-005
+## Current source preparation — MET-VERIFY-001
+
+Owner-operated required check: verify is reported only by the owner's GitHub App
+from the installed trusted launcher; the offline-readiness workflow is disabled.
+Alpha2 OPEN;192 accepted plus VERIFY-001 only. PR #145/#146 merged under two
+consumed one-time admin exceptions after LOCAL_PASS_ONLY. No cloud or runner.
+Native Linux, exact-main and tenant acceptance remain separate gates.
+
+## Historical005 source preparation — MET-LINUX-005
 
 Reviewed MET-LINUX-004 runner-contract repair carried onto accepted main f7af83e.
 Alpha2 OPEN;191 accepted plus005 only. PR #145 (028) merged under a consumed
@@ -1021,3 +1029,4 @@ acceptance is claimed. Alpha2 ONGOING; model-effort transition NOT_DUE.
 | 190 | `MET-RUNNER-001` | `Harness-Engineering` | Source-only bounded external development-CI capacity and exact-job pre-checkout admission contract |
 | 191 | `MET-PERF-028` | `Harness-Engineering` | Exact-bytes authority recheck reuse and linear uniqueItems; fresh reads and failed027 evidence, zero execution authority |
 | 192 | `MET-LINUX-005` | `Harness-Engineering` | Linux runner nested-checkout and system-alias contract repair on accepted 028 main; zero execution authority |
+| 193 | `MET-VERIFY-001` | `Harness-Engineering` | Owner-operated required verify check reported by the owner's GitHub App from the installed trusted launcher; no hosted runners |

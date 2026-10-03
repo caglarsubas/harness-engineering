@@ -1,0 +1,88 @@
+# Owner-operated required check — MET-VERIFY-001
+
+Status: source-only contract on accepted main `e4e0bebc77737d99a32aedee7916f36a3906c3bd`.
+It records an owner decision of October 3, 2026. It is not native Linux
+qualification, exact-main evidence, an installed Linux host, runtime or tenant
+acceptance, and it authorizes no cloud provisioning or spending.
+
+## Why
+
+The required `verify` check on `main` could only be produced by the
+`offline-readiness` workflow on a self-hosted runner. No runner was ever
+registered (the bounded disposable-guest design in
+[CI_CAPACITY_EXCEPTION.md](CI_CAPACITY_EXCEPTION.md) was never provisioned), so
+PR #145 and PR #146 were merged under two consumed one-time administrator
+exceptions. Those exceptions are not reusable and transfer no allowance.
+
+## Required-check source
+
+- Branch protection on `main` requires the check `verify`, pinned to the owner's
+  GitHub App `harness-onion-verify` (App ID 5175550). The App has Checks write,
+  Pull requests read and Metadata read, and is installed only on this repository.
+  A check or status named `verify` from any other source does not satisfy it.
+- The `offline-readiness` workflow file stays byte-identical but is disabled.
+  No GitHub-hosted runner or hosted minutes are used.
+- The verifier is external operator infrastructure on an owner-operated host.
+  Its code, keys and evidence are operator records outside this repository.
+
+## Admission rules
+
+For each open, same-repository, non-draft pull request into `main`:
+
+1. Verify the exact head commit once. There is no automatic retry; a new push is
+   a new head. Fork pull requests are never fetched or executed.
+2. Require the branch to contain the current `main`, so the verified tree is the
+   merge candidate.
+3. Require exactly one added `task-packets/*.yaml` (a regular file) and no other
+   packet change. The packet must keep every command of the newest accepted
+   packet on `main`, in order.
+4. Refuse pull requests changing anything under `ci/` other than top-level
+   `ci/test_*.py` and `ci/linux-runner/`. The launcher executes the checkout's
+   own offline transport, which also prints the evidence lines, so transport
+   changes need the reviewed operator LOCAL path instead.
+5. Sign a short-lived activation for the exact packet bytes and commit, activate
+   it through the installed root helper, and run the installed trusted launcher
+   once. The launcher still enforces deny-all outbound isolation, the 900-second
+   ceiling, the exact packet and the exact commit.
+6. Report success only for exit code zero, the exact packet/session header,
+   every declared command in order, unchanged tracked files and a run inside the
+   deadline. Only strict pytest totals are published; logs stay on the host.
+
+The verifier pauses while any operator LOCAL attempt or launcher is running, when
+the operator creates its `PAUSE` file, at a daily run cap, or before the shared
+activation store nears capacity. Operators create `PAUSE` at the start of every
+manual LOCAL gate and remove it afterwards.
+
+## Execution authority and isolation
+
+- A separate narrow activation key is accepted by the installed authority only
+  for repository `Harness-Engineering`, profile `python-meta` and a lifetime of at
+  most 1800 seconds. The operator key path and every other authority rule are
+  unchanged. The key and the App key live only in the verifier's private custody.
+- The installed launcher sandbox additionally denies LaunchServices opens,
+  Apple Events, launchd job creation and execution of `open`, `osascript`,
+  `osacompile`, `launchctl`, `crontab`, `at`, `batch`, `automator`, `shortcuts`
+  and `lsappinfo`. Probe evidence for these denials is an operator record and is
+  repeated after macOS updates.
+- Residual risks accepted by the owner: a deliberately double-forked test process
+  can outlive cleanup inside the sandbox; agents running as the operator can read
+  the verifier's keys; manual attempts rely on the `PAUSE` file; test contents
+  remain pull-request controlled, so human review stays required.
+
+## Evidence states
+
+A `verify` success is a pull-request check on the macOS trusted offline launcher.
+Source review, isolated LOCAL acceptance, merge, exact-main, installed Linux host,
+native Linux (`CONF-LINUX-001`), runtime and tenant acceptance remain separate
+states and are never inferred from it.
+
+## Successor and rollback
+
+A GCP Linux verifier in project `harness-onion` is the intended successor. It
+needs its own reviewed image, launcher installation, cost limit and owner
+approval; this packet grants none of them.
+
+Rollback is a set of independent operator actions: re-enable `offline-readiness`,
+unpin the `verify` check source, unload the verifier, and restore the installed
+v1 authority, launcher and policy from the owner's rollback copy. Revert this
+source in its own scoped pull request.

@@ -269,9 +269,9 @@ def validate() -> None:
             "schema performance validator drift")
     paths = sorted((ROOT / "task-packets").glob("*.yaml"))
     old = set(record["baselinePackets"])
-    require(len(paths) == 192
-            and {path.stem for path in paths} == old | {NEW_PACKET, successor.NEW_PACKET},
-            "closed 192-packet catalog retaining the 191-packet checkpoint")
+    require(len(paths) == 193
+            and {path.stem for path in paths} == old | {NEW_PACKET, successor.NEW_PACKET, successor.successor.NEW_PACKET},
+            "closed 193-packet catalog retaining the 191-packet checkpoint")
     for name, expected in record["baselinePackets"].items():
         require(digest(regular_bytes("task-packets/" + name + ".yaml")) == expected,
                 "changed predecessor YAML: " + name)
@@ -316,4 +316,4 @@ if __name__ == "__main__":
     except (ValueError, TypeError, KeyError, OSError, UnicodeError) as exc:
         print("Schema performance source invalid: " + str(exc))
         raise SystemExit(1)
-    print("Schema performance source valid: 192 current packets; 191-packet checkpoint and 190 immutable predecessors; no runtime acceptance.")
+    print("Schema performance source valid: 193 current packets; 191-packet checkpoint and 190 immutable predecessors; no runtime acceptance.")

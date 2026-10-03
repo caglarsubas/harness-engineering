@@ -21,7 +21,7 @@ def plan_inputs(authority):
 def test_complete166_catalog_and_all_inherited_tests_remain(authority):
     assert module.validate_authority(*authority) == []
     packets,record,inputs = authority
-    assert len(packets) == 193 and module.NEW_IDS == ('MET-ADOPT-002',)
+    assert len(packets) == 194 and module.NEW_IDS == ('MET-ADOPT-002',)
     for path,rule in record['metaRecipes'].items():
         before = module.historical_bytes(path,inputs[path])
         assert module.apply_recipe(before,rule) == repair_history(path, inputs[path])

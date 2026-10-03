@@ -15,7 +15,7 @@ def authority():
 def test_exact_publication_preserves158_packets_and_all_test_identities(authority):
     assert module.validate_authority(*authority) == []
     packets,record,inputs = authority
-    assert len(packets) == 193 and 'CONF-PERF-005' not in packets
+    assert len(packets) == 194 and 'CONF-PERF-005' not in packets
     for path,rule in record['metaRecipes'].items():
         before = module.historical_bytes(path, inputs[path])
         assert module.apply_recipe(before,rule) == timing_history(path, inputs[path])

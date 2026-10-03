@@ -257,7 +257,7 @@ def validate_custody_handoff(packets, record, inputs):
         pinned(record)
         errors = validate_additions(packets)
         old = {Path(p).stem for p in record["protectedFiles"] if p.startswith("task-packets/")}
-        require(len(old) == 136 and set(packets) == old | set(ADDITIONS) | {"MET-UNIFY-005", "MET-RUNNER-001", "MET-PERF-028", "MET-LINUX-005", "MET-VERIFY-001"}, "136 predecessors plus two custody packets required")
+        require(len(old) == 136 and set(packets) == old | set(ADDITIONS) | {"MET-UNIFY-005", "MET-RUNNER-001", "MET-PERF-028", "MET-LINUX-005", "MET-VERIFY-001", "MET-PERF-029"}, "136 predecessors plus two custody packets required")
         pins = {**record["protectedFiles"], **record["inputFiles"]}
         require(type(inputs) is dict and set(inputs) == set(pins), "exact custody input inventory required")
         for path, checksum in pins.items():
@@ -292,7 +292,7 @@ def main():
     for error in errors:
         print("ERROR: " + error)
     if not errors:
-        print("Custody handoff authority valid: 193 packets; 127-file/279-ID history preserved; product/native NOT_RUN.")
+        print("Custody handoff authority valid: 194 packets; 127-file/279-ID history preserved; product/native NOT_RUN.")
     return int(bool(errors))
 
 

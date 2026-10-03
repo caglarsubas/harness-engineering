@@ -26,7 +26,7 @@ def authority():
 def test_current_catalog_preserves_all_old_packets_and_full_commands(authority):
     packets, record, inputs = authority
     assert validate_authority(*authority) == []
-    assert len(packets) == 193
+    assert len(packets) == 194
     assert len([p for p in record["protectedFiles"] if p.startswith("task-packets/") and p.endswith(".yaml")]) == 144
     assert len(packets["MET-PERF-002"]["offlineAcceptanceCommands"]) == 24
     assert len(packets["CONF-PERF-001"]["offlineAcceptanceCommands"]) == 8

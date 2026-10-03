@@ -241,7 +241,7 @@ def validate_successor_inventory(packets, record, inputs):
         errors.extend(validate_proxy_additions(packets))
         pins = {**record["protectedFiles"], **record["inputFiles"], **record["packetDigests"]}
         old_ids = {Path(p).stem for p in record["protectedFiles"] if p.startswith("task-packets/")}
-        if len(old_ids) != 132 or len(record["protectedFiles"]) != 170 or set(packets) != old_ids | set(ADDITIONS) | set(PROXY_ADDITIONS) | {"MET-UNIFY-005", "MET-RUNNER-001", "MET-PERF-028", "MET-LINUX-005", "MET-VERIFY-001"}:
+        if len(old_ids) != 132 or len(record["protectedFiles"]) != 170 or set(packets) != old_ids | set(ADDITIONS) | set(PROXY_ADDITIONS) | {"MET-UNIFY-005", "MET-RUNNER-001", "MET-PERF-028", "MET-LINUX-005", "MET-VERIFY-001", "MET-PERF-029"}:
             errors.append("exact historical 132 plus two inventory and one proxy prerequisite packets required")
         if set(inputs) != set(pins):
             errors.append("exact 188 authority inputs required")
@@ -276,7 +276,7 @@ def main():
     for error in errors:
         print("ERROR: " + error)
     if not errors:
-        print("Successor inventory authority valid: 193 packets; 188 predecessor files unchanged; product correction NOT_RUN; native gate closed.")
+        print("Successor inventory authority valid: 194 packets; 188 predecessor files unchanged; product correction NOT_RUN; native gate closed.")
     return int(bool(errors))
 
 

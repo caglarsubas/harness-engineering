@@ -15,7 +15,7 @@ def authority():
 def test_closed_authority_preserves_predecessors_and_full_recipe(authority):
     assert module.validate_authority(*authority)==[]
     packets,record,inputs=authority
-    assert len(packets)==193 and len(module.historical_catalog(packets))==170
+    assert len(packets)==194 and len(module.historical_catalog(packets))==170
     for path in ('ci/test_offline_runner.py','ci/test_warm_snapshot.py'):
         raw=module.regular_bytes(module.ROOT,path)
         assert module.digest(raw)==record['unchangedTests'][path]

@@ -34,7 +34,7 @@ def data(authority):
 def test_exact_catalog_recipe_and_unchanged_product_checkpoint(authority):
     packets,record,inputs = authority
     assert validate_qualification_authority(*authority) == []
-    assert len(packets) == 193
+    assert len(packets) == 194
     assert sum(p.startswith("task-packets/") for p in record["protectedFiles"]) == 143
     assert len(packets["MET-REPAIR-015"]["offlineAcceptanceCommands"]) == 23
     checkpoint = json.loads(inputs[CHECKPOINT_PATH])

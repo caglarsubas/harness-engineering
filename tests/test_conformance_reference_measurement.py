@@ -32,7 +32,7 @@ def authority():
 def test_current_authority_preserves_all150_old_yaml_and_records(authority):
     packets, record, inputs = authority
     assert validate_authority(*authority) == []
-    assert len(packets) == 193
+    assert len(packets) == 194
     old = [p for p in record["protectedFiles"] if p.startswith("task-packets/") and p.endswith(".yaml")]
     assert len(old) == 150
     for path in old:

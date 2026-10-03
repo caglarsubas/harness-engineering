@@ -57,7 +57,7 @@ FIELDS = [(kind, path, field) for kind, path in OBJECTS
 def test_exact_catalog_and_independent_source_evidence(authority):
     packets, record, inputs = authority
     assert validate_observation_contract(*authority) == []
-    assert len(packets) == 193 and len(record["protectedFiles"]) == 186
+    assert len(packets) == 194 and len(record["protectedFiles"]) == 186
     assert digest(canonical(record)) == RECORD_SHA256
     assert digest(canonical(SCHEMA)) == SCHEMA_SHA256
     baseline = json.loads(inputs["architecture/proxy-contract-inputs/baseline.json"])

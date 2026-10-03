@@ -83,4 +83,4 @@ def test_historical_phase_zero_cardinality_is_not_rewritten():
     audit = json.loads((ROOT / "docs/phase-0/phase-0-backtest.json").read_text())
     assert audit["cardinality"]["taskPackets"] == 107
     packets, _ = inputs()
-    assert len(packets) == 193
+    assert len(packets) == 194

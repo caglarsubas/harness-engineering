@@ -27,7 +27,7 @@ BEFORE_PATH = "architecture/ci-performance-inputs/tests.before.json"
 RECORD_SHA256 = "c533d6afdb7c8afc72a80a249d05e9812e18cd1aa6d54f9df7e3b1f4a158c5c3"
 PACKET_SHA256 = "e5d8e021c7e779040118b8ba71fb45ec14d7a5a4e39386a2580ff4f1eb821284"
 ADDITIONS = ("MET-PERF-001",)
-CURRENT_PACKET_COUNT = 193
+CURRENT_PACKET_COUNT = 194
 HISTORICAL_PACKET_COUNT = 139
 SUCCESSOR_ADDITIONS = ("MET-REPAIR-012", "CONF-FIX-005", "MET-REPAIR-013", "MET-REPAIR-014", "MET-REPAIR-015", "MET-PERF-002", "CONF-PERF-001", "MET-PERF-003", "CONF-PERF-002", "MET-PERF-004", "CONF-PERF-003", "MET-PERF-005", "CONF-PERF-004", "CONF-BENCH-001", "MET-REPAIR-016", "CONF-FIX-006", "MET-ADOPT-001", "MET-PERF-006", "CONF-DIAG-001", "MET-PERF-007", "MET-PERF-008", "CONF-DIAG-002", "MET-ACCEPT-001", "MET-PUBLISH-001", "MET-REPAIR-017", "CONF-FIX-007", "MET-ADOPT-002", "MET-PERF-010", "MET-PERF-009", "CONF-DIAG-003", "MET-PERF-011", "MET-PERF-012", "CONF-PERF-006", "CONF-BENCH-002", "MET-PERF-013", "CONF-BENCH-003", "MET-REPAIR-018", "CONF-FIX-008", "MET-PERF-014", "CONF-DIAG-004", "MET-PERF-015", "CONF-FIX-009", "MET-PERF-016", "MET-PERF-017", "MET-REPAIR-019", "MET-ENFORCE-001", "MET-PERF-018", "MET-ENFORCE-003", "CONF-FIX-010")
 
@@ -139,7 +139,7 @@ def validate_ci_performance(packets, record, inputs, current_tests):
         previous = {Path(path).stem for path in record["protectedFiles"] if path.startswith("task-packets/")}
         require(len(previous) == 138 and len(packets) == CURRENT_PACKET_COUNT
                 and set(packets) == previous | set(ADDITIONS) | set(SUCCESSOR_ADDITIONS)
-                    | {"MET-UNIFY-005", "MET-RUNNER-001", "MET-PERF-028", "MET-LINUX-005", "MET-VERIFY-001"},
+                    | {"MET-UNIFY-005", "MET-RUNNER-001", "MET-PERF-028", "MET-LINUX-005", "MET-VERIFY-001", "MET-PERF-029"},
                 "138 exact predecessors, performance packet and two exact credential packets")
         try:
             from validate_credential_lifecycle import validate_additions as credential_additions
@@ -170,7 +170,7 @@ def main():
     for error in errors:
         print("ERROR: " + error)
     if not errors:
-        print("CI performance authority valid: 193 packets; historical 139 authority and all prior tests/both complete replays preserved; no native acceptance.")
+        print("CI performance authority valid: 194 packets; historical 139 authority and all prior tests/both complete replays preserved; no native acceptance.")
     return int(bool(errors))
 
 

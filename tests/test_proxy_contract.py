@@ -47,7 +47,7 @@ REQUIRED_FIELDS = [(path, key) for path, obj in nested_objects(VECTORS["positive
 def test_exact_catalog_profile_and_recorded_source_checkpoint(authority):
     packets, record, inputs = authority
     assert validate_proxy_contract(*authority) == []
-    assert len(packets) == 193 and len(record["protectedFiles"]) == 176
+    assert len(packets) == 194 and len(record["protectedFiles"]) == 176
     assert digest(canonical(record)) == RECORD_SHA256
     baseline = parse(inputs["architecture/proxy-contract-inputs/baseline.json"])
     assert len(baseline["files"]) == 127 and baseline["testCount"] == 279

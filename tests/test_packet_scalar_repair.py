@@ -30,7 +30,7 @@ def inputs():
 def test_closed_catalog_preserves_164_files_and_all_130_packet_bytes(inputs):
     packets, record, raw = inputs
     assert validate_scalar_repair(*inputs) == []
-    assert len(packets) == 193 and len(record["protectedFiles"]) == 164 and len(raw) == 169
+    assert len(packets) == 194 and len(record["protectedFiles"]) == 164 and len(raw) == 169
     assert len([p for p in record["protectedFiles"] if p.startswith("task-packets/")]) == 130
     assert record["repositoryCount"] == 13 and record["harnessCount"] == 16
     assert record["liveDeclarationCount"] == 12

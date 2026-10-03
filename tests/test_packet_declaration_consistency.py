@@ -200,7 +200,7 @@ HISTORICAL_TEST_NAMES = (
     "test_task_packet_schema_rejects_legacy_shell_and_unknown_authority",
 )
 ACCEPTED_TEST_MODULE_SHA256 = "7d559e7e6000ba3734c0598c03d938cc24efc74a4cd3e8d758bcb8092a8a819c"
-CATALOG_SCALAR_CURRENT = b"assert len(files) == EXPECTED_PACKET_COUNT == 193"
+CATALOG_SCALAR_CURRENT = b"assert len(files) == EXPECTED_PACKET_COUNT == 194"
 CATALOG_SCALAR_ACCEPTED = b"assert len(files) == EXPECTED_PACKET_COUNT == 190"
 
 

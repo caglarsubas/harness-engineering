@@ -55,7 +55,7 @@ def vector(inputs, stage):
 def test_exact_catalog_checkpoint_and_historical_inventory(inputs):
     packets, record, raw = inputs
     assert validate_successor_inventory(*inputs) == []
-    assert len(packets) == 193 and len(record["protectedFiles"]) == 170 and len(raw) == 175
+    assert len(packets) == 194 and len(record["protectedFiles"]) == 170 and len(raw) == 175
     baseline = json.loads(raw[BASELINE_PATH])
     historical = json.loads(baseline["historical103Raw"])
     assert len(baseline["files"]) == 106 and sum(map(len, baseline["tests"].values())) == 150

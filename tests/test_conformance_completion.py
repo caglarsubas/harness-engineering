@@ -15,7 +15,7 @@ def authority():
 def test_exact_amendment_preserves163_packets_and_inherited_tests(authority):
     assert module.validate_authority(*authority) == []
     packets,record,inputs = authority
-    assert len(packets) == 193 and module.NEW_IDS == ('MET-REPAIR-017','CONF-FIX-007')
+    assert len(packets) == 194 and module.NEW_IDS == ('MET-REPAIR-017','CONF-FIX-007')
     for path,rule in record['metaRecipes'].items():
         before = module.historical_bytes(path,inputs[path])
         assert module.apply_recipe(before,rule) == research_history(path, inputs[path])

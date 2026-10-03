@@ -1,6 +1,13 @@
 # Sol-High Task Packet Catalog
 
-## Current source preparation — MET-VERIFY-001
+## Current source preparation — MET-PERF-029
+
+Linear history-chain authority rechecks: every route still freshly reads every
+newer authority, now exactly once. Alpha2 OPEN;193 accepted plus029 only.
+MET-VERIFY-001 (#147) merged through the owner-operated verify check with no
+admin exception. No cloud or runner. Native Linux, exact-main and tenant remain separate.
+
+## Historical VERIFY-001 source preparation — MET-VERIFY-001
 
 Owner-operated required check: verify is reported only by the owner's GitHub App
 from the installed trusted launcher; the offline-readiness workflow is disabled.
@@ -1030,3 +1037,4 @@ acceptance is claimed. Alpha2 ONGOING; model-effort transition NOT_DUE.
 | 191 | `MET-PERF-028` | `Harness-Engineering` | Exact-bytes authority recheck reuse and linear uniqueItems; fresh reads and failed027 evidence, zero execution authority |
 | 192 | `MET-LINUX-005` | `Harness-Engineering` | Linux runner nested-checkout and system-alias contract repair on accepted 028 main; zero execution authority |
 | 193 | `MET-VERIFY-001` | `Harness-Engineering` | Owner-operated required verify check reported by the owner's GitHub App from the installed trusted launcher; no hosted runners |
+| 194 | `MET-PERF-029` | `Harness-Engineering` | Linear history-chain authority rechecks: each newer authority freshly read exactly once per route |

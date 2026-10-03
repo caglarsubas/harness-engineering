@@ -36,7 +36,7 @@ def authority():
 def test_exact_catalog_preserves_every_old_yaml_and_authority(authority):
     packets, record, inputs = authority
     assert validate_authority(*authority) == []
-    assert len(packets) == 193
+    assert len(packets) == 194
     old = [p for p in record["protectedFiles"] if p.startswith("task-packets/") and p.endswith(".yaml")]
     assert len(old) == 146
     for path in old:

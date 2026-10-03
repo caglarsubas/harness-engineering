@@ -28,7 +28,7 @@ def inputs():
 def test_current_authority_and_historical_bytes_agree(inputs):
     packets, record, snapshots = inputs
     assert validate_model_fixture_scope(*inputs) == []
-    assert len(packets) == 193
+    assert len(packets) == 194
     assert record["historicalPacketCount"] == 121
     assert record["baseline"]["passed"] == 758
     assert record["baseline"]["failed"] == record["baseline"]["skipped"] == 0

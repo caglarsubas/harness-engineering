@@ -42,7 +42,7 @@ def candidate_pair(inputs):
 def test_current_authority_and_preserved_failure_evidence(inputs):
     packets, record, snapshots = inputs
     assert validate_model_api_inventory(*inputs) == []
-    assert len(packets) == 193
+    assert len(packets) == 194
     assert record["historicalPacketCount"] == 122
     assert record["baseline"]["passed"] == 758
     assert record["baseline"]["failed"] == record["baseline"]["skipped"] == 0

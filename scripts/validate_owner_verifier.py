@@ -14,8 +14,10 @@ from typing import Any
 
 try:
     from safe_yaml import safe_load
+    import validate_linear_history_rechecks as successor
 except ImportError:
     from scripts.safe_yaml import safe_load
+    from scripts import validate_linear_history_rechecks as successor
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -89,6 +91,14 @@ _VERIFIED_AUTHORITY: tuple[str, bytes] | None = None
 
 
 def _checked_authority_raw() -> bytes:
+    """Newest first: every newer authority, then this one, each read exactly once."""
+    successor._checked_authority_raw()
+    return _checked_own_authority_raw()
+
+
+def _checked_own_authority_raw() -> bytes:
+    """Fresh complete read of this layer's authority only; callers reach newer
+    authorities through exactly one successor route per public call."""
     global _VERIFIED_AUTHORITY
     raw = regular_bytes(AUTHORITY_PATH)
     if type(raw) is not bytes or _VERIFIED_AUTHORITY != (AUTHORITY_SHA256, raw):
@@ -249,10 +259,23 @@ def _inverse(raw: bytes, hunks: tuple[tuple[int, bytes, bytes], ...]) -> bytes:
 
 
 def historical_bytes(path: str, raw: bytes) -> bytes:
-    """Recheck the pinned authority and undo only this reviewed successor."""
-    _checked_authority_raw()
+    """Undo the newer successor, then this step; every authority is read once."""
     _path(path)
     require(type(raw) is bytes and len(raw) <= MAX_FILE_BYTES, "bounded source bytes required")
+    rule = _PROJECTION_RULES.get(path)
+    # An exact 192-era byte string is already older than the successor layer.
+    # Every newer authority and this one are still rechecked before this fast return.
+    if rule is not None and digest(raw) == rule["beforeSha256"]:
+        _checked_authority_raw()
+        return raw
+    # The successor route freshly rechecks every newer authority exactly once.
+    raw = successor.historical_bytes(path, raw)
+    _checked_own_authority_raw()
+    return _undo_this_layer(path, raw)
+
+
+def _undo_this_layer(path: str, raw: bytes) -> bytes:
+    """Apply only this layer's reviewed inverse; callers have already rechecked authorities."""
     rule = _PROJECTION_RULES.get(path)
     if rule is None:
         return raw
@@ -267,33 +290,37 @@ def historical_bytes(path: str, raw: bytes) -> bytes:
 
 
 def historical_test_bytes(raw: bytes) -> bytes:
-    _checked_authority_raw()
     require(type(raw) is bytes and len(raw) <= MAX_FILE_BYTES, "bounded test bytes required")
+    raw = successor.historical_test_bytes(raw)
+    _checked_own_authority_raw()
     current_sha = digest(raw)
     matches = [path for path, rule in _PROJECTION_RULES.items()
                if path.startswith("tests/") and current_sha == rule["afterSha256"]]
     require(len(matches) <= 1, "ambiguous current test")
-    return historical_bytes(matches[0], raw) if matches else raw
+    return _undo_this_layer(matches[0], raw) if matches else raw
 
 
 def current_test_bytes(before: bytes) -> bytes:
-    _checked_authority_raw()
     require(type(before) is bytes and len(before) <= MAX_FILE_BYTES, "bounded test bytes required")
     before_sha = digest(before)
     matches = [path for path, rule in _PROJECTION_RULES.items()
                if path.startswith("tests/") and before_sha == rule["beforeSha256"]]
     require(len(matches) <= 1, "ambiguous predecessor test")
     if not matches:
-        return before
-    current = regular_bytes(matches[0])
+        current = successor.current_test_bytes(before)
+        _checked_own_authority_raw()
+        return current
+    current = successor.historical_bytes(matches[0], regular_bytes(matches[0]))
+    _checked_own_authority_raw()
     require(digest(current) == _PROJECTION_RULES[matches[0]]["afterSha256"],
             "current test drift")
-    return current
+    return successor.current_test_bytes(current)
 
 
 def historical_catalog(packets: dict[str, Any]) -> dict[str, Any]:
     """Remove only this layer, leaving predecessor checks to their owners."""
-    _checked_authority_raw()
+    packets = successor.historical_catalog(packets)
+    _checked_own_authority_raw()
     require(type(packets) is dict, "packet mapping")
     current_ids = set(_PACKET_BYTE_RULES)
     require(NEW_PACKET in current_ids and set(packets) == current_ids,
@@ -332,7 +359,7 @@ def validate_packet_payloads(packets: dict[str, Any]) -> None:
 
 def validate() -> None:
     record = authority()
-    validator_raw = regular_bytes(VALIDATOR_PATH)
+    validator_raw = successor.historical_bytes(VALIDATOR_PATH, regular_bytes(VALIDATOR_PATH))
     literal = b'AUTHORITY_SHA256 = "' + AUTHORITY_SHA256.encode("ascii") + b'"'
     placeholder = b'AUTHORITY_SHA256 = "TO_BE_PINNED_AFTER_SOURCE_FREEZE"'
     require(validator_raw.count(literal) == 1
@@ -340,10 +367,13 @@ def validate() -> None:
             == record["validatorNormalizedSha256"], "owner verifier validator drift")
     paths = sorted((ROOT / "task-packets").glob("*.yaml"))
     old = set(record["baselinePackets"])
-    require(len(paths) == 193 and {path.stem for path in paths} == old | {NEW_PACKET},
-            "closed 193-packet catalog")
+    require(len(paths) == 194
+            and {path.stem for path in paths} == old | {NEW_PACKET, successor.NEW_PACKET},
+            "closed 194-packet catalog retaining the 193-packet checkpoint")
     packets = {}
     for path in paths:
+        if path.stem == successor.NEW_PACKET:
+            continue
         raw = regular_bytes("task-packets/" + path.name)
         expected = record["packetSha256"] if path.stem == NEW_PACKET else record["baselinePackets"][path.stem]
         require(digest(raw) == expected, "packet YAML drift: " + path.stem)
@@ -369,14 +399,15 @@ def validate() -> None:
                                          "task-packets/" + NEW_PACKET + ".yaml"},
             "unreviewed or omitted verifier packet path")
     for path, rule in record["changedFiles"].items():
-        current = regular_bytes(path)
+        current = successor.historical_bytes(path, regular_bytes(path))
         require(digest(current) == rule["afterSha256"]
                 and digest(historical_bytes(path, current)) == rule["beforeSha256"],
                 "unreviewed current source: " + path)
     for path, expected in record["newFiles"].items():
-        require(digest(regular_bytes(path)) == expected, "new source drift: " + path)
+        require(digest(successor.historical_bytes(path, regular_bytes(path))) == expected,
+                "new source drift: " + path)
 
 
 if __name__ == "__main__":
     validate()
-    print("Owner verifier contract valid: 193 current specifications; exact 192-packet predecessor; verifier operation and native qualification remain separate.")
+    print("Owner verifier contract valid: 194 current specifications; 193-packet checkpoint and exact 192-packet predecessor; verifier operation and native qualification remain separate.")

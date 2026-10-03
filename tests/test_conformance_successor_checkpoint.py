@@ -44,7 +44,7 @@ def candidate(authority):
 def test_current155_catalog_preserves153_yaml_and_exact_two_path_scope(authority):
     packets, record, inputs = authority
     assert module.validate_authority(*authority) == []
-    assert len(packets) == 193
+    assert len(packets) == 194
     assert packets["CONF-FIX-006"]["allowedPaths"] == [module.DOC, module.SUP]
     assert packets["CONF-FIX-006"]["predecessors"] == ["MET-REPAIR-016", "CONF-PERF-004"]
     assert packets["MET-REPAIR-016"]["offlineAcceptanceCommands"][:-3] == packets["MET-PERF-005"]["offlineAcceptanceCommands"][:-2]

@@ -36,7 +36,7 @@ def test_current_and_historical_authorities_agree_without_rewriting_history(inpu
     original = (ROOT / "architecture/linux-readiness.json").read_bytes()
     assert validate_linux_readiness(packets, json.loads(original)) == []
     assert validate_linux_repair(packets, json.loads(previous), original) == []
-    assert len(packets) == 193
+    assert len(packets) == 194
     assert json.loads(previous)["currentPacketCount"] == 120
     assert json.loads(original)["currentPacketCount"] == 118
     assert record["testChange"]["productImplementation"] == "NOT_RUN"

@@ -1,6 +1,25 @@
 # Harness-Onion — unified development roadmap
 
-## Current checkpoint — MET-VERIFY-001 source preparation, October 3, 2026
+## Current checkpoint — MET-PERF-029 source preparation, October 4, 2026
+
+Alpha2 OPEN. MET-VERIFY-001 passed its required verify through the owner's App
+(55/55, 750.4 s in the trusted launcher, activation391) and PR #147 merged as
+main 8172538 with no administrator exception. Its run showed suite time growing
+about50s per packet because composed layers re-read every newer authority
+quadratically. MET-PERF-029 is the sole194th specification: each route still
+freshly reads every newer authority, now exactly once.
+
+| Phase | ID | Status | Description / gate |
+|---|---|---|---|
+| Alpha2 performance | MET-PERF-029 | SOURCE_PREPARED | Linear authority rechecks as194th packet; verify from the owner's App |
+| Alpha2 CI | MET-VERIFY-001 | VERIFY_PASSED_MERGED | Owner-operated required check; exact-main and native Linux NOT_RUN |
+| Alpha2 qualification | W01 / CONF-LINUX-001 / CONF-A2-001 | WAITING_PREREQUISITES | Installed Linux host, fresh native AMD64 and integrated read-only acceptance |
+
+Keep56argv, both full suites, 420/750/900s/15min and32MiB. No cloud, runner
+registration, live/native/tenant or model-effort changes. Phase-end effort
+transition NOT_DUE. Prior checkpoints below are history only.
+
+## Historical VERIFY-001 source checkpoint — MET-VERIFY-001 source preparation, October 3, 2026
 
 Alpha2 OPEN. MET-LINUX-005 reached LOCAL_PASS_ONLY (54/54, 671.395 s,
 activation390; independent terminal review confirmed) and PR #146 was merged as
@@ -549,7 +568,8 @@ These checkboxes count only the named deliverable at the stated evidence level. 
 - [ ] Alpha 2 · MET-RUNNER-001 · Publish the source-only bounded development-CI admission contract with exact 189-packet history, isolated acceptance, required CI and exact-main evidence.
 - [ ] Alpha 2 · MET-PERF-028 · Complete exact-bytes authority recheck reuse and linear uniqueItems, independent review and separately authorized full LOCAL/CI/exact-main; preserve failed019–027/PR144 and unresolved timing/native Linux gates.
 - [ ] Alpha 2 · MET-LINUX-005 · Complete the runner-contract repair on accepted 028 main, independent review and separately authorized full LOCAL/CI/exact-main; preserve PR144 attempts and unresolved native Linux gates.
-- [ ] Alpha 2 · MET-VERIFY-001 · Publish the owner-operated required verify contract and pass its own required verify through the owner's App; exact-main and native Linux remain separate.
+- [x] Alpha 2 · MET-VERIFY-001 · Publish the owner-operated required verify contract and pass its own required verify through the owner's App; exact-main and native Linux remain separate.
+- [ ] Alpha 2 · MET-PERF-029 · Make history-chain authority rechecks linear with unchanged freshness and refusal semantics; pass required verify through the owner's App.
 - [ ] Alpha 2A · W01 · Resolve G04–G07/G09 and adopt a versioned host interface only after the required independent review.
 - [ ] Alpha 2A · CONF-FIX-010 · Complete safe design and exact authority before any product attempt.
 - [ ] Alpha 2A · CONF-LIVE-004 · Produce the exact native-probe source implementation and separately qualify it.

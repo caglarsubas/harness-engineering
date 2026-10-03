@@ -27,7 +27,7 @@ def authority():
 
 def test_exact_packet_and_preservation_authority(authority):
     packets, record, inputs, current = authority
-    assert len(packets) == CURRENT_PACKET_COUNT == 193
+    assert len(packets) == CURRENT_PACKET_COUNT == 194
     assert len(record["protectedFiles"]) == 236
     assert len(record["mechanicalTestUpdates"]) == 20
     assert digest(canonical(record)) == RECORD_SHA256
@@ -81,7 +81,7 @@ def test_assertion_or_skip_substitution_refuses(authority, change):
     _, record, inputs, current = authority
     path = "tests/test_task_packets.py"
     changed = dict(current)
-    target = b"assert len(files) == EXPECTED_PACKET_COUNT == 193"
+    target = b"assert len(files) == EXPECTED_PACKET_COUNT == 194"
     assert target in changed[path]
     changed[path] = changed[path].replace(target, change, 1)
     assert validate_test_preservation(record, inputs[BEFORE_PATH], changed)
@@ -141,7 +141,7 @@ def test_malformed_and_executable_tags_refuse_without_side_effects(raw):
 def test_full_current_corpus_matches_the_python_safe_constructor():
     paths = sorted({p for folder in ("architecture", "legal", "policies", "release", "task-packets")
                     for p in (ROOT / folder).rglob("*.yaml")})
-    assert len(paths) == 209
+    assert len(paths) == 210
     for path in paths:
         raw = path.read_bytes()
         assert shape(safe_yaml.safe_load(raw)) == shape(yaml.load(raw, Loader=yaml.SafeLoader)), path

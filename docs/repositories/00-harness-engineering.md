@@ -1,6 +1,13 @@
 # Repository Plan: `Harness-Engineering`
 
-## Current source preparation — MET-PERF-029
+## Current source preparation — MET-PERF-030
+
+In-session predecessor proof: the outer packet session already runs the complete
+predecessor suite, so the predecessor test proves it passed instead of re-running
+it (fallback re-run for standalone runs). Alpha2 OPEN;194 accepted plus030 only.
+Linux verification only when mandatory. Native Linux, exact-main and tenant remain separate.
+
+## Historical029 source preparation — MET-PERF-029
 
 Linear history-chain authority rechecks: every route still freshly reads every
 newer authority, now exactly once. Alpha2 OPEN;193 accepted plus029 only.
@@ -798,6 +805,7 @@ Every packet uses branch `codex/<packet-id>`, changes only named paths, opens a 
 66. `MET-LINUX-005`: carry the reviewed Linux runner nested-checkout and system-alias contract repair onto accepted 028 main; source only, no execution grant.
 67. `MET-VERIFY-001`: document the owner-operated required verify check (GitHub App, installed trusted launcher, disabled workflow); source only, no cloud or runner grant.
 68. `MET-PERF-029`: make history-chain authority rechecks linear (each newer authority freshly read once per route); source only.
+69. `MET-PERF-030`: prove the predecessor suite from the same packet session instead of re-running it; source only.
 
 ## Testing, verification, and acceptance
 

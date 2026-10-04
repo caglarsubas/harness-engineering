@@ -151,18 +151,63 @@ def test_standard_library_only_and_no_shell_evaluation():
                             and node.func.value.id == "os" and node.func.attr in ("system", "popen"))
 
 
-def test_full_predecessor_suites_and_validators_remain_green(capsys):
+PREDECESSOR_TARGETS = ("tests", "--ignore=tests/linux_runner", "ci/test_offline_runner.py", "ci/test_warm_snapshot.py")
+
+
+def _is_predecessor(nodeid):
+    return ((nodeid.startswith("tests/") and not nodeid.startswith("tests/linux_runner/"))
+            or nodeid.startswith(("ci/test_offline_runner.py::", "ci/test_warm_snapshot.py::")))
+
+
+def _in_session_predecessor_proof(request, env):
+    """Prove the complete predecessor suite passed in this same session, or return None.
+
+    An independent collect-only process lists the exact predecessor tests. Only when
+    this session collected that identical set is the proof used; any standalone or
+    partial invocation falls back to the original nested re-run.
+    """
+    session_nodes = {item.nodeid for item in request.session.items if _is_predecessor(item.nodeid)}
+    if not session_nodes:
+        return None
+    started = time.monotonic()
+    collect = subprocess.run([sys.executable, "-m", "pytest", "--collect-only", *PREDECESSOR_TARGETS],
+                             cwd=ROOT, env=env, capture_output=True, text=True, timeout=420, close_fds=True)
+    expected = {line for line in collect.stdout.splitlines() if "::" in line and not line.startswith(" ")}
+    if collect.returncode != 0 or not expected or session_nodes != expected:
+        return None
+    reports = request.config._planeon_predecessor_outcomes.reports
+    failed = sorted(node for node in expected if any(outcome == "failed" for _when, outcome in reports.get(node, ())))
+    incomplete = sorted(node for node in expected
+                        if not any(when == "teardown" for when, _outcome in reports.get(node, ()))
+                        or not any(when == "call" or (when == "setup" and outcome == "skipped")
+                                   for when, outcome in reports.get(node, ())))
+    return {"mode": "IN_SESSION_PROOF", "predecessorTests": len(expected), "failed": len(failed),
+            "incomplete": len(incomplete), "failedNodes": failed[:16], "incompleteNodes": incomplete[:16],
+            "elapsedSeconds": time.monotonic() - started}
+
+
+def test_full_predecessor_suites_and_validators_remain_green(capsys, request):
     # A nested test process stays in this packet's OS-denied tree. Excluding
     # only this new directory prevents recursion, not legacy-test deselection.
     env = {**os.environ, "PYTHONDONTWRITEBYTECODE": "1"}
-    commands = [[sys.executable, "-m", "pytest", "-rs", "tests", "--ignore=tests/linux_runner", "ci/test_offline_runner.py", "ci/test_warm_snapshot.py"]]
+    commands = [[sys.executable, "-m", "pytest", "-rs", *PREDECESSOR_TARGETS]]
     commands += [[sys.executable, "scripts/" + name] for name in
                  ("validate_readiness.py", "validate_reuse.py", "validate_alpha2_readiness.py",
                   "validate_readiness_repairs.py", "validate_linux_readiness.py")]
     commands += [[sys.executable, "scripts/zero_bill_scan.py", "."]]
     labels = ("full-predecessor-suite", "readiness", "reuse", "alpha2-readiness",
               "readiness-repairs", "linux-readiness", "zero-bill-scan")
+    proof = _in_session_predecessor_proof(request, env)
+    if proof is not None:
+        # The outer session already ran every predecessor test; prove it instead of re-running.
+        identity = {"ordinal": 1, "total": len(commands), "label": labels[0]}
+        _publish_predecessor_record(capsys, {**identity, "event": "START", "timeoutSeconds": 420})
+        _publish_predecessor_record(capsys, {**identity, "event": "END",
+                                             "returncode": 0 if not (proof["failed"] or proof["incomplete"]) else 1, **proof})
+        assert proof["failed"] == 0 and proof["incomplete"] == 0, "predecessor suite failed in this session: " + json.dumps(proof)
     for ordinal, argv in enumerate(commands, start=1):
+        if ordinal == 1 and proof is not None:
+            continue
         identity = {"ordinal": ordinal, "total": len(commands), "label": labels[ordinal - 1]}
         started = time.monotonic()
         _publish_predecessor_record(capsys, {**identity, "event": "START", "timeoutSeconds": 420})

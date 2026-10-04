@@ -53,3 +53,34 @@ def manifest():
             "runner": dict(RUNNER), "isolation": {**ISOLATION, "warmSourceRoots": ["/srv/planeon/warm-snapshots/reference"]},
             "preflight": {"suiteVersion": VERSION, "status": "PASS", "evidenceSha256": "2" * 64, **{name: True for name in PROOFS}},
             "signature": {"algorithm": "ED25519", "signaturePath": MANIFEST + ".sig", "publicKeyPath": PUBLIC, "publicKeySha256": "3" * 64}}
+
+
+# MET-PERF-030: the outer packet session already runs the complete predecessor
+# suite, so its proof test reads this session's own results instead of running
+# every predecessor test a second time. The recorder only observes reports.
+PREDECESSOR_PROOF_NODE = ("tests/linux_runner/test_build_and_predecessors.py"
+                          "::test_full_predecessor_suites_and_validators_remain_green")
+
+
+class PredecessorOutcomes:
+    """Session-wide (when, outcome) record per node; never alters a report."""
+
+    def __init__(self):
+        self.reports = {}
+
+    @pytest.hookimpl(trylast=True)
+    def pytest_runtest_logreport(self, report):
+        self.reports.setdefault(report.nodeid, []).append((report.when, report.outcome))
+
+
+def pytest_configure(config):
+    if not hasattr(config, "_planeon_predecessor_outcomes"):
+        config._planeon_predecessor_outcomes = PredecessorOutcomes()
+        config.pluginmanager.register(config._planeon_predecessor_outcomes, "planeon-predecessor-outcomes")
+
+
+def pytest_collection_modifyitems(session, config, items):
+    # Run the proof last so every predecessor test in this session has reported.
+    proof = [item for item in items if item.nodeid == PREDECESSOR_PROOF_NODE]
+    if proof:
+        items[:] = [item for item in items if item.nodeid != PREDECESSOR_PROOF_NODE] + proof

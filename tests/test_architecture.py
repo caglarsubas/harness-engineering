@@ -158,5 +158,5 @@ def test_packet_wrapper_requires_named_trusted_outer_boundary() -> None:
     assert 'HARNESS_OFFLINE_ENFORCED:-0' in wrapper
     assert 'HARNESS_OFFLINE_BACKEND:-' in wrapper
     assert 'HARNESS_OFFLINE_SESSION_ID:-' in wrapper
-    assert 'exec python3 "$runner"' in wrapper
+    assert 'exec python3 -I "$runner"' in wrapper
     assert "UV_OFFLINE UV_FROZEN UV_NO_SYNC" in wrapper

@@ -497,12 +497,13 @@ def test_schema_performance_publication_preserves_complete_source_history():
     assert performance.validate() is None
     current = _current_catalog(performance)
     accepted = performance.historical_catalog(current)
-    assert len(current) == 196 and len(accepted) == 190
+    assert len(current) == 197 and len(accepted) == 190
     assert set(accepted) == set(current) - {performance.NEW_PACKET, performance.successor.NEW_PACKET,
                                             performance.successor.successor.NEW_PACKET,
                                             performance.successor.successor.successor.NEW_PACKET,
                                             performance.successor.successor.successor.successor.NEW_PACKET,
-                                            performance.successor.successor.successor.successor.successor.NEW_PACKET}
+                                            performance.successor.successor.successor.successor.successor.NEW_PACKET,
+                                            performance.successor.successor.successor.successor.successor.successor.NEW_PACKET}
     assert len(runner.historical_catalog(current)) == 189
     assert len(roadmap.historical_catalog(current)) == 188
     for path, rule in performance._PROJECTION_RULES.items():
@@ -792,4 +793,4 @@ def test_retained_019_failure_is_not_a_predecessor_or_a_new_execution_grant():
     assert policy["budgetReset"] is False
     assert policy["automaticCiOrExactMain"] is False
     names = {path.stem for path in (performance.ROOT / "task-packets").glob("*.yaml")}
-    assert len(names) == 196 and performance.NEW_PACKET in names and "MET-PERF-019" not in names and "MET-PERF-020" not in names
+    assert len(names) == 197 and performance.NEW_PACKET in names and "MET-PERF-019" not in names and "MET-PERF-020" not in names

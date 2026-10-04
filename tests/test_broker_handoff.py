@@ -48,7 +48,7 @@ def model():
 def test_exact_authority_catalog_and_immutable_consumer_checkpoint(authority):
     packets, record, inputs = authority
     assert validate_handoff(*authority) == []
-    assert len(packets) == 196
+    assert len(packets) == 197
     assert sum(p.startswith("task-packets/") for p in record["protectedFiles"]) == 142
     assert len(packets["MET-REPAIR-014"]["offlineAcceptanceCommands"]) == 22
     checkpoint = json.loads(inputs[CHECKPOINT_PATH])
@@ -341,9 +341,11 @@ def test_unchanged_legacy_test_bridge_accepts_only_six_exact_pinned_sources(auth
     _, record, inputs = authority
     assert len(record["unchangedTests"]) == 6
     for path, checksum in record["unchangedTests"].items():
-        raw = inputs[path]
+        # Current bytes are projected through the newer history layers first.
+        current = inputs[path]
+        raw = historical_bytes(path, current)
         assert digest(raw) == checksum
-        assert current_test_bytes(raw) == raw
+        assert current_test_bytes(raw) == current
         with pytest.raises(ValueError): current_test_bytes(raw + b"\n# altered\n")
     with pytest.raises(ValueError): current_test_bytes(b"def test_unknown(): pass\n")
 

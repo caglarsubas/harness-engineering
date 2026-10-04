@@ -29,7 +29,7 @@ if [[ "${HARNESS_OFFLINE_ENFORCED:-0}" == "1" ]]; then
     fi
   done
   cd "$repo_root"
-  exec python3 "$runner"
+  exec python3 -I "$runner"
 fi
 
 # shellcheck disable=SC2034 # Consumed by the sourced isolation contract.
@@ -69,7 +69,7 @@ case "$(uname -s)" in
         UV_OFFLINE=1 \
         UV_FROZEN=1 \
         UV_NO_SYNC=1 \
-        python3 "$runner"
+        python3 -I "$runner"
     ;;
   Linux)
     if command -v firejail >/dev/null 2>&1; then
@@ -89,7 +89,7 @@ case "$(uname -s)" in
           UV_OFFLINE=1 \
           UV_FROZEN=1 \
           UV_NO_SYNC=1 \
-          python3 "$runner"
+          python3 -I "$runner"
     fi
     echo "offline verification refused: firejail is required for network, packet-write, and warm-source isolation" >&2
     exit 2

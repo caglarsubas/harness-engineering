@@ -1,6 +1,13 @@
 # Sol-High Task Packet Catalog
 
-## Current source preparation — MET-LINUX-006
+## Current source preparation — MET-VERIFY-002
+
+The offline wrapper starts its runner with python3 -I. Pull requests that change
+the offline transport run only after the owner approves their exact head commit
+through a root-owned record. Alpha2 OPEN;196 accepted plus
+002 only. Native Linux, exact-main and tenant acceptance remain separate.
+
+## Historical006 source preparation — MET-LINUX-006
 
 Portable warm-snapshot fixture parent (/private/tmp on macOS, /tmp on Linux) so the
 complete suite passes on Linux as a non-root user. Alpha2 OPEN;195 accepted plus
@@ -1054,3 +1061,4 @@ acceptance is claimed. Alpha2 ONGOING; model-effort transition NOT_DUE.
 | 194 | `MET-PERF-029` | `Harness-Engineering` | Linear history-chain authority rechecks: each newer authority freshly read exactly once per route |
 | 195 | `MET-PERF-030` | `Harness-Engineering` | In-session predecessor proof instead of re-running the complete predecessor suite; fallback re-run kept |
 | 196 | `MET-LINUX-006` | `Harness-Engineering` | Portable warm-snapshot fixture parent so the complete suite passes on Linux as a non-root user |
+| 197 | `MET-VERIFY-002` | `Harness-Engineering` | Isolated offline runner call; transport changes verified only after the owner's root-owned exact-commit approval |

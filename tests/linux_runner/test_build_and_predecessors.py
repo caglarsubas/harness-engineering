@@ -183,7 +183,7 @@ def _in_session_predecessor_proof(request, env, targets):
             "elapsedSeconds": time.monotonic() - started}
 
 
-def test_full_predecessor_suites_and_validators_remain_green(capsys, request):
+def test_full_predecessor_suites_and_validators_remain_green(capsys):
     # A nested test process stays in this packet's OS-denied tree. Excluding
     # only this new directory prevents recursion, not legacy-test deselection.
     env = {**os.environ, "PYTHONDONTWRITEBYTECODE": "1"}
@@ -195,7 +195,10 @@ def test_full_predecessor_suites_and_validators_remain_green(capsys, request):
     labels = ("full-predecessor-suite", "readiness", "reuse", "alpha2-readiness",
               "readiness-repairs", "linux-readiness", "zero-bill-scan")
     # The proof lists exactly the nested command's own targets (everything after "-rs").
-    proof = _in_session_predecessor_proof(request, env, commands[0][4:])
+    # Pinned pytest 8.4.2 keeps the requesting test on its capture fixture; any caller
+    # without a real pytest request (such as the strict mock harness) keeps the re-run.
+    request = getattr(capsys, "request", None)
+    proof = None if request is None else _in_session_predecessor_proof(request, env, commands[0][4:])
     if proof is not None:
         # The outer session already ran every predecessor test; prove it instead of re-running.
         identity = {"ordinal": 1, "total": len(commands), "label": labels[0]}

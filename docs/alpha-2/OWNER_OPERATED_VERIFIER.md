@@ -1,7 +1,8 @@
 # Owner-operated required check — MET-VERIFY-001
 
 Status: source-only contract on accepted main `e4e0bebc77737d99a32aedee7916f36a3906c3bd`.
-It records an owner decision of October 3, 2026. It is not native Linux
+It records an owner decision of October 3, 2026, amended on October 4, 2026 by
+MET-VERIFY-002 (isolated runner call and exact-commit transport approval). It is not native Linux
 qualification, exact-main evidence, an installed Linux host, runtime or tenant
 acceptance, and it authorizes no cloud provisioning or spending.
 
@@ -37,9 +38,15 @@ For each open, same-repository, non-draft pull request into `main`:
    packet change. The packet must keep every command of the newest accepted
    packet on `main`, in order.
 4. Refuse pull requests changing anything under `ci/` other than top-level
-   `ci/test_*.py` and `ci/linux-runner/`. The launcher executes the checkout's
-   own offline transport, which also prints the evidence lines, so transport
-   changes need the reviewed operator LOCAL path instead.
+   `ci/test_*.py` and `ci/linux-runner/`, unless the owner has approved that
+   exact head commit. The launcher executes the checkout's own offline
+   transport, which also prints the evidence lines, so such a change runs only
+   after an independent source review and the owner's approval: a root-owned,
+   non-writable record `/private/etc/planeon/transport-approvals/<head>.json`
+   naming the pull request number and the exact head commit, inside root-owned
+   directories. Creating it needs the owner's administrator password, so agents
+   running as the operator cannot approve their own change. A new push is a new
+   head and needs a new approval. The check summary records the approval digest.
 5. Sign a short-lived activation for the exact packet bytes and commit, activate
    it through the installed root helper, and run the installed trusted launcher
    once. The launcher still enforces deny-all outbound isolation, the 900-second
@@ -59,6 +66,9 @@ manual LOCAL gate and remove it afterwards.
   for repository `Harness-Engineering`, profile `python-meta` and a lifetime of at
   most 1800 seconds. The operator key path and every other authority rule are
   unchanged. The key and the App key live only in the verifier's private custody.
+- The offline wrapper starts its runner with `python3 -I`, so modules planted in
+  the checkout's `ci/` directory, `PYTHON*` variables and user site-packages
+  cannot shadow the standard library the evidence-printing runner imports.
 - The installed launcher sandbox additionally denies LaunchServices opens,
   Apple Events, launchd job creation and execution of `open`, `osascript`,
   `osacompile`, `launchctl`, `crontab`, `at`, `batch`, `automator`, `shortcuts`

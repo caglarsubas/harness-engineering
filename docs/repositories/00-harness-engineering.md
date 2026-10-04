@@ -1,6 +1,13 @@
 # Repository Plan: `Harness-Engineering`
 
-## Current source preparation — MET-LINUX-006
+## Current source preparation — MET-VERIFY-002
+
+The offline wrapper starts its runner with python3 -I. Pull requests that change
+the offline transport run only after the owner approves their exact head commit
+through a root-owned record. Alpha2 OPEN;196 accepted plus
+002 only. Native Linux, exact-main and tenant acceptance remain separate.
+
+## Historical006 source preparation — MET-LINUX-006
 
 Portable warm-snapshot fixture parent (/private/tmp on macOS, /tmp on Linux) so the
 complete suite passes on Linux as a non-root user. Alpha2 OPEN;195 accepted plus
@@ -814,6 +821,7 @@ Every packet uses branch `codex/<packet-id>`, changes only named paths, opens a 
 68. `MET-PERF-029`: make history-chain authority rechecks linear (each newer authority freshly read once per route); source only.
 69. `MET-PERF-030`: prove the predecessor suite from the same packet session instead of re-running it; source only.
 70. `MET-LINUX-006`: make the warm-snapshot locker test portable to Linux (non-root); source only.
+71. `MET-VERIFY-002`: start the offline runner in isolated mode; owner exact-commit approval for transport changes; source only.
 
 ## Testing, verification, and acceptance
 

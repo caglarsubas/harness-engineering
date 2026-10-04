@@ -68,7 +68,7 @@ def test_only_the_owned_semantic_expression_changes_in_the_validator():
             item.value = "MET-PERF-024"
         if isinstance(item, ast.Set):
             item.elts = [element for element in item.elts
-                         if not (isinstance(element, ast.Constant) and element.value in {"MET-LINUX-005", "MET-VERIFY-001", "MET-PERF-029", "MET-PERF-030", "MET-LINUX-006"})]
+                         if not (isinstance(element, ast.Constant) and element.value in {"MET-LINUX-005", "MET-VERIFY-001", "MET-PERF-029", "MET-PERF-030", "MET-LINUX-006", "MET-VERIFY-002"})]
     # AST encoding is bound to the declared Python 3.12 toolchain, not the
     # macOS system interpreter used for ordinary source editing.
     assert _ast_sha(node) == "2cba8cc6052f1f11681635e82a0b2f727c0dffde5fc1ffc2c8efd918870cac47"

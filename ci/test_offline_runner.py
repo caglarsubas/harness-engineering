@@ -317,6 +317,42 @@ else:
             self.assertIn("--read-only=${warm_root}", launcher)
         self.assertNotIn("unshare --user", repository_launcher)
 
+    def test_wrapper_starts_the_runner_in_isolated_mode(self) -> None:
+        # The runner prints the evidence lines, so modules planted in its own
+        # directory, PYTHON* variables or user site-packages must not shadow the
+        # standard library it imports.
+        launcher = Path(__file__).with_name("verify-offline.sh").read_text(
+            encoding="utf-8"
+        )
+        self.assertEqual(3, launcher.count('python3 -I "$runner"'))
+        self.assertNotIn('python3 "$runner"', launcher)
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "argparse.py").write_text(
+                "raise SystemExit('planted module imported')\n", encoding="utf-8"
+            )
+            script = root / "runner.py"
+            script.write_text("import argparse\nprint('standard library')\n", encoding="utf-8")
+            environment = os.environ.copy()
+            environment.pop("PYTHONSAFEPATH", None)
+            environment["PYTHONPATH"] = str(root)
+            plain, isolated = (
+                subprocess.run(
+                    [sys.executable, *flags, str(script)],
+                    env=environment,
+                    text=True,
+                    capture_output=True,
+                    check=False,
+                )
+                for flags in ((), ("-I",))
+            )
+        self.assertIn("planted module imported", plain.stderr)
+        self.assertEqual(
+            (0, "standard library\n"),
+            (isolated.returncode, isolated.stdout),
+            isolated.stderr,
+        )
+
     def test_detects_packet_mutation_after_child_command(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "packet.yaml"

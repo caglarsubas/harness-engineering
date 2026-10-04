@@ -8,6 +8,7 @@ import conftest as linux_conftest
 from test_build_and_predecessors import _in_session_predecessor_proof, _is_predecessor
 
 PROOF = linux_conftest.PREDECESSOR_PROOF_NODE
+TARGETS = ["tests", "--ignore=tests/linux_runner", "ci/test_offline_runner.py", "ci/test_warm_snapshot.py"]
 NODES = ["tests/test_a.py::test_one", "tests/test_b.py::test_two", "ci/test_warm_snapshot.py::Case::test_three"]
 
 
@@ -48,21 +49,21 @@ def test_recorder_only_observes_reports():
 
 def test_standalone_session_falls_back_to_the_nested_rerun(monkeypatch):
     monkeypatch.setattr(subprocess, "run", lambda *a, **k: pytest.fail("no collection without predecessor items"))
-    assert _in_session_predecessor_proof(_request([PROOF], {}), {}) is None
+    assert _in_session_predecessor_proof(_request([PROOF], {}), {}, TARGETS) is None
 
 
 @pytest.mark.parametrize("fault", ["missing", "extra", "collect_failed", "empty"])
 def test_partial_or_unverifiable_sessions_fall_back(monkeypatch, fault):
     session = NODES[:-1] if fault == "missing" else NODES + (["tests/test_c.py::test_extra"] if fault == "extra" else [])
     _collect(monkeypatch, [] if fault == "empty" else NODES, returncode=1 if fault == "collect_failed" else 0)
-    assert _in_session_predecessor_proof(_request(session, {node: _passed() for node in NODES}), {}) is None
+    assert _in_session_predecessor_proof(_request(session, {node: _passed() for node in NODES}), {}, TARGETS) is None
 
 
 def test_complete_passing_session_is_proven(monkeypatch):
     _collect(monkeypatch, NODES)
     reports = {node: _passed() for node in NODES}
     reports[NODES[1]] = [("setup", "skipped"), ("teardown", "passed")]
-    proof = _in_session_predecessor_proof(_request(NODES, reports), {})
+    proof = _in_session_predecessor_proof(_request(NODES, reports), {}, TARGETS)
     assert proof["mode"] == "IN_SESSION_PROOF" and proof["predecessorTests"] == 3
     assert proof["failed"] == proof["incomplete"] == 0
 
@@ -77,6 +78,6 @@ def test_failed_or_incomplete_predecessors_are_reported(monkeypatch, fault):
                      "failed_teardown": [("setup", "passed"), ("call", "passed"), ("teardown", "failed")],
                      "never_ran": [],
                      "no_teardown": [("setup", "passed"), ("call", "passed")]}[fault]
-    proof = _in_session_predecessor_proof(_request(NODES, reports), {})
+    proof = _in_session_predecessor_proof(_request(NODES, reports), {}, TARGETS)
     assert proof["failed"] + proof["incomplete"] >= 1
     assert node in proof["failedNodes"] + proof["incompleteNodes"]

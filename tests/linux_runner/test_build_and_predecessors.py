@@ -151,15 +151,12 @@ def test_standard_library_only_and_no_shell_evaluation():
                             and node.func.value.id == "os" and node.func.attr in ("system", "popen"))
 
 
-PREDECESSOR_TARGETS = ("tests", "--ignore=tests/linux_runner", "ci/test_offline_runner.py", "ci/test_warm_snapshot.py")
-
-
 def _is_predecessor(nodeid):
     return ((nodeid.startswith("tests/") and not nodeid.startswith("tests/linux_runner/"))
             or nodeid.startswith(("ci/test_offline_runner.py::", "ci/test_warm_snapshot.py::")))
 
 
-def _in_session_predecessor_proof(request, env):
+def _in_session_predecessor_proof(request, env, targets):
     """Prove the complete predecessor suite passed in this same session, or return None.
 
     An independent collect-only process lists the exact predecessor tests. Only when
@@ -170,7 +167,7 @@ def _in_session_predecessor_proof(request, env):
     if not session_nodes:
         return None
     started = time.monotonic()
-    collect = subprocess.run([sys.executable, "-m", "pytest", "--collect-only", *PREDECESSOR_TARGETS],
+    collect = subprocess.run([sys.executable, "-m", "pytest", "--collect-only", *targets],
                              cwd=ROOT, env=env, capture_output=True, text=True, timeout=420, close_fds=True)
     expected = {line for line in collect.stdout.splitlines() if "::" in line and not line.startswith(" ")}
     if collect.returncode != 0 or not expected or session_nodes != expected:
@@ -190,14 +187,15 @@ def test_full_predecessor_suites_and_validators_remain_green(capsys, request):
     # A nested test process stays in this packet's OS-denied tree. Excluding
     # only this new directory prevents recursion, not legacy-test deselection.
     env = {**os.environ, "PYTHONDONTWRITEBYTECODE": "1"}
-    commands = [[sys.executable, "-m", "pytest", "-rs", *PREDECESSOR_TARGETS]]
+    commands = [[sys.executable, "-m", "pytest", "-rs", "tests", "--ignore=tests/linux_runner", "ci/test_offline_runner.py", "ci/test_warm_snapshot.py"]]
     commands += [[sys.executable, "scripts/" + name] for name in
                  ("validate_readiness.py", "validate_reuse.py", "validate_alpha2_readiness.py",
                   "validate_readiness_repairs.py", "validate_linux_readiness.py")]
     commands += [[sys.executable, "scripts/zero_bill_scan.py", "."]]
     labels = ("full-predecessor-suite", "readiness", "reuse", "alpha2-readiness",
               "readiness-repairs", "linux-readiness", "zero-bill-scan")
-    proof = _in_session_predecessor_proof(request, env)
+    # The proof lists exactly the nested command's own targets (everything after "-rs").
+    proof = _in_session_predecessor_proof(request, env, commands[0][4:])
     if proof is not None:
         # The outer session already ran every predecessor test; prove it instead of re-running.
         identity = {"ordinal": 1, "total": len(commands), "label": labels[0]}

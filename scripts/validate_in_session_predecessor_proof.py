@@ -20,7 +20,7 @@ except ImportError:
 
 ROOT = Path(__file__).resolve().parents[1]
 AUTHORITY_PATH = "architecture/in-session-predecessor-proof-authority.json"
-AUTHORITY_SHA256 = "31e3e4b335a6e18c3abc5846a3152c9026d537f6a056a856e62d59a99c351178"
+AUTHORITY_SHA256 = "8b722088014d08292ee270dbf888d41c9353743b8f45a92f45d9a08d720064b6"
 VALIDATOR_PATH = "scripts/validate_in_session_predecessor_proof.py"
 BASE_COMMIT = "f031ceac31e79f0bce5885bcd0b58f702e5dab4d"
 NEW_PACKET = "MET-PERF-030"

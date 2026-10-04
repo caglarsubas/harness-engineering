@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import ast
 import importlib.util
 import json
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -324,8 +326,15 @@ else:
         launcher = Path(__file__).with_name("verify-offline.sh").read_text(
             encoding="utf-8"
         )
-        self.assertEqual(3, launcher.count('python3 -I "$runner"'))
-        self.assertNotIn('python3 "$runner"', launcher)
+        # Every reference to the runner, however spelled, is one of the three isolated calls.
+        self.assertEqual(
+            ['exec python3 -I "$runner"', 'python3 -I "$runner"', 'python3 -I "$runner"'],
+            [
+                line.strip()
+                for line in launcher.splitlines()
+                if re.search(r"\$\{?runner\b", line)
+            ],
+        )
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             (root / "argparse.py").write_text(
@@ -352,6 +361,20 @@ else:
             (isolated.returncode, isolated.stdout),
             isolated.stderr,
         )
+
+    def test_runner_starts_the_network_canary_in_isolated_mode(self) -> None:
+        # Every interpreter the runner starts from its own directory is isolated too.
+        source = Path(__file__).with_name("run_packet_argv.py").read_text(encoding="utf-8")
+        launches = [
+            node
+            for node in ast.walk(ast.parse(source))
+            if isinstance(node, (ast.List, ast.Tuple))
+            and node.elts
+            and ast.unparse(node.elts[0]) == "sys.executable"
+        ]
+        self.assertEqual(1, len(launches))
+        self.assertEqual("'-I'", ast.unparse(launches[0].elts[1]))
+        self.assertEqual(1, source.count("sys.executable"))
 
     def test_detects_packet_mutation_after_child_command(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

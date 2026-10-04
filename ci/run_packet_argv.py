@@ -209,7 +209,7 @@ def main() -> int:
             raise PacketTransportError(f"offline environment requires {name}={value}")
     canary = Path(__file__).with_name("network_canary.py")
     result = subprocess.run(
-        [sys.executable, str(canary)],
+        [sys.executable, "-I", str(canary)],
         env=environment,
         shell=False,
         check=False,

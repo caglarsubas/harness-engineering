@@ -1,6 +1,13 @@
 # Sol-High Task Packet Catalog
 
-## Current source preparation — MET-VERIFY-002
+## Current source preparation — MET-VERIFY-003
+
+The runner also starts its network canary with -I; the wrapper test accepts only
+the three isolated runner calls; the verifier contract states that the owner's
+approval protects against pull-request content, not host tampering. Alpha2 OPEN;197 accepted plus
+003 only. Native Linux, exact-main and tenant acceptance remain separate.
+
+## Historical002 source preparation — MET-VERIFY-002
 
 The offline wrapper starts its runner with python3 -I. Pull requests that change
 the offline transport run only after the owner approves their exact head commit
@@ -1062,3 +1069,4 @@ acceptance is claimed. Alpha2 ONGOING; model-effort transition NOT_DUE.
 | 195 | `MET-PERF-030` | `Harness-Engineering` | In-session predecessor proof instead of re-running the complete predecessor suite; fallback re-run kept |
 | 196 | `MET-LINUX-006` | `Harness-Engineering` | Portable warm-snapshot fixture parent so the complete suite passes on Linux as a non-root user |
 | 197 | `MET-VERIFY-002` | `Harness-Engineering` | Isolated offline runner call; transport changes verified only after the owner's root-owned exact-commit approval |
+| 198 | `MET-VERIFY-003` | `Harness-Engineering` | Isolated network canary launch and the MET-VERIFY-002 review notes |

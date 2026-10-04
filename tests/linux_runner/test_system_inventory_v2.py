@@ -16,6 +16,11 @@ def synthetic_owner(monkeypatch):
     monkeypatch.setattr(common, "trusted_entry", lambda m: m.st_uid in (0, os.getuid())
                         and (stat.S_ISDIR(m.st_mode) or stat.S_ISLNK(m.st_mode)
                              or not m.st_mode & 0o022))
+    # Fixture files must not be group/world writable whatever the host's default
+    # umask is (Ubuntu gives ordinary users 002; macOS and root use 022).
+    previous = os.umask(0o022)
+    yield
+    os.umask(previous)
 
 
 def test_system_tree_binds_file_symlink_and_complete_hardlink_group(tmp_path, synthetic_owner):

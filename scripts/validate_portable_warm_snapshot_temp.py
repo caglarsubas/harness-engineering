@@ -20,12 +20,14 @@ except ImportError:
 
 ROOT = Path(__file__).resolve().parents[1]
 AUTHORITY_PATH = "architecture/portable-warm-snapshot-temp-authority.json"
-AUTHORITY_SHA256 = "ed532a052c8e02877b150a6aa0c30c22dca93edaa4dbb3d91a7d4d7122cdae07"
+AUTHORITY_SHA256 = "1b4931145e59264d2a10576e088211cda3d7c1dc2e817f9868d0c5ac421394f9"
 VALIDATOR_PATH = "scripts/validate_portable_warm_snapshot_temp.py"
 BASE_COMMIT = "a5badfd6c448c549e8bf1119041006b514cdb8cd"
 NEW_PACKET = "MET-LINUX-006"
 PREVIOUS_PACKET = "MET-PERF-030"
 MAX_FILE_BYTES = 16_777_216
+# This layer changes the top-level ci/test_warm_snapshot.py test as well as tests/.
+TEST_PREFIXES = ("tests/", "ci/test_")
 
 
 def require(ok: bool, message: str) -> None:
@@ -276,7 +278,7 @@ def historical_test_bytes(raw: bytes) -> bytes:
     require(type(raw) is bytes and len(raw) <= MAX_FILE_BYTES, "bounded test bytes required")
     current_sha = digest(raw)
     matches = [path for path, rule in _PROJECTION_RULES.items()
-               if path.startswith("tests/") and current_sha == rule["afterSha256"]]
+               if path.startswith(TEST_PREFIXES) and current_sha == rule["afterSha256"]]
     require(len(matches) <= 1, "ambiguous current test")
     return _undo_this_layer(matches[0], raw) if matches else raw
 
@@ -286,7 +288,7 @@ def current_test_bytes(before: bytes) -> bytes:
     require(type(before) is bytes and len(before) <= MAX_FILE_BYTES, "bounded test bytes required")
     before_sha = digest(before)
     matches = [path for path, rule in _PROJECTION_RULES.items()
-               if path.startswith("tests/") and before_sha == rule["beforeSha256"]]
+               if path.startswith(TEST_PREFIXES) and before_sha == rule["beforeSha256"]]
     require(len(matches) <= 1, "ambiguous predecessor test")
     if not matches:
         return before

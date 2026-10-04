@@ -18,9 +18,10 @@ def test_closed_authority_preserves_predecessors_and_full_recipe(authority):
     assert len(packets)==196 and len(module.historical_catalog(packets))==170
     for path in ('ci/test_offline_runner.py','ci/test_warm_snapshot.py'):
         # Current bytes are projected through the newer history layers first.
-        raw=module.historical_bytes(path,module.regular_bytes(module.ROOT,path))
+        current=module.regular_bytes(module.ROOT,path)
+        raw=module.historical_bytes(path,current)
         assert module.digest(raw)==record['unchangedTests'][path]
-        assert module.current_test_bytes(raw)==raw
+        assert module.current_test_bytes(raw)==current
     for path,rule in record['metaRecipes'].items():
         before=module.historical_bytes(path,inputs[path])
         assert module.apply_recipe(before,rule)==transport_history(path,inputs[path])

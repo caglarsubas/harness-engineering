@@ -16,7 +16,7 @@ def authority():
 def test_complete_authority_and_reversible_current_history(authority):
     assert module.validate_authority(*authority) == []
     packets, record, inputs = authority
-    assert len(packets) == 193 and len(module.historical_catalog(packets)) == 175
+    assert len(packets) == 194 and len(module.historical_catalog(packets)) == 175
     for path,rule in record['metaRecipes'].items():
         old = module.historical_bytes(path,inputs[path])
         assert module.apply_recipe(old,rule) == factory_history(path,inputs[path])

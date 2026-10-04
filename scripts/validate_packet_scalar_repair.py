@@ -122,7 +122,7 @@ def validate_scalar_repair(packets: Any, record: Any, inputs: Any) -> list[str]:
         except ImportError:
             from scripts.validate_successor_inventory import ADDITIONS as SUCCESSORS, validate_additions as validate_successors
             from scripts.validate_proxy_contract import ADDITIONS as PROXY_ADDITIONS, validate_additions as validate_proxy_additions
-        if len(old_ids) != 130 or set(packets) != old_ids | set(ADDITIONS) | set(SUCCESSORS) | set(PROXY_ADDITIONS) | {"MET-UNIFY-005", "MET-RUNNER-001", "MET-PERF-028", "MET-LINUX-005", "MET-VERIFY-001"}:
+        if len(old_ids) != 130 or set(packets) != old_ids | set(ADDITIONS) | set(SUCCESSORS) | set(PROXY_ADDITIONS) | {"MET-UNIFY-005", "MET-RUNNER-001", "MET-PERF-028", "MET-LINUX-005", "MET-VERIFY-001", "MET-PERF-029"}:
             errors.append("exact historical 132 plus three cumulative correction packets required")
         errors.extend(validate_successors(packets))
         errors.extend(validate_proxy_additions(packets))
@@ -166,7 +166,7 @@ def main() -> int:
     for error in errors:
         print("ERROR: " + error)
     if not errors:
-        print("Scalar repair authority valid: 193 packets; historical 132-packet record and 164 predecessor files unchanged.")
+        print("Scalar repair authority valid: 194 packets; historical 132-packet record and 164 predecessor files unchanged.")
     return int(bool(errors))
 
 

@@ -144,7 +144,7 @@ def validate_observation_contract(packets, record, inputs):
             return ["exact observation authority required"]
         errors = validate_additions(packets)
         old_ids = {Path(p).stem for p in record["protectedFiles"] if p.startswith("task-packets/")}
-        if len(old_ids) != 135 or set(packets) != old_ids | set(ADDITIONS) | {"MET-UNIFY-005", "MET-RUNNER-001", "MET-PERF-028", "MET-LINUX-005", "MET-VERIFY-001"}:
+        if len(old_ids) != 135 or set(packets) != old_ids | set(ADDITIONS) | {"MET-UNIFY-005", "MET-RUNNER-001", "MET-PERF-028", "MET-LINUX-005", "MET-VERIFY-001", "MET-PERF-029"}:
             errors.append("135 immutable predecessors plus exact observation and custody packets required")
         pins = {**record["protectedFiles"], **record["inputFiles"]}
         if set(inputs) != set(pins):
@@ -184,7 +184,7 @@ def main():
     for error in errors:
         print("ERROR: " + error)
     if not errors:
-        print("Policy observation authority valid: 193 packets; unchanged 127-file/279-ID baseline; DATA_CHECK_ONLY, product/native NOT_RUN.")
+        print("Policy observation authority valid: 194 packets; unchanged 127-file/279-ID baseline; DATA_CHECK_ONLY, product/native NOT_RUN.")
     return int(bool(errors))
 
 

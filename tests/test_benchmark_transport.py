@@ -16,7 +16,7 @@ def authority():
 def test_closed_transport_authority_and_historical_projection(authority):
     assert module.validate_authority(*authority) == []
     packets,record,inputs = authority
-    assert len(packets) == 193 and len(module.historical_catalog(packets)) == 173
+    assert len(packets) == 194 and len(module.historical_catalog(packets)) == 173
     assert module.NEW_IDS == ('MET-PERF-013','CONF-BENCH-003')
     for path,rule in record['metaRecipes'].items():
         before = module.historical_bytes(path,inputs[path])

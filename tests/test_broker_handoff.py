@@ -48,7 +48,7 @@ def model():
 def test_exact_authority_catalog_and_immutable_consumer_checkpoint(authority):
     packets, record, inputs = authority
     assert validate_handoff(*authority) == []
-    assert len(packets) == 193
+    assert len(packets) == 194
     assert sum(p.startswith("task-packets/") for p in record["protectedFiles"]) == 142
     assert len(packets["MET-REPAIR-014"]["offlineAcceptanceCommands"]) == 22
     checkpoint = json.loads(inputs[CHECKPOINT_PATH])

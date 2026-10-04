@@ -15,7 +15,7 @@ def authority():
 def test_current_authority_and_reversible_history(authority):
     packets,record,inputs = authority
     assert module.validate_authority(*authority) == []
-    assert len(packets) == 193 and len(module.historical_catalog(packets)) == 181
+    assert len(packets) == 194 and len(module.historical_catalog(packets)) == 181
     for p,rule in record['metaRecipes'].items():
         before = module.historical_bytes(p,inputs[p])
         assert module.apply_recipe(before,rule) == traversal_history(p,inputs[p])

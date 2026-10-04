@@ -32,7 +32,7 @@ def test_current_publication_is_authority_only(inputs):
     assert all(target["status"] == "NOT_RUN_ENV_UNAVAILABLE" for target in policy["targets"])
     assert policy["completedCorrection"]["linuxProof"] is False
     assert policy["currentPacketCount"] == 118  # Immutable historical policy.
-    assert len(packets) == 193
+    assert len(packets) == 194
 
 
 @pytest.mark.parametrize(("path", "replacement"), [

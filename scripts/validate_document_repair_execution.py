@@ -310,7 +310,7 @@ def validate_authority(packets,record,inputs):
         for path,checksum in pins.items():
             require(type(inputs[path]) is bytes and digest(transport_history(path,runner_history(path,inputs[path])))==checksum, 'source drift: '+path)
         old=historical_catalog(packets)
-        require(len(old)==170 and len(packets)==193 and 'CONF-PERF-006' not in old, 'historical planning boundary')
+        require(len(old)==170 and len(packets)==194 and 'CONF-PERF-006' not in old, 'historical planning boundary')
         for name in transport_catalog(packets):
             require(canonical(packets[name])==canonical(safe_load(inputs['task-packets/'+name+'.yaml'])), 'raw packet parity')
         meta=packets['MET-PERF-012']; prior=packets['MET-PERF-011']
@@ -346,4 +346,4 @@ if __name__=='__main__':
     errors=validate_authority(packets,*load_inputs(ROOT))
     if errors:
         print('\n'.join(errors)); raise SystemExit(1)
-    print('Historical document repair execution valid:193 current specifications;173-packet projection; product and comparison not run.')
+    print('Historical document repair execution valid:194 current specifications;173-packet projection; product and comparison not run.')

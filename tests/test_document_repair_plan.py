@@ -15,7 +15,7 @@ def authority():
 def test_closed_plan_preserves_every_predecessor_and_test_identity(authority):
     assert module.validate_authority(*authority)==[]
     packets,record,inputs=authority
-    assert len(packets)==193 and len(historical_catalog(packets))==170 and module.NEW_IDS==('MET-PERF-011',)
+    assert len(packets)==194 and len(historical_catalog(packets))==170 and module.NEW_IDS==('MET-PERF-011',)
     assert 'CONF-PERF-006' not in historical_catalog(packets) and 'CONF-PERF-005' not in packets
     for path in ('ci/test_offline_runner.py','ci/test_warm_snapshot.py'):
         raw=module.regular_bytes(module.ROOT,path)

@@ -366,7 +366,7 @@ def validate_authority(packets, record, inputs):
         for path,checksum in pins.items():
             require(type(inputs[path]) is bytes and digest(repair_history(path, inputs[path])) == checksum, 'changed source: '+path)
         old = {Path(p).stem for p in record['protectedFiles'] if p.startswith('task-packets/') and p.endswith('.yaml')}
-        require(len(old) == 165 and len(packets) == 193 and set(packets) == old | set(NEW_IDS) | {'MET-PERF-010', 'MET-PERF-009', 'CONF-DIAG-003', 'MET-PERF-011', 'MET-PERF-012', 'CONF-PERF-006', 'CONF-BENCH-002', 'MET-PERF-013', 'CONF-BENCH-003', 'MET-REPAIR-018', 'CONF-FIX-008', 'MET-PERF-014', 'CONF-DIAG-004', 'MET-PERF-015', 'CONF-FIX-009', 'MET-PERF-016', 'MET-PERF-017', 'MET-REPAIR-019', 'MET-ENFORCE-001', 'MET-PERF-018', 'MET-ENFORCE-003', 'CONF-FIX-010', 'MET-UNIFY-005', 'MET-RUNNER-001', 'MET-PERF-028', 'MET-LINUX-005', 'MET-VERIFY-001'}, '165 immutable plus one META')
+        require(len(old) == 165 and len(packets) == 194 and set(packets) == old | set(NEW_IDS) | {'MET-PERF-010', 'MET-PERF-009', 'CONF-DIAG-003', 'MET-PERF-011', 'MET-PERF-012', 'CONF-PERF-006', 'CONF-BENCH-002', 'MET-PERF-013', 'CONF-BENCH-003', 'MET-REPAIR-018', 'CONF-FIX-008', 'MET-PERF-014', 'CONF-DIAG-004', 'MET-PERF-015', 'CONF-FIX-009', 'MET-PERF-016', 'MET-PERF-017', 'MET-REPAIR-019', 'MET-ENFORCE-001', 'MET-PERF-018', 'MET-ENFORCE-003', 'CONF-FIX-010', 'MET-UNIFY-005', 'MET-RUNNER-001', 'MET-PERF-028', 'MET-LINUX-005', 'MET-VERIFY-001', 'MET-PERF-029'}, '165 immutable plus one META')
         for name in old | set(NEW_IDS):
             require(canonical(packets[name]) == canonical(safe_load(inputs['task-packets/'+name+'.yaml'])), 'packet source parity')
         meta = packets['MET-ADOPT-002']
@@ -401,4 +401,4 @@ if __name__ == '__main__':
     errors = validate_authority(packets,*load_inputs(ROOT))
     if errors:
         print('\n'.join(errors)); raise SystemExit(1)
-    print('Research adoption authority valid:193 specifications;165 unchanged packets;16 harnesses/13 repositories; no provider qualification or product execution.')
+    print('Research adoption authority valid:194 specifications;165 unchanged packets;16 harnesses/13 repositories; no provider qualification or product execution.')

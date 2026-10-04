@@ -19,7 +19,7 @@ def authority():
 def test_exact_new_catalog_and_all_historical_packet_bytes(authority):
     assert module.validate_authority(*authority) == []
     packets, record, inputs = authority
-    assert len(packets) == 193
+    assert len(packets) == 194
     assert len([p for p in record['protectedFiles'] if p.startswith('task-packets/') and p.endswith('.yaml')]) == 155
     assert set(module.EXTENSIONS).isdisjoint(packets)
     assert packets['CONF-LIVE-003']['id'] == 'CONF-LIVE-003'

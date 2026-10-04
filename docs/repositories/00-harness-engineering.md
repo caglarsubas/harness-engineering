@@ -1,6 +1,13 @@
 # Repository Plan: `Harness-Engineering`
 
-## Current source preparation — MET-VERIFY-001
+## Current source preparation — MET-PERF-029
+
+Linear history-chain authority rechecks: every route still freshly reads every
+newer authority, now exactly once. Alpha2 OPEN;193 accepted plus029 only.
+MET-VERIFY-001 (#147) merged through the owner-operated verify check with no
+admin exception. No cloud or runner. Native Linux, exact-main and tenant remain separate.
+
+## Historical VERIFY-001 source preparation — MET-VERIFY-001
 
 Owner-operated required check: verify is reported only by the owner's GitHub App
 from the installed trusted launcher; the offline-readiness workflow is disabled.
@@ -790,6 +797,7 @@ Every packet uses branch `codex/<packet-id>`, changes only named paths, opens a 
 65. `MET-PERF-028`: exact-bytes authority recheck reuse and linear exact-verdict uniqueItems with fresh reads; frozen027 evidence, source only, no execution grant.
 66. `MET-LINUX-005`: carry the reviewed Linux runner nested-checkout and system-alias contract repair onto accepted 028 main; source only, no execution grant.
 67. `MET-VERIFY-001`: document the owner-operated required verify check (GitHub App, installed trusted launcher, disabled workflow); source only, no cloud or runner grant.
+68. `MET-PERF-029`: make history-chain authority rechecks linear (each newer authority freshly read once per route); source only.
 
 ## Testing, verification, and acceptance
 

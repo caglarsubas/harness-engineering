@@ -68,7 +68,7 @@ def test_only_the_owned_semantic_expression_changes_in_the_validator():
             item.value = "MET-PERF-024"
         if isinstance(item, ast.Set):
             item.elts = [element for element in item.elts
-                         if not (isinstance(element, ast.Constant) and element.value in {"MET-LINUX-005", "MET-VERIFY-001"})]
+                         if not (isinstance(element, ast.Constant) and element.value in {"MET-LINUX-005", "MET-VERIFY-001", "MET-PERF-029"})]
     # AST encoding is bound to the declared Python 3.12 toolchain, not the
     # macOS system interpreter used for ordinary source editing.
     assert _ast_sha(node) == "2cba8cc6052f1f11681635e82a0b2f727c0dffde5fc1ffc2c8efd918870cac47"
@@ -273,11 +273,13 @@ def test_real_projection_refuses_authority_drift_even_with_warm_conversion(monke
         assert Path(module.__file__).resolve() == ROOT / "scripts/validate_packet_schema_performance.py"
         monkeypatch.setattr(module, "ROOT", tmp_path)
 
-        def checked(read=module._checked_authority_raw, owner=module.__name__):
-            authority_reads.append(owner)
-            return read()
+        # Linear rechecks reach this layer's authority through either entry point.
+        for entry in ("_checked_authority_raw", "_checked_own_authority_raw"):
+            def checked(read=getattr(module, entry), owner=module.__name__):
+                authority_reads.append(owner)
+                return read()
 
-        monkeypatch.setattr(module, "_checked_authority_raw", checked)
+            monkeypatch.setattr(module, entry, checked)
     packets, record, inputs, events, real_history = loop_fixture
 
     def projection(path, raw):

@@ -27,7 +27,7 @@ def authority():
 def test_exact_142_catalog_and_corrected_127_327_checkpoint(authority):
     packets, record, inputs = authority
     assert validate_credential_ordering(*authority) == []
-    assert len(packets) == 193
+    assert len(packets) == 194
     assert len([p for p in record["protectedFiles"] if p.startswith("task-packets/")]) == 141
     checkpoint = json.loads(inputs[CHECKPOINT_PATH])
     assert len(checkpoint["files"]) == 127

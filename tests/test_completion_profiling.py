@@ -23,7 +23,7 @@ def authority():
 def test_all166_packets_and_inherited_test_ids_preserved(authority):
     assert module.validate_authority(*authority) == []
     packets, record, inputs = authority
-    assert len(packets) == 193
+    assert len(packets) == 194
     for path, rule in record['metaRecipes'].items():
         before = module.historical_bytes(path,inputs[path])
         assert module.apply_recipe(before,rule) == document_history(path,inputs[path])
@@ -312,7 +312,7 @@ def test_reconciliation_keeps_accepted_performance_and_observer(authority):
     grant = spec['reconciliation']
     assert grant['base'] == '91b320b9f8525e986260fc4792b01f125b5feae9'
     assert grant['draft'] == '1886aa2272f8d8bc73da60ebd7a6738f288de5fb'
-    assert len(packets) == 193
+    assert len(packets) == 194
     assert len([p for p in record['protectedFiles'] if p.startswith('task-packets/') and p.endswith('.yaml')]) == 167
     assert packets['MET-PERF-009']['predecessors'] == ['MET-PERF-010']
     commands = packets['MET-PERF-009']['offlineAcceptanceCommands']

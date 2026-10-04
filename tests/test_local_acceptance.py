@@ -15,7 +15,7 @@ def authority():
 def test_exact_one_meta_packet_preserves161_packets_and_test_identities(authority):
     assert module.validate_authority(*authority) == []
     packets,record,inputs = authority
-    assert len(packets) == 193 and module.NEW_IDS == ('MET-ACCEPT-001',)
+    assert len(packets) == 194 and module.NEW_IDS == ('MET-ACCEPT-001',)
     for path,rule in record['metaRecipes'].items():
         before = module.historical_bytes(path,inputs[path])
         assert module.apply_recipe(before,rule) == publication_history(path, inputs[path])

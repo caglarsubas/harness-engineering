@@ -29,7 +29,7 @@ def test_current_authority_and_reversible_history(authority):
         assert module.close_traversal_dispatch(changed,errors) == errors+['missing or changed traversal dispatch']
     changed_spec = deepcopy(value); changed_spec['dispatchOverlaps'] = []
     with pytest.raises(ValueError): module.validate_spec(changed_spec,bind=False)
-    assert len(packets) == 193 and len(module.historical_catalog(packets)) == 182
+    assert len(packets) == 194 and len(module.historical_catalog(packets)) == 182
     for p,rule in record['metaRecipes'].items():
         before = module.historical_bytes(p,inputs[p])
         assert module.apply_recipe(before,rule) == observation_history(p,inputs[p])

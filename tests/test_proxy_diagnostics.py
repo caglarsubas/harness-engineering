@@ -15,7 +15,7 @@ def authority():
 def test_exact_authority_preserves_all156_packet_bytes(authority):
     assert module.validate_authority(*authority) == []
     packets,record,inputs = authority
-    assert len(packets) == 193
+    assert len(packets) == 194
     assert len([p for p in record['protectedFiles'] if p.startswith('task-packets/') and p.endswith('.yaml')]) == 156
     assert packets['CONF-LIVE-003']['offlineAcceptanceCommands'] == packets['CONF-PERF-004']['offlineAcceptanceCommands']
     for path,rule in record['metaRecipes'].items():

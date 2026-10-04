@@ -20,7 +20,7 @@ except ImportError:
 
 ROOT = Path(__file__).resolve().parents[1]
 AUTHORITY_PATH = "architecture/isolated-network-canary-authority.json"
-AUTHORITY_SHA256 = "8338da4d688af4c77e5b0b6ed95763733d16ccc3c477bc61a8bae88226fe9b5d"
+AUTHORITY_SHA256 = "c0b4076c53e5510274a99ec2f9e8494d28ca152be1735552eb53cf835cccc0b4"
 VALIDATOR_PATH = "scripts/validate_isolated_network_canary.py"
 BASE_COMMIT = "c269c7d73e49399b273bfe537e47232e06b82dac"
 NEW_PACKET = "MET-VERIFY-003"
@@ -386,4 +386,4 @@ def validate() -> None:
 
 if __name__ == "__main__":
     validate()
-    print("Isolated network canary valid: 198 current specifications; exact 197-packet predecessor; every transport interpreter launch is isolated.")
+    print("Isolated network canary valid: 198 current specifications; exact 197-packet predecessor; isolated launches are tested by ci/test_offline_runner.py.")

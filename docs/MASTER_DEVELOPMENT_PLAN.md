@@ -6,8 +6,8 @@ Alpha2 OPEN. MET-VERIFY-002 was the first transport change verified through the
 owner's exact-commit approval: independent source review, root-owned approval,
 then required verify through the owner's App (59/59, 476.2 s); PR #151 merged as
 main c269c7d. Its review notes are applied here: the runner now also starts its
-network canary with -I, the wrapper test accepts only the three isolated runner
-calls however spelled, and the verifier contract no longer overstates what the
+network canary with -I (observed by running the runner), the wrapper test accepts
+only the three isolated calls as its interpreter calls, and the verifier contract no longer overstates what the
 approval protects against. MET-VERIFY-003 is the sole198th specification.
 
 | Phase | ID | Status | Description / gate |

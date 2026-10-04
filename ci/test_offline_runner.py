@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import ast
 import importlib.util
 import json
 import os
@@ -10,6 +9,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 RUNNER_PATH = Path(__file__).with_name("run_packet_argv.py")
 SPEC = importlib.util.spec_from_file_location("packet_argv_runner", RUNNER_PATH)
@@ -326,14 +326,21 @@ else:
         launcher = Path(__file__).with_name("verify-offline.sh").read_text(
             encoding="utf-8"
         )
-        # Every reference to the runner, however spelled, is one of the three isolated calls.
+        # The runner path is named once; every interpreter call and every use of the
+        # runner variable is one of the three isolated calls.
+        isolated_calls = [
+            'exec python3 -I "$runner"',
+            'python3 -I "$runner"',
+            'python3 -I "$runner"',
+        ]
+        lines = [line.strip() for line in launcher.splitlines()]
+        self.assertEqual(1, launcher.count("run_packet_argv"))
         self.assertEqual(
-            ['exec python3 -I "$runner"', 'python3 -I "$runner"', 'python3 -I "$runner"'],
-            [
-                line.strip()
-                for line in launcher.splitlines()
-                if re.search(r"\$\{?runner\b", line)
-            ],
+            isolated_calls,
+            [line for line in lines if re.search(r"\$\{?runner\b", line)],
+        )
+        self.assertEqual(
+            isolated_calls, [line for line in lines if re.search(r"python", line)]
         )
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -363,18 +370,39 @@ else:
         )
 
     def test_runner_starts_the_network_canary_in_isolated_mode(self) -> None:
-        # Every interpreter the runner starts from its own directory is isolated too.
-        source = Path(__file__).with_name("run_packet_argv.py").read_text(encoding="utf-8")
-        launches = [
-            node
-            for node in ast.walk(ast.parse(source))
-            if isinstance(node, (ast.List, ast.Tuple))
-            and node.elts
-            and ast.unparse(node.elts[0]) == "sys.executable"
-        ]
-        self.assertEqual(1, len(launches))
-        self.assertEqual("'-I'", ast.unparse(launches[0].elts[1]))
-        self.assertEqual(1, source.count("sys.executable"))
+        # Observe the runner's real first launch: the canary, isolated like the runner.
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "packet.yaml"
+            path.write_text(
+                "prefetchCommands: []\n"
+                + "offlineAcceptanceCommands: "
+                + json.dumps([[sys.executable, "-c", "pass"]], separators=(",", ":"))
+                + "\n"
+                + "offlineExecution: "
+                + json.dumps(RUNNER.EXPECTED_EXECUTION, separators=(",", ":"))
+                + "\n",
+                encoding="utf-8",
+            )
+            environment = {
+                "PATH": os.environ.get("PATH", ""),
+                "HARNESS_TASK_PACKET": str(path),
+                "HARNESS_OFFLINE_ENFORCED": "1",
+                **RUNNER.OFFLINE_ENVIRONMENT,
+            }
+            launches = []
+
+            def stop_after_launch(command, **_options):
+                launches.append(list(command))
+                return subprocess.CompletedProcess(command, 7)
+
+            with mock.patch.dict(os.environ, environment, clear=True), mock.patch.object(
+                RUNNER, "parse_arguments"
+            ), mock.patch.object(RUNNER.subprocess, "run", stop_after_launch):
+                self.assertEqual(7, RUNNER.main())
+        self.assertEqual(
+            [[sys.executable, "-I", str(RUNNER_PATH.with_name("network_canary.py"))]],
+            launches,
+        )
 
     def test_detects_packet_mutation_after_child_command(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

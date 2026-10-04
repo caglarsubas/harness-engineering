@@ -1,6 +1,13 @@
 # Sol-High Task Packet Catalog
 
-## Current source preparation — MET-PERF-029
+## Current source preparation — MET-PERF-030
+
+In-session predecessor proof: the outer packet session already runs the complete
+predecessor suite, so the predecessor test proves it passed instead of re-running
+it (fallback re-run for standalone runs). Alpha2 OPEN;194 accepted plus030 only.
+Linux verification only when mandatory. Native Linux, exact-main and tenant remain separate.
+
+## Historical029 source preparation — MET-PERF-029
 
 Linear history-chain authority rechecks: every route still freshly reads every
 newer authority, now exactly once. Alpha2 OPEN;193 accepted plus029 only.
@@ -1038,3 +1045,4 @@ acceptance is claimed. Alpha2 ONGOING; model-effort transition NOT_DUE.
 | 192 | `MET-LINUX-005` | `Harness-Engineering` | Linux runner nested-checkout and system-alias contract repair on accepted 028 main; zero execution authority |
 | 193 | `MET-VERIFY-001` | `Harness-Engineering` | Owner-operated required verify check reported by the owner's GitHub App from the installed trusted launcher; no hosted runners |
 | 194 | `MET-PERF-029` | `Harness-Engineering` | Linear history-chain authority rechecks: each newer authority freshly read exactly once per route |
+| 195 | `MET-PERF-030` | `Harness-Engineering` | In-session predecessor proof instead of re-running the complete predecessor suite; fallback re-run kept |

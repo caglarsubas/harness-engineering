@@ -1,6 +1,13 @@
 # Repository Plan: `Harness-Engineering`
 
-## Current source preparation — MET-PERF-030
+## Current source preparation — MET-LINUX-006
+
+Portable warm-snapshot fixture parent (/private/tmp on macOS, /tmp on Linux) so the
+complete suite passes on Linux as a non-root user. Alpha2 OPEN;195 accepted plus
+006 only. Linux verification only when mandatory. Native Linux, exact-main and
+tenant acceptance remain separate.
+
+## Historical030 source preparation — MET-PERF-030
 
 In-session predecessor proof: the outer packet session already runs the complete
 predecessor suite, so the predecessor test proves it passed instead of re-running
@@ -806,6 +813,7 @@ Every packet uses branch `codex/<packet-id>`, changes only named paths, opens a 
 67. `MET-VERIFY-001`: document the owner-operated required verify check (GitHub App, installed trusted launcher, disabled workflow); source only, no cloud or runner grant.
 68. `MET-PERF-029`: make history-chain authority rechecks linear (each newer authority freshly read once per route); source only.
 69. `MET-PERF-030`: prove the predecessor suite from the same packet session instead of re-running it; source only.
+70. `MET-LINUX-006`: make the warm-snapshot locker test portable to Linux (non-root); source only.
 
 ## Testing, verification, and acceptance
 

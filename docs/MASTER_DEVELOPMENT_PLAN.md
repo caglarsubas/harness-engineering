@@ -1,6 +1,26 @@
 # Harness-Onion — unified development roadmap
 
-## Current checkpoint — MET-PERF-030 source preparation, October 4, 2026
+## Current checkpoint — MET-LINUX-006 source preparation, October 4, 2026
+
+Alpha2 OPEN. MET-PERF-030 passed required verify through the owner's App (57/57,
+417.6 s) and PR #149 merged as main a5badfd. Of the six Linux-only failures from
+the GCP run, reproduction in an Ubuntu 24.04 container showed one real defect
+(the warm-snapshot fixture under macOS-only /private/tmp, also reused by
+test_reuse.py); three kit tests failed only because that run used root, which the
+kit correctly refuses; the predecessor test failed only because of the first.
+MET-LINUX-006 is the sole196th specification.
+
+| Phase | ID | Status | Description / gate |
+|---|---|---|---|
+| Alpha2 Linux | MET-LINUX-006 | SOURCE_PREPARED | Portable fixture parent as196th packet; verify from the owner's App |
+| Alpha2 performance | MET-PERF-030 | VERIFY_PASSED_MERGED | In-session predecessor proof; exact-main and native Linux NOT_RUN |
+| Alpha2 qualification | W01 / CONF-LINUX-001 / CONF-A2-001 | WAITING_PREREQUISITES | Linux verification only when mandatory |
+
+Keep58argv, 420/750/900s/15min and32MiB. No cloud, runner registration,
+live/native/tenant or model-effort changes. Phase-end effort transition NOT_DUE.
+Prior checkpoints below are history only.
+
+## Historical030 source checkpoint — MET-PERF-030 source preparation, October 4, 2026
 
 Alpha2 OPEN. MET-PERF-029 passed required verify through the owner's App (56/56,
 692.4 s, nested 314 s) and PR #148 merged as main f031cea. Half of each outer run
@@ -590,7 +610,8 @@ These checkboxes count only the named deliverable at the stated evidence level. 
 - [ ] Alpha 2 · MET-LINUX-005 · Complete the runner-contract repair on accepted 028 main, independent review and separately authorized full LOCAL/CI/exact-main; preserve PR144 attempts and unresolved native Linux gates.
 - [x] Alpha 2 · MET-VERIFY-001 · Publish the owner-operated required verify contract and pass its own required verify through the owner's App; exact-main and native Linux remain separate.
 - [x] Alpha 2 · MET-PERF-029 · Make history-chain authority rechecks linear with unchanged freshness and refusal semantics; pass required verify through the owner's App.
-- [ ] Alpha 2 · MET-PERF-030 · Prove the predecessor suite from the same packet session instead of re-running it; pass required verify through the owner's App.
+- [x] Alpha 2 · MET-PERF-030 · Prove the predecessor suite from the same packet session instead of re-running it; pass required verify through the owner's App.
+- [ ] Alpha 2 · MET-LINUX-006 · Make the complete suite pass on Linux as a non-root user; pass required verify through the owner's App.
 - [ ] Alpha 2A · W01 · Resolve G04–G07/G09 and adopt a versioned host interface only after the required independent review.
 - [ ] Alpha 2A · CONF-FIX-010 · Complete safe design and exact authority before any product attempt.
 - [ ] Alpha 2A · CONF-LIVE-004 · Produce the exact native-probe source implementation and separately qualify it.

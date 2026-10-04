@@ -111,7 +111,8 @@ class WarmSnapshotTest(unittest.TestCase):
     def test_locks_exact_detached_inventory_and_disables_remotes(self) -> None:
         with tempfile.TemporaryDirectory(
             prefix="met-002-observer.",
-            dir="/private/tmp",
+            # macOS keeps the historical /private/tmp parent; Linux has only /tmp.
+            dir="/private/tmp" if os.path.isdir("/private/tmp") else "/tmp",
         ) as directory:
             root = Path(directory)
             snapshot = root / "snapshot"

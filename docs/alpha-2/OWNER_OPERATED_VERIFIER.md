@@ -2,7 +2,8 @@
 
 Status: source-only contract on accepted main `e4e0bebc77737d99a32aedee7916f36a3906c3bd`.
 It records an owner decision of October 3, 2026, amended on October 4, 2026 by
-MET-VERIFY-002 (isolated runner call and exact-commit transport approval). It is not native Linux
+MET-VERIFY-002 (isolated runner call and exact-commit transport approval) and
+MET-VERIFY-003 (isolated network canary and corrected approval wording). It is not native Linux
 qualification, exact-main evidence, an installed Linux host, runtime or tenant
 acceptance, and it authorizes no cloud provisioning or spending.
 
@@ -45,8 +46,9 @@ For each open, same-repository, non-draft pull request into `main`:
    non-writable record `/private/etc/planeon/transport-approvals/<head>.json`
    naming the pull request number and the exact head commit, inside root-owned
    directories. Creating it needs the owner's administrator password, so agents
-   running as the operator cannot approve their own change. A new push is a new
-   head and needs a new approval. The check summary records the approval digest.
+   running as the operator cannot create the approval record; they can still
+   alter the verifier itself (see the residual risks). A new push is a new head
+   and needs a new approval. The check summary records the approval digest.
 5. Sign a short-lived activation for the exact packet bytes and commit, activate
    it through the installed root helper, and run the installed trusted launcher
    once. The launcher still enforces deny-all outbound isolation, the 900-second
@@ -66,9 +68,10 @@ manual LOCAL gate and remove it afterwards.
   for repository `Harness-Engineering`, profile `python-meta` and a lifetime of at
   most 1800 seconds. The operator key path and every other authority rule are
   unchanged. The key and the App key live only in the verifier's private custody.
-- The offline wrapper starts its runner with `python3 -I`, so modules planted in
-  the checkout's `ci/` directory, `PYTHON*` variables and user site-packages
-  cannot shadow the standard library the evidence-printing runner imports.
+- The offline wrapper starts its runner with `python3 -I`, and the runner starts
+  its network canary with `-I`, so modules planted in the checkout's `ci/`
+  directory, `PYTHON*` variables and user site-packages cannot shadow the
+  standard library either of them imports.
 - The installed launcher sandbox additionally denies LaunchServices opens,
   Apple Events, launchd job creation and execution of `open`, `osascript`,
   `osacompile`, `launchctl`, `crontab`, `at`, `batch`, `automator`, `shortcuts`
@@ -76,8 +79,10 @@ manual LOCAL gate and remove it afterwards.
   repeated after macOS updates.
 - Residual risks accepted by the owner: a deliberately double-forked test process
   can outlive cleanup inside the sandbox; agents running as the operator can read
-  the verifier's keys; manual attempts rely on the `PAUSE` file; test contents
-  remain pull-request controlled, so human review stays required.
+  the verifier's keys and edit the verifier, so the exact-commit approval protects
+  against pull-request content, not against tampering on the verifier host;
+  manual attempts rely on the `PAUSE` file; test contents remain pull-request
+  controlled, so human review stays required.
 
 ## Evidence states
 
@@ -90,7 +95,9 @@ states and are never inferred from it.
 
 A GCP Linux verifier in project `harness-onion` is the intended successor. It
 needs its own reviewed image, launcher installation, cost limit and owner
-approval; this packet grants none of them.
+approval; this packet grants none of them. A Linux runner policy pins the
+transport bytes (`transportPins` for `ci/verify-offline.sh`, `ci/run_packet_argv.py`
+and `ci/network_canary.py`) of the accepted `main` it runs, never an older value.
 
 Rollback is a set of independent operator actions: re-enable `offline-readiness`,
 unpin the `verify` check source, unload the verifier, and restore the installed

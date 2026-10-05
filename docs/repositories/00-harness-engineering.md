@@ -1,6 +1,13 @@
 # Repository Plan: `Harness-Engineering`
 
-## Current source preparation — MET-VERIFY-002
+## Current source preparation — MET-VERIFY-003
+
+The runner also starts its network canary with -I; the wrapper test accepts only
+the three isolated runner calls; the verifier contract states that the owner's
+approval protects against pull-request content, not host tampering. Alpha2 OPEN;197 accepted plus
+003 only. Native Linux, exact-main and tenant acceptance remain separate.
+
+## Historical002 source preparation — MET-VERIFY-002
 
 The offline wrapper starts its runner with python3 -I. Pull requests that change
 the offline transport run only after the owner approves their exact head commit
@@ -822,6 +829,7 @@ Every packet uses branch `codex/<packet-id>`, changes only named paths, opens a 
 69. `MET-PERF-030`: prove the predecessor suite from the same packet session instead of re-running it; source only.
 70. `MET-LINUX-006`: make the warm-snapshot locker test portable to Linux (non-root); source only.
 71. `MET-VERIFY-002`: start the offline runner in isolated mode; owner exact-commit approval for transport changes; source only.
+72. `MET-VERIFY-003`: start the network canary in isolated mode; apply the MET-VERIFY-002 review notes; source only.
 
 ## Testing, verification, and acceptance
 

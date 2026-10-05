@@ -1,0 +1,110 @@
+{
+  "schemaVersion": "planeon.internal.host-interface-resolution-index/v1",
+  "baseMain": "d938151907f533421accc698bc142833c0315be0",
+  "baseTree": "bd1e7bf8557684d183660e2a8c8dfbba28d414e4",
+  "subject": [
+    {
+      "path": "architecture/host-interface-inputs/resolved/HOST_INTERFACE_SPEC.md",
+      "sha256": "8a3a09bb5dbc08804dbea06dd0700a14648a9cdbc8efd62112dc64ba0b6ba1b4"
+    },
+    {
+      "path": "architecture/host-interface-inputs/resolved/REVIEW_BRIEF.md",
+      "sha256": "ed876021e2b23c6f951fde37f28285fa43b114c07456056fd54456c4947589e7"
+    },
+    {
+      "path": "architecture/host-interface-inputs/resolved/README.md",
+      "sha256": "002c57bd0edfabffa9a4bb6403f7d7df0bfb63493356a29a457be6c879058a94"
+    },
+    {
+      "path": "architecture/host-interface-inputs/resolved/scope.json",
+      "sha256": "40d91dd5e7d00cdcda3ecae7c611eef0a132503d12c7ad591924ec1dc7f4723c"
+    }
+  ],
+  "predecessorInputs": [
+    {
+      "path": "architecture/host-interface-inputs/corrected/HOST_INTERFACE_SPEC.md",
+      "sha256": "1b0bee7e46e3cd730b3f878179ac36d0f062ce70ed6c843788ab634aead16ef0"
+    },
+    {
+      "path": "architecture/host-interface-inputs/corrected/REVIEW_BRIEF.md",
+      "sha256": "8e627ee92919d6228ce63caadb32b4e2cb3948f4e805131ad4b4bfc9055c0338"
+    },
+    {
+      "path": "architecture/host-interface-inputs/corrected/scope.json",
+      "sha256": "71c10840fcea9db96baad71e63c5cd852f22d262a0bad56d377fc45619aa6f49"
+    },
+    {
+      "path": "architecture/host-interface-inputs/independent-review.json",
+      "sha256": "3c221d149ad401fe18b5b5521afd57ea8c9837cad18bedb5e40d90b8abd39c57"
+    },
+    {
+      "path": "architecture/host-interface-plan.json",
+      "sha256": "574d2ab3441d111f036c7b6e7e966eac788f64d20eb95c12d7e2b8d9aa6cddfc"
+    },
+    {
+      "path": "architecture/enforcement-integration-plan.json",
+      "sha256": "0dd10c40cec4f171d2f9a2b95dc0b9837327acced20190eed1d603eb882fe4cc"
+    },
+    {
+      "path": "architecture/native-qualification-inputs/qualification.schema.json",
+      "sha256": "bef248bfa82b234124c014f98e40c5791bced3171bb118b7ed1bb7b8daaf95c3"
+    },
+    {
+      "path": "docs/alpha-2/HOST_INTERFACE_PUBLICATION.md",
+      "sha256": "397716a6a8536a24235479a34de7398016bf09c4b056ecbe1d8a62116eae7e34"
+    },
+    {
+      "path": "docs/alpha-2/ENFORCEMENT_INTEGRATION.md",
+      "sha256": "abbf35454a80b6e5b847f86e944819910320e274dc78a31d817bbbbf155ecc55"
+    },
+    {
+      "path": "docs/alpha-2/ENFORCEMENT_FEASIBILITY.md",
+      "sha256": "9fac4492e1b5f6255993374a6642072855a5855a40bcc68706a25b78fd822965"
+    },
+    {
+      "path": "docs/alpha-2/OBSERVATION_ENFORCEMENT_DESIGN.md",
+      "sha256": "44ceb7ef3a8e2c71b93cbaee695ee486c65b1be9d4e9fdd564473ec65681b1e6"
+    },
+    {
+      "path": "docs/alpha-2/POLICY_OBSERVATION_READINESS.md",
+      "sha256": "65778040919c5eb7335f2c104d983ca920b877b1b123f961556a6bcae36d232c"
+    },
+    {
+      "path": "docs/alpha-2/PROXY_CONTRACT_READINESS.md",
+      "sha256": "3e3bf310ebd8a7b1aed696ed9b8d4d26cb67160aab3f862877e2b2a2e0c9f3d0"
+    },
+    {
+      "path": "docs/alpha-2/BROKER_HANDOFF_READINESS.md",
+      "sha256": "2cc6ebef252efb33744208378b29248d89597e5a0be7c4a1a113adc9d63b9fc3"
+    },
+    {
+      "path": "docs/alpha-2/NATIVE_QUALIFICATION_READINESS.md",
+      "sha256": "60bed4c5358527dabfba15bf4e7a7f584872715ef2ca4f9b4350303b656bf595"
+    },
+    {
+      "path": "docs/alpha-2/LIVE_BACKEND_READINESS.md",
+      "sha256": "3ecc905a0ce26d6eb2639a0d644f58cf3cd668af2994cd1c93e36f22d2ea06cd"
+    },
+    {
+      "path": "docs/MASTER_DEVELOPMENT_PLAN.md",
+      "sha256": "d3d18f012ef58ba7ea0f3d98f09484712dae660633a92621b95a1d4d4610cc71"
+    }
+  ],
+  "research": [
+    "Linux v6.12 kernel/bpf/syscall.c",
+    "Linux v6.12 kernel/bpf/inode.c",
+    "Linux v6.12 kernel/bpf/cgroup.c",
+    "Linux v6.12 kernel/cgroup/cgroup.c",
+    "Linux v6.12 include/linux/bpf.h",
+    "Linux v6.12 include/linux/capability.h",
+    "Linux v6.12 include/linux/filter.h",
+    "Linux v6.12 kernel/ksyms_common.c",
+    "Linux v6.12 include/uapi/linux/bpf.h",
+    "Linux v6.12 security/selinux/hooks.c",
+    "https://docs.kernel.org/admin-guide/cgroup-v2.html",
+    "https://docs.kernel.org/admin-guide/sysctl/kernel.html",
+    "https://kubernetes.io/docs/reference/access-authn-authz/validating-admission-policy/",
+    "https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/",
+    "https://kubernetes.io/docs/reference/access-authn-authz/authorization/"
+  ]
+}

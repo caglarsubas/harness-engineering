@@ -1,0 +1,254 @@
+{
+  "actions": {
+    "filesEdited": false,
+    "githubMutated": false,
+    "nativeActions": false,
+    "repositoryCodeExecuted": false,
+    "runnerActivated": false,
+    "testsRun": false,
+    "warmSourcesAccessed": false
+  },
+  "counterexampleDispositions": {
+    "1": "Covered. A1 is the sole admission event and A4 urgent invalidation closes A1 immediately; an action not consumed before invalidation is denied; the gate owns forwarding through terminal classification.",
+    "10": "Covered (strongly). D3 reboot-only maintenance plus secure_mode_policyload locks policy load/booleans/enforcing until reboot; ancestor BPF/SELinux changes require a maintenance-boot reboot that ends the generation (M1/M3).",
+    "11": "Covered. W1-W6 preserve original broker parentage via clone3(CLONE_PIDFD|CLONE_INTO_CGROUP) into a pre-frozen delegated leaf; the spec explicitly rejects systemd-child/OCI/subreaper adoption as a substitute.",
+    "12": "Covered (design; T06 residual). A2 VAP checks the final post-defaulting object against the signed manifest with an enumerated per-kind defaulted-field allowlist; unexpected effects keep exact-UID cleanup ownership.",
+    "13": "Covered. P10 zero-resource uniformity requires the same observer view; 4.1 keeps the gate resident and denying in zero-resource mode so no fake policy or skipped observation.",
+    "14": "Covered. G06 v2 record with closed roles and 4.4 mutual v1/v2 rejection; a v2 record that puts the gate under the BROKER key/path or enrolls it as an old role refuses; no permissive parser.",
+    "15": "Covered. I04 bytes unchanged; I05 and the new I07 are local AF_UNIX interfaces explicitly enumerated and versioned (not hidden); 6.3 and scope.json confirm no new header/field/credential and no remote-control transport.",
+    "16": "Covered. All E01-E12 remain OPEN_UNPROVEN and T01-T08 unexecuted; the candidate repeatedly states it is not native enforcement; this review is read-only source-only.",
+    "17": "Covered for transport buffering. C2 flush-on-arm + listen-backlog drain, C3 stamp-at-accept, C5 one-consumption-per-stamp and C7 mutation uniqueness exclude a buffered duplicate of A from consuming a later identical B (6.2). The only residual is an application-level resend (6.3), honestly stated and bounded to at most one B effect with no unarmed effect; it remains a T02/native case.",
+    "18": "Covered. A3 drain fence blocks any I07 WRITE_OBJECT (and other writers) while an admitted CREATE lacks a terminal classification; the urgent path records ADMITTED_BEFORE_INVALIDATION (A4). Also listed as 9.18.",
+    "19": "Covered. planeon-host-containment.service has RefuseManualStart=yes, sealed unit type, and after S4 planeon_containment_enabled=0 is frozen by secure_mode_policyload so the domain cannot be re-entered until reboot.",
+    "2": "Covered. A1 states admission is at pre-forward consumption, not socket accept, TLS, ARM_ACTION ack or worker report; a request parsed under a now-invalid generation cannot pass A1.",
+    "20": "Covered. P2 denies name_connect to planeon_kubeapi_port_t from every domain except the enumerated ones, independent of any leftover kubeconfig credential (the confined admin domain is explicitly denied the port).",
+    "21": "Covered. C6 and base rule: a gate restart starts deny-first and HELD with no stamps restored, so no connection can be resumed.",
+    "22": "Covered. A connection K opened while A is armed is stamped A at accept (C3); after B is armed, C4 refuses K because its stamp != currently armed action, closing it without forwarding.",
+    "23": "Covered. I07 WRITE_OBJECT refuses non-policy and every effect kind (2.4); the writer identity never forwards Pod/ConfigMap/Service.",
+    "24": "Covered. 2.5 profile rule: the effective RBAC closure contains no ClusterRole with an aggregationRule; the observer refuses otherwise, so the aggregation controller cannot widen a role in-scope.",
+    "25": "Covered. Datastore AF_UNIX connectto is allowed only for the apiserver domain and the data directory is writable only by the datastore domain; restore/replace is possible only in reboot maintenance (P1, 2.2).",
+    "26": "Covered. P4 disables CSR signing/approving controllers and keeps the CA key off-host during INSPECTING/ACTIVE; even a minted cert cannot reach the port (P2).",
+    "27": "Covered (kernel-verified). v2 removes BPF_PROG_GET_FD_BY_ID (cmd 13, which the source confirms needs CAP_SYS_ADMIN) and uses BPF_OBJ_GET (cmd 7, no capability check) on sealed bpffs pins; readers hold only CAP_NET_ADMIN and CAP_BPF.",
+    "28": "Covered (reword per F2). MULTI attachment means legacy prog-less detach fails (source-confirmed: MULTI detach needs a valid prog/link fd), and SELinux denies prog_run on containment-owned programs and labels the cgroup dirs. The 'cannot get an O_PATH fd via dir-search denial' framing is imprecise because cgroup2 supports open_by_handle_at, but the SELinux open/label denial (plus denying the confined admin CAP_DAC_READ_SEARCH) still blocks the detach, so the outcome holds.",
+    "3": "Covered (design; native residual E10). P3 uses Node+RBAC from sealed config with no authorization webhook and no anonymous/static-token path; 2.3 has the observer re-verify complete effective RBAC each observation; admission is re-evaluated at A1/A2.",
+    "4": "Partially covered. External system:masters/impersonate/escalate/bind are excluded by the 2.3 closure, P3/P4 (no such on-disk credential, CA key absent) and P7 (no aggregation/APIService); 2.5 excludes aggregated ClusterRoles. Remaining: the in-apiserver loopback system:masters identity and rbac-bootstrap reconciler are not enumerated (F1) but are sealed-TCB and unreachable from unlisted domains by P2, so not an external bypass; enumerate in W02.",
+    "5": "Covered. A1/A2/A3 give explicit admitted-vs-committed semantics and 3.3 disclaims any end-to-end atomic transaction; the drain fence rests on the gate being the sole writer path (G04).",
+    "6": "Covered. C7 uses signed never-reused CREATE names; IO_AMBIGUOUS/ADMITTED_BEFORE_INVALIDATION retain the name and ownership; M3 new boot/generation never reuses a prior generation or nonce; no name adoption.",
+    "7": "Covered. Base separate-journal fsync-domain rule plus HELD-on-uncertainty is retained; consumed-action tombstones (C6) persist; no automatic redispatch.",
+    "8": "Covered. Gate/broker/server disagreement on UID or result classification surfaces in the existing RESOURCE_RESULT agreement check (6.3) and becomes HELD; records retained.",
+    "9": "Covered. BIND_EXECUTION binds the broker peer qualification digest and generation; peer death is an A4 invalidation that closes A1; no reconnect; W6 waitid/pidfd lifetime enforcement."
+  },
+  "findings": [
+    {
+      "finding": "2.3 states 'Only these identities can reach the apiserver' but omits the apiserver's own in-process loopback client, which Kubernetes creates at startup with a random bearer token in group system:masters (verified in apiserver config.go AuthorizeClientBearerToken), and the rbac/bootstrap-roles PostStartHook that reconciles ClusterRoles/ClusterRoleBindings on every start as that identity (verified in storage_rbac.go). These are policy-kind writers not listed in the 2.3 closure or the 2.5 autonomous-writer table. They are inside the sealed-apiserver TCB and unreachable from unlisted domains by P2, so they are not an external bypass, but the closure claim is literally incomplete.",
+      "id": "F1",
+      "location": "HOST_INTERFACE_SPEC.md 2.3 and 2.5",
+      "requiredChange": "In W02, enumerate the apiserver loopback system:masters identity and the rbac/bootstrap-roles reconciler explicitly (as sealed-TCB, bootstrap-config-pinned, re-verified by the observer's effective-RBAC check each observation), so 2.3's 'only these identities' statement is exact.",
+      "severity": "MINOR"
+    },
+    {
+      "finding": "5.1 argues that denying 'dir search' on labelled planeon cgroup directories means 'no other domain can even get an O_PATH fd'. cgroup2 is mounted on kernfs with KERNFS_ROOT_SUPPORT_EXPORTOP (verified in cgroup.c), so a directory fd can also be obtained via open_by_handle_at, and with CAP_DAC_READ_SEARCH that path bypasses DAC search checks (verified in fs/fhandle.c may_decode_fh). The effective defense is the SELinux label check at open (and the confined-admin domain lacking CAP_DAC_READ_SEARCH), not the 'cannot get an fd' framing.",
+      "id": "F2",
+      "location": "HOST_INTERFACE_SPEC.md 5.1 (cgroup O_PATH defense) and counterexample 28",
+      "requiredChange": "Reword 5.1/counterexample 28 so the stated mechanism is the SELinux open/label denial on planeon cgroup types (which applies regardless of how the dentry is resolved, including via file handles) plus denial of CAP_DAC_READ_SEARCH to the confined admin domain, rather than relying on inability to obtain an O_PATH fd. Outcome is unchanged; the argument should cite the actual gate.",
+      "severity": "MINOR"
+    },
+    {
+      "finding": "v2 relocates role cgroups from the v1 record's fixed /sys/fs/cgroup/planeon-live/{...} to /sys/fs/cgroup/planeon.slice/planeon-*.service, which is a deliberate versioned change consistent with G06 and the F01 feasibility concern (hand-created planeon-live paths were not a supported systemd delegation plan). This is correct but the path change is a substantive v2 record delta that W02 must carry with explicit old/new rejection vectors; it is flagged so it is not mistaken for an unchanged detail.",
+      "id": "F3",
+      "location": "HOST_INTERFACE_SPEC.md 4.2 vs NATIVE_QUALIFICATION_READINESS.md (v1 cgroup paths)",
+      "requiredChange": "No change required for this candidate; W02 must specify the exact v2 cgroup paths and ensure a v1 reader rejects the v2 path layout and vice versa (already asserted in 4.4).",
+      "severity": "NOTE"
+    }
+  ],
+  "gateDispositions": {
+    "G04": {
+      "disposition": "RESOLVED_DESIGN",
+      "reason": "Concrete backend SEALED_SINGLE_NODE_CONTROL_PLANE_V1 with P1-P10, API-path closure (2.2), identity/permission closure (2.3), I07 sole writer (2.4), autonomous-writer table (2.5) and writer-family map (2.6). Host-only properties are named residual native evidence (E03,E04,E05,E10 in 8). No Kubernetes distribution selected and no native enforcement claimed. Residual gap (see F1) is the apiserver's in-process loopback system:masters identity plus the rbac/bootstrap-roles PostStartHook reconciler, which are not enumerated in 2.3/2.5; they sit inside the sealed-apiserver TCB and are unreachable from unlisted domains by P2, so they do not open an external bypass, but W02 should list them. Meets the RESOLVED_DESIGN bar."
+    },
+    "G05": {
+      "disposition": "RESOLVED_DESIGN",
+      "reason": "POLICY-ADMISSION-SEMANTICS/v2 names A1 (pre-forward gate linearization), A2 (in-apiserver ValidatingAdmissionPolicy pre-persist, stable since v1.30 and running after mutating admission), A3 (drain fence) and A4 (explicitly weaker, recorded). 3.3 disclaims any end-to-end transaction. Accepted bytes of POLICY_OBSERVATION_READINESS.md are unchanged (verified by git diff). A4 is honestly presented as weaker, not equivalent. Residuals A2 field allowlists (T06) named."
+    },
+    "G06": {
+      "disposition": "RESOLVED_DESIGN",
+      "reason": "Record planeon.internal.native-qualification/v2 with closed resident roles (SERVER/OBSERVER/BROKER/WORKER/EFFECT_GATE), closed lifecycle subjects (HOST_CONTAINMENT/POLICY_WRITER), closed backendComponents, and v1/v2 mutual rejection with no fallback (4.4). No new root key or signing role (reuses pinned root pubkey, 4.2). Gate always resident and denying so the parser has no mode-dependent branch. No reinterpretation or nonce/generation reuse of v1 data. Residual E07 named."
+    },
+    "G07": {
+      "disposition": "RESOLVED_DESIGN",
+      "reason": "5.1 kernel findings independently verified against Linux v6.12; boot/seal S1-S6; per-role capability/seccomp/SELinux table (5.3) with no blanket CAP_SYS_ADMIN and no CAP_SYS_PTRACE/CAP_DAC_OVERRIDE anywhere; worker original-parent lifecycle W1-W6; reboot-only maintenance M1-M5. Each row is a design selection; completeness on a real host and the kernel/policy facts are named residual T04/E01-E08 evidence (8). The capability split is internally consistent for same-uid /proc peer inspection (broker inspects the frozen child before its W4 uid change; workers read only world-readable parent stat). Per-arch syscall allowlists deferred to W02 as data."
+    },
+    "G09": {
+      "disposition": "RESOLVED_DESIGN",
+      "reason": "Connection stamping C1-C7 on unchanged I04: C2 flush-on-arm (closes unconsumed accepted connections and drains the listen backlog), C3 stamp-at-accept (gate state, not client-supplied), C4/C5 one consumption per stamp, C7 mutation uniqueness by construction. This is the transport restriction the base brief required; no new header/field/caller actionId (6.3; scope.json newHeaderOrFieldIntroduced=false). The sole residual (6.3 application-level resend) is stated, bounded to at most one B effect with no unarmed effect, and routed to the existing RESOURCE_RESULT agreement check (HELD). scope.json honestly marks requestActionCorrelationProven=false (behaviour under load/restart is T02/T03). Meets the bar."
+    }
+  },
+  "kernelClaimsVerified": [
+    {
+      "claim": "BPF_PROG_GET_FD_BY_ID (cmd 13) requires capable(CAP_SYS_ADMIN)",
+      "evidence": "v6.12 kernel/bpf/syscall.c bpf_prog_get_fd_by_id: 'if (!capable(CAP_SYS_ADMIN)) return -EPERM;'",
+      "result": "CONFIRMED"
+    },
+    {
+      "claim": "BPF_PROG_QUERY (cmd 16) requires bpf_net_capable() = CAP_NET_ADMIN or CAP_SYS_ADMIN",
+      "evidence": "kernel/bpf/syscall.c bpf_prog_query: 'if (!bpf_net_capable()) return -EPERM;' and bpf_net_capable() = capable(CAP_NET_ADMIN) || capable(CAP_SYS_ADMIN)",
+      "result": "CONFIRMED"
+    },
+    {
+      "claim": "bpf_prog_get_info_by_fd zeroes xlated_prog_len without bpf_capable() (CAP_BPF or CAP_SYS_ADMIN)",
+      "evidence": "kernel/bpf/syscall.c bpf_prog_get_info_by_fd: 'if (!bpf_capable()) { info.xlated_prog_len = 0; ... goto done; }'; capability.h bpf_capable()=CAP_BPF||CAP_SYS_ADMIN",
+      "result": "CONFIRMED"
+    },
+    {
+      "claim": "Blinded program instructions withheld without bpf_dump_raw_ok, and helper-call immediates zeroed unless bpf_dump_raw_ok; bpf_dump_raw_ok==kallsyms_show_value depending on kptr_restrict and CAP_SYSLOG",
+      "evidence": "bpf_insn_prepare_dump zeroes CALL imm when !bpf_dump_raw_ok and bpf_prog_get_info_by_fd sets xlated_prog_insns=0 when prog->blinded && !bpf_dump_raw_ok; include/linux/filter.h bpf_dump_raw_ok()=kallsyms_show_value(); kernel/ksyms_common.c kallsyms_show_value() switches on kptr_restrict and requires CAP_SYSLOG",
+      "result": "CONFIRMED"
+    },
+    {
+      "claim": "BPF_OBJ_GET (cmd 7) has no capability check; access is file permission plus SELinux bpf checks",
+      "evidence": "kernel/bpf/syscall.c bpf_obj_get has no capable() call; kernel/bpf/inode.c bpf_obj_do_get uses path_permission(); bpf_prog_new_fd calls security_bpf_prog -> selinux_bpf_prog (BPF__PROG_RUN). inode.c capable() calls are only in unrelated mount/msk paths",
+      "result": "CONFIRMED"
+    },
+    {
+      "claim": "bpf_jit_harden 0 or 1 leaves CAP_BPF-loaded programs unblinded",
+      "evidence": "include/linux/filter.h bpf_jit_blinding_enabled: returns false if !bpf_jit_harden, and if harden==1 && bpf_token_capable(CAP_BPF); only harden==2 blinds",
+      "result": "CONFIRMED"
+    },
+    {
+      "claim": "cgroup CGROUP_SOCK/SOCK_ADDR attach and detach check no capability; cgroup taken from a directory fd",
+      "evidence": "kernel/bpf/syscall.c bpf_prog_attach/bpf_prog_detach contain no capable() call for these ptypes (only attach-type match); kernel/bpf/cgroup.c cgroup_bpf_prog_attach/detach call cgroup_get_from_fd with no capability check",
+      "result": "CONFIRMED"
+    },
+    {
+      "claim": "Legacy (non-MULTI) attachment can be detached with no program fd; MULTI detach requires a valid prog/link fd",
+      "evidence": "kernel/bpf/cgroup.c find_detach_entry: for !allow_multi returns first entry (prog may be NULL) in NONE/OVERRIDE legacy mode; for MULTI 'if (!prog && !link) return ERR_PTR(-EINVAL)'",
+      "result": "CONFIRMED"
+    },
+    {
+      "claim": "cgroup fd lookup uses fdget_raw, so an O_PATH directory fd suffices",
+      "evidence": "kernel/cgroup/cgroup.c cgroup_v1v2_get_from_fd: 'struct fd f = fdget_raw(fd);'; cgroup_get_from_fd wraps it then checks cgroup_on_dfl",
+      "result": "CONFIRMED"
+    },
+    {
+      "claim": "SELinux selinux_bpf hook checks only MAP_CREATE and PROG_LOAD at cmd dispatch",
+      "evidence": "security/selinux/hooks.c selinux_bpf switch: BPF_MAP_CREATE->BPF__MAP_CREATE, BPF_PROG_LOAD->BPF__PROG_LOAD, default->0 (attach/detach/query/obj_get not checked at cmd level; separate PROG_RUN hook applies on fd creation)",
+      "result": "CONFIRMED"
+    },
+    {
+      "claim": "unprivileged_bpf_disabled applies only to map creation and program load",
+      "evidence": "sysctl_unprivileged_bpf_disabled referenced only in map_create and bpf_prog_load in kernel/bpf/syscall.c; its sysctl handler (bpf_unpriv_handler) is one-way lockable (SYSCTL_ZERO..SYSCTL_TWO, locked at 1)",
+      "result": "CONFIRMED"
+    },
+    {
+      "claim": "5.4 CLONE_INTO_CGROUP into a frozen cgroup freezes the child before user space",
+      "evidence": "kernel/cgroup/cgroup.c cgroup_post_fork sets child->jobctl |= JOBCTL_TRAP_FREEZE for a non-PF_KTHREAD child when test_bit(CGRP_FREEZE, &cgrp_flags) on the destination cgroup; kernel/signal.c recalc_sigpending_tsk includes JOBCTL_TRAP_FREEZE and get_signal routes to do_freezer_trap; kernel/sched/core.c schedule_tail calls calculate_sigpending so the new task traps before returning to userspace",
+      "result": "CONFIRMED"
+    },
+    {
+      "claim": "5.3 roles need no CAP_SYS_ADMIN/CAP_SYS_PTRACE for same-uid /proc peer inspection; capability split is internally consistent",
+      "evidence": "security/commoncap.c cap_ptrace_access_check and kernel/ptrace.c __ptrace_may_access allow access when caller and target credentials match (all root roles) without CAP_SYS_PTRACE; broker inspects the child at W3 while still uid 0 (before W4 setresuid); cross-uid worker inspection is avoided (worker reads only world-readable parent /proc/<pid>/stat, not ptrace-gated maps/exe)",
+      "result": "CONFIRMED"
+    },
+    {
+      "claim": "BPF_F_ALLOW_MULTI and systemd installs its IP filters with BPF_F_ALLOW_MULTI",
+      "evidence": "include/uapi/linux/bpf.h BPF_F_ALLOW_MULTI = (1U<<1); systemd v257 CGROUP_DELEGATION.md item 3 'Any BPF IP filter programs systemd installs will be installed with BPF_F_ALLOW_MULTI'",
+      "result": "CONFIRMED"
+    },
+    {
+      "claim": "cgroup_seclabel SELinux policy capability allows labelling cgroup2 directories",
+      "evidence": "security/selinux/include/policycap_names.h lists 'cgroup_seclabel'; security/selinux/hooks.c selinux_is_genfs_special_handling gates cgroup/cgroup2 in-core setxattr on selinux_policycap_cgroupseclabel()",
+      "result": "CONFIRMED"
+    },
+    {
+      "claim": "cgroup2 supports file handles (open_by_handle_at) and CAP_DAC_READ_SEARCH relaxes its DAC path checks",
+      "evidence": "kernel/cgroup/cgroup.c kernfs_create_root with KERNFS_ROOT_SUPPORT_EXPORTOP; fs/fhandle.c may_decode_fh requires CAP_DAC_READ_SEARCH (or CAP_SYS_ADMIN) and sets HANDLE_CHECK_PERMS; relevant to finding F2 (the stated O_PATH-only defense is imprecise; SELinux open gate is the real control)",
+      "result": "CONFIRMED"
+    },
+    {
+      "claim": "one-way sysctls kernel.modules_disabled and kernel.kexec_load_disabled only transition 0->1; yama ptrace_scope locks at max",
+      "evidence": "kernel/sysctl.c modules_disabled ctl_table extra1=extra2=SYSCTL_ONE ('only handle a transition from default 0 to 1'); kernel/kexec_core.c kexec_load_disabled ctl_table same; security/yama/yama_lsm.c yama_dointvec_minmax locks extra1=extra2 once value hits max",
+      "result": "CONFIRMED"
+    },
+    {
+      "claim": "Kubernetes runs mutating admission before validating admission, and ValidatingAdmissionPolicy is stable since v1.30",
+      "evidence": "kubernetes/website admission-controllers.md 'first phase, mutating admission controllers are run... second phase, validating admission controllers are run'; validating-admission-policy.md feature-state stable for_k8s_version v1.30",
+      "result": "CONFIRMED"
+    },
+    {
+      "claim": "apiserver loopback client is group system:masters and rbac bootstrap reconciles on start (relevant to G04 closure, finding F1)",
+      "evidence": "k8s apiserver pkg/server/config.go AuthorizeClientBearerToken injects the loopback bearer token with Groups [user.SystemPrivilegedGroup]; pkg/registry/rbac/rest/storage_rbac.go PostStartHookName 'rbac/bootstrap-roles' reconciles ClusterRoles/bindings via EnsureRBACPolicy",
+      "result": "CONFIRMED"
+    }
+  ],
+  "questionAnswers": {
+    "Q1": "Yes. C2+C3 exclude counterexample 17 for every place a transport duplicate can be buffered. A buffered duplicate must sit on a connection that already exists at ARM(B): if accepted it has either consumed its one action (C1 one-request-per-connection, so it is finished per C5) or not consumed one, in which case C2 closes it without forwarding; if still in the kernel accept/listen backlog, C2 explicitly accepts and closes it; a connection whose TLS handshake completes after ARM(B) is accepted afterwards and stamped by C3 with the then-armed action, so it cannot carry a stale pre-ARM duplicate without the application itself resending (the 6.3 residual, not transport). Gate-parser-queued bytes belong to an accepted-but-unconsumed connection and are flushed by C2. The exclusion holds for the kernel accept queue, in-connection TLS records, parser queues and post-ARM handshakes.",
+    "Q2": "Yes. The 6.3 residual (application resend identical to B while B is armed) is correctly bounded: the forwarded bytes equal B's armed request-template digest (C4), so no unarmed effect can occur; B is consumed once and all other B-stamped connections are closed (C5) with mutation uniqueness by construction (C7), so at most one B effect occurs; a misattributed stale-A-as-B shows up as gate/server disagreement in the existing RESOURCE_RESULT agreement check and becomes HELD. The residual requires the trusted server's own behaviour, is disclosed rather than hidden, and is routed to T02/native, matching the base threat model.",
+    "Q3": "The v6.12 claims in 5.1/5.4 all match the fetched torvalds/linux v6.12 source. Confirmed: bpf_prog_get_fd_by_id requires capable(CAP_SYS_ADMIN); bpf_prog_query requires bpf_net_capable() (CAP_NET_ADMIN or CAP_SYS_ADMIN); bpf_prog_get_info_by_fd zeroes xlated_prog_len without bpf_capable() and withholds blinded instructions / zeroes helper-call immediates unless bpf_dump_raw_ok==kallsyms_show_value (kptr_restrict + CAP_SYSLOG); BPF_OBJ_GET (cmd 7) has no capability check in bpf_obj_get/bpf_obj_get_user (path_permission plus security_bpf_prog PROG_RUN only); bpf_jit_harden 0 or 1 with CAP_BPF leaves programs unblinded; cgroup attach/detach (bpf_prog_attach/detach, cgroup_bpf_prog_attach/detach) check no capability; legacy non-MULTI detach via find_detach_entry accepts prog==NULL while MULTI detach requires a valid prog/link fd; cgroup_v1v2_get_from_fd uses fdget_raw (O_PATH accepted); selinux_bpf checks only MAP_CREATE and PROG_LOAD at cmd dispatch; unprivileged_bpf_disabled gates only map_create and bpf_prog_load. The 5.4 freeze claim is confirmed: cgroup_post_fork sets JOBCTL_TRAP_FREEZE on a non-kthread child of a CGRP_FREEZE cgroup and calculate_sigpending/recalc_sigpending force the freezer trap before return to user space. UAPI command/attach-type/prog-type numbers match. One-way sysctls (modules_disabled, kexec_load_disabled transition-to-1-only; yama ptrace_scope max-lock) confirmed. VAP stable@v1.30 and 'mutating before validating' confirmed in Kubernetes docs.",
+    "Q4": "Yes. A2 (in-apiserver ValidatingAdmissionPolicy, failurePolicy Fail, after mutating admission and before persistence) is a sound pre-persist position for the actual post-mutation manifest: Kubernetes runs mutating admission first (confirmed), so A2 sees the post-defaulting object, and VAP is in-process so it needs no external webhook (P6 keeps webhooks absent). Allowed differences are an enumerated per-kind defaulted-field allowlist fixed in W02 (residual T06). A4 is honestly weaker: it is labelled 'explicitly weaker, recorded', records ADMITTED_BEFORE_INVALIDATION, never relabels the action unadmitted, and 3.3 disclaims equivalence to the original strict wording.",
+    "Q5": "Largely yes. Given P2 (loopback-only labelled port with name_connect limited to gate/observer/enumerated control-plane components), P8 (closed in-cluster clients, no Pod SA tokens) and P9 (runtime socket kubelet-only), 2.3 covers the externally reachable identities (gate effect, gate writer, observer, kubelet, per-controller controller-manager, scheduler, service-proxy/network-policy agent). The one omission is the apiserver's own loopback system:masters client and the rbac bootstrap reconciler (finding F1); these are sealed-TCB and not an external bypass but should be enumerated. The 2.5 autonomous-writer table is plausible as a starting inventory (aggregation, SA/token, namespace-lifecycle, ResourceQuota status, root-CA publisher, CSR, GC/EndpointSlice) with distribution-specific additions explicitly deferred to W02.",
+    "Q6": "Acceptable. systemd documents that delegation is available on service/scope units and expressly NOT on slice units (verified in the pinned CGROUP_DELEGATION.md). v2's refinement puts one service per role under planeon.slice and gives Delegate=yes only to planeon-capacity-broker.service, which exclusively owns the broker and probe-worker leaves; the slice itself is not delegated. Raw cgroup ownership therefore remains a single delegated service, satisfying the spirit of MET-ENFORCE-001 decision 2 while the non-delegated roles are ordinary systemd-managed services (single-writer owned by systemd, read-only inspectable). This also resolves the v1 F01 concern that hand-created /sys/fs/cgroup/planeon-live paths were not a supported delegation plan. It does not need to collapse to a single service because only the broker requires raw cgroup access. The reviewer confirms this is the explicit refinement the brief asked to check.",
+    "Q7": "The 8 residual-native list is essentially complete: it names 2-closure completeness (E03-E05,E10), 5.1 kernel facts on the enrolled kernel/policy and the secure_mode_policyload conditionals in the pinned binary policy (T04), freeze-before-user-space under CLONE_INTO_CGROUP (T04/T05), C2/C3 flush/stamp under load and restart (T02/T03), and A2 field allowlists (T06). The one item that should be added for completeness is the apiserver loopback system:masters identity / rbac-bootstrap reconciler (finding F1), which is implicitly within the E10/2-closure residual but not spelled out. No RESOLVED_DESIGN claim rests on an undisclosed native assumption beyond that; the kernel-level assumptions this review could check against source all held."
+  },
+  "reviewDate": "2026-10-05",
+  "reviewLimit": "Read-only source-only design review of the exact hashed subject files against the listed predecessor inputs and independently fetched Linux v6.12 and Kubernetes/systemd upstream source. It establishes only that the five gates meet the RESOLVED_DESIGN bar at design level and that the cited kernel/Kubernetes facts match upstream source. It is NOT W01 native completion, coding readiness, an adopted wire ABI, an installed gate, native enforcement, selection of a Kubernetes distribution, closure of any E01-E12 obligation, nor tenant/native acceptance. No host was observed; kernel facts were read from source, not run; all behaviour under load, restart and on the enrolled kernel/policy remains unproven (T01-T08, E01-E12 OPEN_UNPROVEN).",
+  "round": 1,
+  "schemaVersion": "planeon.internal.host-interface-resolution-review/v1",
+  "sourcesRead": [
+    "/private/tmp/claude-501/-Users-caglarsubasi-Desktop-prometa-pocs-harness-engineering/9b7941dc-44f6-4d0f-b224-b50b0d6a419a/scratchpad/review1/HOST_INTERFACE_SPEC.md",
+    "/private/tmp/claude-501/-Users-caglarsubasi-Desktop-prometa-pocs-harness-engineering/9b7941dc-44f6-4d0f-b224-b50b0d6a419a/scratchpad/review1/REVIEW_BRIEF.md",
+    "/private/tmp/claude-501/-Users-caglarsubasi-Desktop-prometa-pocs-harness-engineering/9b7941dc-44f6-4d0f-b224-b50b0d6a419a/scratchpad/review1/README.md",
+    "/private/tmp/claude-501/-Users-caglarsubasi-Desktop-prometa-pocs-harness-engineering/9b7941dc-44f6-4d0f-b224-b50b0d6a419a/scratchpad/review1/scope.json",
+    "/private/tmp/claude-501/-Users-caglarsubasi-Desktop-prometa-pocs-harness-engineering/9b7941dc-44f6-4d0f-b224-b50b0d6a419a/scratchpad/review1/source-index.json",
+    "git d938151907f533421accc698bc142833c0315be0:architecture/host-interface-inputs/corrected/HOST_INTERFACE_SPEC.md",
+    "git d938151907...:architecture/host-interface-inputs/corrected/REVIEW_BRIEF.md",
+    "git d938151907...:architecture/host-interface-inputs/independent-review.json",
+    "git d938151907...:docs/alpha-2/POLICY_OBSERVATION_READINESS.md",
+    "git d938151907...:docs/alpha-2/PROXY_CONTRACT_READINESS.md",
+    "git d938151907...:docs/alpha-2/BROKER_HANDOFF_READINESS.md",
+    "git d938151907...:docs/alpha-2/NATIVE_QUALIFICATION_READINESS.md",
+    "git d938151907...:docs/alpha-2/OBSERVATION_ENFORCEMENT_DESIGN.md",
+    "git d938151907...:docs/alpha-2/ENFORCEMENT_FEASIBILITY.md",
+    "git d938151907...:docs/alpha-2/ENFORCEMENT_INTEGRATION.md",
+    "https://raw.githubusercontent.com/torvalds/linux/v6.12/kernel/bpf/syscall.c",
+    "https://raw.githubusercontent.com/torvalds/linux/v6.12/kernel/bpf/cgroup.c",
+    "https://raw.githubusercontent.com/torvalds/linux/v6.12/kernel/bpf/inode.c",
+    "https://raw.githubusercontent.com/torvalds/linux/v6.12/kernel/cgroup/cgroup.c",
+    "https://raw.githubusercontent.com/torvalds/linux/v6.12/kernel/cgroup/freezer.c",
+    "https://raw.githubusercontent.com/torvalds/linux/v6.12/include/linux/capability.h",
+    "https://raw.githubusercontent.com/torvalds/linux/v6.12/include/linux/filter.h",
+    "https://raw.githubusercontent.com/torvalds/linux/v6.12/include/linux/bpf.h",
+    "https://raw.githubusercontent.com/torvalds/linux/v6.12/kernel/ksyms_common.c",
+    "https://raw.githubusercontent.com/torvalds/linux/v6.12/include/uapi/linux/bpf.h",
+    "https://raw.githubusercontent.com/torvalds/linux/v6.12/security/selinux/hooks.c",
+    "https://raw.githubusercontent.com/torvalds/linux/v6.12/security/selinux/include/policycap_names.h",
+    "https://raw.githubusercontent.com/torvalds/linux/v6.12/kernel/fork.c",
+    "https://raw.githubusercontent.com/torvalds/linux/v6.12/kernel/signal.c",
+    "https://raw.githubusercontent.com/torvalds/linux/v6.12/kernel/sched/core.c",
+    "https://raw.githubusercontent.com/torvalds/linux/v6.12/include/linux/sched/jobctl.h",
+    "https://raw.githubusercontent.com/torvalds/linux/v6.12/security/commoncap.c",
+    "https://raw.githubusercontent.com/torvalds/linux/v6.12/kernel/ptrace.c",
+    "https://raw.githubusercontent.com/torvalds/linux/v6.12/fs/proc/base.c",
+    "https://raw.githubusercontent.com/torvalds/linux/v6.12/fs/exec.c",
+    "https://raw.githubusercontent.com/torvalds/linux/v6.12/kernel/cred.c",
+    "https://raw.githubusercontent.com/torvalds/linux/v6.12/fs/fhandle.c",
+    "https://raw.githubusercontent.com/torvalds/linux/v6.12/kernel/sysctl.c",
+    "https://raw.githubusercontent.com/torvalds/linux/v6.12/kernel/module/main.c",
+    "https://raw.githubusercontent.com/torvalds/linux/v6.12/kernel/kexec_core.c",
+    "https://raw.githubusercontent.com/torvalds/linux/v6.12/security/yama/yama_lsm.c",
+    "https://raw.githubusercontent.com/kubernetes/website/main/content/en/docs/reference/access-authn-authz/validating-admission-policy.md",
+    "https://raw.githubusercontent.com/kubernetes/website/main/content/en/docs/reference/access-authn-authz/admission-controllers.md",
+    "https://raw.githubusercontent.com/kubernetes/website/main/content/en/docs/reference/access-authn-authz/authorization.md",
+    "https://raw.githubusercontent.com/kubernetes/kubernetes/v1.31.0/staging/src/k8s.io/apiserver/pkg/server/config.go",
+    "https://raw.githubusercontent.com/kubernetes/kubernetes/v1.31.0/pkg/registry/rbac/rest/storage_rbac.go",
+    "https://raw.githubusercontent.com/kubernetes/kubernetes/v1.31.0/plugin/pkg/auth/authorizer/node/node_authorizer.go",
+    "https://raw.githubusercontent.com/systemd/systemd/70bae7648f2c18010187c9cf20093155eaa26029/docs/CGROUP_DELEGATION.md"
+  ],
+  "subjectSha256": {
+    "HOST_INTERFACE_SPEC.md": "8a3a09bb5dbc08804dbea06dd0700a14648a9cdbc8efd62112dc64ba0b6ba1b4",
+    "README.md": "002c57bd0edfabffa9a4bb6403f7d7df0bfb63493356a29a457be6c879058a94",
+    "REVIEW_BRIEF.md": "ed876021e2b23c6f951fde37f28285fa43b114c07456056fd54456c4947589e7",
+    "scope.json": "40d91dd5e7d00cdcda3ecae7c611eef0a132503d12c7ad591924ec1dc7f4723c",
+    "source-index.json": "c2c284a0de89c2465c28d7c0f2039799acb258bb1af3a45d99cc76580d7e4171"
+  },
+  "verdict": "PASS_FOR_SOURCE_PUBLICATION"
+}

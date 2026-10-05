@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate the CI exception after the exact 199-to-198-to-197-to-196-to-195-to-194-to-193-to-192-to-191-to-190-to-189 source chain."""
+"""Validate the CI exception after the exact 200-to-199-to-198-to-197-to-196-to-195-to-194-to-193-to-192-to-191-to-190-to-189 source chain."""
 from __future__ import annotations
 
 import base64
@@ -258,12 +258,12 @@ def validate() -> None:
             == record["validatorNormalizedSha256"], "runner validator drift")
     paths = sorted((ROOT / "task-packets").glob("*.yaml"))
     old = set(record["baselinePackets"])
-    require(len(paths) == 199
+    require(len(paths) == 200
             and {path.stem for path in paths}
             == old | {NEW_PACKET, successor.NEW_PACKET, successor.successor.NEW_PACKET,
                       successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.NEW_PACKET,
-                      successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET},
-            "closed 199-to-198-to-197-to-196-to-195-to-194-to-193-to-192-to-191-to-190-to-189 packet catalog")
+                      successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET},
+            "closed 200-to-199-to-198-to-197-to-196-to-195-to-194-to-193-to-192-to-191-to-190-to-189 packet catalog")
     for name, expected in record["baselinePackets"].items():
         require(digest(regular_bytes("task-packets/" + name + ".yaml")) == expected,
                 "changed predecessor YAML: " + name)
@@ -306,4 +306,4 @@ if __name__ == "__main__":
     except (ValueError, TypeError, KeyError, OSError, UnicodeError) as exc:
         print("CI runner admission source invalid: " + str(exc))
         raise SystemExit(1)
-    print("CI runner admission source valid: 199 current packets; exact 190-to-189 predecessor history; no host or product acceptance.")
+    print("CI runner admission source valid: 200 current packets; exact 190-to-189 predecessor history; no host or product acceptance.")

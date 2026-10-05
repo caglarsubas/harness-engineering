@@ -1,6 +1,13 @@
 # Sol-High Task Packet Catalog
 
-## Current source preparation — MET-VERIFY-004
+## Current source preparation — MET-ENFORCE-004
+
+The W01 gates G04-G07 and G09 are resolved at design level with the owner's design
+decisions and passed an independent source-only review; W01 is DESIGN_RESOLVED_REVIEWED,
+every E01-E12 obligation stays open. Alpha2 OPEN;199 accepted plus
+ENFORCE-004 only. Native Linux, exact-main and tenant acceptance remain separate.
+
+## Historical VERIFY-004 source preparation — MET-VERIFY-004
 
 The owner-operated verifier now runs as a dedicated macOS account with root-owned
 code and its own keys; the verifier contract records this and the risks that remain
@@ -1078,3 +1085,4 @@ acceptance is claimed. Alpha2 ONGOING; model-effort transition NOT_DUE.
 | 197 | `MET-VERIFY-002` | `Harness-Engineering` | Isolated offline runner call; transport changes verified only after the owner's root-owned exact-commit approval |
 | 198 | `MET-VERIFY-003` | `Harness-Engineering` | Isolated network canary launch and the MET-VERIFY-002 review notes |
 | 199 | `MET-VERIFY-004` | `Harness-Engineering` | Dedicated verifier account recorded in the owner-operated verifier contract |
+| 200 | `MET-ENFORCE-004` | `Harness-Engineering` | W01 gate resolutions (G04-G07, G09) with independent source-only review |

@@ -1,6 +1,26 @@
 # Harness-Onion — unified development roadmap
 
-## Current checkpoint — MET-VERIFY-003 source preparation, October 4, 2026
+## Current checkpoint — MET-VERIFY-004 source preparation, October 5, 2026
+
+Alpha2 OPEN. MET-VERIFY-003 passed required verify through the owner's App after
+the owner's exact-commit approval (60/60, 500.8 s); PR #152 merged as main 2f0ae59.
+The verifier then moved to a dedicated macOS account with root-owned code, its own
+keys and a root policy binding its activation key to that account; the GitHub CLI
+login used by agents lost repository administration. MET-VERIFY-004 records this
+in the verifier contract and is the first pull request verified by the new
+account. MET-VERIFY-004 is the sole199th specification.
+
+| Phase | ID | Status | Description / gate |
+|---|---|---|---|
+| Alpha2 verify | MET-VERIFY-004 | SOURCE_PREPARED | Dedicated verifier account contract as199th packet; verify from the owner's App |
+| Alpha2 verify | MET-VERIFY-003 | VERIFY_PASSED_MERGED | Isolated network canary; MET-VERIFY-002 review notes |
+| Alpha2 qualification | W01 / CONF-LINUX-001 / CONF-A2-001 | WAITING_PREREQUISITES | Linux verification only when mandatory |
+
+Keep61argv, 420/750/900s/15min and32MiB. No cloud, runner registration,
+live/native/tenant or model-effort changes. Phase-end effort transition NOT_DUE.
+Prior checkpoints below are history only.
+
+## Historical003 source checkpoint — MET-VERIFY-003 source preparation, October 4, 2026
 
 Alpha2 OPEN. MET-VERIFY-002 was the first transport change verified through the
 owner's exact-commit approval: independent source review, root-owned approval,
@@ -653,7 +673,8 @@ These checkboxes count only the named deliverable at the stated evidence level. 
 - [x] Alpha 2 · MET-PERF-030 · Prove the predecessor suite from the same packet session instead of re-running it; pass required verify through the owner's App.
 - [x] Alpha 2 · MET-LINUX-006 · Make the complete suite pass on Linux as a non-root user; pass required verify through the owner's App.
 - [x] Alpha 2 · MET-VERIFY-002 · Start the offline runner in isolated mode and admit transport changes only with the owner's exact-commit approval; pass required verify through the owner's App.
-- [ ] Alpha 2 · MET-VERIFY-003 · Start the network canary in isolated mode and apply the MET-VERIFY-002 review notes; pass required verify through the owner's App.
+- [x] Alpha 2 · MET-VERIFY-003 · Start the network canary in isolated mode and apply the MET-VERIFY-002 review notes; pass required verify through the owner's App.
+- [ ] Alpha 2 · MET-VERIFY-004 · Record the dedicated verifier account in the verifier contract; pass required verify through the owner's App from that account.
 - [ ] Alpha 2A · W01 · Resolve G04–G07/G09 and adopt a versioned host interface only after the required independent review.
 - [ ] Alpha 2A · CONF-FIX-010 · Complete safe design and exact authority before any product attempt.
 - [ ] Alpha 2A · CONF-LIVE-004 · Produce the exact native-probe source implementation and separately qualify it.

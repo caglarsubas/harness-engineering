@@ -1,6 +1,13 @@
 # Sol-High Task Packet Catalog
 
-## Current source preparation — MET-VERIFY-003
+## Current source preparation — MET-VERIFY-004
+
+The owner-operated verifier now runs as a dedicated macOS account with root-owned
+code and its own keys; the verifier contract records this and the risks that remain
+until earlier credentials are revoked. Alpha2 OPEN;198 accepted plus
+004 only. Native Linux, exact-main and tenant acceptance remain separate.
+
+## Historical003 source preparation — MET-VERIFY-003
 
 The runner also starts its network canary with -I; the wrapper test accepts only
 the three isolated runner calls; the verifier contract states that the owner's
@@ -1070,3 +1077,4 @@ acceptance is claimed. Alpha2 ONGOING; model-effort transition NOT_DUE.
 | 196 | `MET-LINUX-006` | `Harness-Engineering` | Portable warm-snapshot fixture parent so the complete suite passes on Linux as a non-root user |
 | 197 | `MET-VERIFY-002` | `Harness-Engineering` | Isolated offline runner call; transport changes verified only after the owner's root-owned exact-commit approval |
 | 198 | `MET-VERIFY-003` | `Harness-Engineering` | Isolated network canary launch and the MET-VERIFY-002 review notes |
+| 199 | `MET-VERIFY-004` | `Harness-Engineering` | Dedicated verifier account recorded in the owner-operated verifier contract |

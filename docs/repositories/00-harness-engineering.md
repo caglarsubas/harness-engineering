@@ -1,6 +1,13 @@
 # Repository Plan: `Harness-Engineering`
 
-## Current source preparation — MET-VERIFY-004
+## Current source preparation — MET-ENFORCE-004
+
+The W01 gates G04-G07 and G09 are resolved at design level with the owner's design
+decisions and passed an independent source-only review; W01 is DESIGN_RESOLVED_REVIEWED,
+every E01-E12 obligation stays open. Alpha2 OPEN;199 accepted plus
+ENFORCE-004 only. Native Linux, exact-main and tenant acceptance remain separate.
+
+## Historical VERIFY-004 source preparation — MET-VERIFY-004
 
 The owner-operated verifier now runs as a dedicated macOS account with root-owned
 code and its own keys; the verifier contract records this and the risks that remain
@@ -838,6 +845,7 @@ Every packet uses branch `codex/<packet-id>`, changes only named paths, opens a 
 71. `MET-VERIFY-002`: start the offline runner in isolated mode; owner exact-commit approval for transport changes; source only.
 72. `MET-VERIFY-003`: start the network canary in isolated mode; apply the MET-VERIFY-002 review notes; source only.
 73. `MET-VERIFY-004`: record the dedicated verifier account in the verifier contract; source only.
+74. `MET-ENFORCE-004`: resolve W01 gates G04-G07 and G09 at design level with independent review; source only.
 
 ## Testing, verification, and acceptance
 

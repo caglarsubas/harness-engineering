@@ -1,0 +1,120 @@
+{
+  "schemaVersion": "planeon.internal.host-interface-resolution-scope/v1",
+  "designLabel": "HOST-INTERFACE-DRAFT-002",
+  "baseDesignLabel": "HOST-INTERFACE-DRAFT-001",
+  "baseDesignSha256": "1b0bee7e46e3cd730b3f878179ac36d0f062ce70ed6c843788ab634aead16ef0",
+  "roadmapWorkLabel": "W01 HOST_INTERFACE_SPEC",
+  "phase": "Alpha 2",
+  "status": "RESOLVED_CANDIDATE_AWAITING_INDEPENDENT_REVIEW",
+  "baseMain": "d938151907f533421accc698bc142833c0315be0",
+  "baseTree": "bd1e7bf8557684d183660e2a8c8dfbba28d414e4",
+  "ownerDecisions": [
+    {
+      "id": "D1",
+      "gate": "G04",
+      "selected": "DEDICATED_SEALED_SINGLE_NODE_CONTROL_PLANE"
+    },
+    {
+      "id": "D2",
+      "gate": "G05",
+      "selected": "VERSIONED_AMENDMENT_THREE_CHECKS_AND_DRAIN_FENCE"
+    },
+    {
+      "id": "D3",
+      "gate": "G07",
+      "selected": "REBOOT_ONLY_HOST_MAINTENANCE"
+    },
+    {
+      "id": "D4",
+      "gate": "G09",
+      "selected": "CONNECTION_STAMPING_ON_UNCHANGED_I04"
+    }
+  ],
+  "ownerDecisionDate": "2026-10-05",
+  "candidateGateDispositions": {
+    "G04": "RESOLVED_DESIGN",
+    "G05": "RESOLVED_DESIGN",
+    "G06": "RESOLVED_DESIGN",
+    "G07": "RESOLVED_DESIGN",
+    "G09": "RESOLVED_DESIGN"
+  },
+  "selectedBackendProfile": "SEALED_SINGLE_NODE_CONTROL_PLANE_V1",
+  "kubernetesDistributionSelected": false,
+  "tenantManagedClusterResourceCapability": "UNAVAILABLE",
+  "admissionSemanticsVersion": "POLICY-ADMISSION-SEMANTICS/v2",
+  "acceptedContractBytesChanged": false,
+  "nativeRecordProposed": "planeon.internal.native-qualification/v2",
+  "nativeProfileProposed": "SELINUX_FSVERITY_CGROUP_BPF_V2",
+  "residentRoles": [
+    "SERVER",
+    "OBSERVER",
+    "BROKER",
+    "WORKER",
+    "EFFECT_GATE"
+  ],
+  "lifecycleSubjects": [
+    "HOST_CONTAINMENT",
+    "POLICY_WRITER"
+  ],
+  "interfaces": {
+    "existingUnchanged": [
+      "I01",
+      "I02",
+      "I03",
+      "I04"
+    ],
+    "proposedAmendedNotAdopted": [
+      "I05"
+    ],
+    "selectedBackendNotInstalled": [
+      "I06"
+    ],
+    "proposedNewNotAdopted": [
+      "I07"
+    ]
+  },
+  "newHeaderOrFieldIntroduced": false,
+  "requestActionCorrelation": "TRANSPORT_RESTRICTION_ARGUED_NOT_DEMONSTRATED",
+  "requestActionCorrelationProven": false,
+  "reuseCandidateNotSelected": "envoyproxy/envoy",
+  "counterexamples": 28,
+  "testSpecificationsNotExecuted": [
+    "T01",
+    "T02",
+    "T03",
+    "T04",
+    "T05",
+    "T06",
+    "T07",
+    "T08"
+  ],
+  "enforcementProofsOpen": [
+    "E01",
+    "E02",
+    "E03",
+    "E04",
+    "E05",
+    "E06",
+    "E07",
+    "E08",
+    "E09",
+    "E10",
+    "E11",
+    "E12"
+  ],
+  "repositoryCount": 13,
+  "harnessCount": 16,
+  "planeCount": 4,
+  "independentReviewCompleted": false,
+  "w01Complete": false,
+  "implementationReady": false,
+  "wireSchemasAdopted": false,
+  "runtimeAdoptionAuthorized": false,
+  "productExecution": false,
+  "runnerActivated": false,
+  "nativeAcceptance": false,
+  "tenantAcceptance": false,
+  "oldAttemptsReset": false,
+  "phaseComplete": false,
+  "next": "Hash-bound independent source-only review by a separate agent; W01 becomes DESIGN_RESOLVED_REVIEWED only on PASS with every gate RESOLVED_DESIGN"
+}

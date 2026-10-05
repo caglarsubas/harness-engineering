@@ -1,0 +1,124 @@
+{
+  "schemaVersion": "planeon.internal.native-profile-v2-index/v1",
+  "round": 3,
+  "baseMain": "0ecc5f3a428dd3cdb3a9eba9f8626e5d5fdfd93b",
+  "baseTree": "61e4cde89cfc994a31b5edc2dd6f169accd89267",
+  "subject": [
+    {
+      "path": "architecture/native-profile-v2/README.md",
+      "sha256": "7eb2bf5f8e78bf19f942893f57da5e7ca519bdf134c26b98d7b79ef4cc47fc89"
+    },
+    {
+      "path": "architecture/native-profile-v2/REVIEW_BRIEF.md",
+      "sha256": "30e896dafecdc5d4e78852b526dde7ba8108c28e998afe47d608ce5ec567a345"
+    },
+    {
+      "path": "architecture/native-profile-v2/qualification.schema.json",
+      "sha256": "55bd641fd229f21e04ec00813bcfe600890584e982e290a210720ac5cb160ab0"
+    },
+    {
+      "path": "architecture/native-profile-v2/vectors.json",
+      "sha256": "6d58d1f36b7bce5739b94dd89512d358b96878c70e1de7cf8f399050b881b396"
+    },
+    {
+      "path": "scripts/native_qualification_v2.py",
+      "sha256": "c72b6e18044f685c646756a1574bd81cd24f1475d7eda326778d70d1314ef68b"
+    }
+  ],
+  "predecessorInputs": [
+    {
+      "path": "architecture/host-interface-inputs/resolved/HOST_INTERFACE_SPEC.md",
+      "sha256": "8a3a09bb5dbc08804dbea06dd0700a14648a9cdbc8efd62112dc64ba0b6ba1b4"
+    },
+    {
+      "path": "architecture/host-interface-inputs/resolution-review-round1.json",
+      "sha256": "619b7ac456097e1312fc0e42c2bf67911b7a1cc044119862724606b189b4861f"
+    },
+    {
+      "path": "architecture/host-interface-inputs/resolution-status.json",
+      "sha256": "e6a1333a66eeab4801c97902b7c1ae145b0f16693a8136d5dbce7d24b2837c6c"
+    },
+    {
+      "path": "architecture/native-qualification-inputs/qualification.schema.json",
+      "sha256": "bef248bfa82b234124c014f98e40c5791bced3171bb118b7ed1bb7b8daaf95c3"
+    },
+    {
+      "path": "architecture/native-qualification-inputs/vectors.json",
+      "sha256": "cd1be009b721bb596887335184a33ab8e1f24aed8215477b63e28f058110748f"
+    },
+    {
+      "path": "scripts/validate_native_qualification.py",
+      "sha256": "f29fb82a89d4fab7429c834a5106e2e8aac50ca78ea10ec681d9e08ffd8c38ad"
+    },
+    {
+      "path": "scripts/validate_proxy_contract.py",
+      "sha256": "8895dbc106d750a1e6902ec91ba817147c60df26ff666a560f593153289d6dbc"
+    },
+    {
+      "path": "docs/alpha-2/NATIVE_QUALIFICATION_READINESS.md",
+      "sha256": "60bed4c5358527dabfba15bf4e7a7f584872715ef2ca4f9b4350303b656bf595"
+    },
+    {
+      "path": "docs/alpha-2/HOST_INTERFACE_RESOLUTION.md",
+      "sha256": "5d19b5ce1230edd1d0cf5dc59c6ddc23784e1906791010bb750d1bdb49d31d79"
+    }
+  ],
+  "earlierRounds": [
+    {
+      "path": "architecture/native-profile-v2/round1/README.md",
+      "sha256": "c1a31789aa73f8faa8770d8434754fb4b6bad2ae3d22ffff5cb59b7970e1a073"
+    },
+    {
+      "path": "architecture/native-profile-v2/round1/REVIEW_BRIEF.md",
+      "sha256": "20c1be5f95806f4b2b4cba477b2fec9c946bd368b5ca017a9ceb3851c8391923"
+    },
+    {
+      "path": "architecture/native-profile-v2/round1/qualification.schema.json",
+      "sha256": "649b2b09e60e7dac860f6ef4756ffd1a335d058ad44039be41bb66ae8bfd2a63"
+    },
+    {
+      "path": "architecture/native-profile-v2/round1/vectors.json",
+      "sha256": "3c56ad834cf5f448c3eae8003844aa5462c3e3ca0eb7b9ead0bbbf5c5fa22ea5"
+    },
+    {
+      "path": "architecture/native-profile-v2/round1/native_qualification_v2.py",
+      "sha256": "abaa6e7cc90bf17b149b92704593edc048f626d79c1321dee55a142930545d19"
+    },
+    {
+      "path": "architecture/native-profile-v2/round1/source-index.json",
+      "sha256": "feebab9064aa92e5d1f7173bb1768dc97906304e39db65954da5360707d83f10"
+    },
+    {
+      "path": "architecture/native-profile-v2/round2/README.md",
+      "sha256": "a3056f6c6201da90e19ee3611aa357914cfdf2a8855ddc01d1c98c99912f37ac"
+    },
+    {
+      "path": "architecture/native-profile-v2/round2/REVIEW_BRIEF.md",
+      "sha256": "7ca5dc4475ad712a1a891ec086124c2f13284a61a5e9dfdacc96036f32b18599"
+    },
+    {
+      "path": "architecture/native-profile-v2/round2/qualification.schema.json",
+      "sha256": "6e34577ea6946500eb0ccaeecaa3a0477386951a411ab3fc7795cf8e7bd18535"
+    },
+    {
+      "path": "architecture/native-profile-v2/round2/vectors.json",
+      "sha256": "7e0358dbb8897892b573e0ca67f25c6591212c89fd5b4664dc8079a8676e507c"
+    },
+    {
+      "path": "architecture/native-profile-v2/round2/native_qualification_v2.py",
+      "sha256": "89dade2161713ac36a7c0b41514f2a234caf9bbab1a39fee1b759f8b6da470d6"
+    },
+    {
+      "path": "architecture/native-profile-v2/round2/source-index.json",
+      "sha256": "d813a19991c3a3927f10841e8889493b2252fb0fc88e3d3eff707c3ea6a142eb"
+    },
+    {
+      "path": "architecture/native-profile-v2/review-round1.json",
+      "sha256": "9100034ec9d171ddad87d85c4c31b1a3ec9ee681060abb4ba85cbcc20816ef1c"
+    },
+    {
+      "path": "architecture/native-profile-v2/review-round2.json",
+      "sha256": "1a94aaca6c2309e795a3ca709096d79003c61eecdf31e408957f03937ec376ed"
+    }
+  ]
+}

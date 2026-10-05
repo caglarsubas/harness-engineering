@@ -1,0 +1,76 @@
+{
+  "schemaVersion": "planeon.internal.native-profile-v2-status/v1",
+  "contract": "planeon.internal.native-qualification/v2",
+  "reviewRounds": [
+    {
+      "round": 1,
+      "record": "architecture/native-profile-v2/review-round1.json",
+      "recordSha256": "9100034ec9d171ddad87d85c4c31b1a3ec9ee681060abb4ba85cbcc20816ef1c",
+      "verdict": "CHANGES_REQUIRED",
+      "subjectDirectory": "architecture/native-profile-v2/round1/"
+    },
+    {
+      "round": 2,
+      "record": "architecture/native-profile-v2/review-round2.json",
+      "recordSha256": "1a94aaca6c2309e795a3ca709096d79003c61eecdf31e408957f03937ec376ed",
+      "verdict": "CHANGES_REQUIRED",
+      "subjectDirectory": "architecture/native-profile-v2/round2/"
+    },
+    {
+      "round": 3,
+      "record": "architecture/native-profile-v2/review-round3.json",
+      "recordSha256": "a28bf4b9df183075eeef071d8af557ae1edd7bee92193612cfeb255ee763caf1",
+      "verdict": "PASS_FOR_SOURCE_PUBLICATION",
+      "subjectDirectory": "CURRENT"
+    }
+  ],
+  "carriedFindings": {
+    "P1": "W02a-F: refuse a role closure that lists another role's executable or an interpreter for a native-only role; record the running executable in captures",
+    "P2": "W01 amendment, W02d and T04: owner decision D5 is recorded in ownerDecisions here and on the W02a status page",
+    "P3": "W02a-F: compare the slice census with the role captures and canonicalize census paths",
+    "P4": "W02a-F: (pid, startTicks) unique over all cgroup members and backend processes",
+    "P5": "W02a-F: observe planeon.slice's own members or state the cgroup v2 no-internal-process reliance; reword the domain-count claim",
+    "P6": "W02a-F: kernel-plausible pids.max versus thread counts in the positives",
+    "P7": "W02g and W03: mark the unit-distribution profile test-only when a real profile is added; type-name wording; nested backend cgroups"
+  },
+  "ownerDecisions": [
+    {
+      "id": "D5",
+      "date": "2026-10-06",
+      "finding": "review-round2.json N7",
+      "decision": "The probe worker's capability bounding set may be any subset of the broker's enrolled set; permitted, effective, ambient and inheritable must be empty, with no_new_privs = 1 and a non-root uid.",
+      "amends": "HOST-INTERFACE-DRAFT-002 section 5.3 WORKER row (bounding set equal to the empty listed set)",
+      "carriedTo": [
+        "W01 amendment",
+        "W02d",
+        "T04"
+      ]
+    }
+  ],
+  "contractState": "ADOPTED_DATA_CONTRACT",
+  "f3": "CLOSED",
+  "obligations": {
+    "E01": "OPEN_UNPROVEN",
+    "E02": "OPEN_UNPROVEN",
+    "E03": "OPEN_UNPROVEN",
+    "E04": "OPEN_UNPROVEN",
+    "E05": "OPEN_UNPROVEN",
+    "E06": "OPEN_UNPROVEN",
+    "E07": "OPEN_UNPROVEN",
+    "E08": "OPEN_UNPROVEN",
+    "E09": "OPEN_UNPROVEN",
+    "E10": "OPEN_UNPROVEN",
+    "E11": "OPEN_UNPROVEN",
+    "E12": "OPEN_UNPROVEN"
+  },
+  "independentReviewer": "SEPARATE_AGENT_NOT_AUTHOR",
+  "nativeAcceptance": false,
+  "tenantAcceptance": false,
+  "installedProfile": false,
+  "distributionSelected": false,
+  "f1Closed": false,
+  "f2Closed": false,
+  "productExecution": false,
+  "runnerActivated": false,
+  "phaseComplete": false
+}

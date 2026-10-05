@@ -1,0 +1,377 @@
+{
+  "actions": {
+    "filesEdited": false,
+    "githubMutated": false,
+    "nativeActions": false,
+    "referenceModelExecuted": true,
+    "repositoryValidatorsRun": false,
+    "runnerActivated": false,
+    "testsRun": false,
+    "warmSourcesAccessed": false
+  },
+  "f3Closed": true,
+  "findings": [
+    {
+      "finding": "Round 3 refuses a role executable whose content equals another role's executable or an enrolled interpreter (R52, R53, and a verity-only collision probe), but a role closure may still list another role's executable or the interpreter by path: path and content sharing stays allowed inside the single resident-role owner class (needed for the shared SERVER/WORKER interpreter), and no capture field identifies the process image (/proc/<pid>/exe); files and executableMaps are compared only as sets. Probes, full bundles rebound, positives 0 and 1: EFFECT_GATE filePaths plus the gate capture's files and executableMaps extended with /opt/planeon/bin/harness-capacity-broker, with /opt/planeon/python/3.12.14/bin/python3.12, or with python3.12 and the worker script harness-live-probe-exec are all ACCEPTED by check_qualification; so are OBSERVER (interpreterPath null) loading python3.12, SERVER loading the gate artifact, and a gate executable byte-identical to a library listed in the broker closure. Those observations are indistinguishable from the broker binary or Python running in the gate's cgroup and domain. Decision 5 ('the gate is native only') and the Gate identity row ('a copied broker or Python binary cannot pass as the gate') therefore hold for copies at the gate path but not for the enrolled originals, and the intent of spec 4.4 ('puts the gate under the BROKER key or path') is reachable through the closure. v1 has the same closure model; the native-only rule and the gate are v2 additions.",
+      "id": "P1",
+      "location": "scripts/native_qualification_v2.py _Owners (one 'role' owner class) and the role-executable content loop in check_record; check_capture files/executableMaps (no process-image field); qualification.schema.json $defs.roles.*.filePaths and $defs.capture.process; README 'What v2 adds' Gate identity row and decision 5",
+      "requiredChange": "Refuse a role closure that lists another role's executable, and refuse the enrolled interpreter in the closure of any role whose interpreterPath is null (at least EFFECT_GATE); alternatively or additionally, observe the process image (exe device, inode and measured verity) in captures and require it to equal the role's interpreter or executable. Restate decision 5 and the Gate identity row to match, and add negatives for a gate closure containing the broker executable and one containing python3.12.",
+      "severity": "MINOR"
+    },
+    {
+      "finding": "D5 says it 'amends the reviewed spec's 5.3 WORKER row and is carried to W01's record and to T04'. Nothing outside this subject records D5: the W01 spec still requires the WORKER bounding set to equal the empty listed set, resolution-status.json is identical to base (carriedFindings only F1-F3 to W02), no T04 artifact exists, and task-packets/MET-ENFORCE-005.yaml excludes changing the W01 snapshots and verdicts. W02d, which owns the worker pre-exec filter and was named in round-2 N7's required change, is not mentioned. The encoding is exact (Q2), but the present-tense carry claim is not true in the reviewed bytes, and W02d, W03 or T04 work that reads the W01 spec would reinstate the unsatisfiable rule.",
+      "id": "P2",
+      "location": "README 'Owner decision' D5 paragraph (last sentence); out of subject and byte-identical to base: architecture/host-interface-inputs/resolved/HOST_INTERFACE_SPEC.md 5.3 and architecture/host-interface-inputs/resolution-status.json",
+      "requiredChange": "Reword the sentence as a pending obligation, or record D5 where downstream parts read it (for example the native-profile-v2 status record and a successor W01 amendment), naming W01, W02d and T04 and the packet that carries it.",
+      "severity": "MINOR"
+    },
+    {
+      "finding": "The slice census is never compared with the role captures. check_qualification ACCEPTS a census that lists an unpopulated child cgroup under planeon-effect-gate.service, an unpopulated child under the probe-worker leaf, or a third unpopulated leaf under planeon-capacity-broker.service, while the same bundle's role captures report childCgroups [] with descendantCount 0 and delegatedChildren [broker, probe-worker]. It also accepts a census that reports the SERVER cgroup, or planeon.slice itself, as unpopulated while the SERVER capture lists its live process. The bundle thus carries its own observation of a role-cgroup descendant or an extra delegated leaf (spec 4.2's exclusively owned leaves; the contract's 'both required empty') and still qualifies. Only populated unenrolled cgroups are refused, so no process under a role's grants is accepted. Census paths are not canonicalized either: '/sys/fs/cgroup/planeon.slice/../system.slice/x.service' and '/sys/fs/cgroup/planeon.slice/' pass the slice-prefix test (accepted when unpopulated).",
+      "id": "P3",
+      "location": "scripts/native_qualification_v2.py check_lifecycle_capture and check_qualification; qualification.schema.json $defs.lifecycleCapture.sliceCgroups; README 'What v2 adds' Subtrees row",
+      "requiredChange": "In check_qualification (or check_lifecycle_capture), refuse any census entry below an enrolled role cgroup, require the census children of planeon-capacity-broker.service to be exactly broker and probe-worker, require populated 1 for planeon.slice, the broker service and each role cgroup whose capture lists members, and apply the canonical-path rule to census paths; add negatives.",
+      "severity": "MINOR"
+    },
+    {
+      "finding": "Uniqueness of (pid, startTicks) is checked among the inspected role processes plus backend processes, and separately among all role cgroup members, but not between members and backend processes. Probe: a WORKER co-member descended from the worker, with the worker's label and uid, carrying the KUBELET backend capture's pid and startTicks (planeon_worker_t count raised to match) is ACCEPTED. One process cannot be in probe-worker as planeon_worker_t and in the kubelet cgroup as qualk8s_kubelet_t, so this is the impossible observation set round-2 N9 asked to refuse, and 'no process reported twice' is overstated.",
+      "id": "P4",
+      "location": "scripts/native_qualification_v2.py check_qualification ('one process reported twice'); README Files bullet and round-2 N9 disposition",
+      "requiredChange": "Check (pid, startTicks) uniqueness over the union of all role cgroup members and all backend processes.",
+      "severity": "NOTE"
+    },
+    {
+      "finding": "(a) Processes directly in planeon.slice are not observed: the slice is enrolled, so its hierarchical populated flag is unconstrained, and no field lists its own members. OUTSIDE_PLANEON_SLICE for the slice root therefore rests on cgroup v2's no-internal-process rule (a non-root cgroup with domain controllers enabled in cgroup.subtree_control holds no processes, implied by the role services' memory.max), which the README does not state. (b) planeon_policy_writer_t is counted but never checked (probe: a count of 7 is accepted); correct by design but undocumented. (c) 'so no planeon-domain process exists outside its role cgroup' is overbroad: policy-writer processes are planeon-domain processes outside role cgroups by design, and only the seven listed domains are counted.",
+      "id": "P5",
+      "location": "README 'What v2 adds' Lifecycle subjects and Host-wide counts rows; decision 8; scripts/native_qualification_v2.py check_lifecycle_capture",
+      "requiredChange": "State the reliance on the no-internal-process rule (or observe planeon.slice's own cgroup.procs, required empty), and reword the counts row as 'no role-domain process outside its role cgroup; the writer count is informational'.",
+      "severity": "NOTE"
+    },
+    {
+      "finding": "The cgroup v2 pids controller counts TIDs, and clone() returns EAGAIN at pids.max. Every positive pairs a SERVER cgroup pidsMax of 1 with a four-thread SERVER process (threadsUniform true), which a limit set before start (systemd TasksMax) does not allow. threadCount is never compared with pidsMax, and the WORKER rule compares the number of member processes, not tasks, with pidsMax.",
+      "id": "P6",
+      "location": "vectors.json positive[0..3] (record roles.SERVER.cgroup.pidsMax 1; SERVER capture process.threadCount 4); scripts/native_qualification_v2.py check_capture WORKER pidsMax rule",
+      "requiredChange": "Make the positives kernel-plausible (pidsMax at least the thread count), and either compare thread counts (or pids.current) with pidsMax or state that pidsMax is not checked against threads.",
+      "severity": "NOTE"
+    },
+    {
+      "finding": "(a) The only implementation profile is the unit test fixture 'unit-distribution', which check_qualification accepts like a production profile; the README says W03 'adds' the selected distribution, so a production record could keep claiming the fixture profile unless it is then removed or confined to tests. (b) The README names the allow-listed types qualk8s_<component>_t, but CONTAINER_RUNTIME, SERVICE_PROXY and NETWORK_POLICY_AGENT use qualk8s_runtime_t, qualk8s_proxy_t and qualk8s_netpol_t; whether these types are confined is entirely a W02e/W03 policy obligation, as the README states. (c) 'Distinct cgroups' admits nesting: a SCHEDULER cgroup inside the KUBELET cgroup is accepted (also observed in round 2).",
+      "id": "P7",
+      "location": "qualification.schema.json $defs.backendProfile and $defs.backendComponents; scripts/native_qualification_v2.py check_record backend loop; README 'What v2 adds' Backend row",
+      "requiredChange": "When W03 adds the selected profile, remove 'unit-distribution' from production acceptance or mark it test-only; correct the type-name wording; refuse nested backend cgroups or document why nesting is acceptable.",
+      "severity": "NOTE"
+    }
+  ],
+  "modelExecution": {
+    "extraProbes": [
+      {
+        "expected": "every recorded result",
+        "observed": "162/162 matched; 158 unique IDs; the four positives are also accepted with no_v1_history=True and an empty predecessor list",
+        "probe": "Independent replay harness (own mutation applier) of every vector against the hash-verified schema, vectors and model and the base-identical v1 schema and vectors"
+      },
+      {
+        "expected": "single error (README)",
+        "observed": "38/38 single top-level errors",
+        "probe": "Top-level schema error count behind each schema-level negative"
+      },
+      {
+        "expected": "mustInclude pairs present; single error for X11",
+        "observed": "X05-X08: 45 errors including $.schemaVersion const and $.qualificationProfile const; X10: 17, X12: 2, X13: 4, each including $ additionalProperties; X11: 1 error; the whole v1 schema (oneOf) refuses each with 1 error",
+        "probe": "Error sets behind the cross-version cases"
+      },
+      {
+        "expected": "valid; pins match; no unused definition",
+        "observed": "valid; v2 canonical fd1657c9... = SCHEMA_SHA256 = vectors.schemaSha256; v1 canonical 8e184d60... = V1_SCHEMA_SHA256 = vectors.v1SchemaSha256; every $defs entry referenced",
+        "probe": "Draft 2020-12 metaschema check; canonical digests; $defs references"
+      },
+      {
+        "expected": "[]",
+        "observed": "[] for all four",
+        "probe": "validate_profile (pinned proxy contract, imported read-only) on the four positive profiles"
+      },
+      {
+        "expected": "refuse (role subtree must be empty)",
+        "observed": "ACCEPTED by check_qualification",
+        "probe": "Census lists unpopulated /sys/fs/cgroup/planeon.slice/planeon-effect-gate.service/x while the gate capture reports childCgroups [] and descendantCount 0"
+      },
+      {
+        "expected": "refuse",
+        "observed": "ACCEPTED",
+        "probe": "Census lists an unpopulated third leaf planeon-capacity-broker.service/extra while the broker capture reports delegatedChildren [broker, probe-worker]"
+      },
+      {
+        "expected": "refuse (leaf property)",
+        "observed": "ACCEPTED",
+        "probe": "Census lists an unpopulated child of the probe-worker leaf"
+      },
+      {
+        "expected": "refuse (inconsistent observations)",
+        "observed": "ACCEPTED (both variants)",
+        "probe": "Census reports the SERVER cgroup, or planeon.slice, as populated 0 while the SERVER capture lists its live process"
+      },
+      {
+        "expected": "refuse non-canonical paths",
+        "observed": "unpopulated: ACCEPTED; populated: refused 'unenrolled populated cgroup in the planeon slice'",
+        "probe": "Census entries '/sys/fs/cgroup/planeon.slice/../system.slice/x.service' and '/sys/fs/cgroup/planeon.slice/', unpopulated and populated"
+      },
+      {
+        "expected": "refuse",
+        "observed": "refused 'unenrolled populated cgroup in the planeon slice'",
+        "probe": "Census adds a populated non-canonical alias of the gate cgroup, or a populated child of the containment cgroup"
+      },
+      {
+        "expected": "refuse (one process reported twice)",
+        "observed": "ACCEPTED",
+        "probe": "WORKER co-member (descended, worker label and uid) carrying the KUBELET backend process's pid and startTicks; planeon_worker_t count raised to match"
+      },
+      {
+        "expected": "refuse (gate must not be the broker)",
+        "observed": "ACCEPTED",
+        "probe": "EFFECT_GATE closure (record filePaths, capture files and executableMaps) extended with /opt/planeon/bin/harness-capacity-broker"
+      },
+      {
+        "expected": "refuse (decision 5: native-only gate)",
+        "observed": "ACCEPTED",
+        "probe": "EFFECT_GATE closure extended with python3.12, or with python3.12 plus harness-live-probe-exec (positives 0 and 1)"
+      },
+      {
+        "expected": "refuse or documented",
+        "observed": "ACCEPTED (positives 0 and 1)",
+        "probe": "OBSERVER (interpreterPath null) closure extended with python3.12; SERVER closure extended with the gate artifact"
+      },
+      {
+        "expected": "refuse or documented",
+        "observed": "ACCEPTED",
+        "probe": "Gate executable byte-identical to a library added to the broker closure"
+      },
+      {
+        "expected": "refuse",
+        "observed": "refused 'role executables share content'",
+        "probe": "Gate verityDigest equal to the broker's while sha256 differs"
+      },
+      {
+        "expected": "refuse",
+        "observed": "refused 'code shared across owner classes'",
+        "probe": "Policy-writer executable content equal to the apiserver backend file"
+      },
+      {
+        "expected": "refuse",
+        "observed": "both refused 'planeon process outside its role cgroup'",
+        "probe": "planeon_server_t count 2; WORKER co-member dropped from the capture while planeon_worker_t stays 2"
+      },
+      {
+        "expected": "accepted by design (placement enforced by census and memberships)",
+        "observed": "ACCEPTED",
+        "probe": "planeon_policy_writer_t count 7"
+      },
+      {
+        "expected": "refuse",
+        "observed": "refused 'role cgroup has descendants'",
+        "probe": "OBSERVER capture with childCgroups ['x'] and descendantCount 1 (no vector covers OBSERVER)"
+      },
+      {
+        "expected": "accept; refuse; refuse; refuse or note",
+        "observed": "accepted; refused; refused; ACCEPTED (ancestry checked by ppid only)",
+        "probe": "WORKER members: a grandchild of the worker; two members in a ppid cycle; a sibling spawned by the broker; a co-member whose startTicks precede its parent's"
+      },
+      {
+        "expected": "refuse; accept (D5); refuse; refuse",
+        "observed": "refused 'capability sets differ from the enrolled set'; ACCEPTED; refused 'process/kernel custody differs'; refused 'capability sets differ from the enrolled set'",
+        "probe": "WORKER capture: capBounding {CAP_SETPCAP}; capBounding {CAP_SETUID}; noNewPrivs 0; capInheritable, capAmbient or capEffective {CAP_SETUID}"
+      },
+      {
+        "expected": "refuse",
+        "observed": "both refused 'seal marker does not bind this boot'",
+        "probe": "Seal marker digest kept after changing one program's translatedSha256, or after changing the record's bootId"
+      },
+      {
+        "expected": "accept (marker recomputable from the record, disclosed)",
+        "observed": "ACCEPTED",
+        "probe": "SERVER and OBSERVER INET4_BIND program IDs swapped with the marker and captures recomputed consistently"
+      },
+      {
+        "expected": "note (label value is W02e)",
+        "observed": "ACCEPTED",
+        "probe": "Seal marker label system_u:object_r:tmp_t:s0 recorded and observed consistently"
+      },
+      {
+        "expected": "accept (attested empty) / refuse",
+        "observed": "ACCEPTED / refused 'nonce reused across versions'",
+        "probe": "v2 run nonce equal to the v1 'unit-nonce': with no_v1_history=True and [], and with the real v1 predecessors"
+      },
+      {
+        "expected": "accept (caller obligation: this host's complete history)",
+        "observed": "ACCEPTED",
+        "probe": "v1 predecessors with host.machine changed to aarch64"
+      },
+      {
+        "expected": "validate_profile refuses; check_qualification accepts (documented obligation)",
+        "observed": "validate_profile ['invalid strict proxy profile data']; check_qualification ACCEPTED; validate_qualification returns [] on acceptance and carries the obligation text only in its refusal message",
+        "probe": "Profile with every quota integer set to 0, digests rebound"
+      },
+      {
+        "expected": "accept; refuse (decision 4)",
+        "observed": "ACCEPTED; refused 'one process reported twice'",
+        "probe": "KUBELET and SERVICE_PROXY sharing one executable as separate processes; the same with one process reported for both"
+      },
+      {
+        "expected": "refuse or documented",
+        "observed": "ACCEPTED",
+        "probe": "SCHEDULER cgroup nested inside the KUBELET cgroup"
+      },
+      {
+        "expected": "W02g scope",
+        "observed": "ACCEPTED",
+        "probe": "SCHEDULER apiIdentities ['system:masters']; APISERVER identities including system:masters"
+      },
+      {
+        "expected": "refuse or kernel-plausible data",
+        "observed": "ACCEPTED in all four positives",
+        "probe": "Positive bundles: SERVER cgroup pidsMax 1 with SERVER threadCount 4 (cgroup v2 pids.max counts TIDs)"
+      },
+      {
+        "expected": "accept (no ordering rule)",
+        "observed": "ACCEPTED",
+        "probe": "Lifecycle capture observed at 2026-09-08T00:09:59Z, after the role captures"
+      },
+      {
+        "expected": "no dropped check; changes as the README states",
+        "observed": "no check dropped; denylist replaced by the schema allow-list; by_content split into by_sha256 and by_verity; WORKER members unique by pid; schema changes match the README",
+        "probe": "Diff of the round-2 model and schema against round 3"
+      },
+      {
+        "expected": "identical",
+        "observed": "identical (8ee55718..., 3d567946...); only the catalog-set and success-message lines differ",
+        "probe": "Base versus working tree: validate_record and validate_capture (lines 154-269) and load_proxy_inputs through validate_profile (lines 72-215)"
+      }
+    ],
+    "resultsMatched": 162,
+    "vectorsReplayed": 162
+  },
+  "openItemStatus": {
+    "F15": {
+      "note": "backendProfile.oneOf binds implementationId 'unit-distribution' to the eight-key list, pinned through SCHEMA_SHA256 (R58 six-key variant and R59 unknown profile refused, single error); the model requires components equal to componentKeys (R57).",
+      "status": "CLOSED"
+    },
+    "F16": {
+      "note": "The README states the two-line deltas in both scripts, verified: lines 300 and 348 of scripts/validate_native_qualification.py and lines 223 and 260 of scripts/validate_proxy_contract.py; validate_record, validate_capture, load_proxy_inputs and validate_profile hash identically to base. The base-digest pins are stated as intentional. The out-of-subject working-tree edits were not reviewed here.",
+      "status": "CLOSED"
+    },
+    "F18": {
+      "note": "Cross-version cases assert reader-independent facts (X05-X08 contain both v1 version consts among 45 errors; X10, X12, X13 contain $ additionalProperties, the only discriminating fact because v1 captures carry no version field; X11 is a single error); roleProcess is removed and every $defs entry is referenced; 38 of 38 schema-level negatives are single top-level errors.",
+      "status": "CLOSED"
+    },
+    "F3": {
+      "note": "Role captures report childCgroups and descendantCount, required empty (C22-C25, plus an OBSERVER probe); the broker capture reports the delegated service's children and direct members (C19-C21); the slice census refuses populated unenrolled cgroups (L11, L12); host-wide role-domain counts refuse role-domain processes outside role cgroups (Q07). POLICY_WRITER and containment processes in a role cgroup are refused (C14, C15, R50, R51). Residuals: census versus role-capture consistency (P3) and the slice root's own members (P5).",
+      "status": "CLOSED"
+    },
+    "F7": {
+      "note": "Each backend component's processLabel is a schema-const qualk8s_* type (R61-R66, all single-error, covering planeon_server_t, unconfined_t, kubelet_t, container_runtime_t, rpm_t and a shared domain); positives use the qualk8s types; distinct cgroups under cgroupfs outside the slice, disjoint identities and backend captures remain (R67-R72, K01-K03). Confinement of the qualk8s types is a disclosed W02e/W03 obligation; nested backend cgroups are still accepted (P7).",
+      "status": "CLOSED"
+    },
+    "N1": {
+      "note": "A pinned per-component allow-list replaces the denylist; R62 unconfined_t, R63 kubelet_t, R64 container_runtime_t and R65 rpm_t are refused as single schema errors; the positives use qualk8s types; the README defers the defining policy module to W02e/W03 (wording nits in P7).",
+      "status": "CLOSED"
+    },
+    "N10": {
+      "note": "Members carry ppid, uid, label, no_new_privs and seccomp mode; WORKER members must match the worker and descend from it (C17, C18; cycle and sibling probes refused, grandchildren accepted); domainProcessCounts for every role domain must equal the role membership (Q07); EMPTY is defined as cgroup.events populated 0.",
+      "status": "CLOSED"
+    },
+    "N11": {
+      "note": "Cross-version expectations are 'refused, with these errors present' (mustInclude), replayed independently; no best_match strings remain in those cases.",
+      "status": "CLOSED"
+    },
+    "N12": {
+      "note": "threadsUniform is required (C26) and stated as an inspector obligation in the module docstring and README; decision 8 names W02d and W02e for POLICY_WRITER's steady-state row.",
+      "status": "CLOSED"
+    },
+    "N13": {
+      "note": "The marker's label, uid 0 and mode 0444 are recorded and observed (L05, L06); its content binds every (role, hook, programId, translatedSha256) (R54); the README states that the marker is recomputable and that the booleans and pinned programs are the stronger evidence.",
+      "status": "CLOSED"
+    },
+    "N14": {
+      "note": "Decision 6 discloses the static-linking or unlisted-library consequence and that lifecycle and backend closures beyond the executable are declared, not observed.",
+      "status": "CLOSED"
+    },
+    "N15": {
+      "note": "The inheritable-empty and single-process rules are listed as decisions 9 and 10 with rationale; roleProcess is removed; the mandatory non-empty v1 list is replaced by the attested empty history.",
+      "status": "CLOSED"
+    },
+    "N16": {
+      "note": "The README states the two-line deltas in both scripts (verified) and that source-index pins base bytes on purpose.",
+      "status": "CLOSED"
+    },
+    "N2": {
+      "note": "childCgroups and descendantCount are required empty for all five role cgroups, delegatedServiceMembers is required empty, the broker service's children must be exactly broker and probe-worker, and the census refuses populated descendants (C20, C22-C25, L12). The census does not refuse unpopulated descendants that contradict the role captures (P3).",
+      "status": "CLOSED"
+    },
+    "N3": {
+      "note": "The census observes every cgroup under planeon.slice and refuses populated unenrolled ones (L11, L13, L14); decision 8 is restated as a recorded rule enforced by the census and the memberships. The slice root's own processes rely on an unstated kernel rule (P5).",
+      "status": "CLOSED"
+    },
+    "N4": {
+      "note": "implementationId is bound to its exact key set in the schema (pinned through SCHEMA_SHA256); R58 and R59 refuse a six-key variant and an undefined profile.",
+      "status": "CLOSED"
+    },
+    "N5": {
+      "note": "Copies are refused: role executables are pairwise content-distinct and distinct from the enrolled interpreter (R52, R53, verity-only probe). The gate can still list the enrolled broker executable or python3.12 in its closure, and captures do not observe the process image, so the native-only gate and the gate-is-not-the-broker goal are bypassable by path inclusion (P1).",
+      "status": "PARTIAL"
+    },
+    "N6": {
+      "note": "The caller obligation is stated (complete retained v1 history owned by the W03 enrollment ledger); an attested empty history is a no_v1_history flag; M08 is accepted and M09 and M10 refused; check_qualification passes the flag through (all positives accepted with it).",
+      "status": "CLOSED"
+    },
+    "N7": {
+      "note": "Owner decision D5 resolves the unsatisfiable rule explicitly; the WORKER rule is encoded exactly (Q2) with C06, C07 and A04, and the positives carry the inherited broker bounding set. The claim that D5 is already carried to W01's record and T04 is not evidenced in the working tree (P2).",
+      "status": "CLOSED"
+    },
+    "N8": {
+      "note": "The module, check_qualification and validate_qualification docstrings state the caller obligation; probe: a zero-quota profile that validate_profile rejects is still accepted by check_qualification, as documented. The reminder in validate_qualification's result text appears only in the refusal message; an accepted result is [].",
+      "status": "CLOSED"
+    },
+    "N9": {
+      "note": "(pid, startTicks) is unique across inspected role and backend processes and across role cgroup members (Q05; decision 4 probe), but a WORKER co-member that equals a backend process is accepted (P4).",
+      "status": "PARTIAL"
+    }
+  },
+  "questionAnswers": {
+    "Q1": "F3, F7, F15, F16 and F18 are CLOSED in the round-3 bytes; N1-N4, N6-N8 and N10-N16 are CLOSED; N5 and N9 are PARTIAL; none is OPEN. N5: copies of the broker binary or the interpreter at the gate path are refused (R52, R53), but the gate's closure may list the enrolled broker executable or python3.12 and captures do not observe the process image (P1). N9: inspected role processes, backend processes and role members are each unique, but a WORKER co-member may carry a backend process's (pid, startTicks) (P4). Closed items carry residuals recorded as P2 (D5 carry claim, N7), P3 (census versus role-capture consistency, F3/N2), P5 (slice root, N3) and P7 (backend wording and nesting, F7/N1). The README dispositions are true except that 'distinct (pid, start ticks) across captures' (N9) is incomplete and the Gate identity claim holds only for copies (N5).",
+    "Q2": "Yes. check_capture's WORKER branch requires capPermitted, capEffective, capAmbient and capInheritable to equal [], capBounding to be duplicate-free and a subset of the BROKER's enrolled set (schema const CAP_BPF, CAP_NET_ADMIN, CAP_SETGID, CAP_SETUID), noNewPrivs equal to the record's const 1, uid and gid equal to the record's WORKER values (schema minimum 10000, so non-root) and threadsUniform true; every other role keeps permitted = effective = bounding = enrolled with ambient and inheritable empty. C06 and C07 refuse, A04 accepts an empty bounding set, the positives carry the inherited broker set, and probes refuse a {CAP_SETPCAP} bounding set, no_new_privs 0 and non-empty inheritable, ambient or effective sets while accepting {CAP_SETUID}. It is no weaker than claimed: per capabilities(7) the bounding set enters P'(permitted) only through file permitted capabilities, and dropping an entry needs CAP_SETPCAP while the set is inherited at fork and preserved across execve (so the premise holds); per PR_SET_NO_NEW_PRIVS, file capabilities and set-user-ID bits are non-functional under no_new_privs; with empty permitted, inheritable and ambient sets and a non-root uid, capset cannot add to the inheritable set and an ambient raise needs both. D5 is a deliberate, disclosed relaxation of the reviewed spec's 5.3 WORKER row (bounding equal to the empty set) taken as the owner's decision; its stated carry to W01's record and T04 is not evidenced in the reviewed bytes (P2).",
+    "Q3": "Mostly faithful, with disclosed deferrals and one partly enforced decision. Encoded: 4.1 (record and profile versions, the closed five roles all required, the gate present without a listener in zero-resource mode, closed lifecycle subjects with digest, domain and entry rule, closed backend keys bound to the implementation profile); 4.2 (exact slice, service and leaf paths, the delegated service with exactly broker and probe-worker and no direct members, leaves without children, gate, writer and containment artifact paths, a 0555 root-owned gate artifact through the actual-executable rule and root-owned file observations, the gate listener as the signed KUBERNETES_API_PROXY endpoint); 4.4 (every rejection vector: X01-X13, R01-R07, R43, R50, R55, R75, C14-C25, L11, L12, M02-M10); 5.1 (commands {7,15,16}, pin layout and label, BPF_F_ALLOW_MULTI, helper-free, map-free and unique programs, jit_harden 0 or 1, effective = local = the enrolled program); 5.2 (lockdown integrity, enforcing with a pinned policy digest, the three booleans, modules_disabled, kexec_load_disabled, ptrace_scope 3, unprivileged_bpf_disabled 1, module-set digest, a boot-bound seal marker on tmpfs, containment absent); 5.3 (uids, capability sets with D5, seccomp mode 2 with KILL_PROCESS and a filter digest, no_new_privs 1, RLIMIT_CORE 0, the CAP_NET_BIND_SERVICE coupling, fixed per-role domains). Not encoded and deferred: exact filters (W02d), label values and the permission matrix, program-object ownership and pin permissions, confinement of the qualk8s types, root-login confinement and 'no unconfined or permissive domain anywhere on the host' (these rest on the pinned policy digest and W02e; data constrains only planeon and backend domains), POLICY_WRITER's steady-state row (decision 8), the identity closure (W02g) and unit-file properties (RefuseManualStart, Delegate). No spec rule is weakened apart from the owner-decided D5 relaxation; the additions (decisions 9, 10, 11 and the native-only gate) are stricter. Decisions 1-11 are listed with rationale; decision 5's native-only property is enforced only against copies (P1), decision 8's enforcement for the slice root rests on an unstated kernel rule (P5), decision 4's separate-process rule is enforced (probe), and decision 6's consequence is disclosed.",
+    "Q4": "Yes, some violating inputs still pass; none reaches MAJOR in this review. Accepted (full bundles rebound where the record changes): a gate, observer or server closure listing another role's executable or python3.12, including a gate that loads the broker binary, or python3.12 plus the worker script (P1); a census listing unpopulated descendants of role cgroups or a third broker leaf, or reporting live role cgroups or planeon.slice as unpopulated, beside role captures that report none (P3); a WORKER co-member that is also the KUBELET process (P4); processes directly in planeon.slice, which no field can report (P5); SERVER pids.max 1 with four threads (P6); nested backend cgroups, system:masters among SCHEDULER or APISERVER identities (W02g scope) and arbitrary but consistent label values (W02e scope); and, by stated caller obligation, proxy-invalid profiles, incomplete v1 histories, a false empty-history attestation and v1 records from another machine. Sound where tested: the census refuses populated unenrolled cgroups, including role-cgroup descendants, children of the containment cgroup and non-canonical aliases of enrolled paths (L11, L12, probes); host-wide role-domain counts refuse role-domain processes outside role cgroups (Q07, server and worker probes); role subtrees for all five roles and the broker service (C19-C25, OBSERVER probe); worker membership by label, uid, no_new_privs, seccomp and descent, with grandchildren accepted and cycles and sibling workers refused; the allow-list and implementation profile (R57-R66); content-distinct executables including verity-only collisions (R52, R53); the seal marker's binding of the boot and every (role, hook, program, digest) (R54 and a boot probe; a consistent recomputation is accepted, as disclosed); migration with an attested empty history (M08-M10) and the full-string v1 nonce scan; decision 4's separate processes. A diff against the round-2 model found no dropped check: the denylist became a stricter schema allow-list, by_content split into by_sha256 and by_verity, and WORKER members are now unique by pid.",
+    "Q5": "All 162 vectors replay exactly under an independent harness: 4 positives through check_qualification (with the v1 predecessors, and again with an attested empty history), 131 negatives with the recorded refusal, 4 accepted variants, 13 cross-version cases including every mustInclude set, and 10 migration cases with v1Ops and noV1History; the 158 IDs are unique. All 38 schema-level negatives are single top-level errors. Each negative's intent matches the rule that fires (R61 and R66 now fire as schema consts, which makes the model's planeon-domain and shared-domain backend checks unreachable; R73 fires as custody). A01-A04 are right under spec 5.3 and D5. The cross-version facts are right: the v2 reader refuses v1 records and captures at the discriminator; the v1 reader refuses v2 records with both version consts among the errors, and v2 captures, lifecycle captures and backend captures with $ additionalProperties; the v2 path under the v1 reader is a single error. The four positive profiles pass the pinned validate_profile. The positives are kernel-implausible for SERVER pids.max (P6). Nothing claims native observation, an installed profile, a selected distribution, closure of W01 F1 or F2 or any E01-E12 proof (DATA_CHECK_ONLY; nativeAcceptance and tenantAcceptance false; 'Not claimed' section). Overstatements: 'a copied broker or Python binary cannot pass as the gate' (true only for copies, P1), D5 'is carried to W01's record and to T04' (P2), 'no process reported twice' (P4), 'no planeon-domain process exists outside its role cgroup' and placement 'enforced by the slice census' (P5), and 'qualk8s_<component>_t' (P7). The claim to close W01 F3 is correct.",
+    "Q6": "Yes. The v1 schema (bef248bf...) and vectors (cd1be009...) are byte-identical at base 0ecc5f3, in the working tree and in source-index; the canonical v1 schema digest 8e184d60... equals the v2 model's V1_SCHEMA_SHA256 and the v1 model's SCHEMA_SHA256. scripts/validate_native_qualification.py differs from base only at line 300 (catalog set, in validate_qualification_authority) and line 348 (success message, in main); lines 154-269 (validate_record and validate_capture) hash identically (8ee55718...). scripts/validate_proxy_contract.py differs only at line 223 (catalog set, in validate_proxy_contract) and line 260 (success message, in main); lines 72-215 (load_proxy_inputs through validate_profile) hash identically (3d567946...). The v2 primitive definitions equal the v1 ones. The v2 model validates predecessors against the pinned v1 schema and reads only their bootId and scope nonces; no v1 data is reinterpreted. The v1 model was compared by bytes and not executed."
+  },
+  "reviewDate": "2026-10-06",
+  "reviewLimit": "Source-level DATA_CHECK_ONLY review of the six snapshot files, hash-verified and byte-identical to the working-tree copies at the start and at the end of the review. It establishes no native qualification, kernel, SELinux, cgroup or BPF behaviour, installed profile, selected distribution, closure of W01 F1 or F2, or any E01-E12 obligation, and it authorizes nothing. Repository tests and validators were not run; the v1 model was compared by bytes and not executed; the proxy contract was imported only for load_proxy_inputs and validate_profile. Out-of-subject working-tree files (the new layer validator, tests, packet YAML, authority and catalog edits) were not reviewed beyond the excerpts listed in sourcesRead. Kernel and capability facts come from public documentation read through a summarizing fetch tool, not from a host or a pinned release. Owner decision D5 was taken as genuine, as the brief states, and judged only for its encoding and soundness. Probes are illustrative, not exhaustive. f3Closed refers to W01 review finding F3 (exact v2 cgroup paths and mutual path rejection), not to round-1 F3. Git was used only through show, rev-parse and log; no status, checkout or index-writing command ran. Bytecode writing was disabled and no scripts/__pycache__ was created; no repository file was created, edited or deleted; scratch files were written only under scratchpad/reviewer-w02a-r3.",
+  "round": 3,
+  "schemaVersion": "planeon.internal.native-profile-v2-review/v1",
+  "sourcesRead": [
+    "Snapshot review-w02a-r3/: README.md, REVIEW_BRIEF.md, qualification.schema.json, vectors.json, native_qualification_v2.py, source-index.json (hash-verified; byte-identical to the working-tree copies at the start and at the end of the review)",
+    "architecture/native-profile-v2/review-round1.json and review-round2.json (hashes match source-index; findings, statuses, answers and probes read; subjectSha256 checked against round1/ and round2/)",
+    "architecture/native-profile-v2/round1/* and round2/* (hashes verified against source-index; round2/native_qualification_v2.py and round2/qualification.schema.json diffed against round 3; round2/README.md decision 5 excerpt read)",
+    "architecture/host-interface-inputs/resolved/HOST_INTERFACE_SPEC.md (base hash verified; sections 0-2, 4, 5 and 8-10 read)",
+    "architecture/host-interface-inputs/resolution-review-round1.json (base hash verified; findings F1-F3 read)",
+    "architecture/host-interface-inputs/resolution-status.json (base hash verified; carriedFindings, laterWork, w01State and obligations read)",
+    "docs/alpha-2/NATIVE_QUALIFICATION_READINESS.md and docs/alpha-2/HOST_INTERFACE_RESOLUTION.md (base hashes verified; the latter grepped for 'bounding' and 'T04' only)",
+    "architecture/native-qualification-inputs/qualification.schema.json and vectors.json (v1; hashes verified; $defs compared with v2; positives used for cross-version and migration replay)",
+    "scripts/validate_native_qualification.py (diff against base; lines 154-269 read and hashed; not imported or executed)",
+    "scripts/validate_proxy_contract.py (lines 1-135 read; diff against base; imported only for load_proxy_inputs and validate_profile); architecture/proxy-contract-amendment.json (keys and inputFiles) and the proxy profile schema loaded through load_proxy_inputs",
+    "scripts/validate_native_profile_v2.py (out of subject; lines 360-535 read for the vector replay protocol and status-record rules; not imported or executed)",
+    "task-packets/MET-ENFORCE-005.yaml (out of subject; objective, contracts and excluded lines read via grep)",
+    "tests/test_native_profile_v2.py and architecture/native-profile-v2-authority.json (out of subject; existence only, not read)",
+    "AGENTS.md (loaded as context)",
+    "git metadata: rev-parse HEAD and the base tree, log -1 of the base, git show <base>:<path> for every predecessor input; no status, diff, checkout or other index-writing command",
+    "https://docs.kernel.org/admin-guide/cgroup-v2.html (summarizing fetch: no-internal-process constraint, pids controller counts TIDs, cgroup.events populated, threaded mode)",
+    "https://man7.org/linux/man-pages/man7/capabilities.7.html (summarizing fetch: PR_CAPBSET_DROP needs CAP_SETPCAP, bounding set inherited at fork and preserved across execve, execve transformation)",
+    "https://man7.org/linux/man-pages/man2/PR_SET_NO_NEW_PRIVS.2const.html (summarizing fetch: no_new_privs makes set-user-ID, set-group-ID and file capabilities non-functional; inherited and irreversible)"
+  ],
+  "subjectSha256": {
+    "README.md": "7eb2bf5f8e78bf19f942893f57da5e7ca519bdf134c26b98d7b79ef4cc47fc89",
+    "REVIEW_BRIEF.md": "30e896dafecdc5d4e78852b526dde7ba8108c28e998afe47d608ce5ec567a345",
+    "native_qualification_v2.py": "c72b6e18044f685c646756a1574bd81cd24f1475d7eda326778d70d1314ef68b",
+    "qualification.schema.json": "55bd641fd229f21e04ec00813bcfe600890584e982e290a210720ac5cb160ab0",
+    "source-index.json": "a531cd4bd2c29a50459e93847119009b59b6690ac5628c0f737644cef504b5c7",
+    "vectors.json": "6d58d1f36b7bce5739b94dd89512d358b96878c70e1de7cf8f399050b881b396"
+  },
+  "verdict": "PASS_FOR_SOURCE_PUBLICATION"
+}

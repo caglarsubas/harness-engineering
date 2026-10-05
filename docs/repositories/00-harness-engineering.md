@@ -1,6 +1,14 @@
 # Repository Plan: `Harness-Engineering`
 
-## Current source preparation — MET-ENFORCE-004
+## Current source preparation — MET-ENFORCE-005
+
+W02a: the closed v2 native qualification contract (record, role, lifecycle and backend
+captures, 162 vector checks, DATA_CHECK_ONLY reference model) passed its third
+independent review and closes W01 finding F3; every E01-E12 obligation stays open.
+Alpha2 OPEN;200 accepted plus ENFORCE-005 only. Native Linux, exact-main and tenant
+acceptance remain separate.
+
+## Historical ENFORCE-004 source preparation — MET-ENFORCE-004
 
 The W01 gates G04-G07 and G09 are resolved at design level with the owner's design
 decisions and passed an independent source-only review; W01 is DESIGN_RESOLVED_REVIEWED,
@@ -846,6 +854,7 @@ Every packet uses branch `codex/<packet-id>`, changes only named paths, opens a 
 72. `MET-VERIFY-003`: start the network canary in isolated mode; apply the MET-VERIFY-002 review notes; source only.
 73. `MET-VERIFY-004`: record the dedicated verifier account in the verifier contract; source only.
 74. `MET-ENFORCE-004`: resolve W01 gates G04-G07 and G09 at design level with independent review; source only.
+75. `MET-ENFORCE-005`: publish the W02a v2 native qualification contract with independent review; source only.
 
 ## Testing, verification, and acceptance
 

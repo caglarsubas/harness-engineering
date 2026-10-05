@@ -1,0 +1,385 @@
+{
+  "actions": {
+    "filesEdited": false,
+    "githubMutated": false,
+    "nativeActions": false,
+    "referenceModelExecuted": true,
+    "repositoryValidatorsRun": false,
+    "runnerActivated": false,
+    "testsRun": false,
+    "warmSourcesAccessed": false
+  },
+  "f3Closed": true,
+  "findings": [
+    {
+      "finding": "Spec 5.2 S5 lists kernel.unprivileged_bpf_disabled=1 among the one-way sysctls and says containment refuses to seal if any value differs; owner decision D3 locks host controls until reboot. The record also accepts 2. In Linux v6.12 only 1 is locked (kernel/bpf/syscall.c bpf_unpriv_handler: locked_state = value == 1; Documentation/admin-guide/sysctl/kernel.rst: with 2 'an admin can still change this setting later on'). Probe: a record plus all five captures with unprivilegedBpfDisabled=2 pass check_record, check_capture and check_lifecycle_capture. The README cites spec 5.2 for '1 or 2'; the spec says 1.",
+      "id": "F1",
+      "location": "qualification.schema.json $defs.hardening.unprivilegedBpfDisabled (enum [1,2]); README 'What v2 adds' Host lock state row",
+      "requiredChange": "Make hardening.unprivilegedBpfDisabled const 1 (keep the observed enum 0..2 so readers can report what they see), correct the README row, and add a record negative (2) and a capture negative (observed 2).",
+      "severity": "MAJOR"
+    },
+    {
+      "finding": "Spec 5.3 requires, for every role, permitted = effective, bounding equal to the listed set and ambient empty. Record and capture carry one 'capabilities' list whose set (effective or permitted) is undefined, so a reader cannot report, and the model cannot refuse, a SERVER whose permitted or bounding set contains CAP_SYS_ADMIN while its effective set is {CAP_BPF, CAP_NET_ADMIN}; a permitted capability can be raised into effective with capset(2). The README presents the 5.3 capability rows as encoded. Unlike booleans and hardening, the capture cannot express the violating observation.",
+      "id": "F2",
+      "location": "qualification.schema.json $defs.roles.*.capabilities and $defs.capture.process.capabilities; native_qualification_v2.py check_capture",
+      "requiredChange": "Keep the enrolled set in the record and make captures report permitted, effective, bounding and ambient separately; refuse unless permitted == effective == bounding == enrolled set and ambient == []; add negatives for an extra permitted capability, an extra bounding capability and a non-empty ambient set.",
+      "severity": "MAJOR"
+    },
+    {
+      "finding": "Spec 4.4 requires refusing a v2 record with a lifecycle subject running inside a resident role cgroup. Only HOST_CONTAINMENT is placed (const cgroupPath; host-wide absence via lifecycleCapture.domainProcessCount). POLICY_WRITER, the subject that may run during ACTIVE (spec 4.1), has no placement field (probe: adding cgroupPath is refused as additionalProperties), and a resident-role capture describes exactly one process, so a POLICY_WRITER process, or any other foreign process, sharing a role cgroup can be neither expressed nor refused. C07 replaces the inspected SERVER process label; it does not model a co-resident process. The record also cannot express that the delegated planeon-capacity-broker.service owns exactly the two leaves broker and probe-worker (spec 4.2), so an extra unenrolled leaf without the seven programs is invisible.",
+      "id": "F3",
+      "location": "qualification.schema.json $defs.lifecycleSubjects.POLICY_WRITER (no placement field) and $defs.capture.process (one process); vectors.json C07",
+      "requiredChange": "Add a POLICY_WRITER placement rule (a recorded cgroup required to be outside planeon.slice and every role cgroup) and a membership observation in role captures (complete cgroup.procs with a label per member, plus the child list of the delegated broker service); refuse any unenrolled member or child; add record and capture negatives for POLICY_WRITER and HOST_CONTAINMENT inside a role cgroup.",
+      "severity": "MAJOR"
+    },
+    {
+      "finding": "The v2 resource positives differ from the v1 positives only in binding.runNonce and binding.capacityNonce. Their resource manifest is the v1 manifest unchanged (manifestDigest sha256:e455c4a909dc0e47f79d3df287fee5344bf062aac49e050dc4a3668793b13028) and still carries label planeon.ai/run-nonce='unit-nonce' (the v1 run nonce) while binding.runNonce='unit-nonce-v2'; the CREATE name unit-fixture is also the v1 name (C7: signed CREATE names are never reused). The pinned proxy profile contract requires labels == {run-nonce: binding.runNonce, tenant-id: binding.tenantId} (scripts/validate_proxy_contract.py at base 0ecc5f3, lines 167 and 177-178, read only), so the profiles these records pin by profileDigest are invalid and embed v1 nonce data that spec 4.4 says migration never reuses. M01 ('fresh boot and fresh nonces') accepts them because check_record never validates the profile and check_migration compares only scope.runNonce and scope.capacityNonce.",
+      "id": "F4",
+      "location": "vectors.json positive[1] and positive[3] profile.resources[0].manifest; migration M01; native_qualification_v2.py check_record and check_migration",
+      "requiredChange": "Regenerate positives 1 and 3 with v2 labels (and fresh signed names), recompute manifestDigest, profileDigest, record digests and capture/lifecycle qualificationDigests; state that a valid proxy profile is a precondition of check_record or check it; extend the migration check to every nonce-bearing profile field; add a migration negative for a v2 profile carrying a v1 nonce.",
+      "severity": "MAJOR"
+    },
+    {
+      "finding": "Spec 4.1 requires every backend component to be recorded with its artifact digest, and the model requires its files in the closed inventory, but each file is capped at 64 MiB. Public release metadata (HTTP HEAD content-length, 2026-10-05): kube-apiserver v1.31.0 linux/amd64 90,501,272 B; kube-controller-manager 84,705,432 B; kubelet 76,865,848 B; k3s v1.31.0+k3s1 68,305,048 B; k0s v1.31.1+k0s.0 260,830,864 B (kube-scheduler 63,688,856 B fits). Probe: an APISERVER file of 90,501,272 B is refused at $.files[8].size maximum. The record therefore cannot express the backend of any mainstream distribution checked, an undisclosed W03 selection constraint. The contract also raised files maxItems 128->256 and the inventory bound 512 MiB->1 GiB without disclosure (v1 readiness: 128 files, <=64MiB each, <=512MiB total).",
+      "id": "F5",
+      "location": "qualification.schema.json $defs.file.size (maximum 67108864, unchanged v1 primitive) as applied to backendComponents files; native_qualification_v2.py code inventory bound",
+      "requiredChange": "Admit realistic control-plane artifacts (a separate backend-file bound if role files must stay at 64 MiB), disclose every bound change relative to the v1 reader bounds, and add a positive with a realistically sized backend file.",
+      "severity": "MAJOR"
+    },
+    {
+      "finding": "The model requires apiIdentity == null exactly for APISERVER, DATASTORE and CONTAINER_RUNTIME. Review finding F1 (carried to W02) and upstream Kubernetes v1.31.0 (staging/src/k8s.io/apiserver/pkg/server/config.go AuthorizeClientBearerToken: Name user.APIServerUser = 'system:apiserver', Groups [system:masters]) show the apiserver authenticates its own loopback client, which the rbac/bootstrap-roles hook uses to write policy kinds. The record hard-codes the incomplete closure F1 flagged and makes the required enumeration inexpressible (probe: APISERVER apiIdentity 'system:apiserver' refused 'backend API identity'). Spec 2.3 and 4.1, which the README cites, do not support the null rule.",
+      "id": "F6",
+      "location": "native_qualification_v2.py NO_API_IDENTITY and check_record 'backend API identity'; README Backend components row; vectors.json R21",
+      "requiredChange": "Let the APISERVER entry carry its in-process identities (string or list) and leave exact values to W02g; remove the null-for-APISERVER rule and correct the README attribution; keep null only where no API client exists (DATASTORE, CONTAINER_RUNTIME).",
+      "severity": "MAJOR"
+    },
+    {
+      "finding": "Spec P1 (datastore socket connectto from the apiserver domain alone), P4 (signing key readable only by the apiserver and controller-manager domains), P9 (runtime socket only from the kubelet domain) and 2.3 (each identity in its own domain) presume distinct per-component domains, and 5.3 forbids unconfined domains anywhere. The model only refuses planeon_* labels and paths under planeon.slice. Probes ACCEPTED: all six components in kube_apiserver_t; APISERVER in unconfined_t, init_t, kernel_t or spc_t; KUBELET cgroupPath '/opt/not-a-cgroup' or the root '/sys/fs/cgroup'; every component in one cgroup; SCHEDULER sharing the KUBELET node identity. Decision 4 (shared executables) as encoded thus admits a single-process, single-domain control plane that cannot meet P1/P4/P9. No capture variant observes backend processes, so recorded labels and cgroups are never compared with an observation.",
+      "id": "F7",
+      "location": "native_qualification_v2.py check_record backend loop; qualification.schema.json $defs.backendComponent; README decision 4",
+      "requiredChange": "Require pairwise-distinct processLabel and cgroupPath (under /sys/fs/cgroup, not the root) and distinct apiIdentity values across backend components; refuse known unconfined or privileged types or bind labels to the W02e matrix; restate decision 4 as 'a shared file is allowed only with separate processes in separate domains'; add a backend capture or name the observation that checks these fields; add negatives.",
+      "severity": "MAJOR"
+    },
+    {
+      "finding": "All 42 negatives replay to exactly their stated refusal, but coverage has gaps: no vector for a backend component sharing a role artifact (the rule 'backend code shared with a planeon role' is never exercised), for a resident role loading lifecycle code (R31 tests the inverse direction), for HOST_CONTAINMENT cgroupPath inside a role cgroup (spec 4.4), for the internal-tuple collision rule (reachable only through a signed tuple equal to the I06 tuple; R28 is refused earlier by the schema enum), for gate outbound, server endpoints or broker/worker grants, for the gate CAP_NET_BIND_SERVICE coupling in either direction, for capacityNonce reuse, for record-level planeon_containment_enabled, modulesDisabled, kexecLoadDisabled or unprivilegedBpfDisabled, non-empty mapIds, intra-role program sharing, the gate under the BROKER key, or lifecycle-capture binding, expiry and seal path. The ten crossVersion entries use four IDs (X01 x4, X02 x4), record no expected refusal, are refused on structural errors ('schema $ required') rather than the version discriminator, and X03/X04 cover one positive each; the v1-reader path-only case is not vectored (probe: refused at $.roles.SERVER.cgroup.path const). M03 carries a stray 'kind' key. C07's intent ('containment-domain process inside a resident role cgroup') overstates what it tests.",
+      "id": "F8",
+      "location": "vectors.json negative, crossVersion and migration arrays",
+      "requiredChange": "Add the missing negatives with exact refusals, give crossVersion entries unique IDs and expected refusals, add path-only cross-version vectors for both readers and for captures, and align C07's intent with what it tests.",
+      "severity": "MINOR"
+    },
+    {
+      "finding": "Code ownership is compared by path only. Probes ACCEPTED: OBSERVER loading a byte-identical copy (same sha256 and verityDigest) of the HOST_CONTAINMENT executable at another path; KUBELET's executable byte-identical to the EFFECT_GATE artifact at another path. The README rules 'their code may not be loaded by a resident role' and 'never with a planeon role or lifecycle subject' are bypassed by a copy.",
+      "id": "F9",
+      "location": "native_qualification_v2.py check_record 'used' ownership map; README decision 4 and Lifecycle subjects row",
+      "requiredChange": "Compare sha256 and verityDigest across owner classes (role, each lifecycle subject, backend) in addition to paths, and add negatives for content-identical copies.",
+      "severity": "MINOR"
+    },
+    {
+      "finding": "These functions only schema-validate the record; none runs check_record. Probe: with SCHEDULER in planeon_server_t, check_record refuses, but all five captures, the lifecycle capture and check_migration accept. The README defines no acceptance rule saying a v2 qualification needs check_record plus captures for all five roles plus the lifecycle capture, in one boot and window.",
+      "id": "F10",
+      "location": "native_qualification_v2.py check_capture, check_lifecycle_capture, check_migration; README",
+      "requiredChange": "Either call check_record inside each check (passing profile and endpoints) or define and vector an aggregate acceptance function, and document that the individual checks are not acceptance on their own.",
+      "severity": "MINOR"
+    },
+    {
+      "finding": "Predecessors are not validated against the pinned v1 schema; only schemaVersion is read. Probes ACCEPTED: predecessor {bootId: null, runNonce: null, capacityNonce: null}; a predecessor carrying the v2 boot ID in upper case (the v1 schema requires lower case); a v2 runNonce equal to the v1 capacityNonce (cross-field reuse). No vector covers capacityNonce reuse.",
+      "id": "F11",
+      "location": "native_qualification_v2.py check_migration",
+      "requiredChange": "Validate each predecessor against the pinned v1 schema (sha256 bef248bfa82b234124c014f98e40c5791bced3171bb118b7ed1bb7b8daaf95c3), compare every v2 nonce against every v1 nonce, and add vectors.",
+      "severity": "MINOR"
+    },
+    {
+      "finding": "Aliasing is refused only through distinct const strings. Probes ACCEPTED: the gate listener (KUBERNETES_API_PROXY) and the SERVER listener (CAMPAIGN_PROXY) as two signed IDs with one tuple 127.0.0.1:9443; EFFECT_GATE and SERVER cgroups with the same inode.",
+      "id": "F12",
+      "location": "native_qualification_v2.py check_record endpoint and role checks",
+      "requiredChange": "Refuse duplicate (address, port) tuples among signed endpoints and duplicate cgroup inodes across roles and lifecycle subjects; add negatives.",
+      "severity": "MINOR"
+    },
+    {
+      "finding": "The closed schema has no field that binds several spec 5.1-5.3 items, so each needs a new record version later: RLIMIT_CORE=0; seccomp default action KILL_PROCESS and the per-role, per-architecture filter (W02d) (only seccompMode const 2 is recorded, and inspection.bpfCommands is a constant tied to no filter); the S5 loaded kernel module set ('exact list is W02 data', not listed as deferred); labels of the planeon cgroup directories and pin/program ownership, which review finding F2 identifies as the real control.",
+      "id": "F13",
+      "location": "qualification.schema.json $defs.roles.*, $defs.capture.process, $defs.inspection; README 'Not claimed'",
+      "requiredChange": "Add binding slots now (e.g. per-role seccompFilterDigest per machine, rlimitCore, cgroup selinuxLabel, pin label and owner, moduleSetDigest) or state which later version or W02 part adds each and that v2 alone does not bind them.",
+      "severity": "MINOR"
+    },
+    {
+      "finding": "Decisions that are not listed as decisions, or are attributed to spec text that does not state them: (a) HOST_CONTAINMENT placed in planeon.slice (spec 4.2 lists only the resident services; S2 only names the unit); (b) EFFECT_GATE interpreterPath const null (native-only gate; spec silent); (c) the lifecycle code-sharing rule is attributed to spec 4.1/5.2, which do not state it; (d) the internal I06 endpoint is the first outbound tuple not in the signed envelope, departing from NATIVE_QUALIFICATION_READINESS ('Per-role tuples are an explicit subset of the existing envelope/capacity, not a new endpoint authorization') without saying what authorizes its port, and decision 2's stated purpose (comparison with enrolled BPF tuples) is not realizable because the record carries no tuple content; (e) the inventory bound changes in F5.",
+      "id": "F14",
+      "location": "README 'What v2 adds' and 'Decisions made in this contract'; qualification.schema.json",
+      "requiredChange": "List each as a decision with rationale, state the authorization source of the internal tuple (e.g. sealed apiserver configuration or the planeon_kubeapi_port_t label from W02e), and correct the spec attributions.",
+      "severity": "MINOR"
+    },
+    {
+      "finding": "Spec 4.1: backendComponents keys are fixed by the selected implementation profile version and missing keys refuse. Nothing binds a key set to backendProfile.implementationId; the positives use the same implementationId 'unit-distribution' with six keys in zero-resource mode and eight in resource mode, contrary to P10 (same backend view in both modes) and the 'no mode-dependent branch' rule. Probe: removing both optional components from positive 1 is ACCEPTED.",
+      "id": "F15",
+      "location": "qualification.schema.json $defs.backendComponents (SERVICE_PROXY and NETWORK_POLICY_AGENT optional) and $defs.backendProfile; vectors.json positives 0-3",
+      "requiredChange": "Bind implementationId (or a pinned backend profile digest) to an exact key set, refuse missing keys against it, and make the positives' backend composition mode-independent.",
+      "severity": "MINOR"
+    },
+    {
+      "finding": "At the start of this review git status showed only the six subject files untracked. Later, with no action by this reviewer, 107 tracked files were modified (mtimes 22:18:32-22:20:53) and three untracked files appeared: scripts/validate_native_profile_v2.py, tests/test_native_profile_v2.py, task-packets/MET-ENFORCE-005.yaml. The v1 reference model scripts/validate_native_qualification.py now has sha256 c1d6e0f9d4098f6b0ef3af62774f80d50f8789d8674309af6a9f1d51c746ec16, not the source-index and base pin f29fb82a89d4fab7429c834a5106e2e8aac50ca78ea10ec681d9e08ffd8c38ad; the diff changes the exact packet catalog (200 -> 201, adding MET-ENFORCE-005) and the success message, not validate_record or validate_capture. The six subject files still match their hashes. None of these other changes was reviewed, and the README statement that the v1 reference model is unchanged is false for the working tree.",
+      "id": "F16",
+      "location": "Repository working tree outside the subject (observed 2026-10-05 22:38-22:39 local time)",
+      "requiredChange": "Publish only reviewed bytes: keep scripts/validate_native_qualification.py at f29fb82a89d4fab7429c834a5106e2e8aac50ca78ea10ec681d9e08ffd8c38ad or record and review the delta and correct the README; review the new validator, tests, packet and modified files separately; re-pin source-index to the published state.",
+      "severity": "MINOR"
+    },
+    {
+      "finding": "The marker content is undefined, so its digest binds neither the boot nor the containment run (constant content gives the same digest every boot); no field shows that /run is tmpfs, which decision 1's 'per-boot by construction' relies on; and lifecycleCapture cannot express an absent containment cgroup (systemd may remove a finished unit's cgroup), only populated 0 or 1.",
+      "id": "F17",
+      "location": "qualification.schema.json $defs.sealMarker and $defs.lifecycleCapture; README decision 1",
+      "requiredChange": "Define the marker content (e.g. bootId, policy digest, containment artifact digest), record the /run filesystem type, and define how an absent cgroup is reported.",
+      "severity": "NOTE"
+    },
+    {
+      "finding": "Capability lists are compared order-sensitively (probe: the SERVER set reordered in a capture is refused 'process/kernel custody differs'); lifecycle-to-lifecycle sharing is refused with the misleading message 'lifecycle code shared with a resident role'; SCHEMA_PATH and V1_SCHEMA_PATH are unused; schema refusal strings come from jsonschema best_match heuristics and are stable only under the locked jsonschema 4.24.0.",
+      "id": "F18",
+      "location": "native_qualification_v2.py",
+      "requiredChange": "Compare capability sets as sets or fix the order in the contract, give lifecycle sharing its own rule name, remove unused constants, and keep multi-error schema mutations out of exact-refusal vectors.",
+      "severity": "NOTE"
+    },
+    {
+      "finding": "Spec 2.3 requires per-controller credentials for the controller-manager; a single apiIdentity string cannot express that identity set (input for W02g).",
+      "id": "F19",
+      "location": "qualification.schema.json $defs.backendComponent.apiIdentity",
+      "requiredChange": "Allow a list of identities per backend component when W02g fixes the closure.",
+      "severity": "NOTE"
+    }
+  ],
+  "modelExecution": {
+    "extraProbes": [
+      {
+        "expected": "every vector matches its stated outcome",
+        "observed": "83/83 checks matched in both runs: 28/28 positive checks accepted; 42/42 negatives returned exactly their refusal; 10/10 cross-version refused (all on structural errors, e.g. 'schema $ required'); M01 accepted, M02/M03 exact refusals",
+        "probe": "Replay of all 59 vectors (4 positives = 28 checks, 42 negatives, 10 cross-version, 3 migration) against the frozen snapshot model/schema/vectors and base-commit v1 schema/vectors (git objects); repeated on the working-tree copies"
+      },
+      {
+        "expected": "refuse",
+        "observed": "ALL ACCEPTED",
+        "probe": "record+captures with hardening.unprivilegedBpfDisabled=2 (spec 5.2 S5: one-way value 1, containment refuses to seal otherwise)"
+      },
+      {
+        "expected": "expressible (F1 requires enumeration)",
+        "observed": "refused: backend API identity",
+        "probe": "APISERVER apiIdentity='system:apiserver' (the in-process loopback identity F1 says W02 must enumerate)"
+      },
+      {
+        "expected": "refuse",
+        "observed": "ACCEPTED",
+        "probe": "all backend components in the apiserver domain kube_apiserver_t (scheduler/kubelet could connectto the datastore socket, P1/P9 collapse)"
+      },
+      {
+        "expected": "refuse",
+        "observed": "ACCEPTED",
+        "probe": "APISERVER processLabel system_u:system_r:unconfined_t:s0 (spec 5.3: no unconfined domain anywhere)"
+      },
+      {
+        "expected": "refuse",
+        "observed": "ACCEPTED",
+        "probe": "APISERVER processLabel system_u:system_r:init_t:s0 (spec 5.3: no unconfined domain anywhere)"
+      },
+      {
+        "expected": "refuse",
+        "observed": "ACCEPTED",
+        "probe": "APISERVER processLabel system_u:system_r:kernel_t:s0 (spec 5.3: no unconfined domain anywhere)"
+      },
+      {
+        "expected": "refuse",
+        "observed": "ACCEPTED",
+        "probe": "APISERVER processLabel system_u:system_r:spc_t:s0 (spec 5.3: no unconfined domain anywhere)"
+      },
+      {
+        "expected": "refuse",
+        "observed": "ACCEPTED",
+        "probe": "KUBELET cgroupPath '/opt/not-a-cgroup' (not under /sys/fs/cgroup)"
+      },
+      {
+        "expected": "refuse or explicit decision",
+        "observed": "ACCEPTED",
+        "probe": "KUBELET cgroupPath '/sys/fs/cgroup' (root cgroup, ancestor of planeon.slice)"
+      },
+      {
+        "expected": "refuse or explicit decision",
+        "observed": "ACCEPTED",
+        "probe": "all backend components share one cgroup"
+      },
+      {
+        "expected": "refuse",
+        "observed": "ACCEPTED",
+        "probe": "SCHEDULER apiIdentity equal to KUBELET node identity (2.3 distinct identities)"
+      },
+      {
+        "expected": "refuse or out of scope (observer RBAC check)",
+        "observed": "ACCEPTED",
+        "probe": "SCHEDULER apiIdentity 'system:masters'"
+      },
+      {
+        "expected": "refuse (lifecycle code loaded by a resident role)",
+        "observed": "ACCEPTED",
+        "probe": "OBSERVER loads a byte-identical copy (same sha256+verity) of the HOST_CONTAINMENT executable at another path"
+      },
+      {
+        "expected": "refuse (decision 4: never share with a planeon role)",
+        "observed": "ACCEPTED",
+        "probe": "KUBELET executable is byte-identical to the EFFECT_GATE artifact (sha256/verity) at another path"
+      },
+      {
+        "expected": "refuse with an accurate rule name",
+        "observed": "refused: lifecycle code shared with a resident role",
+        "probe": "POLICY_WRITER loads the HOST_CONTAINMENT executable (lifecycle-lifecycle sharing)"
+      },
+      {
+        "expected": "refuse",
+        "observed": "refused: schema $.lifecycleSubjects.HOST_CONTAINMENT.cgroupPath const",
+        "probe": "HOST_CONTAINMENT cgroupPath = planeon-effect-gate.service (4.4: lifecycle subject inside a resident role cgroup)"
+      },
+      {
+        "expected": "expressible and refused",
+        "observed": "refused: schema $.lifecycleSubjects.POLICY_WRITER additionalProperties",
+        "probe": "POLICY_WRITER given cgroupPath = planeon-effect-gate.service"
+      },
+      {
+        "expected": "refuse",
+        "observed": "refused: backend code shared with a planeon role",
+        "probe": "KUBELET filePaths includes the python interpreter used by SERVER/WORKER (backend shares role code)"
+      },
+      {
+        "expected": "refuse (loopback apiserver endpoint must stay internal)",
+        "observed": "refused: loopback apiserver endpoint must stay internal",
+        "probe": "signed KUBERNETES_API_PROXY tuple == internal I06 tuple 127.0.0.1:6443"
+      },
+      {
+        "expected": "refuse (role endpoint aliasing)",
+        "observed": "ACCEPTED",
+        "probe": "gate listener (KUBERNETES_API_PROXY) tuple == SERVER listener (CAMPAIGN_PROXY) tuple 127.0.0.1:9443"
+      },
+      {
+        "expected": "refuse",
+        "observed": "refused: CAP_NET_BIND_SERVICE only for a signed port below 1024",
+        "probe": "gate signed port 443 without CAP_NET_BIND_SERVICE"
+      },
+      {
+        "expected": "accept",
+        "observed": "ACCEPTED",
+        "probe": "gate signed port 443 with CAP_NET_BIND_SERVICE"
+      },
+      {
+        "expected": "refuse",
+        "observed": "refused: gate endpoints differ",
+        "probe": "EFFECT_GATE outbound ['unit-proxy']"
+      },
+      {
+        "expected": "refuse",
+        "observed": "ACCEPTED",
+        "probe": "EFFECT_GATE cgroup.inode == SERVER cgroup.inode (two role paths aliasing one cgroup)"
+      },
+      {
+        "expected": "capture checks refuse or document the check_record precondition",
+        "observed": "{\"BROKER\": null, \"EFFECT_GATE\": null, \"OBSERVER\": null, \"SERVER\": null, \"WORKER\": null, \"lifecycle\": null, \"record\": \"backend component in a planeon domain\"}",
+        "probe": "captures + lifecycle against a record with SCHEDULER in planeon_server_t (check_record refuses; do the capture checks?)"
+      },
+      {
+        "expected": "accept (same set)",
+        "observed": "{\"BROKER\": null, \"EFFECT_GATE\": null, \"OBSERVER\": null, \"SERVER\": \"process/kernel custody differs\", \"WORKER\": null, \"lifecycle\": null, \"record\": null}",
+        "probe": "SERVER capture lists the same two capabilities in a different order"
+      },
+      {
+        "expected": "refuse",
+        "observed": "ACCEPTED",
+        "probe": "check_migration with predecessor {bootId:null, nonces:null}"
+      },
+      {
+        "expected": "refuse (nonce reuse)",
+        "observed": "ACCEPTED",
+        "probe": "check_migration: v2 runNonce equals the v1 capacityNonce"
+      },
+      {
+        "expected": "refuse (v1 nonce reused; proxy contract requires label == binding.runNonce)",
+        "observed": "ACCEPTED (check_record and check_migration)",
+        "probe": "M01/positive 1: profile resource label planeon.ai/run-nonce='unit-nonce' vs binding.runNonce='unit-nonce-v2' (v1 nonce='unit-nonce')"
+      },
+      {
+        "expected": "accept (spec 4.1 requires recording it)",
+        "observed": "refused: schema $.files[8].size maximum",
+        "probe": "APISERVER artifact of 90501272 bytes (upstream kube-apiserver v1.31.0 linux/amd64)"
+      },
+      {
+        "expected": "present (4.4 lifecycle subject inside a resident role cgroup)",
+        "observed": "none: capture.process describes one process; keys=['capabilities', 'cgroup', 'gid', 'namespaceInodes', 'noNewPrivs', 'pid', 'processLabel', 'seccompMode', 'startTicks', 'uid']; POLICY_WRITER has no cgroupPath",
+        "probe": "capture schema fields that could report other members of the role cgroup (cgroup.procs) or POLICY_WRITER placement"
+      },
+      {
+        "expected": "present",
+        "observed": "single 'capabilities' list in role and capture.process; set semantics unspecified",
+        "probe": "record/capture fields for permitted vs effective vs bounding vs ambient capability sets (spec 5.3 header)"
+      },
+      {
+        "expected": "refuse at the cgroup path",
+        "observed": "refused: schema $.roles.SERVER.cgroup.path const",
+        "probe": "v1 record whose only change is the v2 SERVER cgroup path, under the v1 schema"
+      },
+      {
+        "expected": "refuse",
+        "observed": "{\"BROKER\": \"process/kernel custody differs\", \"EFFECT_GATE\": null, \"OBSERVER\": null, \"SERVER\": null, \"WORKER\": null, \"lifecycle\": null, \"record\": null}",
+        "probe": "v2 BROKER capture observing the v1 cgroup path"
+      },
+      {
+        "expected": "refuse (same boot; predecessor is not an accepted v1 record)",
+        "observed": "ACCEPTED",
+        "probe": "check_migration: v2 record on boot 12345678-1234-1234-1234-123456789abc; predecessor carries the same boot ID in upper case (not v1-schema-valid)"
+      },
+      {
+        "expected": "refuse or documented precondition",
+        "observed": "check_record: backend component in a planeon domain; check_migration: ACCEPTED",
+        "probe": "check_migration with a v2 record that check_record refuses (SCHEDULER in planeon_server_t)"
+      },
+      {
+        "expected": "refuse for an implementation that has them",
+        "observed": "ACCEPTED",
+        "probe": "positive 1 with SERVICE_PROXY and NETWORK_POLICY_AGENT removed under the same implementationId 'unit-distribution' (spec 4.1: keys fixed by implementation profile; missing keys refuse)"
+      }
+    ],
+    "refusalsMatched": 54,
+    "vectorsReplayed": 59
+  },
+  "questionAnswers": {
+    "Q1": "Partly. Encoded as consts or checks: record/profile versions; all five resident roles required with exact executables, labels, uids, cgroups, seccomp mode 2 and no_new_privs 1; closed lifecycle subjects with digest, domain and entry; closed backend keys; gate identity, listener (the KUBERNETES_API_PROXY endpoint when resources exist) and outbound (internal loopback only); reader commands {7,15,16}; pin layout; BPF_F_ALLOW_MULTI, helper-free, map-free programs; bpf_jit_harden 0/1; the three booleans; lockdown=integrity, modules_disabled=1, kexec_load_disabled=1, ptrace_scope=3; seal marker; capability consts and the CAP_NET_BIND_SERVICE coupling. Weakened: unprivileged_bpf_disabled accepts 2 (F1); capability set relations (F2); spec 4.4 placement of POLICY_WRITER and role-cgroup membership (F3); backend per-component separation and unconfined domains (F7); missing optional backend keys (F15). Not expressible: upstream backend binaries over 64 MiB (F5), the apiserver loopback identity F1 requires (F6), per-controller identities (F19), RLIMIT_CORE, seccomp default action and filter binding, module set, cgroup/pin labels (F13). Added without spec support: APISERVER null API identity (F6), HOST_CONTAINMENT in planeon.slice, native-only gate, raised inventory bounds, the lifecycle code rule's attribution, the unsigned internal tuple (F14). Decisions: 1 acceptable, but marker content and tmpfs are unverified (F17); 2 consistent with P2, but a departure from the v1 signed-envelope rule with unstated authorization (F14); 3 acceptable and consistent with S3 (cross-role sharing vectored by R26, intra-role not); 4 as encoded permits collapsing domains, cgroups and identities and is checked by path only (F7, F9).",
+    "Q2": "The paths are exact and consistent with spec 4.2: SERVER /sys/fs/cgroup/planeon.slice/planeon-proxy-server.service, OBSERVER .../planeon-policy-observer.service, EFFECT_GATE .../planeon-effect-gate.service, BROKER .../planeon-capacity-broker.service/broker, WORKER .../planeon-capacity-broker.service/probe-worker, all schema consts; HOST_CONTAINMENT .../planeon-host-containment.service goes beyond 4.2 (F14). v1/v2 mutual rejection holds for records (v2 consts; R07; X01 x4 refused; the v1 schema pins planeon-live/*, so X02 x4 are refused and a v1 record changed only in the SERVER path is refused at $.roles.SERVER.cgroup.path const) and for captures (X03 refused under v2, X04 refused under the v1 schema; a v2 BROKER capture observing the v1 path is refused 'process/kernel custody differs'). The cross-version refusals are structural rather than path-isolated, and only R07 isolates a path (F8). F3 is closed. The v1 direction was checked against the v1 schema only; the v1 validator was not run.",
+    "Q3": "42/42 negatives replay to exactly their stated refusal, and none fails on an incidental rule, though C07's intent overstates its test. Spec 4.4 cases covered: v1 under v2 (X01, R01), v2 under v1 (X02), missing EFFECT_GATE (R02), extra role (R03), gate at the broker executable/path/domain (R04-R06), unknown backend key (R17), migration boot/nonce (M02, M03). 'Gate under the BROKER key' is not directly vectored (schema consts refuse it). 'Lifecycle subject inside a resident role cgroup' has only C07 and cannot be expressed for POLICY_WRITER (F3). Duplicated pins are prevented by the exact layout rule (R25). Important refusals without a vector are listed in F8, notably a backend sharing a role artifact (rule never exercised; probes show it fires by path, while copies bypass it, F9) and a resident role loading lifecycle code (only the inverse, R31). Cross-version entries have duplicate IDs and no expected refusals (F8).",
+    "Q4": "Yes. The model wrongly accepts: unprivileged_bpf_disabled=2 in record and captures (F1); captures whose single capability list hides permitted, bounding or ambient differences (F2, by construction); co-resident foreign or POLICY_WRITER processes (F3, by construction); positives that reuse v1 nonce data (F4); all backend components in one domain or cgroup, unconfined/init/kernel/spc domains, non-cgroupfs paths and shared identities (F7); byte-identical copies of lifecycle or gate code (F9); captures, lifecycle capture and migration against a record that check_record refuses (F10); unvalidated or cross-field-reusing migration predecessors (F11); aliased listener tuples and duplicate cgroup inodes (F12); missing optional backend keys (F15). Ordering: every check validates the schema before semantics, but check_capture, check_lifecycle_capture and check_migration never run check_record. Endpoint/capability coupling is correct for SERVER and EFFECT_GATE in both directions (R22; probes with gate port 443 with and without the capability). Code ownership is path-based. Capture equality is exact for the inspected process, files, maps, programs, pins and host lock state, but it is order-sensitive for capabilities (false refusal, F18) and cannot see other cgroup members.",
+    "Q5": "No claim of native observation, an installed profile, a selected Kubernetes distribution, closure of F1 or F2, or any E01-E12 proof: evidenceClass DATA_CHECK_ONLY, nativeAcceptance and tenantAcceptance false, E01-E12 OPEN_UNPROVEN, F1 -> W02g, F2 -> W02e; the backend names in the vectors sit under implementationId 'unit-distribution' and are unit data. There are fidelity misstatements: the README cites spec 5.2 for unprivileged_bpf_disabled '1 or 2' (spec says 1, F1), spec 2.3/4.1 for the APISERVER null identity (unsupported and contrary to F1, F6) and spec 4.1/5.2 for the lifecycle code rule (F14); M01's intent 'fresh boot and fresh nonces' is false for the profile manifests (F4); C07's intent overstates (F8); the README claim that the v1 reference model is unchanged no longer holds in the working tree (F16).",
+    "Q6": "At base 0ecc5f3 and in the source-index pins, the v1 schema (bef248bfa82b234124c014f98e40c5791bced3171bb118b7ed1bb7b8daaf95c3), vectors (cd1be009b721bb596887335184a33ab8e1f24aed8215477b63e28f058110748f) and reference model (f29fb82a89d4fab7429c834a5106e2e8aac50ca78ea10ec681d9e08ffd8c38ad) are unchanged, and the subject modifies none of them. v2 does not reinterpret v1 records: it has its own $id and const versions, refuses v1 records and captures, and check_migration reads only schemaVersion, bootId and the two nonces from v1 records. Exceptions: (a) v2 positives 1 and 3 reuse the v1 resource manifest, including its v1 run-nonce label and manifestDigest, under a v2 binding (F4); (b) during the review the working-tree v1 reference model changed to c1d6e0f9d4098f6b0ef3af62774f80d50f8789d8674309af6a9f1d51c746ec16 through an out-of-subject edit to the catalog line (F16); the working-tree v1 schema and vectors still match."
+  },
+  "reviewDate": "2026-10-05",
+  "reviewLimit": "Source-level DATA_CHECK_ONLY review of the six snapshot files only. It does not establish native qualification, kernel, SELinux, cgroup or BPF behaviour, an installed profile, a selected distribution, closure of F1 or F2, or any E01-E12 obligation, and it authorizes nothing. Repository tests and validators were not run; the v1 reader direction was checked against the v1 schema only, and the proxy profile contract was read, not executed. Files outside the subject were not reviewed, including the out-of-subject working-tree changes observed during the review (F16). Probes are illustrative, not exhaustive. Kernel and Kubernetes facts come from Linux v6.12 and Kubernetes v1.31.0 source and public release metadata, not from a host. Scratch files were written only under scratchpad/reviewer-w02a; no repository file was created, edited or deleted.",
+  "round": 1,
+  "schemaVersion": "planeon.internal.native-profile-v2-review/v1",
+  "sourcesRead": [
+    "Snapshot review-w02a/: README.md, REVIEW_BRIEF.md, qualification.schema.json, vectors.json, native_qualification_v2.py, source-index.json (hash-verified; byte-identical to the repository working-tree copies)",
+    "architecture/host-interface-inputs/resolved/HOST_INTERFACE_SPEC.md (base 0ecc5f3, full)",
+    "architecture/host-interface-inputs/resolution-review-round1.json (base; findings F1-F3, gate and counterexample dispositions, kernel claims)",
+    "architecture/host-interface-inputs/resolution-status.json (base, full)",
+    "docs/alpha-2/HOST_INTERFACE_RESOLUTION.md (base; excerpts on W02 and F1-F3)",
+    "architecture/native-qualification-inputs/qualification.schema.json (base; every $defs entry compared with v2)",
+    "architecture/native-qualification-inputs/vectors.json (base; positives, profiles, hosts, outbound grants)",
+    "scripts/validate_native_qualification.py (base bytes read in full, not executed; working-tree diff inspected read-only)",
+    "docs/alpha-2/NATIVE_QUALIFICATION_READINESS.md (base; lines 55-262)",
+    "scripts/validate_proxy_contract.py (lines 150-185 of the working-tree copy, read only, not executed; the label rule at lines 167 and 177-178 is identical at base 0ecc5f3, and the concurrent diff only changes catalog counts)",
+    "docs/alpha-2/PROXY_CONTRACT_READINESS.md (lines 232-248)",
+    "AGENTS.md (repository rules, loaded as context)",
+    "git metadata: rev-parse, lock-free status and diff, git show <base>:<path> for every predecessor input",
+    "https://raw.githubusercontent.com/kubernetes/kubernetes/v1.31.0/staging/src/k8s.io/apiserver/pkg/server/config.go (AuthorizeClientBearerToken)",
+    "https://raw.githubusercontent.com/kubernetes/kubernetes/v1.31.0/staging/src/k8s.io/apiserver/pkg/authentication/user/user.go",
+    "https://raw.githubusercontent.com/torvalds/linux/v6.12/kernel/bpf/syscall.c (bpf_unpriv_handler)",
+    "https://raw.githubusercontent.com/torvalds/linux/v6.12/Documentation/admin-guide/sysctl/kernel.rst (unprivileged_bpf_disabled)",
+    "HTTP HEAD content-length only, no download: dl.k8s.io/release/v1.31.0/bin/linux/amd64/{kube-apiserver,kube-controller-manager,kubelet,kube-scheduler}; github.com/k3s-io/k3s release v1.31.0+k3s1 asset k3s; github.com/k0sproject/k0s release v1.31.1+k0s.0 asset k0s-v1.31.1+k0s.0-amd64"
+  ],
+  "subjectSha256": {
+    "README.md": "c1a31789aa73f8faa8770d8434754fb4b6bad2ae3d22ffff5cb59b7970e1a073",
+    "REVIEW_BRIEF.md": "20c1be5f95806f4b2b4cba477b2fec9c946bd368b5ca017a9ceb3851c8391923",
+    "native_qualification_v2.py": "abaa6e7cc90bf17b149b92704593edc048f626d79c1321dee55a142930545d19",
+    "qualification.schema.json": "649b2b09e60e7dac860f6ef4756ffd1a335d058ad44039be41bb66ae8bfd2a63",
+    "source-index.json": "feebab9064aa92e5d1f7173bb1768dc97906304e39db65954da5360707d83f10",
+    "vectors.json": "3c56ad834cf5f448c3eae8003844aa5462c3e3ca0eb7b9ead0bbbf5c5fa22ea5"
+  },
+  "verdict": "CHANGES_REQUIRED"
+}

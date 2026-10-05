@@ -369,12 +369,12 @@ def validate() -> None:
             == record["validatorNormalizedSha256"], "verifier account validator drift")
     paths = sorted((ROOT / "task-packets").glob("*.yaml"))
     old = set(record["baselinePackets"])
-    require(len(paths) == 200
-            and {path.stem for path in paths} == old | {NEW_PACKET, successor.NEW_PACKET},
-            "closed 200-packet catalog retaining the 199-packet checkpoint")
+    require(len(paths) == 201
+            and {path.stem for path in paths} == old | {NEW_PACKET, successor.NEW_PACKET, successor.successor.NEW_PACKET},
+            "closed 201-packet catalog retaining the 199-packet checkpoint")
     packets = {}
     for path in paths:
-        if path.stem == successor.NEW_PACKET:
+        if path.stem in (successor.NEW_PACKET, successor.successor.NEW_PACKET):
             continue
         raw = regular_bytes("task-packets/" + path.name)
         expected = record["packetSha256"] if path.stem == NEW_PACKET else record["baselinePackets"][path.stem]
@@ -412,4 +412,4 @@ def validate() -> None:
 
 if __name__ == "__main__":
     validate()
-    print("Dedicated verifier account contract valid: 200 current specifications; 199-packet checkpoint and exact 198-packet predecessor; the verifier host itself is not in this repository.")
+    print("Dedicated verifier account contract valid: 201 current specifications; 199-packet checkpoint and exact 198-packet predecessor; the verifier host itself is not in this repository.")

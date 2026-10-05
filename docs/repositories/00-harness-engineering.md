@@ -1,6 +1,13 @@
 # Repository Plan: `Harness-Engineering`
 
-## Current source preparation — MET-VERIFY-003
+## Current source preparation — MET-VERIFY-004
+
+The owner-operated verifier now runs as a dedicated macOS account with root-owned
+code and its own keys; the verifier contract records this and the risks that remain
+until earlier credentials are revoked. Alpha2 OPEN;198 accepted plus
+004 only. Native Linux, exact-main and tenant acceptance remain separate.
+
+## Historical003 source preparation — MET-VERIFY-003
 
 The runner also starts its network canary with -I; the wrapper test accepts only
 the three isolated runner calls; the verifier contract states that the owner's
@@ -830,6 +837,7 @@ Every packet uses branch `codex/<packet-id>`, changes only named paths, opens a 
 70. `MET-LINUX-006`: make the warm-snapshot locker test portable to Linux (non-root); source only.
 71. `MET-VERIFY-002`: start the offline runner in isolated mode; owner exact-commit approval for transport changes; source only.
 72. `MET-VERIFY-003`: start the network canary in isolated mode; apply the MET-VERIFY-002 review notes; source only.
+73. `MET-VERIFY-004`: record the dedicated verifier account in the verifier contract; source only.
 
 ## Testing, verification, and acceptance
 

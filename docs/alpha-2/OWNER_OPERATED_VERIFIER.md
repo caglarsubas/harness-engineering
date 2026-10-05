@@ -3,7 +3,8 @@
 Status: source-only contract on accepted main `e4e0bebc77737d99a32aedee7916f36a3906c3bd`.
 It records an owner decision of October 3, 2026, amended on October 4, 2026 by
 MET-VERIFY-002 (isolated runner call and exact-commit transport approval) and
-MET-VERIFY-003 (isolated network canary and corrected approval wording). It is not native Linux
+MET-VERIFY-003 (isolated network canary and corrected approval wording), and on
+October 5, 2026 by MET-VERIFY-004 (dedicated verifier account). It is not native Linux
 qualification, exact-main evidence, an installed Linux host, runtime or tenant
 acceptance, and it authorizes no cloud provisioning or spending.
 
@@ -58,16 +59,27 @@ For each open, same-repository, non-draft pull request into `main`:
    deadline. Only strict pytest totals are published; logs stay on the host.
 
 The verifier pauses while any operator LOCAL attempt or launcher is running, when
-the operator creates its `PAUSE` file, at a daily run cap, or before the shared
-activation store nears capacity. Operators create `PAUSE` at the start of every
-manual LOCAL gate and remove it afterwards.
+the operator creates `/opt/planeon/verifier-control/PAUSE`, at a daily run cap, or
+before the shared activation store nears capacity. Operators create `PAUSE` at the
+start of every manual LOCAL gate and remove it afterwards.
 
 ## Execution authority and isolation
 
+- The verifier runs as a dedicated hidden macOS account (no login shell, no
+  password) started at boot by a root-owned LaunchDaemon. Its code is root-owned
+  and read-only; its keys and run records live in that account's own home. The
+  operator's account, and so agents running as the operator, can read the run
+  records and logs but cannot change the verifier, read its keys or alter its
+  records. Verifier changes are root installs by the owner.
 - A separate narrow activation key is accepted by the installed authority only
   for repository `Harness-Engineering`, profile `python-meta` and a lifetime of at
-  most 1800 seconds. The operator key path and every other authority rule are
-  unchanged. The key and the App key live only in the verifier's private custody.
+  most 1800 seconds, and only from the dedicated account; the installed launcher
+  runs such an activation only as that account, in its own runner root. The
+  operator key path is unchanged and works only from the operator's account.
+- Packet code is denied the operator's home and the verifier account's home,
+  signals to processes outside its own sandbox, writes to per-user temporary and
+  cache folders, and creation of warm-snapshot containers; every process of the
+  verifier account that outlives a run is stopped before the next activation.
 - The offline wrapper starts its runner with `python3 -I`, and the runner starts
   its network canary with `-I`, so modules planted in the checkout's `ci/`
   directory, `PYTHON*` variables and user site-packages cannot shadow the
@@ -77,12 +89,15 @@ manual LOCAL gate and remove it afterwards.
   `osacompile`, `launchctl`, `crontab`, `at`, `batch`, `automator`, `shortcuts`
   and `lsappinfo`. Probe evidence for these denials is an operator record and is
   repeated after macOS updates.
-- Residual risks accepted by the owner: a deliberately double-forked test process
-  can outlive cleanup inside the sandbox; agents running as the operator can read
-  the verifier's keys and edit the verifier, so the exact-commit approval protects
-  against pull-request content, not against tampering on the verifier host;
-  manual attempts rely on the `PAUSE` file; test contents remain pull-request
-  controlled, so human review stays required.
+- The operator's GitHub CLI login used by agents is a fine-grained token without
+  repository administration, so it cannot change branch protection.
+- Residual risks accepted by the owner: credentials issued before the move that
+  agents running as the operator could read (the earlier App key, the earlier
+  administrator CLI login) stay valid until the owner revokes them, and until then
+  this protection is incomplete; agents running as the operator can still pause
+  verification or delay it (`PAUSE`, warm-snapshot containers); manual attempts
+  rely on the `PAUSE` file; test contents remain pull-request controlled, so human
+  review stays required.
 
 ## Evidence states
 
@@ -101,5 +116,6 @@ and `ci/network_canary.py`) of the accepted `main` it runs, never an older value
 
 Rollback is a set of independent operator actions: re-enable `offline-readiness`,
 unpin the `verify` check source, unload the verifier, and restore the installed
-v1 authority, launcher and policy from the owner's rollback copy. Revert this
-source in its own scoped pull request.
+authority, launcher and policy from the owner's rollback copy (the dedicated
+account move has its own root rollback script). Revert this source in its own
+scoped pull request.

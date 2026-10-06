@@ -22,9 +22,8 @@ except ImportError:
 
 ROOT = Path(__file__).resolve().parents[1]
 AUTHORITY_PATH = "architecture/i05-gate-channel-authority.json"
-AUTHORITY_SHA256 = "08889f7b63f0f4dab970cb61fde18495e7fa62837b4ca4a759c5f2a9acfaafb9"
+AUTHORITY_SHA256 = "abd94906cb3e5268f39eb66ec06da370755e6882d9de0fc22d1168395498bcaa"
 VALIDATOR_PATH = "scripts/validate_i05_gate_channel.py"
-PREVIOUS_VALIDATOR_PATH = "scripts/validate_i06_backend_profile.py"
 BASE_COMMIT = "fe50b57c0e6b6d5e5732b1b346bbad8727959a6f"
 NEW_PACKET = "MET-ENFORCE-007"
 PREVIOUS_PACKET = "MET-ENFORCE-006"
@@ -513,13 +512,9 @@ def validate() -> None:
             and packet["sourceReuse"] == packet["prefetchCommands"] == []
             and packet["offlineExecution"] == previous["offlineExecution"]
             and "liveCampaignExecution" not in packet
-            and len(commands) == len(previous["offlineAcceptanceCommands"]) == 64
-            and commands[:-3] + commands[-2:] == previous["offlineAcceptanceCommands"][:-3]
-            + previous["offlineAcceptanceCommands"][-2:]
-            and previous["offlineAcceptanceCommands"][-3] == ["uv", "run", "--offline", "--frozen", "--no-sync",
-                                                              "python", PREVIOUS_VALIDATOR_PATH]
-            and commands[-3] == ["uv", "run", "--offline", "--frozen", "--no-sync",
-                                 "python", VALIDATOR_PATH],
+            and len(commands) == 64
+            and commands == previous["offlineAcceptanceCommands"]
+            and not any(VALIDATOR_PATH in argv for argv in commands),
             "closed source-only i05-gate-channel packet and inherited commands")
     require(len(packet["allowedPaths"]) == len(set(packet["allowedPaths"]))
             and set(packet["allowedPaths"]) == set(record["changedFiles"])

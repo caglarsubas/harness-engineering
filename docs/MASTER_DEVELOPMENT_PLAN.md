@@ -23,8 +23,8 @@ specification.
 | Alpha2A | W02c-W02f, W02a-F, W02b-F, W02g-F | WAITING_EXACT_PACKETS | I07 schema, seccomp, SELinux matrix, admission; follow-ups |
 | Alpha2 qualification | CONF-LINUX-001 / CONF-A2-001 | WAITING_PREREQUISITES | Linux verification only when mandatory |
 
-Keep 64 argv (the installed activation cap; the new layer validator takes the MET-ENFORCE-006 validator's slot,
-which the outer pytest still runs in full), 420/750/900 s/15 min and 32 MiB. No cloud, runner registration,
+Keep the inherited 64 argv unchanged (the installed activation cap and the verifier's inheritance rule; the new
+layer validator adds no argv and runs inside the outer pytest), 420/750/900 s/15 min and 32 MiB. No cloud, runner registration,
 live/native/tenant or model-effort changes. Phase-end effort transition NOT_DUE.
 Prior checkpoints below are history only.
 

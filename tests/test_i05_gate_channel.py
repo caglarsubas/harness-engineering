@@ -96,11 +96,10 @@ def test_every_predecessor_payload_is_checked_without_a_verdict_cache():
 def test_acceptance_retains_every_inherited_command_and_wrapper():
     current = packets()
     packet, predecessor = current[profile.NEW_PACKET], current[profile.PREVIOUS_PACKET]
-    commands, inherited = packet["offlineAcceptanceCommands"], predecessor["offlineAcceptanceCommands"]
-    assert len(commands) == len(inherited) == 64
-    assert commands[:-3] + commands[-2:] == inherited[:-3] + inherited[-2:]
-    assert commands[-3][-1] == profile.VALIDATOR_PATH
-    assert inherited[-3][-1] == profile.PREVIOUS_VALIDATOR_PATH == iprofile.VALIDATOR_PATH
+    commands = packet["offlineAcceptanceCommands"]
+    assert len(commands) == 64 and commands == predecessor["offlineAcceptanceCommands"]
+    assert not any(profile.VALIDATOR_PATH in argv for argv in commands)
+    assert commands[-2][-3:] == ["tests", "ci/test_offline_runner.py", "ci/test_warm_snapshot.py"]
     assert packet["offlineExecution"] == predecessor["offlineExecution"]
     assert packet["sourceReuse"] == packet["prefetchCommands"] == []
     assert "liveCampaignExecution" not in packet

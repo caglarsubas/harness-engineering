@@ -1,6 +1,14 @@
 # Sol-High Task Packet Catalog
 
-## Current source preparation — MET-ENFORCE-004
+## Current source preparation — MET-ENFORCE-005
+
+W02a: the closed v2 native qualification contract (record, role, lifecycle and backend
+captures, 162 vector checks, DATA_CHECK_ONLY reference model) passed its third
+independent review and closes W01 finding F3; every E01-E12 obligation stays open.
+Alpha2 OPEN;200 accepted plus ENFORCE-005 only. Native Linux, exact-main and tenant
+acceptance remain separate.
+
+## Historical ENFORCE-004 source preparation — MET-ENFORCE-004
 
 The W01 gates G04-G07 and G09 are resolved at design level with the owner's design
 decisions and passed an independent source-only review; W01 is DESIGN_RESOLVED_REVIEWED,
@@ -1086,3 +1094,4 @@ acceptance is claimed. Alpha2 ONGOING; model-effort transition NOT_DUE.
 | 198 | `MET-VERIFY-003` | `Harness-Engineering` | Isolated network canary launch and the MET-VERIFY-002 review notes |
 | 199 | `MET-VERIFY-004` | `Harness-Engineering` | Dedicated verifier account recorded in the owner-operated verifier contract |
 | 200 | `MET-ENFORCE-004` | `Harness-Engineering` | W01 gate resolutions (G04-G07, G09) with independent source-only review |
+| 201 | `MET-ENFORCE-005` | `Harness-Engineering` | W02a v2 native qualification contract with three independent review rounds |

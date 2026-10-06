@@ -1,0 +1,61 @@
+{
+  "schemaVersion": "planeon.internal.native-profile-v2-index/v1",
+  "baseMain": "0ecc5f3a428dd3cdb3a9eba9f8626e5d5fdfd93b",
+  "baseTree": "61e4cde89cfc994a31b5edc2dd6f169accd89267",
+  "subject": [
+    {
+      "path": "architecture/native-profile-v2/README.md",
+      "sha256": "c1a31789aa73f8faa8770d8434754fb4b6bad2ae3d22ffff5cb59b7970e1a073"
+    },
+    {
+      "path": "architecture/native-profile-v2/REVIEW_BRIEF.md",
+      "sha256": "20c1be5f95806f4b2b4cba477b2fec9c946bd368b5ca017a9ceb3851c8391923"
+    },
+    {
+      "path": "architecture/native-profile-v2/qualification.schema.json",
+      "sha256": "649b2b09e60e7dac860f6ef4756ffd1a335d058ad44039be41bb66ae8bfd2a63"
+    },
+    {
+      "path": "architecture/native-profile-v2/vectors.json",
+      "sha256": "3c56ad834cf5f448c3eae8003844aa5462c3e3ca0eb7b9ead0bbbf5c5fa22ea5"
+    },
+    {
+      "path": "scripts/native_qualification_v2.py",
+      "sha256": "abaa6e7cc90bf17b149b92704593edc048f626d79c1321dee55a142930545d19"
+    }
+  ],
+  "predecessorInputs": [
+    {
+      "path": "architecture/host-interface-inputs/resolved/HOST_INTERFACE_SPEC.md",
+      "sha256": "8a3a09bb5dbc08804dbea06dd0700a14648a9cdbc8efd62112dc64ba0b6ba1b4"
+    },
+    {
+      "path": "architecture/host-interface-inputs/resolution-review-round1.json",
+      "sha256": "619b7ac456097e1312fc0e42c2bf67911b7a1cc044119862724606b189b4861f"
+    },
+    {
+      "path": "architecture/host-interface-inputs/resolution-status.json",
+      "sha256": "e6a1333a66eeab4801c97902b7c1ae145b0f16693a8136d5dbce7d24b2837c6c"
+    },
+    {
+      "path": "architecture/native-qualification-inputs/qualification.schema.json",
+      "sha256": "bef248bfa82b234124c014f98e40c5791bced3171bb118b7ed1bb7b8daaf95c3"
+    },
+    {
+      "path": "architecture/native-qualification-inputs/vectors.json",
+      "sha256": "cd1be009b721bb596887335184a33ab8e1f24aed8215477b63e28f058110748f"
+    },
+    {
+      "path": "scripts/validate_native_qualification.py",
+      "sha256": "f29fb82a89d4fab7429c834a5106e2e8aac50ca78ea10ec681d9e08ffd8c38ad"
+    },
+    {
+      "path": "docs/alpha-2/NATIVE_QUALIFICATION_READINESS.md",
+      "sha256": "60bed4c5358527dabfba15bf4e7a7f584872715ef2ca4f9b4350303b656bf595"
+    },
+    {
+      "path": "docs/alpha-2/HOST_INTERFACE_RESOLUTION.md",
+      "sha256": "5d19b5ce1230edd1d0cf5dc59c6ddc23784e1906791010bb750d1bdb49d31d79"
+    }
+  ]
+}

@@ -36,11 +36,12 @@ def test_exact_current_source_and_complete_history_chain():
     assert portable.validate() is None
     current = packets()
     accepted = portable.historical_catalog(current)
-    assert len(current) == 200 and len(accepted) == 195
+    assert len(current) == 201 and len(accepted) == 195
     assert set(accepted) == set(current) - {portable.NEW_PACKET, portable.successor.NEW_PACKET,
                                             portable.successor.successor.NEW_PACKET,
                                             portable.successor.successor.successor.NEW_PACKET,
-                                            portable.successor.successor.successor.successor.NEW_PACKET}
+                                            portable.successor.successor.successor.successor.NEW_PACKET,
+                                            portable.successor.successor.successor.successor.successor.NEW_PACKET}
     assert len(proof.historical_catalog(current)) == 194
     assert len(recheck.historical_catalog(current)) == 193
     assert len(verifier.historical_catalog(current)) == 192

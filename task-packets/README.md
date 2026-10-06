@@ -1,6 +1,16 @@
 # Sol-High Task Packet Catalog
 
-## Current source preparation — MET-ENFORCE-005
+## Current source preparation — MET-ENFORCE-006
+
+W02g: the I06 backend profile for the sealed single-node control plane on Kubernetes
+v1.37.1 has distribution selection criteria, a writer inventory and an identity closure
+derived from the upstream bootstrap RBAC. It has 141 vector checks and a DATA_CHECK_ONLY
+reference model. It passed its second independent review and closes W01 finding F1. The
+I06 part of W02a finding P7 is closed and the rest is carried. No distribution is
+selected, and every E01-E12 obligation stays open. Alpha2 OPEN; 201 accepted plus
+ENFORCE-006 only. Native Linux, exact-main and tenant acceptance remain separate.
+
+## Historical ENFORCE-005 source preparation — MET-ENFORCE-005
 
 W02a: the closed v2 native qualification contract (record, role, lifecycle and backend
 captures, 162 vector checks, DATA_CHECK_ONLY reference model) passed its third
@@ -1095,3 +1105,4 @@ acceptance is claimed. Alpha2 ONGOING; model-effort transition NOT_DUE.
 | 199 | `MET-VERIFY-004` | `Harness-Engineering` | Dedicated verifier account recorded in the owner-operated verifier contract |
 | 200 | `MET-ENFORCE-004` | `Harness-Engineering` | W01 gate resolutions (G04-G07, G09) with independent source-only review |
 | 201 | `MET-ENFORCE-005` | `Harness-Engineering` | W02a v2 native qualification contract with three independent review rounds |
+| 202 | `MET-ENFORCE-006` | `Harness-Engineering` | W02g I06 backend profile: selection criteria, writer inventory and identity closure with two independent review rounds |

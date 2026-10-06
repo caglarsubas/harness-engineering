@@ -1,0 +1,171 @@
+{
+ "schemaVersion": "planeon.internal.i06-backend-profile-review/v1",
+ "round": 1,
+ "reviewDate": "2026-10-06",
+ "verdict": "CHANGES_REQUIRED",
+ "subjectSha256": {
+  "README.md": "eb872992371d242a3c033775318d7b1b94413964676ecc8c72a80bae9dcead1b",
+  "REVIEW_BRIEF.md": "343f1aa12050dc8e43cb723bf902be2857f404646658630dfd1a6a5605e303ec",
+  "criteria.json": "c729c67924169f599c7beefcab83857b06c0c947264259cc74d6cf5f452c73e7",
+  "writer-inventory.json": "fd57c98726020adf66585e54d431d40203704739e51ba55ad9def89223b709b6",
+  "identity-closure.json": "73ac718f6199fba3f88b0b54ec0835ce2b5c6620612e92342d6b2585fcde532a",
+  "upstream-bootstrap-rbac-v1.37.1.json": "e9727e7b321b4e1c0ad9244eb97deb3da2c78f576c6be23df01530e8452ea71f",
+  "upstream-facts-v1.37.1.json": "354f048c06cbfd9e88f9e1042abf9322f759bb9d9082209a2188af091c89c7af",
+  "vectors.json": "005ecbe66edb71d591a3b745315fd73f1b73feb97bc2a29835ec93e75779ffb8",
+  "i06_backend_profile.py": "3698c048a56df3728b8c132627eed92ac14f6c37507255eb25591034185fdf75",
+  "source-index.json": "b631ef894cf13ad9664d864c3b829e033f157153d938f94147669974bf4284c6"
+ },
+ "findings": [
+  {
+   "id": "F1",
+   "severity": "MAJOR",
+   "location": "scripts/i06_backend_profile.py check_closure (PROFILE branch checks only 'key not in upstream' and scope in {CLUSTER, QUALIFICATION_NAMESPACE}; the post-loop checks cover only planeon:policy-writer); identity-closure.json PROFILE entries; README 'Identity closure' (PROFILE bullets, 'CL checks each derivation'); criteria.json CL",
+   "finding": "CL does not constrain any PROFILE identity other than the writer, so a closure that contradicts spec 2.3 passes and then becomes the IC03 reference for the observer. Probes with the shipped inventory and bootstrap file, each accepted by check_closure and (where a snapshot was built) by check_rbac_snapshot: planeon:policy-observer given POLICY_WRITE create clusterrolebindings plus legacy impersonate on users; planeon:effect-gate given escalate and bind on every ClusterRole (resourceNames null, so IC04 never runs); a new PROFILE User 'helper' with serviceaccounts/token create and pods create at CLUSTER; a new PROFILE kube-system ServiceAccount with ClusterRole update; planeon:apiserver-kubelet-client widened with pods/exec create; the writer's holder moved to OBSERVER. Spec 2.3 fixes the effect gate, observer and service-proxy/network-policy rows at 'None', and the README says the kubelet client holds exactly the upstream system:kubelet-api-admin rules, but nothing checks either. CL also accepts any non-empty writer resourceNames list, not exactly the two named roles.",
+   "requiredChange": "In check_closure, pin every PROFILE identity: a closed set of PROFILE keys (writer, effect gate, observer, apiserver kubelet client, network-policy agent; W03-chosen names through one explicit placeholder rule); allowedGrants == [] for effect gate, observer and network-policy agent; kubelet client allowedGrants == derive_grants(upstream system:kubelet-api-admin rules from cluster-roles.yaml, with its digest recorded); writer holder EFFECT_GATE and writer resourceNames exactly [planeon-gate-effect, planeon-policy-observer]. Add closure negatives for each probe shape above."
+  },
+  {
+   "id": "F2",
+   "severity": "MAJOR",
+   "location": "scripts/i06_backend_profile.py check_evidence SC03 (api['serviceAccountKeyReaders'] == ['APISERVER']) and the closed 'apiserver'/'authentication' entries; criteria.json SC03; README decision 3; spec P4",
+   "finding": "SC03 records only who can read the signing key. It cannot express two v1.37.1 token-minting configurations that sit outside the RBAC closure: (1) --service-account-signing-endpoint (ExternalServiceAccountTokenSigner, GA and LockToDefault true since 1.36: pkg/features/kube_features.go:1612-1616; pkg/controlplane/apiserver/options/options.go:208-209,305-335), which moves the signing key into a separate signer process reached over a Unix socket, i.e. a third host domain contrary to P4; (2) --service-account-key-file, which may list several verification keys (pkg/kubeapiserver/options/authentication.go:430-435), so each holder of a matching private key (for example a retained pre-rotation key) can mint tokens for any service account, including generic-garbage-collector or namespace-controller. A record can truthfully say serviceAccountKeyReaders ['APISERVER'] and still trust extra keys. The closed schema refuses any field for these ('SC02 apiserver entry'), so W03 must omit them and the record passes.",
+   "requiredChange": "Add apiserver fields for the signing endpoint (must be null), the signing-key file and its readers, and the verification key set (must be exactly the public half of the apiserver's signing key, with fixed issuers). Check them under SC03 and add negatives for an external signer endpoint and for an extra verification key."
+  },
+  {
+   "id": "F3",
+   "severity": "MAJOR",
+   "location": "scripts/i06_backend_profile.py check_evidence SC07 kubelet entry (only staticPodPath); criteria.json SC07; spec 2.3 kubelet row, P5 (auto-apply), P9",
+   "finding": "KubeletConfiguration v1beta1 in v1.37.1 has staticPodURL and staticPodURLHeader (staging/src/k8s.io/kubelet/config/v1beta1/types.go:152-159). pkg/kubelet/kubelet.go:394-396 uses them to add an HTTP static-pod source. Static pods run directly through the CRI with no API admission (PodSecurity, A2 policies) and can be privileged with host mounts. That is the 'privileged containers around the API' that P9 forbids, and it is an auto-apply source that P5's directory rule does not cover. The record cannot carry staticPodURL ('SC07 kubelet entry' refuses the key), so 'no static pods' is enforced only for the file source.",
+   "requiredChange": "Add staticPodURL (must be empty) and staticPodURLHeader to the kubelet entry. Refuse a non-empty value under SC07 and add a negative."
+  },
+  {
+   "id": "F4",
+   "severity": "MINOR",
+   "location": "scripts/i06_backend_profile.py check_rbac_snapshot (the dormant 'continue' runs before the closure-entry lookup, for every account in _controller_accounts); README 'Dormant bindings (IC02)'; criteria.json IC02",
+   "finding": "Any absent service account from the inventory account set is skipped together with whatever grants it carries. Accepted probes: '*'/'*'/'*' bound to an absent certificate-controller (required-disabled); '*'/'*'/'*' on an absent generic-garbage-collector, which bypasses that closure entry's IC03 limit; '*'/'*'/'*' on an absent podgroup-protection-controller, a GATED_OFF account with no default bootstrap role. Only bindings that the bootstrap reconciler recreates need dormancy. As written, IC02 accepts pre-positioned non-bootstrap grants that go live as soon as the controller-manager creates the account. Activation needs the TCB controller-manager, so this is defence in depth, and it is broader than the README's justification.",
+   "requiredChange": "For an absent controller account, require its grants to be a subset of derive_grants of that account's upstream bootstrap rules, and also of allowedGrants when it has a closure entry; refuse otherwise. Add negatives for the three probe shapes."
+  },
+  {
+   "id": "F5",
+   "severity": "MINOR",
+   "location": "scripts/i06_backend_profile.py check_evidence SC15 (featureGates == {}) and SPECIAL_TARGETS comment for pods/exec; README decision 1; vector B02",
+   "finding": "kube-apiserver v1.37 accepts --emulated-version down to 1.34 (staging/src/k8s.io/apiserver/pkg/util/compatibility/version.go:43-50; staging/src/k8s.io/component-base/compatibility/registry.go:245). Feature defaults are then evaluated at the emulation version. At 1.34, AuthorizePodWebsocketUpgradeCreatePermission (Beta, default true only from 1.35: pkg/features/kube_features.go:1369-1371) and ConstrainedImpersonation are off. A subject with only 'get pods/exec' or 'get pods/attach', which B02 accepts, can then exec over a websocket. featureGates {} does not exclude this. The closed record refuses emulatedVersion and runtimeConfig, and its single featureGates map does not say which component's --feature-gates it covers.",
+   "requiredChange": "Record emulatedVersion (null or 1.37), minCompatibilityVersion, runtimeConfig (empty) and featureGates for each component. Check them under SC15, or make SPECIAL also cover get on pods/exec and pods/attach. Add negatives."
+  },
+  {
+   "id": "F6",
+   "severity": "MINOR",
+   "location": "scripts/i06_backend_profile.py SEALED_FILES / OPTIONAL_SEALED_FILES; criteria.json SC12; README decision 8",
+   "finding": "kube-apiserver v1.37.1 reloads --authentication-config on change (pkg/kubeapiserver/options/authentication.go:754-819) and loads the --client-ca-file bundle through a dynamic CA provider (staging/src/k8s.io/apiserver/pkg/server/options/authentication.go:192-201). A writer who adds a JWT authenticator or a CA gets arbitrary identities, system:masters included. The sealed-file vocabulary has no entry for the authentication configuration or the trust bundles: appending AUTHENTICATION_CONFIG is refused ('SC12 control-plane configuration must be sealed'). It also lacks the container-runtime and CNI, network-policy-agent and service-proxy configuration, which bear on P9 and on NetworkPolicy enforcement. Spec 2.6 host-file sealing (W02e) still applies, so this is MINOR.",
+   "requiredChange": "Add AUTHENTICATION_CONFIG, PKI/trust bundles (client CA, service-account verification keys) and the runtime, CNI, network-policy-agent and service-proxy configuration to the sealed vocabulary, each required when present. Otherwise state in SC12 that spec 2.6/W02e owns them."
+  },
+  {
+   "id": "F7",
+   "severity": "MINOR",
+   "location": "scripts/i06_backend_profile.py check_evidence SC08 distinct-executable rule and _absolute; README decision 7 ('This refuses single-binary distributions'); vector E38",
+   "finding": "Executables are compared as strings, and _absolute rejects only '/../'. Eight spellings of one file are accepted as distinct executables: /opt/k8s/bin/k8s, /opt/k8s/bin/./k8s, /opt/k8s//bin/k8s, /opt/k8s/bin/k8s/ and others. Symlinked or hard-linked names of one multi-call binary would pass the same way. W02a puts every backend component in one 'backend' owner class (scripts/native_qualification_v2.py check_record), so it does not refuse shared content either. Decision 7's claim is not met by the model.",
+   "requiredChange": "Canonicalize the paths (refuse '.', '..', empty segments and a trailing '/') and require a distinct artifact content digest for each component, or bind SC08 to the W02a artifactDigest and verity values. Restate decision 7 and add negatives."
+  },
+  {
+   "id": "F8",
+   "severity": "MINOR",
+   "location": "README intro ('It also marks the W02a unit-distribution profile test-only') and decision 11; criteria.json SC00; check_evidence SC00; vector A02; architecture/native-profile-v2/qualification.schema.json $defs.backendProfile and scripts/native_qualification_v2.py (both byte-identical to HEAD)",
+   "finding": "W02a's schema and check_record still accept implementationId 'unit-distribution' for production. W02g refuses only that exact string, and only inside its own evidence check. A02 qualifies as production a record whose distribution is still 'unit-distribution' 0.0.0 with the fixture's executables. implementationId 'unit-distribution-prod', or 'Unit-Distribution' (which violates W02a's pattern), also passes with production=true. Nothing binds the evidence implementationId to the W02a backendProfile. P7 parts (b), the type-name wording in the W02a README, and (c), nested backend cgroups, are neither addressed nor listed under 'Still open'.",
+   "requiredChange": "Bind the W02g evidence record to the W02a profile (same implementationId under W02a's pattern; production refuses the fixture's implementationId and distribution identity), or amend W02a acceptance in a named successor. Carry P7(b) and P7(c) explicitly, reword the README sentence, and give A02 a non-fixture distribution identity."
+  },
+  {
+   "id": "F9",
+   "severity": "NOTE",
+   "location": "writer-inventory.json rbac/bootstrap-roles reason; README decision 6 and 'Identity closure' (F1_LOOPBACK paragraph)",
+   "finding": "'Runs once per apiserver start and only adds rules and subjects' and 'its role set is compiled into the pinned apiserver binary' are imprecise. ReconcileRecreate deletes and recreates bindings whose roleRef differs (staging/src/k8s.io/component-helpers/auth/rbac/reconciliation/reconcile_rolebindings.go:126-128,184). primeAggregatedClusterRoles and primeSplitClusterRoleBindings create roles and bindings copied from existing objects (pkg/registry/rbac/rest/storage_rbac.go:348-414). The reconciler may also create namespaces. 'Every apiserver writer in the inventory runs as this identity' is contradicted by the inventory's own peer-endpoint-reconciler row (in-process storage) and by the CR deletion through REST storage. No operational rule requires INSPECTING to start only after /readyz/poststarthook/rbac/bootstrap-roles succeeds. The outcome is still re-verified by IC each observation.",
+   "requiredChange": "Reword these statements, and add an operational rule that the observer inspects only after the bootstrap-roles hook (readyz) has completed."
+  },
+  {
+   "id": "F10",
+   "severity": "NOTE",
+   "location": "scripts/i06_backend_profile.py category tables; criteria.json SC07/SC12; README 'Policy-relevant grants'",
+   "finding": "Several identity-adjacent paths are not classified and should be carried. nodes/log reaches the kubelet system-log handler (pkg/kubelet/server/server.go:729-758), which serves node log files, so any credential-bearing log under /var/log would be exposed, for example an audit log at RequestResponse level for serviceaccounts/token or secrets. nodes/checkpoint is also unclassified. ValidatingAdmissionPolicy paramRef objects such as ConfigMaps are policy inputs that the effect gate could write in the qualification namespace. Audit policy and backends are not covered.",
+   "requiredChange": "Carry to W02e/W02f: forbid paramKind in profile policies or classify the param kind as a policy kind; seal the audit configuration and keep token and secret bodies out of logs; or disable the kubelet system-log handler or classify nodes/log."
+  },
+  {
+   "id": "F11",
+   "severity": "NOTE",
+   "location": "scripts/i06_backend_profile.py check_evidence (SC01 members == 1, SC07 readOnlyPort == 0, SC03 counts == 0, SC08 COMPONENTS, SC14 VERSION_PATTERN); vector E07; upstream-facts unverified list",
+   "finding": "Several checks are loose or narrower than disclosed. Type checks: members true or 1.0, readOnlyPort false, clusterAdminCredentials false and bootstrapTokens 0.0 are accepted. Component set: SC08 requires all eight components although W02a allows 6-8, an undisclosed narrowing. Version: SC14 accepts v1.37.0 through v1.37.9999, but the inventory, closure and facts were derived only from v1.37.1. This is fail-safe for RBAC because the observer compares, but it is not listed under 'unverified'.",
+   "requiredChange": "Use strict int/bool checks. Derive the SC08 component set from the W02a profile, or disclose the narrowing. Pin SC14 to v1.37.1, or add a per-patch equivalence check and list it as unverified."
+  },
+  {
+   "id": "F12",
+   "severity": "NOTE",
+   "location": "identity-closure.json User system:apiserver (F1_LOOPBACK, ALL); check_rbac_snapshot _allowed",
+   "finding": "The F1 ALL allowance is keyed on the username, so IC03 accepts any RBAC grant to User system:apiserver. That identity's authority comes from system:masters membership on the loopback token and needs no RBAC binding. If any other credential ever carried CN=system:apiserver (for example a W03-chosen kubelet-client certificate subject), pre-positioned bindings would pass.",
+   "requiredChange": "Refuse any RBAC rule bound to User system:apiserver in the snapshot, and require W03's kubelet-client subject to differ from system:apiserver."
+  }
+ ],
+ "questionAnswers": {
+  "Q1": "Largely faithful. P1-P9 map to SC01-SC12 and P10 is unchanged. The 2.3 kinds and rows map to CL and IC01-IC05, which extend the refused set to status writes, token minting, signer verbs, nodes/proxy, exec/attach and kube-system workload writes. The 2.5 dispositions map to the inventory, OR02 and OR03: the aggregation controller is disabled rather than only refusing aggregated roles, and the GC wildcard is disclosed and handled by OR02. Narrowings (P4 key readers limited to the apiserver, writer kinds, namespace update/patch only) and extensions (front-proxy and external authn off, webhook plugins off, ten required-disabled controllers, test-only fixture, v1.37 baseline) are disclosed in decisions 1-11 and the closure section. Four encodings are weaker than the spec rules they claim: the 2.3 effect-gate, observer and agent rows are not enforced by CL (F1); P4 key confinement is not expressible for extra verification keys or an external signer (F2); the 2.3 kubelet static-pod row and the P5 auto-apply rule miss staticPodURL (F3); the P5 list misses the reloaded authentication config and trust bundles (F6). The IC02 dormant narrowing of 2.3 ('a subject not in the table ... makes the generation unavailable') is disclosed but broader than its justification (F4). The eight-component rule narrows W02a without disclosure (F11).",
+  "Q2": "Accurate for v1.37.1 on every point sampled. Tag object d2b770f4 resolves to commit f78e7223. Ten files fetched from raw.githubusercontent.com at v1.37.1 are byte-identical to the author's tree, including all six golden fixtures, whose digests equal the recorded ones. My own re-derivation of bootstrap RBAC from the fixtures matches all 56 subjects rule for rule. The 49 KCM controllers match controller_descriptor.go in name, order and disabled-by-default state, and the facts' policyKindRules agree with the fixtures. Constrained impersonation (mode.go): impersonate:{associated-node, arbitrary-node, serviceaccount, user-info} on authentication.k8s.io users, groups, serviceaccounts and nodes, plus uids and userextras/<key>; secondary impersonate-on:<mode>:<verb>; legacy 'impersonate' on core users, groups and serviceaccounts; system:masters is refused only in constrained mode; Beta default on since 1.36. nodes/proxy: kubelet auth.go maps POST/GET/PUT/PATCH/DELETE to create/get/update/patch/delete with default subresource proxy, and exec/attach/run/portForward are GET/POST routes. AuthorizePodWebsocketUpgradeCreatePermission is Beta, default true since 1.35, and forces 'create' in the exec, attach and portforward Connect handlers. Signers: PodCertificateRequest status needs 'sign' through certauthorization; kube-apiserver-client-pod is 'currently unimplemented'; CSR approve/sign and CTB attest are enforced by the admission plugins. The front-proxy request-header authenticator has no system:masters filter. Also confirmed: admission defaults and NodeRestriction off by default (plugins.go); the loopback identity (config.go:1189-1217); the AlwaysAllow default; feature-gate defaults; and complete post-start hook coverage. The only imprecisions are in reconciler and writer-identity wording (F9).",
+  "Q3": "Within RBAC the closure covers every listed path. Covered: legacy and constrained impersonation; serviceaccounts/token; signers approve/sign/attest, CSR approval and status, and admissionReviewAPIGroups attest; nodes/proxy get/create/update/patch/delete and nodes 'proxy' (watch and the legacy proxy prefix are unrouted; OPTIONS maps to verb '' but the kubelet routes exec/attach/run only for GET/POST); pods/exec and pods/attach create; pod and pod-template writes and ephemeral containers at cluster scope or in kube-system (CL keeps closure SAs in kube-system, and IC01 leaves other namespaces' SAs without relevant grants); escalate and bind (aggregation controller off, aggregated roles empty); the Node authorizer (graph-limited token minting; CSR and PodCertificateRequest create inert without signers); legacy token Secrets (token controller off plus OR05); front-proxy and external authn off (SC03); dormant controller accounts (inactive until the TCB controller-manager creates them). Paths outside the closure: token minting through extra verification keys or an external signer (F2) and privileged static pods from staticPodURL (F3), neither expressible in the record; the reloaded authentication config and client CA (F6); arbitrary grants accepted on absent controller accounts (F4); the closure itself can widen through PROFILE entries (F1); nodes/log, VAP paramRef and the audit config are unclassified (F10); the exec rule depends on the emulation version (F5).",
+  "Q4": "The RBAC matching mirrors upstream ResourceMatches and VerbMatches: '*', exact match and '*/sub', with no 'res/*' wildcard; userextras is handled conservatively. resourceNames are ignored for detection, which is conservative, and used only for IC04. In my probes, CLUSTER versus namespace scopes, QUALIFICATION_NAMESPACE substitution, system-namespace refusal and the kind/name rules all behave correctly, and the writer is held to its kinds, scopes, verbs and named-role escalate/bind. Violating inputs that pass: closures that widen PROFILE identities (F1); evidence with a path-aliased single binary (F7), type-lax values (F11), a renamed fixture in production (F8), and configurations the closed record cannot carry (F2, F3, F5, F6); snapshots with arbitrary grants on absent controller accounts (F4). check_inventory compares the inventory only with the author's facts; I checked the facts against upstream separately.",
+  "Q5": "All 88 negatives fail with exactly the pinned refusal (my own mutation applier matched 101 of 101 expectations), and each refusal names the criterion its intent states. The accepted variants are valid under the model, with three caveats: A02 qualifies as production a record whose distribution identity is still the unit fixture (F8); B02 holds only at emulation version 1.35 or later (F5); B04's mechanism also accepts non-bootstrap grants (F4). No negatives exist for the F1, F3, F4 and F7 shapes.",
+  "Q6": "F1 is closed. The F1_LOOPBACK closure entries (Group system:masters, User system:apiserver: random loopback bearer token, groups system:authenticated and system:masters), the inventory row rbac/bootstrap-roles (STARTUP_BEFORE_INSPECTING, binary pinned by SC13), OR01 (an apiserver restart invalidates the generation) and per-observation IC re-verification meet the quoted required change; the wording caveats are in F9. P7 is not closed (F8): W02a's acceptance of unit-distribution is unchanged, W02g's SC00 is bypassable, and P7(b) and P7(c) are neither addressed nor carried.",
+  "Q7": "The subject claims no observed cluster, selected distribution, installed profile, W02e/W02c/W02f content or E01-E12 proof. It is DATA_CHECK_ONLY, the E rows stay OPEN_UNPROVEN, and the open items are listed. Statements that go beyond the material: 'marks the W02a unit-distribution profile test-only' (F8); decision 7 'refuses single-binary distributions' (F7); decision 1 'hold for v1.37.x' and the exec rule's dependence on the emulation version (F11, F5); 'only adds rules', 'compiled into the pinned binary' and 'Every apiserver writer ... runs as this identity' (F9); 'CL checks each derivation', which PROFILE entries do not get (F1)."
+ },
+ "f1Closed": true,
+ "p7Closed": false,
+ "modelExecution": {
+  "environment": "uv run --offline --frozen --no-sync python from the repository root (Python 3.12.14); i06_backend_profile imported from the snapshot directory (asserted module path); JSON loaded from the snapshot; scratch scripts only under scratchpad/reviewer-w02g-r1/",
+  "identity": "Start and end: shasum -a 256 -c SHA256SUMS gave 10/10 OK; all 10 snapshot files byte-identical (cmp) to architecture/i06-backend-profile/* and scripts/i06_backend_profile.py; the 6 predecessor inputs match source-index.json digests. Read-only git status/diff showed W02a (architecture/native-profile-v2, scripts/native_qualification_v2.py) and W01 files unchanged from HEAD 46bcc3e.",
+  "upstreamSpotCheck": "curl GET of raw.githubusercontent.com/kubernetes/kubernetes/v1.37.1/ for the 6 golden fixtures, pkg/kubelet/server/auth.go, pkg/features/kube_features.go, staging/src/k8s.io/apiserver/pkg/features/kube_features.go and pkg/kubeapiserver/options/plugins.go: all 10 byte-identical to the author's extracted tree; fixture SHA-256 equal to the values recorded in upstream-bootstrap-rbac-v1.37.1.json. GitHub API: refs/tags/v1.37.1 is tag object d2b770f4c94636a992534a8d3156b6b2d8e82ac3, which points to commit f78e722310e50bcaca9276be22276d9e91d91308.",
+  "independentDerivations": [
+   "Bootstrap RBAC re-derived with my own YAML resolver over the 6 default-gate fixtures: 56 subjects, identical rules and order to upstream-bootstrap-rbac-v1.37.1.json; the only aggregated roles are admin, edit and view (unbound, empty rules); the system:node binding has no subjects.",
+   "KCM controller registration extracted from controller_descriptor.go and names: 49 controllers, identical names and order to the facts; disabled-by-default = bootstrap-signer, token-cleaner, selinux-warning.",
+   "Facts policyKindRules versus bootstrap derivation: non-empty exactly where the controller account has policy-kind writes, for all 49.",
+   "Upstream subjects with derived grants: every one is either a closure entry (F1_LOOPBACK or BOOTSTRAP_SUBJECT, exact derivation) or dormant (certificate-controller, clusterrole-aggregation-controller, kube-apiserver-serving-clustertrustbundle-publisher, storage-version-migrator-controller); system:kubelet-api-admin derives exactly the kubelet-client entry."
+  ],
+  "vectorReplay": "Own applier (set/delete/append, dict selectors required unique, snapshot 'namespace', evidence 'production'). Results: check_inventory and check_closure pass on shipped data; evidencePositive passes with production=false and is refused 'SC00 test-only implementation profile cannot qualify a production backend' with production=true; snapshotPositive passes; 4+4 accepted variants pass; 47 evidence, 27 snapshot, 10 closure and 4 inventory negatives each return exactly their pinned refusal string (101/101 expectations).",
+  "probes": [
+   "check_closure: observer with CRB create plus impersonate; effect gate with ClusterRole escalate/bind; new PROFILE User with serviceaccounts/token create and pods create at CLUSTER; new PROFILE kube-system SA with ClusterRole update; kubelet client with pods/exec; writer holder OBSERVER: all ACCEPTED, with matching snapshots ACCEPTED (F1). Refused, as intended: writer WORKLOAD, node entry as User, Group system:apiserver with ALL, effect gate WORKLOAD in kube-system.",
+   "check_evidence: 8 path spellings of one binary ACCEPTED (F7); members true or 1.0, readOnlyPort false, clusterAdminCredentials false, bootstrapTokens 0.0 ACCEPTED (F11); bindAddress 127.0.0.2, ::ffff:127.0.0.1 and 0:0:0:0:0:0:0:1 accepted, 127.1 refused; v1.37.0, v1.37.9 and v1.37.9999 ACCEPTED (F11); production with implementationId 'unit-distribution-prod' or 'Unit-Distribution' ACCEPTED (F8); fields staticPodURL, serviceAccountSigningEndpoint, emulatedVersion and runtimeConfig cannot be carried (refused as closed-schema entries: F2, F3, F5); AUTHENTICATION_CONFIG refused as outside the sealed vocabulary (F6); W02a-valid 6-component profile refused (F11).",
+   "check_rbac_snapshot: refused as intended: Group system:serviceaccounts:kube-system with pods/exec; writer bind on clusterroles, deletecollection and namespace delete in Q; observer get '*' (nodes/proxy); '*/scopes' impersonate. ACCEPTED: pods/portforward, services/proxy and pods/proxy; nodes/log get and nodes/checkpoint create (F10); nodes/proxy verb '' (inert); get-only pods/exec (F5); kube-system secrets read (OR05 only) and configmaps update; csidrivers; PodCertificateRequest status update without sign (inert); clustertrustbundles; nodes/status; leases; pods create in kube-public and default (no closure SAs there); '*'/'*'/'*' on absent certificate-controller, generic-garbage-collector and podgroup-protection-controller (F4); RBAC grant to User system:apiserver (F12)."
+  ]
+ },
+ "sourcesRead": [
+  "snapshot review-w02g-r1/: README.md, REVIEW_BRIEF.md, criteria.json, writer-inventory.json, identity-closure.json, upstream-bootstrap-rbac-v1.37.1.json, upstream-facts-v1.37.1.json, vectors.json, source-index.json, i06_backend_profile.py, SHA256SUMS",
+  "architecture/host-interface-inputs/resolved/HOST_INTERFACE_SPEC.md (header, sections 0-2.6)",
+  "architecture/host-interface-inputs/resolution-review-round1.json (findings F1-F3)",
+  "architecture/host-interface-inputs/resolution-status.json",
+  "architecture/native-profile-v2/status.json",
+  "architecture/native-profile-v2/review-round3.json (findings P1-P7)",
+  "architecture/native-profile-v2/qualification.schema.json ($defs backendProfile, backendComponents, backendComponent, backendFile, backendCapture)",
+  "scripts/native_qualification_v2.py (lines 170-345, read only, for P7/SC08 context)",
+  "k8s v1.37.1 tree: plugin/pkg/auth/authorizer/rbac/bootstrappolicy/testdata/{cluster-roles,controller-roles,namespace-roles,cluster-role-bindings,controller-role-bindings,namespace-role-bindings}.yaml",
+  "k8s v1.37.1 tree: plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy_test.go, policy.go (NodeRules, line 509, ClusterRolesToAggregate, ClusterRoleBindingsToSplit), controller_policy.go (lines 88, 537)",
+  "k8s v1.37.1 tree: cmd/kube-controller-manager/app/controller_descriptor.go, cmd/kube-controller-manager/names/controller_names.go, cmd/kube-controller-manager/app/*.go descriptor functions (rbac.go, core.go, certificates.go and others)",
+  "k8s v1.37.1 tree: staging/src/k8s.io/apiserver/pkg/endpoints/filters/impersonation/mode.go and impersonation.go",
+  "k8s v1.37.1 tree: staging/src/k8s.io/apiserver/pkg/server/config.go (AuthorizeClientBearerToken, handler chain, post-start hooks), staging/src/k8s.io/apiserver/pkg/server/options/serving_with_loopback.go",
+  "k8s v1.37.1 tree: pkg/kubelet/server/auth.go, pkg/kubelet/server/server.go (routes, system log handler), pkg/kubelet/kubelet.go (static pod URL), staging/src/k8s.io/kubelet/config/v1beta1/types.go",
+  "k8s v1.37.1 tree: pkg/registry/core/pod/rest/subresources.go, pkg/registry/core/node/rest/proxy.go, staging/src/k8s.io/apiserver/pkg/endpoints/request/requestinfo.go, staging/src/k8s.io/apiserver/pkg/endpoints/installer.go (watch actions)",
+  "k8s v1.37.1 tree: pkg/apis/rbac/validation/validation.go, pkg/apis/rbac/v1/evaluation_helpers.go",
+  "k8s v1.37.1 tree: pkg/certauthorization/certauthorization.go, pkg/registry/certificates/podcertificaterequest/strategy.go, plugin/pkg/admission/certificates (grep), pkg/registry/core/serviceaccount/storage/token.go (attest), certificates types (kube-apiserver-client-pod)",
+  "k8s v1.37.1 tree: staging/src/k8s.io/apiserver/pkg/authentication/request/headerrequest/requestheader.go, staging/src/k8s.io/apiserver/pkg/server/options/authentication.go",
+  "k8s v1.37.1 tree: pkg/kubeapiserver/options/plugins.go, authorization.go, authentication.go; pkg/controlplane/apiserver/options/options.go and validation.go",
+  "k8s v1.37.1 tree: pkg/features/kube_features.go, staging/src/k8s.io/apiserver/pkg/features/kube_features.go",
+  "k8s v1.37.1 tree: pkg/registry/rbac/rest/storage_rbac.go, staging/src/k8s.io/component-helpers/auth/rbac/reconciliation/reconcile_rolebindings.go",
+  "k8s v1.37.1 tree: staging/src/k8s.io/component-base/compatibility/registry.go and version.go, staging/src/k8s.io/apiserver/pkg/util/compatibility/version.go, staging/src/k8s.io/cloud-provider/options/kubecloudshared.go",
+  "k8s v1.37.1 tree: grep of AddPostStartHook and PostStartHook() across pkg/, cmd/kube-apiserver, staging apiserver/kube-aggregator/apiextensions-apiserver",
+  "https://raw.githubusercontent.com/kubernetes/kubernetes/v1.37.1/ : 6 golden fixtures, pkg/kubelet/server/auth.go, pkg/features/kube_features.go, staging/src/k8s.io/apiserver/pkg/features/kube_features.go, pkg/kubeapiserver/options/plugins.go",
+  "https://api.github.com/repos/kubernetes/kubernetes/git/refs/tags/v1.37.1",
+  "https://api.github.com/repos/kubernetes/kubernetes/git/tags/d2b770f4c94636a992534a8d3156b6b2d8e82ac3"
+ ],
+ "actions": {
+  "filesEdited": false,
+  "githubMutated": false,
+  "nativeActions": false,
+  "referenceModelExecuted": true,
+  "repositoryValidatorsRun": false,
+  "runnerActivated": false,
+  "testsRun": false,
+  "warmSourcesAccessed": false
+ },
+ "reviewLimit": "This review is static reading of the author-fetched v1.37.1 tree, cross-checked against 10 upstream raw files and the tag ref. Nothing was run against a cluster, no Go code was built or executed, and no SELinux policy was analysed (W02e). The probes test the reference model's data checks, not a real observer or distribution. Out-of-subject packet edits (validators, tests, task packet, authority JSON) were not reviewed. W02a code was read only for P7/SC08 context. Git use was read-only status and diff. No repository file was modified; scratch scripts live only in scratchpad/reviewer-w02g-r1/. A PASS on a later round would not be a selected distribution, an observed cluster or authorization to install anything."
+}

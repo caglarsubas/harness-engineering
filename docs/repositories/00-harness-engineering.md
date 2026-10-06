@@ -1,6 +1,16 @@
 # Repository Plan: `Harness-Engineering`
 
-## Current source preparation — MET-ENFORCE-005
+## Current source preparation — MET-ENFORCE-006
+
+W02g: the I06 backend profile for the sealed single-node control plane on Kubernetes
+v1.37.1 has distribution selection criteria, a writer inventory and an identity closure
+derived from the upstream bootstrap RBAC. It has 141 vector checks and a DATA_CHECK_ONLY
+reference model. It passed its second independent review and closes W01 finding F1. The
+I06 part of W02a finding P7 is closed and the rest is carried. No distribution is
+selected, and every E01-E12 obligation stays open. Alpha2 OPEN; 201 accepted plus
+ENFORCE-006 only. Native Linux, exact-main and tenant acceptance remain separate.
+
+## Historical ENFORCE-005 source preparation — MET-ENFORCE-005
 
 W02a: the closed v2 native qualification contract (record, role, lifecycle and backend
 captures, 162 vector checks, DATA_CHECK_ONLY reference model) passed its third
@@ -855,6 +865,7 @@ Every packet uses branch `codex/<packet-id>`, changes only named paths, opens a 
 73. `MET-VERIFY-004`: record the dedicated verifier account in the verifier contract; source only.
 74. `MET-ENFORCE-004`: resolve W01 gates G04-G07 and G09 at design level with independent review; source only.
 75. `MET-ENFORCE-005`: publish the W02a v2 native qualification contract with independent review; source only.
+76. `MET-ENFORCE-006`: publish the W02g I06 backend profile (selection criteria, writer inventory, identity closure incl. W01 F1) with independent review; source only.
 
 ## Testing, verification, and acceptance
 

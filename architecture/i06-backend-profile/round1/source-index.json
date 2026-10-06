@@ -1,0 +1,76 @@
+{
+  "schemaVersion": "planeon.internal.i06-backend-profile-index/v1",
+  "round": 1,
+  "baseMain": "46bcc3e383ec5d9cf0c0d722636d264942b435de",
+  "baseTree": "c6762dbb056be473846dbdfb01817e8d9f3deffc",
+  "subject": [
+    {
+      "path": "architecture/i06-backend-profile/README.md",
+      "sha256": "eb872992371d242a3c033775318d7b1b94413964676ecc8c72a80bae9dcead1b"
+    },
+    {
+      "path": "architecture/i06-backend-profile/REVIEW_BRIEF.md",
+      "sha256": "343f1aa12050dc8e43cb723bf902be2857f404646658630dfd1a6a5605e303ec"
+    },
+    {
+      "path": "architecture/i06-backend-profile/criteria.json",
+      "sha256": "c729c67924169f599c7beefcab83857b06c0c947264259cc74d6cf5f452c73e7"
+    },
+    {
+      "path": "architecture/i06-backend-profile/writer-inventory.json",
+      "sha256": "fd57c98726020adf66585e54d431d40203704739e51ba55ad9def89223b709b6"
+    },
+    {
+      "path": "architecture/i06-backend-profile/identity-closure.json",
+      "sha256": "73ac718f6199fba3f88b0b54ec0835ce2b5c6620612e92342d6b2585fcde532a"
+    },
+    {
+      "path": "architecture/i06-backend-profile/upstream-bootstrap-rbac-v1.37.1.json",
+      "sha256": "e9727e7b321b4e1c0ad9244eb97deb3da2c78f576c6be23df01530e8452ea71f"
+    },
+    {
+      "path": "architecture/i06-backend-profile/upstream-facts-v1.37.1.json",
+      "sha256": "354f048c06cbfd9e88f9e1042abf9322f759bb9d9082209a2188af091c89c7af"
+    },
+    {
+      "path": "architecture/i06-backend-profile/vectors.json",
+      "sha256": "005ecbe66edb71d591a3b745315fd73f1b73feb97bc2a29835ec93e75779ffb8"
+    },
+    {
+      "path": "scripts/i06_backend_profile.py",
+      "sha256": "3698c048a56df3728b8c132627eed92ac14f6c37507255eb25591034185fdf75"
+    }
+  ],
+  "predecessorInputs": [
+    {
+      "path": "architecture/host-interface-inputs/resolved/HOST_INTERFACE_SPEC.md",
+      "sha256": "8a3a09bb5dbc08804dbea06dd0700a14648a9cdbc8efd62112dc64ba0b6ba1b4"
+    },
+    {
+      "path": "architecture/host-interface-inputs/resolution-review-round1.json",
+      "sha256": "619b7ac456097e1312fc0e42c2bf67911b7a1cc044119862724606b189b4861f"
+    },
+    {
+      "path": "architecture/host-interface-inputs/resolution-status.json",
+      "sha256": "e6a1333a66eeab4801c97902b7c1ae145b0f16693a8136d5dbce7d24b2837c6c"
+    },
+    {
+      "path": "architecture/native-profile-v2/status.json",
+      "sha256": "ccd7bc05c1cd36ea29511cbb058f55d90d46128bdc8188d8135220479ebd5212"
+    },
+    {
+      "path": "architecture/native-profile-v2/review-round3.json",
+      "sha256": "a28bf4b9df183075eeef071d8af557ae1edd7bee92193612cfeb255ee763caf1"
+    },
+    {
+      "path": "architecture/native-profile-v2/qualification.schema.json",
+      "sha256": "55bd641fd229f21e04ec00813bcfe600890584e982e290a210720ac5cb160ab0"
+    }
+  ],
+  "upstream": {
+    "repository": "github.com/kubernetes/kubernetes",
+    "tag": "v1.37.1",
+    "tagObject": "d2b770f4c94636a992534a8d3156b6b2d8e82ac3",
+    "commit": "f78e722310e50bcaca9276be22276d9e91d91308"
+  }
+}

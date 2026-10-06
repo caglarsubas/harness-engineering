@@ -462,12 +462,12 @@ def validate() -> None:
             == record["validatorNormalizedSha256"], "host-interface resolution validator drift")
     paths = sorted((ROOT / "task-packets").glob("*.yaml"))
     old = set(record["baselinePackets"])
-    require(len(paths) == 201
-            and {path.stem for path in paths} == old | {NEW_PACKET, successor.NEW_PACKET},
-            "closed 201-packet catalog retaining the 200-packet checkpoint")
+    require(len(paths) == 202
+            and {path.stem for path in paths} == old | {NEW_PACKET, successor.NEW_PACKET, successor.successor.NEW_PACKET},
+            "closed 202-packet catalog retaining the 200-packet checkpoint")
     packets = {}
     for path in paths:
-        if path.stem == successor.NEW_PACKET:
+        if path.stem in (successor.NEW_PACKET, successor.successor.NEW_PACKET):
             continue
         raw = regular_bytes("task-packets/" + path.name)
         expected = record["packetSha256"] if path.stem == NEW_PACKET else record["baselinePackets"][path.stem]
@@ -506,4 +506,4 @@ def validate() -> None:
 
 if __name__ == "__main__":
     validate()
-    print("Host-interface gate resolutions valid: 201 current specifications; 200-packet checkpoint and exact 199-packet predecessor; design only, every E01-E12 obligation open.")
+    print("Host-interface gate resolutions valid: 202 current specifications; 200-packet checkpoint and exact 199-packet predecessor; design only, every E01-E12 obligation open.")

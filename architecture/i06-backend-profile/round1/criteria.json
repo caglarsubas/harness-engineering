@@ -1,0 +1,180 @@
+{
+ "schemaVersion": "planeon.internal.i06-selection-criteria/v1",
+ "kubernetesBaseline": "v1.37",
+ "criteria": [
+  {
+   "id": "SC00",
+   "requirement": "Closed evidence record; the test-only unit-distribution profile never qualifies a production backend",
+   "source": "W02a P7",
+   "checkedBy": "check_evidence"
+  },
+  {
+   "id": "SC01",
+   "requirement": "Datastore on AF_UNIX only, one member, no peers",
+   "source": "Spec P1",
+   "checkedBy": "check_evidence"
+  },
+  {
+   "id": "SC02",
+   "requirement": "Apiserver binds a loopback address",
+   "source": "Spec P2",
+   "checkedBy": "check_evidence"
+  },
+  {
+   "id": "SC03",
+   "requirement": "No anonymous, static-token, bootstrap-token, front-proxy request-header or external (JWT, webhook) authentication; no cluster-admin credential, cluster or front-proxy CA key or bootstrap token on the host; service-account signing key readable by the apiserver only",
+   "source": "Spec P3, P4; W01 F1",
+   "checkedBy": "check_evidence"
+  },
+  {
+   "id": "SC04",
+   "requirement": "Authorization exactly Node then RBAC from a sealed structured configuration file (the binary default without flags is AlwaysAllow; the file is reloaded on change)",
+   "source": "Spec P3, P5",
+   "checkedBy": "check_evidence"
+  },
+  {
+   "id": "SC05",
+   "requirement": "Required admission plugins enabled (NodeRestriction is off by default upstream); webhook admission, MutatingAdmissionPolicy, NamespaceAutoProvision, ImagePolicyWebhook and AlwaysAdmit disabled; nothing outside the allowed set",
+   "source": "Spec P6",
+   "checkedBy": "check_evidence"
+  },
+  {
+   "id": "SC06",
+   "requirement": "Per-controller credentials (upstream default off); only inventory controllers; every required-disabled controller off; no signing key in the controller-manager",
+   "source": "Spec 2.3, 2.5, P4",
+   "checkedBy": "check_evidence"
+  },
+  {
+   "id": "SC07",
+   "requirement": "Kubelet: no certificate rotation or TLS bootstrap, no static pods, no anonymous or read-only access, Webhook authorization",
+   "source": "Spec P4, P5, P8",
+   "checkedBy": "check_evidence"
+  },
+  {
+   "id": "SC08",
+   "requirement": "Exactly the implementation profile's components, each a separate process from a distinct executable in its W02a confined type",
+   "source": "W02a backend rules",
+   "checkedBy": "check_evidence"
+  },
+  {
+   "id": "SC09",
+   "requirement": "Only local APIServices and no CustomResourceDefinitions",
+   "source": "Spec P7",
+   "checkedBy": "check_evidence"
+  },
+  {
+   "id": "SC10",
+   "requirement": "No automounted tokens; every in-cluster API client is a closure identity without policy-relevant grants",
+   "source": "Spec P8",
+   "checkedBy": "check_evidence"
+  },
+  {
+   "id": "SC11",
+   "requirement": "Container runtime socket reachable only from the kubelet's confined type",
+   "source": "Spec P9",
+   "checkedBy": "check_evidence"
+  },
+  {
+   "id": "SC12",
+   "requirement": "All control-plane configuration sealed, including component definitions and admission manifests when used (reloaded on change); auto-apply manifest directories empty and sealed",
+   "source": "Spec P5",
+   "checkedBy": "check_evidence"
+  },
+  {
+   "id": "SC13",
+   "requirement": "Pinned, offline, license-allowed artifacts with no runtime downloads or auto-update",
+   "source": "AGENTS.md",
+   "checkedBy": "check_evidence"
+  },
+  {
+   "id": "SC14",
+   "requirement": "Kubernetes release within the v1.37 baseline this inventory was derived from (no pre-releases)",
+   "source": "W02g baseline",
+   "checkedBy": "check_evidence"
+  },
+  {
+   "id": "SC15",
+   "requirement": "Feature gates keep their v1.37 defaults",
+   "source": "W02g baseline",
+   "checkedBy": "check_evidence"
+  },
+  {
+   "id": "CL",
+   "requirement": "Closure derivation: upstream identities hold exactly their bootstrap-derived grants; full authority only for system:masters and system:apiserver; required-disabled controller accounts excluded; closure service accounts only in kube-system",
+   "source": "Spec 2.3; W01 F1",
+   "checkedBy": "check_closure"
+  },
+  {
+   "id": "IC01",
+   "requirement": "Every subject holding a policy write, status write, identity-acquisition or escalation verb, or a workload grant at cluster scope or in kube-system is a closure identity",
+   "source": "Spec 2.3; W01 F1",
+   "checkedBy": "check_rbac_snapshot"
+  },
+  {
+   "id": "IC02",
+   "requirement": "Closure identities with grants exist; bindings of controller accounts that do not exist are dormant",
+   "source": "Spec 2.3",
+   "checkedBy": "check_rbac_snapshot"
+  },
+  {
+   "id": "IC03",
+   "requirement": "No grant beyond the subject's closure entry",
+   "source": "Spec 2.3",
+   "checkedBy": "check_rbac_snapshot"
+  },
+  {
+   "id": "IC04",
+   "requirement": "The policy writer's escalate and bind only on the named planeon Roles",
+   "source": "Spec 2.4",
+   "checkedBy": "check_rbac_snapshot"
+  },
+  {
+   "id": "IC05",
+   "requirement": "Required closure identities present",
+   "source": "Spec 2.3",
+   "checkedBy": "check_rbac_snapshot"
+  },
+  {
+   "id": "OR01",
+   "requirement": "An apiserver restart during ACTIVE invalidates the generation: bootstrap-roles and the system-namespace and authentication-info controllers write policy kinds at start",
+   "source": "Spec 5; inventory",
+   "checkedBy": "OPERATIONAL"
+  },
+  {
+   "id": "OR02",
+   "requirement": "Policy-kind objects carry no ownerReferences, so the wildcard garbage collector cannot delete them; observer-checked",
+   "source": "Inventory: garbage-collector-controller",
+   "checkedBy": "OPERATIONAL"
+  },
+  {
+   "id": "OR03",
+   "requirement": "No ClusterRole with an aggregationRule is bound in the qualification namespace (the aggregation controller is disabled, so such roles keep stale rules)",
+   "source": "Spec 2.5",
+   "checkedBy": "OPERATIONAL"
+  },
+  {
+   "id": "OR04",
+   "requirement": "API Priority and Fairness objects affect availability only; system:masters is exempt; only the in-process producer writes them",
+   "source": "Inventory",
+   "checkedBy": "OPERATIONAL"
+  },
+  {
+   "id": "OR05",
+   "requirement": "No Secret of type kubernetes.io/service-account-token and no bootstrap-token Secret exists; Secret reads then yield no credential; observer-checked",
+   "source": "Spec P4",
+   "checkedBy": "OPERATIONAL"
+  },
+  {
+   "id": "OR07",
+   "requirement": "No ValidatingWebhookConfiguration, MutatingWebhookConfiguration or MutatingAdmissionPolicy(Binding) object exists, although their admission plugins are disabled (spec P6); observer-checked",
+   "source": "Spec P6",
+   "checkedBy": "OPERATIONAL"
+  },
+  {
+   "id": "OR06",
+   "requirement": "Recommendation for W02f: hold the A2 admission policies in sealed file-based admission manifests (ManifestBasedAdmissionControlConfig, beta and default on in v1.37), because API-registered policies cannot guard admission objects",
+   "source": "Upstream facts",
+   "checkedBy": "OPERATIONAL"
+  }
+ ]
+}

@@ -1,6 +1,33 @@
 # Harness-Onion — unified development roadmap
 
-## Current checkpoint — MET-ENFORCE-005 source preparation, October 6, 2026
+## Current checkpoint — MET-ENFORCE-006 source preparation, October 6, 2026
+
+Alpha2 OPEN. MET-ENFORCE-005 passed required verify (63/63, 605 s) and merged as main
+46bcc3e; W02a is ADOPTED_DATA_CONTRACT. MET-ENFORCE-006 is the W02g part. It publishes
+the I06 backend profile for SEALED_SINGLE_NODE_CONTROL_PLANE_V1 on Kubernetes v1.37.1:
+- distribution selection criteria, with the evidence bound to its W02a backend profile;
+- an inventory of every upstream controller and in-process apiserver writer;
+- an identity closure derived from the upstream golden RBAC fixtures;
+- 141 executable vector checks and a DATA_CHECK_ONLY reference model.
+
+It passed its second independent review (round 1 CHANGES_REQUIRED, round 2
+PASS_FOR_SOURCE_PUBLICATION) and closes W01 finding F1. The I06 part of W02a finding P7
+is closed and the rest is carried to W02a-F and W03. No distribution is selected and
+nothing is installed or observed; all E01-E12 remain OPEN_UNPROVEN. MET-ENFORCE-006 is
+the sole 202nd specification.
+
+| Phase | ID | Status | Description / gate |
+|---|---|---|---|
+| Alpha2A | MET-ENFORCE-006 / W02g | SOURCE_PREPARED | I06 backend profile as the 202nd packet; verify from the owner's App |
+| Alpha2A | MET-ENFORCE-005 / W02a | VERIFY_PASSED_MERGED | v2 native qualification contract, ADOPTED_DATA_CONTRACT |
+| Alpha2A | W02b-W02f, W02a-F, W02g-F | WAITING_EXACT_PACKETS | I05/I07 schemas, seccomp, SELinux matrix, admission; W02a and W02g follow-ups |
+| Alpha2 qualification | CONF-LINUX-001 / CONF-A2-001 | WAITING_PREREQUISITES | Linux verification only when mandatory |
+
+Keep 64 argv, 420/750/900 s/15 min and 32 MiB. No cloud, runner registration,
+live/native/tenant or model-effort changes. Phase-end effort transition NOT_DUE.
+Prior checkpoints below are history only.
+
+## Historical ENFORCE-005 source checkpoint — MET-ENFORCE-005 source preparation, October 6, 2026
 
 Alpha2 OPEN. MET-ENFORCE-004 passed required verify (62/62, 553 s) and merged as main
 0ecc5f3; W01 is DESIGN_RESOLVED_REVIEWED. MET-ENFORCE-005 is the first W02 part (W02a). It
@@ -691,7 +718,7 @@ The [item-level backlog](../architecture/unified-roadmap-backlog.json) records p
 | Alpha 2 CI capacity | MET-UNIFY-008 / PR #141 | BLOCKED_SELF_HOSTED_CI | Source PR open; `verify` queued with no registered runner |
 | Alpha 2 CI capacity | MET-LINUX-003 / PR #142 | BLOCKED_SELF_HOSTED_CI | Draft source PR open; `verify` queued on the same labels; queue must be serialized before one-job admission |
 | Alpha 2A | W01 / MET-ENFORCE-004 | DESIGN_RESOLVED_REVIEWED | G04–G07/G09 resolved at design level and independently reviewed; E01–E12 remain OPEN_UNPROVEN |
-| Alpha 2A | W02 (W02a MET-ENFORCE-005) / W03–W07 | W02a SOURCE_PREPARED; others WAITING_EXACT_PACKETS | W02a v2 record contract reviewed; remaining W02 parts and W03–W07 are labels, not executable YAML |
+| Alpha 2A | W02 (W02a MET-ENFORCE-005, W02g MET-ENFORCE-006) / W03–W07 | W02a VERIFY_PASSED_MERGED; W02g SOURCE_PREPARED; others WAITING_EXACT_PACKETS | W02a v2 record contract and W02g I06 backend profile reviewed; remaining W02 parts and W03–W07 are labels, not executable YAML |
 | Alpha 2A | CONF-FIX-010 | BLOCKED_SAFE_DESIGN | Zero product attempts; requires separately reviewed safe design and bounded packet authority |
 | Alpha 2A | CONF-LIVE-004/005/006 | WAITING_PREREQUISITES | Native probes, package handoff and trusted campaign integration |
 | Alpha 2A | CONF-LINUX-001 native AMD64 | NOT_RUN_ENV_UNAVAILABLE | Fresh real-Linux PASS gates runtime coding of CTRL-INTEGRATE-001, MODEL-001, EXEC-001 and RUN-001; ARM64 separate |
@@ -723,7 +750,8 @@ These checkboxes count only the named deliverable at the stated evidence level. 
 - [x] Alpha 2 · MET-VERIFY-003 · Start the network canary in isolated mode and apply the MET-VERIFY-002 review notes; pass required verify through the owner's App.
 - [x] Alpha 2 · MET-VERIFY-004 · Record the dedicated verifier account in the verifier contract; pass required verify through the owner's App from that account.
 - [x] Alpha 2A · W01 / MET-ENFORCE-004 · Resolve G04–G07/G09 and adopt a versioned host interface only after the required independent review; pass required verify through the owner's App.
-- [ ] Alpha 2A · W02a / MET-ENFORCE-005 · Publish the independently reviewed v2 native qualification contract; pass required verify through the owner's App.
+- [x] Alpha 2A · W02a / MET-ENFORCE-005 · Publish the independently reviewed v2 native qualification contract; pass required verify through the owner's App.
+- [ ] Alpha 2A · W02g / MET-ENFORCE-006 · Publish the independently reviewed I06 backend profile (selection criteria, writer inventory, identity closure incl. W01 F1); pass required verify through the owner's App.
 - [ ] Alpha 2A · CONF-FIX-010 · Complete safe design and exact authority before any product attempt.
 - [ ] Alpha 2A · CONF-LIVE-004 · Produce the exact native-probe source implementation and separately qualify it.
 - [ ] Alpha 2A · CONF-LIVE-005 · Produce a reproducible selected package and operator handoff.

@@ -1,0 +1,2656 @@
+{
+  "version": "v1.37.1",
+  "meta": {
+    "repo": "github.com/kubernetes/kubernetes",
+    "tag": "v1.37.1",
+    "tagObject": "d2b770f4c94636a992534a8d3156b6b2d8e82ac3",
+    "commit": "f78e722310e50bcaca9276be22276d9e91d91308",
+    "taggedAt": "2026-09-23T17:06:22Z (Kubernetes Release Robot)",
+    "binaryVersionConstant": "DefaultKubeBinaryVersion = \"1.37\" (staging/src/k8s.io/component-base/version/base.go:63)",
+    "method": "Raw files fetched from raw.githubusercontent.com at tag v1.37.1 and cross-checked byte-for-byte against the codeload tarball for the same tag; all other reads from that tarball. Line numbers refer to that tree.",
+    "featureGateResolution": "Defaults evaluated at emulation version 1.37 from versioned specs (latest entry with Version <= 1.37)."
+  },
+  "controllers": [
+    {
+      "name": "serviceaccount-token-controller",
+      "disabledByDefault": false,
+      "serviceAccount": null,
+      "serviceAccountUsername": null,
+      "serviceAccountSource": "cmd/kube-controller-manager/app/service_accounts.go:65-75 (rootClientBuilder 'tokens-controller')",
+      "rbacRole": "none of its own (uses kube-controller-manager kubeconfig identity; bootstrap ClusterRole system:kube-controller-manager)",
+      "rbacRoleSource": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:490-511, bound to user system:kube-controller-manager at plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:725",
+      "policyKindRules": [
+        {
+          "apiGroups": [
+            ""
+          ],
+          "resources": [
+            "secrets",
+            "serviceaccounts"
+          ],
+          "verbs": [
+            "create"
+          ],
+          "source": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:500"
+        },
+        {
+          "apiGroups": [
+            ""
+          ],
+          "resources": [
+            "namespaces",
+            "secrets",
+            "serviceaccounts",
+            "configmaps"
+          ],
+          "verbs": [
+            "get"
+          ],
+          "source": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:502"
+        },
+        {
+          "apiGroups": [
+            ""
+          ],
+          "resources": [
+            "secrets",
+            "serviceaccounts"
+          ],
+          "verbs": [
+            "update"
+          ],
+          "source": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:503"
+        },
+        {
+          "apiGroups": [
+            "*"
+          ],
+          "resources": [
+            "*"
+          ],
+          "verbs": [
+            "list",
+            "watch"
+          ],
+          "source": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:508"
+        },
+        {
+          "apiGroups": [
+            ""
+          ],
+          "resources": [
+            "serviceaccounts/token"
+          ],
+          "verbs": [
+            "create"
+          ],
+          "source": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:509"
+        }
+      ],
+      "notes": "Special controller (requiresSpecialHandling, cmd/kube-controller-manager/app/service_accounts.go:40-41) started first with the root (KCM's own) client builder (cmd/kube-controller-manager/app/controllermanager.go:264-266, 666-672, 821-825); it never uses a per-controller SA even with --use-service-account-credentials. Disabled (returns nil) unless --service-account-private-key-file is set (cmd/kube-controller-manager/app/service_accounts.go:49-52). Writes legacy SA token Secrets and updates ServiceAccounts to drop deleted secret refs (pkg/controller/serviceaccount/tokens_controller.go:359,439,455-483). policyKindRules listed here are those of the KCM identity role system:kube-controller-manager.",
+      "source": "cmd/kube-controller-manager/app/service_accounts.go:31-43",
+      "nameConstantSource": "cmd/kube-controller-manager/names/controller_names.go:44",
+      "aliases": [
+        "serviceaccount-token"
+      ],
+      "aliasesSource": "cmd/kube-controller-manager/app/service_accounts.go:36",
+      "requiredFeatureGates": [],
+      "startsWithDefaultConfig": "conditional: only if --service-account-private-key-file is set"
+    },
+    {
+      "name": "endpoints-controller",
+      "disabledByDefault": false,
+      "serviceAccount": "endpoint-controller",
+      "serviceAccountUsername": "system:serviceaccount:kube-system:endpoint-controller",
+      "serviceAccountSource": "cmd/kube-controller-manager/app/core.go:394",
+      "rbacRole": "system:controller:endpoint-controller",
+      "rbacRoleSource": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:145-153",
+      "policyKindRules": [],
+      "notes": "No policy-kind rules.",
+      "source": "cmd/kube-controller-manager/app/core.go:385-391",
+      "nameConstantSource": "cmd/kube-controller-manager/names/controller_names.go:45",
+      "aliases": [
+        "endpoint"
+      ],
+      "aliasesSource": "cmd/kube-controller-manager/app/core.go:388",
+      "requiredFeatureGates": [],
+      "startsWithDefaultConfig": true
+    },
+    {
+      "name": "endpointslice-controller",
+      "disabledByDefault": false,
+      "serviceAccount": "endpointslice-controller",
+      "serviceAccountUsername": "system:serviceaccount:kube-system:endpointslice-controller",
+      "serviceAccountSource": "cmd/kube-controller-manager/app/discovery.go:39",
+      "rbacRole": "system:controller:endpointslice-controller",
+      "rbacRoleSource": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:155-165",
+      "policyKindRules": [],
+      "notes": "No policy-kind rules.",
+      "source": "cmd/kube-controller-manager/app/discovery.go:30-36",
+      "nameConstantSource": "cmd/kube-controller-manager/names/controller_names.go:46",
+      "aliases": [
+        "endpointslice"
+      ],
+      "aliasesSource": "cmd/kube-controller-manager/app/discovery.go:33",
+      "requiredFeatureGates": [],
+      "startsWithDefaultConfig": true
+    },
+    {
+      "name": "endpointslice-mirroring-controller",
+      "disabledByDefault": false,
+      "serviceAccount": "endpointslicemirroring-controller",
+      "serviceAccountUsername": "system:serviceaccount:kube-system:endpointslicemirroring-controller",
+      "serviceAccountSource": "cmd/kube-controller-manager/app/discovery.go:68",
+      "rbacRole": "system:controller:endpointslicemirroring-controller",
+      "rbacRoleSource": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:167-181",
+      "policyKindRules": [],
+      "notes": "No policy-kind rules.",
+      "source": "cmd/kube-controller-manager/app/discovery.go:59-65",
+      "nameConstantSource": "cmd/kube-controller-manager/names/controller_names.go:47",
+      "aliases": [
+        "endpointslicemirroring"
+      ],
+      "aliasesSource": "cmd/kube-controller-manager/app/discovery.go:62",
+      "requiredFeatureGates": [],
+      "startsWithDefaultConfig": true
+    },
+    {
+      "name": "replicationcontroller-controller",
+      "disabledByDefault": false,
+      "serviceAccount": "replication-controller",
+      "serviceAccountUsername": "system:serviceaccount:kube-system:replication-controller",
+      "serviceAccountSource": "cmd/kube-controller-manager/app/core.go:421",
+      "rbacRole": "system:controller:replication-controller",
+      "rbacRoleSource": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:374-384",
+      "policyKindRules": [],
+      "notes": "No policy-kind rules.",
+      "source": "cmd/kube-controller-manager/app/core.go:412-418",
+      "nameConstantSource": "cmd/kube-controller-manager/names/controller_names.go:48",
+      "aliases": [
+        "replicationcontroller"
+      ],
+      "aliasesSource": "cmd/kube-controller-manager/app/core.go:415",
+      "requiredFeatureGates": [],
+      "startsWithDefaultConfig": true
+    },
+    {
+      "name": "pod-garbage-collector-controller",
+      "disabledByDefault": false,
+      "serviceAccount": "pod-garbage-collector",
+      "serviceAccountUsername": "system:serviceaccount:kube-system:pod-garbage-collector",
+      "serviceAccountSource": "cmd/kube-controller-manager/app/core.go:448",
+      "rbacRole": "system:controller:pod-garbage-collector",
+      "rbacRoleSource": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:353-363",
+      "policyKindRules": [],
+      "notes": "No policy-kind rules.",
+      "source": "cmd/kube-controller-manager/app/core.go:439-445",
+      "nameConstantSource": "cmd/kube-controller-manager/names/controller_names.go:49",
+      "aliases": [
+        "podgc"
+      ],
+      "aliasesSource": "cmd/kube-controller-manager/app/core.go:442",
+      "requiredFeatureGates": [],
+      "startsWithDefaultConfig": true
+    },
+    {
+      "name": "resourcequota-controller",
+      "disabledByDefault": false,
+      "serviceAccount": "resourcequota-controller",
+      "serviceAccountUsername": "system:serviceaccount:kube-system:resourcequota-controller",
+      "serviceAccountSource": "cmd/kube-controller-manager/app/core.go:472,477",
+      "rbacRole": "system:controller:resourcequota-controller",
+      "rbacRoleSource": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:385-393",
+      "policyKindRules": [
+        {
+          "apiGroups": [
+            "*"
+          ],
+          "resources": [
+            "*"
+          ],
+          "verbs": [
+            "list",
+            "watch"
+          ],
+          "source": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:389"
+        },
+        {
+          "apiGroups": [
+            ""
+          ],
+          "resources": [
+            "resourcequotas/status"
+          ],
+          "verbs": [
+            "update"
+          ],
+          "source": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:390"
+        }
+      ],
+      "notes": "Writes ResourceQuota status (pkg/controller/resourcequota/resource_quota_controller.go:409). Wildcard rule is read-only (list/watch). apiGroups ['*'] x resources ['*'] matches every policy kind (namespaces, resourcequotas, limitranges, serviceaccounts, roles, rolebindings, clusterroles, clusterrolebindings, networkpolicies, VAP/VAPB, MAP/MAPB, validating/mutating webhook configurations, apiservices, customresourcedefinitions, certificatesigningrequests, flowschemas, prioritylevelconfigurations).",
+      "source": "cmd/kube-controller-manager/app/core.go:463-469",
+      "nameConstantSource": "cmd/kube-controller-manager/names/controller_names.go:50",
+      "aliases": [
+        "resourcequota"
+      ],
+      "aliasesSource": "cmd/kube-controller-manager/app/core.go:466",
+      "requiredFeatureGates": [],
+      "startsWithDefaultConfig": true
+    },
+    {
+      "name": "namespace-controller",
+      "disabledByDefault": false,
+      "serviceAccount": "namespace-controller",
+      "serviceAccountUsername": "system:serviceaccount:kube-system:namespace-controller",
+      "serviceAccountSource": "cmd/kube-controller-manager/app/core.go:528",
+      "rbacRole": "system:controller:namespace-controller",
+      "rbacRoleSource": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:314-321",
+      "policyKindRules": [
+        {
+          "apiGroups": [
+            ""
+          ],
+          "resources": [
+            "namespaces"
+          ],
+          "verbs": [
+            "get",
+            "list",
+            "watch",
+            "delete"
+          ],
+          "source": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:317"
+        },
+        {
+          "apiGroups": [
+            ""
+          ],
+          "resources": [
+            "namespaces/finalize",
+            "namespaces/status"
+          ],
+          "verbs": [
+            "update"
+          ],
+          "source": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:318"
+        },
+        {
+          "apiGroups": [
+            "*"
+          ],
+          "resources": [
+            "*"
+          ],
+          "verbs": [
+            "get",
+            "list",
+            "watch",
+            "delete",
+            "deletecollection"
+          ],
+          "source": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:319"
+        }
+      ],
+      "notes": "Deletes all content of terminating namespaces and finalizes them (pkg/controller/namespace/deletion/namespaced_resources_deleter.go:273,296,324,391); it discovers only namespaced resources (ServerPreferredNamespacedResources, cmd/kube-controller-manager/app/core.go:553), so in practice it deletes namespaced policy kinds (roles, rolebindings, resourcequotas, limitranges, serviceaccounts, networkpolicies, namespaced CRs) although the RBAC wildcard also covers cluster-scoped kinds. Client QPS x20 / burst x100 (cmd/kube-controller-manager/app/core.go:533-534). apiGroups ['*'] x resources ['*'] matches every policy kind (namespaces, resourcequotas, limitranges, serviceaccounts, roles, rolebindings, clusterroles, clusterrolebindings, networkpolicies, VAP/VAPB, MAP/MAPB, validating/mutating webhook configurations, apiservices, customresourcedefinitions, certificatesigningrequests, flowschemas, prioritylevelconfigurations).",
+      "source": "cmd/kube-controller-manager/app/core.go:516-522",
+      "nameConstantSource": "cmd/kube-controller-manager/names/controller_names.go:51",
+      "aliases": [
+        "namespace"
+      ],
+      "aliasesSource": "cmd/kube-controller-manager/app/core.go:519",
+      "requiredFeatureGates": [],
+      "startsWithDefaultConfig": true
+    },
+    {
+      "name": "serviceaccount-controller",
+      "disabledByDefault": false,
+      "serviceAccount": "service-account-controller",
+      "serviceAccountUsername": "system:serviceaccount:kube-system:service-account-controller",
+      "serviceAccountSource": "cmd/kube-controller-manager/app/core.go:578",
+      "rbacRole": "system:controller:service-account-controller",
+      "rbacRoleSource": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:402-408",
+      "policyKindRules": [
+        {
+          "apiGroups": [
+            ""
+          ],
+          "resources": [
+            "serviceaccounts"
+          ],
+          "verbs": [
+            "create"
+          ],
+          "source": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:405"
+        }
+      ],
+      "notes": "Creates the 'default' ServiceAccount in every namespace (pkg/controller/serviceaccount/serviceaccounts_controller.go:56-62,223).",
+      "source": "cmd/kube-controller-manager/app/core.go:569-575",
+      "nameConstantSource": "cmd/kube-controller-manager/names/controller_names.go:52",
+      "aliases": [
+        "serviceaccount"
+      ],
+      "aliasesSource": "cmd/kube-controller-manager/app/core.go:572",
+      "requiredFeatureGates": [],
+      "startsWithDefaultConfig": true
+    },
+    {
+      "name": "garbage-collector-controller",
+      "disabledByDefault": false,
+      "serviceAccount": "generic-garbage-collector",
+      "serviceAccountUsername": "system:serviceaccount:kube-system:generic-garbage-collector",
+      "serviceAccountSource": "cmd/kube-controller-manager/app/core.go:647,652,657",
+      "rbacRole": "system:controller:generic-garbage-collector",
+      "rbacRoleSource": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:276-283",
+      "policyKindRules": [
+        {
+          "apiGroups": [
+            "*"
+          ],
+          "resources": [
+            "*"
+          ],
+          "verbs": [
+            "get",
+            "list",
+            "watch",
+            "patch",
+            "update",
+            "delete"
+          ],
+          "source": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:280"
+        }
+      ],
+      "notes": "Deletes dependents / patches ownerReferences on any resource (pkg/controller/garbagecollector/operations.go:65,101). Constructor returns nil if EnableGarbageCollector=false (cmd/kube-controller-manager/app/core.go:643-645); default true (pkg/controller/garbagecollector/config/v1alpha1/defaults.go:34-35). RBAC-object updates by non-escalating users are allowed when only GC fields change (pkg/registry/rbac/helpers.go:29-50; pkg/registry/rbac/clusterrole/policybased/storage.go:93-105). apiGroups ['*'] x resources ['*'] matches every policy kind (namespaces, resourcequotas, limitranges, serviceaccounts, roles, rolebindings, clusterroles, clusterrolebindings, networkpolicies, VAP/VAPB, MAP/MAPB, validating/mutating webhook configurations, apiservices, customresourcedefinitions, certificatesigningrequests, flowschemas, prioritylevelconfigurations).",
+      "source": "cmd/kube-controller-manager/app/core.go:624-630",
+      "nameConstantSource": "cmd/kube-controller-manager/names/controller_names.go:53",
+      "aliases": [
+        "garbagecollector"
+      ],
+      "aliasesSource": "cmd/kube-controller-manager/app/core.go:627",
+      "requiredFeatureGates": [],
+      "startsWithDefaultConfig": true
+    },
+    {
+      "name": "daemonset-controller",
+      "disabledByDefault": false,
+      "serviceAccount": "daemon-set-controller",
+      "serviceAccountUsername": "system:serviceaccount:kube-system:daemon-set-controller",
+      "serviceAccountSource": "cmd/kube-controller-manager/app/apps.go:44",
+      "rbacRole": "system:controller:daemon-set-controller",
+      "rbacRoleSource": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:102-114",
+      "policyKindRules": [],
+      "notes": "No policy-kind rules.",
+      "source": "cmd/kube-controller-manager/app/apps.go:35-41",
+      "nameConstantSource": "cmd/kube-controller-manager/names/controller_names.go:54",
+      "aliases": [
+        "daemonset"
+      ],
+      "aliasesSource": "cmd/kube-controller-manager/app/apps.go:38",
+      "requiredFeatureGates": [],
+      "startsWithDefaultConfig": true
+    },
+    {
+      "name": "job-controller",
+      "disabledByDefault": false,
+      "serviceAccount": "job-controller",
+      "serviceAccountUsername": "system:serviceaccount:kube-system:job-controller",
+      "serviceAccountSource": "cmd/kube-controller-manager/app/batch.go:44",
+      "rbacRole": "system:controller:job-controller",
+      "rbacRoleSource": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:298-313",
+      "policyKindRules": [],
+      "notes": "No policy-kind rules (workloads/podgroups rules only with WorkloadWithJob, alpha off: plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:305-309).",
+      "source": "cmd/kube-controller-manager/app/batch.go:35-41",
+      "nameConstantSource": "cmd/kube-controller-manager/names/controller_names.go:55",
+      "aliases": [
+        "job"
+      ],
+      "aliasesSource": "cmd/kube-controller-manager/app/batch.go:38",
+      "requiredFeatureGates": [],
+      "startsWithDefaultConfig": true
+    },
+    {
+      "name": "podgroup-protection-controller",
+      "disabledByDefault": false,
+      "serviceAccount": "podgroup-protection-controller",
+      "serviceAccountUsername": "system:serviceaccount:kube-system:podgroup-protection-controller",
+      "serviceAccountSource": "cmd/kube-controller-manager/app/scheduling.go:46 (controllerName)",
+      "rbacRole": "system:controller:podgroup-protection-controller (only created when GenericWorkload is enabled)",
+      "rbacRoleSource": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:508-516",
+      "policyKindRules": [],
+      "notes": "No policy-kind rules. Not running by default: GenericWorkload is Beta default-off in 1.37.",
+      "source": "cmd/kube-controller-manager/app/scheduling.go:32-40",
+      "nameConstantSource": "cmd/kube-controller-manager/names/controller_names.go:79",
+      "aliases": [],
+      "aliasesSource": null,
+      "requiredFeatureGates": [
+        {
+          "gate": "GenericWorkload",
+          "defaultInV1_37": false,
+          "stage": "Beta since 1.37, default off",
+          "source": "pkg/features/kube_features.go:1622-1625"
+        }
+      ],
+      "startsWithDefaultConfig": false
+    },
+    {
+      "name": "deployment-controller",
+      "disabledByDefault": false,
+      "serviceAccount": "deployment-controller",
+      "serviceAccountUsername": "system:serviceaccount:kube-system:deployment-controller",
+      "serviceAccountSource": "cmd/kube-controller-manager/app/apps.go:129",
+      "rbacRole": "system:controller:deployment-controller",
+      "rbacRoleSource": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:115-127",
+      "policyKindRules": [],
+      "notes": "No policy-kind rules.",
+      "source": "cmd/kube-controller-manager/app/apps.go:120-126",
+      "nameConstantSource": "cmd/kube-controller-manager/names/controller_names.go:56",
+      "aliases": [
+        "deployment"
+      ],
+      "aliasesSource": "cmd/kube-controller-manager/app/apps.go:123",
+      "requiredFeatureGates": [],
+      "startsWithDefaultConfig": true
+    },
+    {
+      "name": "replicaset-controller",
+      "disabledByDefault": false,
+      "serviceAccount": "replicaset-controller",
+      "serviceAccountUsername": "system:serviceaccount:kube-system:replicaset-controller",
+      "serviceAccountSource": "cmd/kube-controller-manager/app/apps.go:103",
+      "rbacRole": "system:controller:replicaset-controller",
+      "rbacRoleSource": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:364-373",
+      "policyKindRules": [],
+      "notes": "No policy-kind rules.",
+      "source": "cmd/kube-controller-manager/app/apps.go:94-100",
+      "nameConstantSource": "cmd/kube-controller-manager/names/controller_names.go:57",
+      "aliases": [
+        "replicaset"
+      ],
+      "aliasesSource": "cmd/kube-controller-manager/app/apps.go:97",
+      "requiredFeatureGates": [],
+      "startsWithDefaultConfig": true
+    },
+    {
+      "name": "horizontal-pod-autoscaler-controller",
+      "disabledByDefault": false,
+      "serviceAccount": "horizontal-pod-autoscaler",
+      "serviceAccountUsername": "system:serviceaccount:kube-system:horizontal-pod-autoscaler",
+      "serviceAccountSource": "cmd/kube-controller-manager/app/autoscaling.go:44,49",
+      "rbacRole": "system:controller:horizontal-pod-autoscaler",
+      "rbacRoleSource": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:284-297",
+      "policyKindRules": [],
+      "notes": "No policy-kind rules (get/update '*/scale' and custom/external metrics '*' are not policy kinds: plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:289,293-294).",
+      "source": "cmd/kube-controller-manager/app/autoscaling.go:35-41",
+      "nameConstantSource": "cmd/kube-controller-manager/names/controller_names.go:58",
+      "aliases": [
+        "horizontalpodautoscaling"
+      ],
+      "aliasesSource": "cmd/kube-controller-manager/app/autoscaling.go:38",
+      "requiredFeatureGates": [],
+      "startsWithDefaultConfig": true
+    },
+    {
+      "name": "disruption-controller",
+      "disabledByDefault": false,
+      "serviceAccount": "disruption-controller",
+      "serviceAccountUsername": "system:serviceaccount:kube-system:disruption-controller",
+      "serviceAccountSource": "cmd/kube-controller-manager/app/policy.go:39,44",
+      "rbacRole": "system:controller:disruption-controller",
+      "rbacRoleSource": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:128-144",
+      "policyKindRules": [],
+      "notes": "No policy-kind rules (get '*/scale' only: plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:139).",
+      "source": "cmd/kube-controller-manager/app/policy.go:30-36",
+      "nameConstantSource": "cmd/kube-controller-manager/names/controller_names.go:59",
+      "aliases": [
+        "disruption"
+      ],
+      "aliasesSource": "cmd/kube-controller-manager/app/policy.go:33",
+      "requiredFeatureGates": [],
+      "startsWithDefaultConfig": true
+    },
+    {
+      "name": "statefulset-controller",
+      "disabledByDefault": false,
+      "serviceAccount": "statefulset-controller",
+      "serviceAccountUsername": "system:serviceaccount:kube-system:statefulset-controller",
+      "serviceAccountSource": "cmd/kube-controller-manager/app/apps.go:76",
+      "rbacRole": "system:controller:statefulset-controller",
+      "rbacRoleSource": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:430-448",
+      "policyKindRules": [],
+      "notes": "No policy-kind rules.",
+      "source": "cmd/kube-controller-manager/app/apps.go:67-73",
+      "nameConstantSource": "cmd/kube-controller-manager/names/controller_names.go:60",
+      "aliases": [
+        "statefulset"
+      ],
+      "aliasesSource": "cmd/kube-controller-manager/app/apps.go:70",
+      "requiredFeatureGates": [],
+      "startsWithDefaultConfig": true
+    },
+    {
+      "name": "cronjob-controller",
+      "disabledByDefault": false,
+      "serviceAccount": "cronjob-controller",
+      "serviceAccountUsername": "system:serviceaccount:kube-system:cronjob-controller",
+      "serviceAccountSource": "cmd/kube-controller-manager/app/batch.go:82",
+      "rbacRole": "system:controller:cronjob-controller",
+      "rbacRoleSource": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:91-101",
+      "policyKindRules": [],
+      "notes": "No policy-kind rules.",
+      "source": "cmd/kube-controller-manager/app/batch.go:73-79",
+      "nameConstantSource": "cmd/kube-controller-manager/names/controller_names.go:61",
+      "aliases": [
+        "cronjob"
+      ],
+      "aliasesSource": "cmd/kube-controller-manager/app/batch.go:76",
+      "requiredFeatureGates": [],
+      "startsWithDefaultConfig": true
+    },
+    {
+      "name": "certificatesigningrequest-signing-controller",
+      "disabledByDefault": false,
+      "serviceAccount": "certificate-controller",
+      "serviceAccountUsername": "system:serviceaccount:kube-system:certificate-controller",
+      "serviceAccountSource": "cmd/kube-controller-manager/app/certificates.go:66",
+      "rbacRole": "system:controller:certificate-controller (shared with csr approving/cleaner controllers)",
+      "rbacRoleSource": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:456-471",
+      "policyKindRules": [
+        {
+          "apiGroups": [
+            "certificates.k8s.io"
+          ],
+          "resources": [
+            "certificatesigningrequests"
+          ],
+          "verbs": [
+            "get",
+            "list",
+            "watch",
+            "delete"
+          ],
+          "source": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:459"
+        },
+        {
+          "apiGroups": [
+            "certificates.k8s.io"
+          ],
+          "resources": [
+            "certificatesigningrequests/status",
+            "certificatesigningrequests/approval"
+          ],
+          "verbs": [
+            "update"
+          ],
+          "source": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:460"
+        },
+        {
+          "apiGroups": [
+            "certificates.k8s.io"
+          ],
+          "resources": [
+            "signers"
+          ],
+          "verbs": [
+            "approve"
+          ],
+          "resourceNames": [
+            "kubernetes.io/kube-apiserver-client-kubelet"
+          ],
+          "source": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:461"
+        },
+        {
+          "apiGroups": [
+            "certificates.k8s.io"
+          ],
+          "resources": [
+            "signers"
+          ],
+          "verbs": [
+            "sign"
+          ],
+          "resourceNames": [
+            "kubernetes.io/legacy-unknown",
+            "kubernetes.io/kube-apiserver-client",
+            "kubernetes.io/kube-apiserver-client-kubelet",
+            "kubernetes.io/kubelet-serving"
+          ],
+          "source": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:462-467"
+        }
+      ],
+      "notes": "Signs CSRs via UpdateStatus (pkg/controller/certificates/signer/signer.go:180,194). Skipped (nil) unless --cluster-signing-cert-file/--cluster-signing-key-file or per-signer files are set (cmd/kube-controller-manager/app/certificates.go:57-61). certificate-controller role also grants create subjectaccessreviews (plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:468, used by the approver's SAR checks) and events. Signer names resolve via staging/src/k8s.io/api/certificates/v1beta1/types.go:150,155,159,163.",
+      "source": "cmd/kube-controller-manager/app/certificates.go:47-53",
+      "nameConstantSource": "cmd/kube-controller-manager/names/controller_names.go:62",
+      "aliases": [
+        "csrsigning"
+      ],
+      "aliasesSource": "cmd/kube-controller-manager/app/certificates.go:50",
+      "requiredFeatureGates": [],
+      "startsWithDefaultConfig": "conditional: only if cluster signing cert/key files are configured"
+    },
+    {
+      "name": "certificatesigningrequest-approving-controller",
+      "disabledByDefault": false,
+      "serviceAccount": "certificate-controller",
+      "serviceAccountUsername": "system:serviceaccount:kube-system:certificate-controller",
+      "serviceAccountSource": "cmd/kube-controller-manager/app/certificates.go:196",
+      "rbacRole": "system:controller:certificate-controller",
+      "rbacRoleSource": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:456-471",
+      "policyKindRules": [
+        {
+          "apiGroups": [
+            "certificates.k8s.io"
+          ],
+          "resources": [
+            "certificatesigningrequests"
+          ],
+          "verbs": [
+            "get",
+            "list",
+            "watch",
+            "delete"
+          ],
+          "source": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:459"
+        },
+        {
+          "apiGroups": [
+            "certificates.k8s.io"
+          ],
+          "resources": [
+            "certificatesigningrequests/status",
+            "certificatesigningrequests/approval"
+          ],
+          "verbs": [
+            "update"
+          ],
+          "source": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:460"
+        },
+        {
+          "apiGroups": [
+            "certificates.k8s.io"
+          ],
+          "resources": [
+            "signers"
+          ],
+          "verbs": [
+            "approve"
+          ],
+          "resourceNames": [
+            "kubernetes.io/kube-apiserver-client-kubelet"
+          ],
+          "source": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:461"
+        },
+        {
+          "apiGroups": [
+            "certificates.k8s.io"
+          ],
+          "resources": [
+            "signers"
+          ],
+          "verbs": [
+            "sign"
+          ],
+          "resourceNames": [
+            "kubernetes.io/legacy-unknown",
+            "kubernetes.io/kube-apiserver-client",
+            "kubernetes.io/kube-apiserver-client-kubelet",
+            "kubernetes.io/kubelet-serving"
+          ],
+          "source": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:462-467"
+        }
+      ],
+      "notes": "Auto-approves node client CSRs when the requester passes a SAR for create certificatesigningrequests/selfnodeclient or /nodeclient (pkg/controller/certificates/approver/sarapprove.go:62-73,97-105, UpdateApproval at :105). certificate-controller role also grants create subjectaccessreviews (plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:468, used by the approver's SAR checks) and events. Signer names resolve via staging/src/k8s.io/api/certificates/v1beta1/types.go:150,155,159,163.",
+      "source": "cmd/kube-controller-manager/app/certificates.go:188-194",
+      "nameConstantSource": "cmd/kube-controller-manager/names/controller_names.go:63",
+      "aliases": [
+        "csrapproving"
+      ],
+      "aliasesSource": "cmd/kube-controller-manager/app/certificates.go:191",
+      "requiredFeatureGates": [],
+      "startsWithDefaultConfig": true
+    },
+    {
+      "name": "certificatesigningrequest-cleaner-controller",
+      "disabledByDefault": false,
+      "serviceAccount": "certificate-controller",
+      "serviceAccountUsername": "system:serviceaccount:kube-system:certificate-controller",
+      "serviceAccountSource": "cmd/kube-controller-manager/app/certificates.go:219",
+      "rbacRole": "system:controller:certificate-controller",
+      "rbacRoleSource": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:456-471",
+      "policyKindRules": [
+        {
+          "apiGroups": [
+            "certificates.k8s.io"
+          ],
+          "resources": [
+            "certificatesigningrequests"
+          ],
+          "verbs": [
+            "get",
+            "list",
+            "watch",
+            "delete"
+          ],
+          "source": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:459"
+        },
+        {
+          "apiGroups": [
+            "certificates.k8s.io"
+          ],
+          "resources": [
+            "certificatesigningrequests/status",
+            "certificatesigningrequests/approval"
+          ],
+          "verbs": [
+            "update"
+          ],
+          "source": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:460"
+        },
+        {
+          "apiGroups": [
+            "certificates.k8s.io"
+          ],
+          "resources": [
+            "signers"
+          ],
+          "verbs": [
+            "approve"
+          ],
+          "resourceNames": [
+            "kubernetes.io/kube-apiserver-client-kubelet"
+          ],
+          "source": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:461"
+        },
+        {
+          "apiGroups": [
+            "certificates.k8s.io"
+          ],
+          "resources": [
+            "signers"
+          ],
+          "verbs": [
+            "sign"
+          ],
+          "resourceNames": [
+            "kubernetes.io/legacy-unknown",
+            "kubernetes.io/kube-apiserver-client",
+            "kubernetes.io/kube-apiserver-client-kubelet",
+            "kubernetes.io/kubelet-serving"
+          ],
+          "source": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:462-467"
+        }
+      ],
+      "notes": "Deletes old CSRs (pkg/controller/certificates/cleaner/cleaner.go:122). certificate-controller role also grants create subjectaccessreviews (plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:468, used by the approver's SAR checks) and events. Signer names resolve via staging/src/k8s.io/api/certificates/v1beta1/types.go:150,155,159,163.",
+      "source": "cmd/kube-controller-manager/app/certificates.go:211-217",
+      "nameConstantSource": "cmd/kube-controller-manager/names/controller_names.go:64",
+      "aliases": [
+        "csrcleaner"
+      ],
+      "aliasesSource": "cmd/kube-controller-manager/app/certificates.go:214",
+      "requiredFeatureGates": [],
+      "startsWithDefaultConfig": true
+    },
+    {
+      "name": "podcertificaterequest-cleaner-controller",
+      "disabledByDefault": false,
+      "serviceAccount": "podcertificaterequestcleaner",
+      "serviceAccountUsername": "system:serviceaccount:kube-system:podcertificaterequestcleaner",
+      "serviceAccountSource": "cmd/kube-controller-manager/app/certificates.go:245",
+      "rbacRole": "system:controller:podcertificaterequestcleaner",
+      "rbacRoleSource": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:472-479",
+      "policyKindRules": [],
+      "notes": "No policy-kind rules (podcertificaterequests only). Deletes PodCertificateRequests (pkg/controller/certificates/cleaner/pcrcleaner.go:99).",
+      "source": "cmd/kube-controller-manager/app/certificates.go:233-241",
+      "nameConstantSource": "cmd/kube-controller-manager/names/controller_names.go:65",
+      "aliases": [],
+      "aliasesSource": null,
+      "requiredFeatureGates": [
+        {
+          "gate": "PodCertificateRequest",
+          "defaultInV1_37": true,
+          "stage": "GA since 1.37 (not locked)",
+          "source": "pkg/features/kube_features.go:1945-1949"
+        }
+      ],
+      "startsWithDefaultConfig": true
+    },
+    {
+      "name": "ttl-controller",
+      "disabledByDefault": false,
+      "serviceAccount": "ttl-controller",
+      "serviceAccountUsername": "system:serviceaccount:kube-system:ttl-controller",
+      "serviceAccountSource": "cmd/kube-controller-manager/app/core.go:609",
+      "rbacRole": "system:controller:ttl-controller",
+      "rbacRoleSource": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:449-455",
+      "policyKindRules": [],
+      "notes": "No policy-kind rules.",
+      "source": "cmd/kube-controller-manager/app/core.go:600-606",
+      "nameConstantSource": "cmd/kube-controller-manager/names/controller_names.go:66",
+      "aliases": [
+        "ttl"
+      ],
+      "aliasesSource": "cmd/kube-controller-manager/app/core.go:603",
+      "requiredFeatureGates": [],
+      "startsWithDefaultConfig": true
+    },
+    {
+      "name": "bootstrap-signer-controller",
+      "disabledByDefault": true,
+      "serviceAccount": "bootstrap-signer",
+      "serviceAccountUsername": "system:serviceaccount:kube-system:bootstrap-signer",
+      "serviceAccountSource": "cmd/kube-controller-manager/app/bootstrap.go:37",
+      "rbacRole": "namespaced Roles system:controller:bootstrap-signer in kube-system and kube-public (no ClusterRole)",
+      "rbacRoleSource": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/namespace_policy.go:83-89,133-134 (kube-system); plugin/pkg/auth/authorizer/rbac/bootstrappolicy/namespace_policy.go:141-151 (kube-public)",
+      "policyKindRules": [],
+      "notes": "No policy-kind rules (kube-system secrets read; kube-public configmaps read + update cluster-info). Writes ConfigMap kube-public/cluster-info (pkg/controller/bootstrap/bootstrapsigner.go:257). kubeadm enables it via --controllers=*,bootstrapsigner,tokencleaner (cmd/kubeadm/app/phases/controlplane/manifests.go:362).",
+      "source": "cmd/kube-controller-manager/app/bootstrap.go:27-34",
+      "nameConstantSource": "cmd/kube-controller-manager/names/controller_names.go:67",
+      "aliases": [
+        "bootstrapsigner"
+      ],
+      "aliasesSource": "cmd/kube-controller-manager/app/bootstrap.go:30",
+      "requiredFeatureGates": [],
+      "startsWithDefaultConfig": false
+    },
+    {
+      "name": "token-cleaner-controller",
+      "disabledByDefault": true,
+      "serviceAccount": "token-cleaner",
+      "serviceAccountUsername": "system:serviceaccount:kube-system:token-cleaner",
+      "serviceAccountSource": "cmd/kube-controller-manager/app/bootstrap.go:65",
+      "rbacRole": "namespaced Role system:controller:token-cleaner in kube-system (no ClusterRole)",
+      "rbacRoleSource": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/namespace_policy.go:98-105,138-139",
+      "policyKindRules": [],
+      "notes": "No policy-kind rules. Deletes expired bootstrap-token Secrets in kube-system (pkg/controller/bootstrap/tokencleaner.go:207).",
+      "source": "cmd/kube-controller-manager/app/bootstrap.go:55-62",
+      "nameConstantSource": "cmd/kube-controller-manager/names/controller_names.go:68",
+      "aliases": [
+        "tokencleaner"
+      ],
+      "aliasesSource": "cmd/kube-controller-manager/app/bootstrap.go:58",
+      "requiredFeatureGates": [],
+      "startsWithDefaultConfig": false
+    },
+    {
+      "name": "node-ipam-controller",
+      "disabledByDefault": false,
+      "serviceAccount": "node-controller",
+      "serviceAccountUsername": "system:serviceaccount:kube-system:node-controller",
+      "serviceAccountSource": "cmd/kube-controller-manager/app/core.go:139",
+      "rbacRole": "system:controller:node-controller (shared with node-lifecycle and taint-eviction)",
+      "rbacRoleSource": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:322-336",
+      "policyKindRules": [],
+      "notes": "No policy-kind rules. Returns nil unless --allocate-node-cidrs=true (cmd/kube-controller-manager/app/core.go:89-91; flag default false at staging/src/k8s.io/cloud-provider/options/kubecloudshared.go:60).",
+      "source": "cmd/kube-controller-manager/app/core.go:80-86",
+      "nameConstantSource": "cmd/kube-controller-manager/names/controller_names.go:69",
+      "aliases": [
+        "nodeipam"
+      ],
+      "aliasesSource": "cmd/kube-controller-manager/app/core.go:83",
+      "requiredFeatureGates": [],
+      "startsWithDefaultConfig": "conditional: only with --allocate-node-cidrs=true"
+    },
+    {
+      "name": "node-lifecycle-controller",
+      "disabledByDefault": false,
+      "serviceAccount": "node-controller",
+      "serviceAccountUsername": "system:serviceaccount:kube-system:node-controller",
+      "serviceAccountSource": "cmd/kube-controller-manager/app/core.go:173",
+      "rbacRole": "system:controller:node-controller",
+      "rbacRoleSource": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:322-336",
+      "policyKindRules": [],
+      "notes": "No policy-kind rules.",
+      "source": "cmd/kube-controller-manager/app/core.go:164-170",
+      "nameConstantSource": "cmd/kube-controller-manager/names/controller_names.go:70",
+      "aliases": [
+        "nodelifecycle"
+      ],
+      "aliasesSource": "cmd/kube-controller-manager/app/core.go:167",
+      "requiredFeatureGates": [],
+      "startsWithDefaultConfig": true
+    },
+    {
+      "name": "persistentvolume-binder-controller",
+      "disabledByDefault": false,
+      "serviceAccount": "persistent-volume-binder",
+      "serviceAccountUsername": "system:serviceaccount:kube-system:persistent-volume-binder",
+      "serviceAccountSource": "cmd/kube-controller-manager/app/core.go:249",
+      "rbacRole": "system:controller:persistent-volume-binder",
+      "rbacRoleSource": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:337-352",
+      "policyKindRules": [],
+      "notes": "No policy-kind rules.",
+      "source": "cmd/kube-controller-manager/app/core.go:234-240",
+      "nameConstantSource": "cmd/kube-controller-manager/names/controller_names.go:73",
+      "aliases": [
+        "persistentvolume-binder"
+      ],
+      "aliasesSource": "cmd/kube-controller-manager/app/core.go:237",
+      "requiredFeatureGates": [],
+      "startsWithDefaultConfig": true
+    },
+    {
+      "name": "persistentvolume-attach-detach-controller",
+      "disabledByDefault": false,
+      "serviceAccount": "attachdetach-controller",
+      "serviceAccountUsername": "system:serviceaccount:kube-system:attachdetach-controller",
+      "serviceAccountSource": "cmd/kube-controller-manager/app/core.go:291",
+      "rbacRole": "system:controller:attachdetach-controller",
+      "rbacRoleSource": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:65-82",
+      "policyKindRules": [],
+      "notes": "No policy-kind rules.",
+      "source": "cmd/kube-controller-manager/app/core.go:273-279",
+      "nameConstantSource": "cmd/kube-controller-manager/names/controller_names.go:74",
+      "aliases": [
+        "attachdetach"
+      ],
+      "aliasesSource": "cmd/kube-controller-manager/app/core.go:276",
+      "requiredFeatureGates": [],
+      "startsWithDefaultConfig": true
+    },
+    {
+      "name": "persistentvolume-expander-controller",
+      "disabledByDefault": false,
+      "serviceAccount": "expand-controller",
+      "serviceAccountUsername": "system:serviceaccount:kube-system:expand-controller",
+      "serviceAccountSource": "cmd/kube-controller-manager/app/core.go:337",
+      "rbacRole": "system:controller:expand-controller",
+      "rbacRoleSource": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:183-191",
+      "policyKindRules": [],
+      "notes": "No policy-kind rules.",
+      "source": "cmd/kube-controller-manager/app/core.go:321-327",
+      "nameConstantSource": "cmd/kube-controller-manager/names/controller_names.go:75",
+      "aliases": [
+        "persistentvolume-expander"
+      ],
+      "aliasesSource": "cmd/kube-controller-manager/app/core.go:324",
+      "requiredFeatureGates": [],
+      "startsWithDefaultConfig": true
+    },
+    {
+      "name": "clusterrole-aggregation-controller",
+      "disabledByDefault": false,
+      "serviceAccount": "clusterrole-aggregation-controller",
+      "serviceAccountUsername": "system:serviceaccount:kube-system:clusterrole-aggregation-controller",
+      "serviceAccountSource": "cmd/kube-controller-manager/app/rbac.go:35",
+      "rbacRole": "system:controller:clusterrole-aggregation-controller",
+      "rbacRoleSource": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:84-90",
+      "policyKindRules": [
+        {
+          "apiGroups": [
+            "rbac.authorization.k8s.io"
+          ],
+          "resources": [
+            "clusterroles"
+          ],
+          "verbs": [
+            "escalate",
+            "get",
+            "list",
+            "watch",
+            "update",
+            "patch"
+          ],
+          "source": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:88"
+        }
+      ],
+      "notes": "Holds the special verb 'escalate' on clusterroles. Rewrites rules of every ClusterRole that has an aggregationRule (e.g. admin/edit/view) via server-side apply, FieldManager clusterrole-aggregation-controller, Force=true (pkg/controller/clusterroleaggregation/clusterroleaggregation_controller.go:97-142).",
+      "source": "cmd/kube-controller-manager/app/rbac.go:26-32",
+      "nameConstantSource": "cmd/kube-controller-manager/names/controller_names.go:76",
+      "aliases": [
+        "clusterrole-aggregation"
+      ],
+      "aliasesSource": "cmd/kube-controller-manager/app/rbac.go:29",
+      "requiredFeatureGates": [],
+      "startsWithDefaultConfig": true
+    },
+    {
+      "name": "persistentvolumeclaim-protection-controller",
+      "disabledByDefault": false,
+      "serviceAccount": "pvc-protection-controller",
+      "serviceAccountUsername": "system:serviceaccount:kube-system:pvc-protection-controller",
+      "serviceAccountSource": "cmd/kube-controller-manager/app/core.go:718",
+      "rbacRole": "system:controller:pvc-protection-controller",
+      "rbacRoleSource": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:480-488",
+      "policyKindRules": [],
+      "notes": "No policy-kind rules.",
+      "source": "cmd/kube-controller-manager/app/core.go:709-715",
+      "nameConstantSource": "cmd/kube-controller-manager/names/controller_names.go:77",
+      "aliases": [
+        "pvc-protection"
+      ],
+      "aliasesSource": "cmd/kube-controller-manager/app/core.go:712",
+      "requiredFeatureGates": [],
+      "startsWithDefaultConfig": true
+    },
+    {
+      "name": "persistentvolume-protection-controller",
+      "disabledByDefault": false,
+      "serviceAccount": "pv-protection-controller",
+      "serviceAccountUsername": "system:serviceaccount:kube-system:pv-protection-controller",
+      "serviceAccountSource": "cmd/kube-controller-manager/app/core.go:747",
+      "rbacRole": "system:controller:pv-protection-controller",
+      "rbacRoleSource": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:489-495",
+      "policyKindRules": [],
+      "notes": "No policy-kind rules.",
+      "source": "cmd/kube-controller-manager/app/core.go:738-744",
+      "nameConstantSource": "cmd/kube-controller-manager/names/controller_names.go:78",
+      "aliases": [
+        "pv-protection"
+      ],
+      "aliasesSource": "cmd/kube-controller-manager/app/core.go:741",
+      "requiredFeatureGates": [],
+      "startsWithDefaultConfig": true
+    },
+    {
+      "name": "volumeattributesclass-protection-controller",
+      "disabledByDefault": false,
+      "serviceAccount": "volumeattributesclass-protection-controller",
+      "serviceAccountUsername": "system:serviceaccount:kube-system:volumeattributesclass-protection-controller",
+      "serviceAccountSource": "cmd/kube-controller-manager/app/core.go:776",
+      "rbacRole": "system:controller:volumeattributesclass-protection-controller",
+      "rbacRoleSource": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:496-506",
+      "policyKindRules": [],
+      "notes": "No policy-kind rules.",
+      "source": "cmd/kube-controller-manager/app/core.go:765-773",
+      "nameConstantSource": "cmd/kube-controller-manager/names/controller_names.go:89",
+      "aliases": [],
+      "aliasesSource": null,
+      "requiredFeatureGates": [
+        {
+          "gate": "VolumeAttributesClass",
+          "defaultInV1_37": true,
+          "stage": "GA, LockToDefault since 1.36",
+          "source": "pkg/features/kube_features.go:2266-2271"
+        }
+      ],
+      "startsWithDefaultConfig": true
+    },
+    {
+      "name": "ttl-after-finished-controller",
+      "disabledByDefault": false,
+      "serviceAccount": "ttl-after-finished-controller",
+      "serviceAccountUsername": "system:serviceaccount:kube-system:ttl-after-finished-controller",
+      "serviceAccountSource": "cmd/kube-controller-manager/app/core.go:806",
+      "rbacRole": "system:controller:ttl-after-finished-controller",
+      "rbacRoleSource": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:518-524",
+      "policyKindRules": [],
+      "notes": "No policy-kind rules.",
+      "source": "cmd/kube-controller-manager/app/core.go:797-803",
+      "nameConstantSource": "cmd/kube-controller-manager/names/controller_names.go:80",
+      "aliases": [
+        "ttl-after-finished"
+      ],
+      "aliasesSource": "cmd/kube-controller-manager/app/core.go:800",
+      "requiredFeatureGates": [],
+      "startsWithDefaultConfig": true
+    },
+    {
+      "name": "root-ca-certificate-publisher-controller",
+      "disabledByDefault": false,
+      "serviceAccount": "root-ca-cert-publisher",
+      "serviceAccountUsername": "system:serviceaccount:kube-system:root-ca-cert-publisher",
+      "serviceAccountSource": "cmd/kube-controller-manager/app/certificates.go:270 (and :381 when --root-ca-file is empty)",
+      "rbacRole": "system:controller:root-ca-cert-publisher",
+      "rbacRoleSource": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:525-531",
+      "policyKindRules": [],
+      "notes": "No policy-kind rules (configmaps create/update: kube-root-ca.crt in every namespace).",
+      "source": "cmd/kube-controller-manager/app/certificates.go:256-262",
+      "nameConstantSource": "cmd/kube-controller-manager/names/controller_names.go:81",
+      "aliases": [
+        "root-ca-cert-publisher"
+      ],
+      "aliasesSource": "cmd/kube-controller-manager/app/certificates.go:259",
+      "requiredFeatureGates": [],
+      "startsWithDefaultConfig": true
+    },
+    {
+      "name": "kube-apiserver-serving-clustertrustbundle-publisher-controller",
+      "disabledByDefault": false,
+      "serviceAccount": "kube-apiserver-serving-clustertrustbundle-publisher",
+      "serviceAccountUsername": "system:serviceaccount:kube-system:kube-apiserver-serving-clustertrustbundle-publisher",
+      "serviceAccountSource": "cmd/kube-controller-manager/app/certificates.go:322",
+      "rbacRole": "system:controller:kube-apiserver-serving-clustertrustbundle-publisher",
+      "rbacRoleSource": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:533-542",
+      "policyKindRules": [],
+      "notes": "No policy-kind rules per the given definition, but holds special verb 'attest' on certificates.k8s.io signers/kubernetes.io/kube-apiserver-serving (plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:537) plus create/update/delete clustertrustbundles (plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:538). Returns nil if the root CA is empty (cmd/kube-controller-manager/app/certificates.go:307-309) or no clustertrustbundles API is discovered (cmd/kube-controller-manager/app/certificates.go:353-356).",
+      "source": "cmd/kube-controller-manager/app/certificates.go:290-296",
+      "nameConstantSource": "cmd/kube-controller-manager/names/controller_names.go:82",
+      "aliases": [],
+      "aliasesSource": null,
+      "requiredFeatureGates": [
+        {
+          "gate": "ClusterTrustBundle",
+          "defaultInV1_37": true,
+          "stage": "GA since 1.37 (not locked)",
+          "source": "pkg/features/kube_features.go:1417-1421"
+        }
+      ],
+      "startsWithDefaultConfig": "yes when gate on (default) and CA + clustertrustbundles API available"
+    },
+    {
+      "name": "ephemeral-volume-controller",
+      "disabledByDefault": false,
+      "serviceAccount": "ephemeral-volume-controller",
+      "serviceAccountUsername": "system:serviceaccount:kube-system:ephemeral-volume-controller",
+      "serviceAccountSource": "cmd/kube-controller-manager/app/core.go:366",
+      "rbacRole": "system:controller:ephemeral-volume-controller",
+      "rbacRoleSource": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:193-201",
+      "policyKindRules": [],
+      "notes": "No policy-kind rules.",
+      "source": "cmd/kube-controller-manager/app/core.go:357-363",
+      "nameConstantSource": "cmd/kube-controller-manager/names/controller_names.go:83",
+      "aliases": [
+        "ephemeral-volume"
+      ],
+      "aliasesSource": "cmd/kube-controller-manager/app/core.go:360",
+      "requiredFeatureGates": [],
+      "startsWithDefaultConfig": true
+    },
+    {
+      "name": "storageversion-garbage-collector-controller",
+      "disabledByDefault": false,
+      "serviceAccount": "storage-version-garbage-collector",
+      "serviceAccountUsername": "system:serviceaccount:kube-system:storage-version-garbage-collector",
+      "serviceAccountSource": "cmd/kube-controller-manager/app/core.go:983",
+      "rbacRole": "system:controller:storage-version-garbage-collector (only when StorageVersionAPI && APIServerIdentity)",
+      "rbacRoleSource": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:555-567",
+      "policyKindRules": [],
+      "notes": "No policy-kind rules. Not running by default (StorageVersionAPI alpha, default off).",
+      "source": "cmd/kube-controller-manager/app/core.go:970-980",
+      "nameConstantSource": "cmd/kube-controller-manager/names/controller_names.go:84",
+      "aliases": [
+        "storage-version-gc"
+      ],
+      "aliasesSource": "cmd/kube-controller-manager/app/core.go:973",
+      "requiredFeatureGates": [
+        {
+          "gate": "APIServerIdentity",
+          "defaultInV1_37": true,
+          "stage": "Beta since 1.26",
+          "source": "staging/src/k8s.io/apiserver/pkg/features/kube_features.go:326-329"
+        },
+        {
+          "gate": "StorageVersionAPI",
+          "defaultInV1_37": false,
+          "stage": "Alpha since 1.20",
+          "source": "staging/src/k8s.io/apiserver/pkg/features/kube_features.go:450-452"
+        }
+      ],
+      "startsWithDefaultConfig": false
+    },
+    {
+      "name": "resourceclaim-controller",
+      "disabledByDefault": false,
+      "serviceAccount": "resource-claim-controller",
+      "serviceAccountUsername": "system:serviceaccount:kube-system:resource-claim-controller",
+      "serviceAccountSource": "cmd/kube-controller-manager/app/resource.go:79",
+      "rbacRole": "system:controller:resource-claim-controller",
+      "rbacRoleSource": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:203-226",
+      "policyKindRules": [],
+      "notes": "No policy-kind rules.",
+      "source": "cmd/kube-controller-manager/app/resource.go:67-76",
+      "nameConstantSource": "cmd/kube-controller-manager/names/controller_names.go:85",
+      "aliases": [
+        "resource-claim-controller"
+      ],
+      "aliasesSource": "cmd/kube-controller-manager/app/resource.go:70",
+      "requiredFeatureGates": [
+        {
+          "gate": "DynamicResourceAllocation",
+          "defaultInV1_37": true,
+          "stage": "GA, LockToDefault since 1.35",
+          "source": "pkg/features/kube_features.go:1579-1585"
+        }
+      ],
+      "startsWithDefaultConfig": true
+    },
+    {
+      "name": "resourcepoolstatusrequest-controller",
+      "disabledByDefault": false,
+      "serviceAccount": "resourcepoolstatusrequest-controller",
+      "serviceAccountUsername": "system:serviceaccount:kube-system:resourcepoolstatusrequest-controller",
+      "serviceAccountSource": "cmd/kube-controller-manager/app/resource.go:111",
+      "rbacRole": "system:controller:resourcepoolstatusrequest-controller (only when DRA && DRAResourcePoolStatus)",
+      "rbacRoleSource": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:255-273",
+      "policyKindRules": [],
+      "notes": "No policy-kind rules. Not running by default (DRAResourcePoolStatus alpha).",
+      "source": "cmd/kube-controller-manager/app/resource.go:100-108",
+      "nameConstantSource": "cmd/kube-controller-manager/names/controller_names.go:86",
+      "aliases": [],
+      "aliasesSource": null,
+      "requiredFeatureGates": [
+        {
+          "gate": "DRAResourcePoolStatus",
+          "defaultInV1_37": false,
+          "stage": "Alpha since 1.36",
+          "source": "pkg/features/kube_features.go:1537-1539"
+        }
+      ],
+      "startsWithDefaultConfig": false
+    },
+    {
+      "name": "device-taint-eviction-controller",
+      "disabledByDefault": false,
+      "serviceAccount": "device-taint-eviction-controller",
+      "serviceAccountUsername": "system:serviceaccount:kube-system:device-taint-eviction-controller",
+      "serviceAccountSource": "cmd/kube-controller-manager/app/resource.go:45 (names constant)",
+      "rbacRole": "system:controller:device-taint-eviction-controller",
+      "rbacRoleSource": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:227-254",
+      "policyKindRules": [],
+      "notes": "No policy-kind rules.",
+      "source": "cmd/kube-controller-manager/app/resource.go:32-42",
+      "nameConstantSource": "cmd/kube-controller-manager/names/controller_names.go:72",
+      "aliases": [],
+      "aliasesSource": null,
+      "requiredFeatureGates": [
+        {
+          "gate": "DynamicResourceAllocation",
+          "defaultInV1_37": true,
+          "stage": "GA, LockToDefault since 1.35",
+          "source": "pkg/features/kube_features.go:1579-1585"
+        },
+        {
+          "gate": "DRADeviceTaints",
+          "defaultInV1_37": true,
+          "stage": "GA since 1.37 (not locked)",
+          "source": "pkg/features/kube_features.go:1481-1485"
+        }
+      ],
+      "startsWithDefaultConfig": true
+    },
+    {
+      "name": "legacy-serviceaccount-token-cleaner-controller",
+      "disabledByDefault": false,
+      "serviceAccount": "legacy-service-account-token-cleaner",
+      "serviceAccountUsername": "system:serviceaccount:kube-system:legacy-service-account-token-cleaner",
+      "serviceAccountSource": "cmd/kube-controller-manager/app/core.go:830",
+      "rbacRole": "system:controller:legacy-service-account-token-cleaner",
+      "rbacRoleSource": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:569-575",
+      "policyKindRules": [],
+      "notes": "No policy-kind rules per definition, but it patches/deletes Secrets cluster-wide (legacy SA token secrets): plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:573; pkg/controller/serviceaccount/legacy_serviceaccount_token_cleaner.go:196,208.",
+      "source": "cmd/kube-controller-manager/app/core.go:821-827",
+      "nameConstantSource": "cmd/kube-controller-manager/names/controller_names.go:87",
+      "aliases": [
+        "legacy-service-account-token-cleaner"
+      ],
+      "aliasesSource": "cmd/kube-controller-manager/app/core.go:824",
+      "requiredFeatureGates": [],
+      "startsWithDefaultConfig": true
+    },
+    {
+      "name": "validatingadmissionpolicy-status-controller",
+      "disabledByDefault": false,
+      "serviceAccount": "validatingadmissionpolicy-status-controller",
+      "serviceAccountUsername": "system:serviceaccount:kube-system:validatingadmissionpolicy-status-controller",
+      "serviceAccountSource": "cmd/kube-controller-manager/app/validatingadmissionpolicystatus.go:42,55 (names constant)",
+      "rbacRole": "system:controller:validatingadmissionpolicy-status-controller",
+      "rbacRoleSource": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:544-553",
+      "policyKindRules": [
+        {
+          "apiGroups": [
+            "admissionregistration.k8s.io"
+          ],
+          "resources": [
+            "validatingadmissionpolicies"
+          ],
+          "verbs": [
+            "get",
+            "list",
+            "watch"
+          ],
+          "source": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:547-548"
+        },
+        {
+          "apiGroups": [
+            "admissionregistration.k8s.io"
+          ],
+          "resources": [
+            "validatingadmissionpolicies/status"
+          ],
+          "verbs": [
+            "get",
+            "patch",
+            "update"
+          ],
+          "source": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:549-550"
+        }
+      ],
+      "notes": "Type-checks VAPs and writes status via server-side ApplyStatus (pkg/controller/validatingadmissionpolicystatus/controller.go:166). requiredFeatureGates is empty (cmd/kube-controller-manager/app/validatingadmissionpolicystatus.go:37).",
+      "source": "cmd/kube-controller-manager/app/validatingadmissionpolicystatus.go:33-39",
+      "nameConstantSource": "cmd/kube-controller-manager/names/controller_names.go:88",
+      "aliases": [],
+      "aliasesSource": null,
+      "requiredFeatureGates": [],
+      "startsWithDefaultConfig": true
+    },
+    {
+      "name": "taint-eviction-controller",
+      "disabledByDefault": false,
+      "serviceAccount": "node-controller",
+      "serviceAccountUsername": "system:serviceaccount:kube-system:node-controller",
+      "serviceAccountSource": "cmd/kube-controller-manager/app/core.go:215",
+      "rbacRole": "system:controller:node-controller",
+      "rbacRoleSource": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:322-336",
+      "policyKindRules": [],
+      "notes": "No policy-kind rules.",
+      "source": "cmd/kube-controller-manager/app/core.go:203-211",
+      "nameConstantSource": "cmd/kube-controller-manager/names/controller_names.go:71",
+      "aliases": [],
+      "aliasesSource": null,
+      "requiredFeatureGates": [
+        {
+          "gate": "SeparateTaintEvictionController",
+          "defaultInV1_37": true,
+          "stage": "GA, LockToDefault since 1.34",
+          "source": "pkg/features/kube_features.go:2126-2129"
+        }
+      ],
+      "startsWithDefaultConfig": true
+    },
+    {
+      "name": "service-cidr-controller",
+      "disabledByDefault": false,
+      "serviceAccount": "service-cidrs-controller",
+      "serviceAccountUsername": "system:serviceaccount:kube-system:service-cidrs-controller",
+      "serviceAccountSource": "cmd/kube-controller-manager/app/networking.go:42",
+      "rbacRole": "system:controller:service-cidrs-controller",
+      "rbacRoleSource": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:418-429",
+      "policyKindRules": [],
+      "notes": "No policy-kind rules.",
+      "source": "cmd/kube-controller-manager/app/networking.go:31-39",
+      "nameConstantSource": "cmd/kube-controller-manager/names/controller_names.go:90",
+      "aliases": [],
+      "aliasesSource": null,
+      "requiredFeatureGates": [
+        {
+          "gate": "MultiCIDRServiceAllocator",
+          "defaultInV1_37": true,
+          "stage": "GA, LockToDefault since 1.34",
+          "source": "pkg/features/kube_features.go:1850-1855"
+        }
+      ],
+      "startsWithDefaultConfig": true
+    },
+    {
+      "name": "storage-version-migrator-controller",
+      "disabledByDefault": false,
+      "serviceAccount": "storage-version-migrator-controller",
+      "serviceAccountUsername": "system:serviceaccount:kube-system:storage-version-migrator-controller",
+      "serviceAccountSource": "cmd/kube-controller-manager/app/storageversionmigrator.go:58,66 (controllerName)",
+      "rbacRole": "system:controller:storage-version-migrator-controller (only when StorageVersionMigrator)",
+      "rbacRoleSource": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:577-591",
+      "policyKindRules": [
+        {
+          "apiGroups": [
+            "*"
+          ],
+          "resources": [
+            "*"
+          ],
+          "verbs": [
+            "list",
+            "patch"
+          ],
+          "source": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:585"
+        },
+        {
+          "apiGroups": [
+            "apiextensions.k8s.io"
+          ],
+          "resources": [
+            "customresourcedefinitions"
+          ],
+          "verbs": [
+            "get"
+          ],
+          "source": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:586"
+        },
+        {
+          "apiGroups": [
+            "apiextensions.k8s.io"
+          ],
+          "resources": [
+            "customresourcedefinitions/status"
+          ],
+          "verbs": [
+            "patch"
+          ],
+          "source": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:587"
+        }
+      ],
+      "notes": "No requiredFeatureGates in descriptor, but constructor returns nil unless StorageVersionMigrator and client-go InformerResourceVersion are enabled (cmd/kube-controller-manager/app/storageversionmigrator.go:43-46); errors if GC disabled or InOrderInformers off (:48-55). Patches arbitrary objects with merge patches (pkg/controller/storageversionmigrator/storageversionmigrator.go:317-323) and SSA-patches CRD status (pkg/controller/storageversionmigrator/migrationrunner.go:270,412). apiGroups ['*'] x resources ['*'] matches every policy kind (namespaces, resourcequotas, limitranges, serviceaccounts, roles, rolebindings, clusterroles, clusterrolebindings, networkpolicies, VAP/VAPB, MAP/MAPB, validating/mutating webhook configurations, apiservices, customresourcedefinitions, certificatesigningrequests, flowschemas, prioritylevelconfigurations).",
+      "source": "cmd/kube-controller-manager/app/storageversionmigrator.go:34-40",
+      "nameConstantSource": "cmd/kube-controller-manager/names/controller_names.go:91",
+      "aliases": [
+        "svm"
+      ],
+      "aliasesSource": "cmd/kube-controller-manager/app/storageversionmigrator.go:37",
+      "requiredFeatureGates": [
+        {
+          "gate": "StorageVersionMigrator",
+          "defaultInV1_37": true,
+          "stage": "GA since 1.37 (not locked)",
+          "source": "pkg/features/kube_features.go:2205-2209"
+        },
+        {
+          "gate": "InformerResourceVersion (client-go)",
+          "defaultInV1_37": true,
+          "stage": "GA since 1.35",
+          "source": "staging/src/k8s.io/client-go/features/known_features.go:134-137"
+        },
+        {
+          "gate": "InOrderInformers (client-go)",
+          "defaultInV1_37": true,
+          "stage": "GA, LockToDefault since 1.36",
+          "source": "staging/src/k8s.io/client-go/features/known_features.go:127-130"
+        }
+      ],
+      "startsWithDefaultConfig": true
+    },
+    {
+      "name": "selinux-warning-controller",
+      "disabledByDefault": true,
+      "serviceAccount": "selinux-warning-controller",
+      "serviceAccountUsername": "system:serviceaccount:kube-system:selinux-warning-controller",
+      "serviceAccountSource": "cmd/kube-controller-manager/app/core.go:1009 (controllerName)",
+      "rbacRole": "system:controller:selinux-warning-controller",
+      "rbacRoleSource": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:593-604",
+      "policyKindRules": [],
+      "notes": "No policy-kind rules.",
+      "source": "cmd/kube-controller-manager/app/core.go:997-1006",
+      "nameConstantSource": "cmd/kube-controller-manager/names/controller_names.go:92",
+      "aliases": [],
+      "aliasesSource": null,
+      "requiredFeatureGates": [
+        {
+          "gate": "SELinuxChangePolicy",
+          "defaultInV1_37": true,
+          "stage": "GA, LockToDefault since 1.36",
+          "source": "pkg/features/kube_features.go:2091-2095"
+        }
+      ],
+      "startsWithDefaultConfig": false
+    }
+  ],
+  "controllersSummary": {
+    "total": 49,
+    "registrationSource": "cmd/kube-controller-manager/app/controller_descriptor.go:135-234 (register calls :174-225); KnownControllers = sorted keys (:105-108); ControllersDisabledByDefault (:121-133)",
+    "disabledByDefault": [
+      "bootstrap-signer-controller",
+      "selinux-warning-controller",
+      "token-cleaner-controller"
+    ],
+    "disabledByDefaultSource": "cmd/kube-controller-manager/app/bootstrap.go:32,60; cmd/kube-controller-manager/app/core.go:1001",
+    "featureGateOffByDefault": [
+      "podgroup-protection-controller (GenericWorkload)",
+      "storageversion-garbage-collector-controller (StorageVersionAPI)",
+      "resourcepoolstatusrequest-controller (DRAResourcePoolStatus)"
+    ],
+    "conditionalOnFlags": [
+      "serviceaccount-token-controller (--service-account-private-key-file)",
+      "certificatesigningrequest-signing-controller (cluster signing cert/key)",
+      "node-ipam-controller (--allocate-node-cidrs)",
+      "kube-apiserver-serving-clustertrustbundle-publisher-controller (CA + API present)"
+    ],
+    "withPolicyKindRules": [
+      "serviceaccount-token-controller (via KCM identity)",
+      "resourcequota-controller",
+      "namespace-controller",
+      "serviceaccount-controller",
+      "garbage-collector-controller",
+      "certificatesigningrequest-signing-controller",
+      "certificatesigningrequest-approving-controller",
+      "certificatesigningrequest-cleaner-controller",
+      "clusterrole-aggregation-controller",
+      "validatingadmissionpolicy-status-controller",
+      "storage-version-migrator-controller"
+    ],
+    "specialVerbs": {
+      "escalate": [
+        "clusterrole-aggregation-controller (plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:88)"
+      ],
+      "bind": [],
+      "impersonate": [],
+      "create serviceaccounts/token": [
+        "KCM identity system:kube-controller-manager (plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:509)"
+      ],
+      "approve/sign signers": [
+        "certificate-controller (plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:461-467)"
+      ],
+      "attest signers": [
+        "kube-apiserver-serving-clustertrustbundle-publisher (plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:537)"
+      ]
+    }
+  },
+  "controllerManagerIdentity": {
+    "summary": "--use-service-account-credentials defaults to false: the bool has no defaulter (staging/src/k8s.io/cloud-provider/options/kubecloudshared.go:54; staging/src/k8s.io/cloud-provider/config/v1alpha1/defaults.go:60-71), and with false every controller client is the controller-manager's own kubeconfig identity (clientBuilder = rootClientBuilder, cmd/kube-controller-manager/app/controllermanager.go:821-835).",
+    "whenUseServiceAccountCredentialsTrue": "Per-controller clients come from DynamicControllerClientBuilder over an anonymous copy of the kubeconfig (controllermanager.go:826-831). It get-or-creates ServiceAccount kube-system/<name> (and the kube-system Namespace if missing) and mints 3600s TokenRequest tokens using the controller-manager's OWN client c.Client.CoreV1() (staging/src/k8s.io/controller-manager/pkg/clientbuilder/client_builder_dynamic.go:44-49,106-133,186-224,247-271). Username = system:serviceaccount:kube-system:<name> (client_builder_dynamic.go:236-244; staging/src/k8s.io/apiserver/pkg/authentication/serviceaccount/util.go:78-80).",
+    "alwaysUsesKCMIdentity": [
+      {
+        "what": "serviceaccount-token-controller ('tokens-controller')",
+        "source": "cmd/kube-controller-manager/app/service_accounts.go:65-75"
+      },
+      {
+        "what": "shared informers ('shared-informers'), metadata informers, controller-discovery",
+        "source": "cmd/kube-controller-manager/app/controllermanager.go:541,553,572"
+      },
+      {
+        "what": "leader election lock and lease candidate",
+        "source": "cmd/kube-controller-manager/app/controllermanager.go:356-364,840-866"
+      },
+      {
+        "what": "event sink",
+        "source": "cmd/kube-controller-manager/app/controllermanager.go:209-210"
+      },
+      {
+        "what": "provisioning SAs / Namespace kube-system / serviceaccounts/token for per-controller credentials",
+        "source": "staging/src/k8s.io/controller-manager/pkg/clientbuilder/client_builder_dynamic.go:201,247-271; cmd/kube-controller-manager/app/controllermanager.go:828-831"
+      }
+    ],
+    "bootstrapRole": "ClusterRole system:kube-controller-manager plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:490-511, ClusterRoleBinding to User system:kube-controller-manager plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:725; RoleBindings in kube-system: system::leader-locking-kube-controller-manager and system::extension-apiserver-authentication-reader (plugin/pkg/auth/authorizer/rbac/bootstrappolicy/namespace_policy.go:124-130).",
+    "policyKindRules": [
+      {
+        "apiGroups": [
+          ""
+        ],
+        "resources": [
+          "secrets",
+          "serviceaccounts"
+        ],
+        "verbs": [
+          "create"
+        ],
+        "source": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:500"
+      },
+      {
+        "apiGroups": [
+          ""
+        ],
+        "resources": [
+          "namespaces",
+          "secrets",
+          "serviceaccounts",
+          "configmaps"
+        ],
+        "verbs": [
+          "get"
+        ],
+        "source": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:502"
+      },
+      {
+        "apiGroups": [
+          ""
+        ],
+        "resources": [
+          "secrets",
+          "serviceaccounts"
+        ],
+        "verbs": [
+          "update"
+        ],
+        "source": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:503"
+      },
+      {
+        "apiGroups": [
+          "*"
+        ],
+        "resources": [
+          "*"
+        ],
+        "verbs": [
+          "list",
+          "watch"
+        ],
+        "source": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:508"
+      },
+      {
+        "apiGroups": [
+          ""
+        ],
+        "resources": [
+          "serviceaccounts/token"
+        ],
+        "verbs": [
+          "create"
+        ],
+        "source": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:509"
+      }
+    ],
+    "sharedServiceAccounts": {
+      "node-controller": [
+        "node-ipam-controller",
+        "node-lifecycle-controller",
+        "taint-eviction-controller"
+      ],
+      "certificate-controller": [
+        "certificatesigningrequest-signing-controller",
+        "certificatesigningrequest-approving-controller",
+        "certificatesigningrequest-cleaner-controller"
+      ],
+      "source": "cmd/kube-controller-manager/app/core.go:139,173,215; cmd/kube-controller-manager/app/certificates.go:66,196,219"
+    },
+    "rolesWithoutAKCMController": {
+      "items": [
+        "system:controller:route-controller (plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:394-401)",
+        "system:controller:service-controller (plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:409-417)",
+        "Role kube-system/system:controller:cloud-provider (plugin/pkg/auth/authorizer/rbac/bootstrappolicy/namespace_policy.go:90-97, 136-137; marked deprecated)"
+      ],
+      "note": "No route/service controller exists among the 49 KCM controller names (cmd/kube-controller-manager/names/controller_names.go:44-92)."
+    },
+    "controllersFlagDefault": "--controllers defaults to ['*'] (staging/src/k8s.io/controller-manager/config/v1alpha1/defaults.go:37-39); '*' enables all except disabled-by-default, explicit name enables, '-name' disables (staging/src/k8s.io/controller-manager/app/helper.go:60-80)."
+  },
+  "apiserverWriters": [
+    {
+      "name": "rbac/bootstrap-roles",
+      "kind": "POST_START_HOOK",
+      "writes": "Create/update (union-only) of 73 ClusterRoles, 54 ClusterRoleBindings, 7 Roles, 7 RoleBindings under default gates (kube-system, kube-public); recreates a binding whose roleRef changed; may create Namespaces kube-system/kube-public if missing; primes system:aggregate-to-{admin,edit,view} from legacy roles and system:public-info-viewer binding from system:discovery.",
+      "writesPolicyKinds": true,
+      "cadence": "STARTUP_ONCE",
+      "identity": "system:apiserver (UID random), groups [system:authenticated, system:masters] via the privileged loopback bearer token (staging/src/k8s.io/apiserver/pkg/server/config.go:1206-1213, wired at :748; token = random UUID, staging/src/k8s.io/apiserver/pkg/server/options/serving_with_loopback.go:92; hooks receive it via PostStartHookContext, staging/src/k8s.io/apiserver/pkg/server/hooks.go:161-164)",
+      "source": "pkg/registry/rbac/rest/storage_rbac.go:59,131-141,162-340; staging/src/k8s.io/component-helpers/auth/rbac/reconciliation/namespace.go:28-45",
+      "enabledWhen": "RBAC is an enabled authorizer (else added to DisabledPostStartHooks: pkg/controlplane/apiserver/config.go:241-243) and rbac.authorization.k8s.io/v1 is enabled (pkg/controlplane/apiserver/apis.go:109-136)",
+      "notes": "See bootstrapRoles for semantics."
+    },
+    {
+      "name": "start-system-namespaces-controller",
+      "kind": "POST_START_HOOK",
+      "writes": "Creates Namespaces kube-system, kube-public, default, kube-node-lease if absent (never updates/deletes).",
+      "writesPolicyKinds": true,
+      "cadence": "CONTINUOUS",
+      "identity": "system:apiserver (UID random), groups [system:authenticated, system:masters] via the privileged loopback bearer token (staging/src/k8s.io/apiserver/pkg/server/config.go:1206-1213, wired at :748; token = random UUID, staging/src/k8s.io/apiserver/pkg/server/options/serving_with_loopback.go:92; hooks receive it via PostStartHookContext, staging/src/k8s.io/apiserver/pkg/server/hooks.go:161-164)",
+      "source": "pkg/controlplane/apiserver/server.go:140,144-149; pkg/controlplane/controller/systemnamespaces/system_namespaces_controller.go:49-58,73,78-103; list: pkg/controlplane/apiserver/options/options.go:131 + cmd/kube-apiserver/app/options/options.go:97",
+      "enabledWhen": "len(SystemNamespaces) > 0 (always true for kube-apiserver)",
+      "notes": "Re-syncs every 1 minute (system_namespaces_controller.go:50,73)."
+    },
+    {
+      "name": "start-cluster-authentication-info-controller",
+      "kind": "POST_START_HOOK",
+      "writes": "ConfigMap kube-system/extension-apiserver-authentication (update/create; delete+requeue if too large); creates Namespace kube-system if missing.",
+      "writesPolicyKinds": true,
+      "cadence": "CONTINUOUS",
+      "identity": "system:apiserver (UID random), groups [system:authenticated, system:masters] via the privileged loopback bearer token (staging/src/k8s.io/apiserver/pkg/server/config.go:1206-1213, wired at :748; token = random UUID, staging/src/k8s.io/apiserver/pkg/server/options/serving_with_loopback.go:92; hooks receive it via PostStartHookContext, staging/src/k8s.io/apiserver/pkg/server/hooks.go:161-164)",
+      "source": "pkg/controlplane/apiserver/server.go:232-258; pkg/controlplane/controller/clusterauthenticationtrust/cluster_authentication_trust_controller.go:51-54,171-219,471-475",
+      "notes": "Namespace creation is a policy-kind write (cluster_authentication_trust_controller.go:181-197)."
+    },
+    {
+      "name": "priority-and-fairness-config-producer",
+      "kind": "POST_START_HOOK",
+      "writes": "Creates/updates mandatory (exempt, catch-all) and suggested FlowSchemas/PriorityLevelConfigurations; deletes bootstrap-annotated objects no longer in the bootstrap set.",
+      "writesPolicyKinds": false,
+      "cadence": "CONTINUOUS",
+      "identity": "system:apiserver (UID random), groups [system:authenticated, system:masters] via the privileged loopback bearer token (staging/src/k8s.io/apiserver/pkg/server/config.go:1206-1213, wired at :748; token = random UUID, staging/src/k8s.io/apiserver/pkg/server/options/serving_with_loopback.go:92; hooks receive it via PostStartHookContext, staging/src/k8s.io/apiserver/pkg/server/hooks.go:161-164)",
+      "source": "pkg/registry/flowcontrol/rest/storage_flowcontrol.go:53,100-229; pkg/registry/flowcontrol/ensurer/strategy.go:141-155,199-217,252-334",
+      "enabledWhen": "flowcontrol.apiserver.k8s.io group enabled (provider hooks only added for enabled groups: pkg/controlplane/apiserver/apis.go:109-136)",
+      "notes": "Initial ensure blocks up to 5m, then re-ensures every 1 minute (storage_flowcontrol.go:124-166). See apiPriorityAndFairness."
+    },
+    {
+      "name": "priority-and-fairness-config-consumer",
+      "kind": "POST_START_HOOK",
+      "writes": "FlowSchema status (server-side ApplyStatus, field manager api-priority-and-fairness-config-consumer-v1).",
+      "writesPolicyKinds": false,
+      "cadence": "CONTINUOUS",
+      "identity": "system:apiserver (UID random), groups [system:authenticated, system:masters] via the privileged loopback bearer token (staging/src/k8s.io/apiserver/pkg/server/config.go:1206-1213, wired at :748; token = random UUID, staging/src/k8s.io/apiserver/pkg/server/options/serving_with_loopback.go:92; hooks receive it via PostStartHookContext, staging/src/k8s.io/apiserver/pkg/server/hooks.go:161-164)",
+      "source": "staging/src/k8s.io/apiserver/pkg/server/config.go:942-955; staging/src/k8s.io/apiserver/pkg/util/flowcontrol/apf_controller.go:613-633; staging/src/k8s.io/apiserver/pkg/util/flowcontrol/apf_filter.go:42; client from loopback: staging/src/k8s.io/apiserver/pkg/server/options/feature.go:81-85, pkg/controlplane/apiserver/config.go:159-178",
+      "enabledWhen": "c.FlowControl != nil (APF enabled)"
+    },
+    {
+      "name": "kube-apiserver-autoregistration",
+      "kind": "POST_START_HOOK",
+      "writes": "APIService objects: create/update/delete for built-in group-versions (synced once at start, label kube-aggregator.kubernetes.io/automanaged=onstart) and for CRD group-versions via crdRegistrationController (synced continuously, automanaged=true).",
+      "writesPolicyKinds": true,
+      "cadence": "CONTINUOUS",
+      "identity": "system:apiserver (UID random), groups [system:authenticated, system:masters] via the privileged loopback bearer token (staging/src/k8s.io/apiserver/pkg/server/config.go:1206-1213, wired at :748; token = random UUID, staging/src/k8s.io/apiserver/pkg/server/options/serving_with_loopback.go:92; hooks receive it via PostStartHookContext, staging/src/k8s.io/apiserver/pkg/server/hooks.go:161-164); client built from aggregator loopback config at pkg/controlplane/apiserver/aggregator.go:151",
+      "source": "pkg/controlplane/apiserver/aggregator.go:150-197,355-380; staging/src/k8s.io/kube-aggregator/pkg/controllers/autoregister/autoregister_controller.go:44-50,208-290; pkg/controlplane/controller/crdregistration/crdregistration_controller.go:140,213,226"
+    },
+    {
+      "name": "apiservice-status-local-available-controller",
+      "kind": "POST_START_HOOK",
+      "writes": "APIService status (UpdateStatus).",
+      "writesPolicyKinds": true,
+      "cadence": "CONTINUOUS",
+      "identity": "system:apiserver (UID random), groups [system:authenticated, system:masters] via the privileged loopback bearer token (staging/src/k8s.io/apiserver/pkg/server/config.go:1206-1213, wired at :748; token = random UUID, staging/src/k8s.io/apiserver/pkg/server/options/serving_with_loopback.go:92; hooks receive it via PostStartHookContext, staging/src/k8s.io/apiserver/pkg/server/hooks.go:161-164)",
+      "source": "staging/src/k8s.io/kube-aggregator/pkg/apiserver/apiserver.go:218,337-350; staging/src/k8s.io/kube-aggregator/pkg/controllers/status/local/local_available_controller.go:142",
+      "notes": "Status subresource only."
+    },
+    {
+      "name": "apiservice-status-remote-available-controller",
+      "kind": "POST_START_HOOK",
+      "writes": "APIService status (UpdateStatus).",
+      "writesPolicyKinds": true,
+      "cadence": "CONTINUOUS",
+      "identity": "system:apiserver (UID random), groups [system:authenticated, system:masters] via the privileged loopback bearer token (staging/src/k8s.io/apiserver/pkg/server/config.go:1206-1213, wired at :748; token = random UUID, staging/src/k8s.io/apiserver/pkg/server/options/serving_with_loopback.go:92; hooks receive it via PostStartHookContext, staging/src/k8s.io/apiserver/pkg/server/hooks.go:161-164)",
+      "source": "staging/src/k8s.io/kube-aggregator/pkg/apiserver/apiserver.go:352-373; staging/src/k8s.io/kube-aggregator/pkg/controllers/status/remote/remote_available_controller.go:420",
+      "enabledWhen": "!DisableRemoteAvailableConditionController (apiserver.go:354)",
+      "notes": "Status subresource only."
+    },
+    {
+      "name": "start-apiextensions-controllers",
+      "kind": "POST_START_HOOK",
+      "writes": "CustomResourceDefinition status (naming, establishing, nonstructural-schema, API-approval conditions; finalizer removal via UpdateStatus); the CRD finalizer deletes all CR instances of a deleted CRD.",
+      "writesPolicyKinds": true,
+      "cadence": "CONTINUOUS",
+      "identity": "system:apiserver (UID random), groups [system:authenticated, system:masters] via the privileged loopback bearer token (staging/src/k8s.io/apiserver/pkg/server/config.go:1206-1213, wired at :748; token = random UUID, staging/src/k8s.io/apiserver/pkg/server/options/serving_with_loopback.go:92; hooks receive it via PostStartHookContext, staging/src/k8s.io/apiserver/pkg/server/hooks.go:161-164); CR instance deletion bypasses HTTP authn/authz/admission (direct REST storage DeleteCollection with rest.ValidateAllObjectFunc)",
+      "source": "staging/src/k8s.io/apiextensions-apiserver/pkg/apiserver/apiserver.go:166,187,217-224,230-261; controller writes: staging/src/k8s.io/apiextensions-apiserver/pkg/controller/establish/establishing_controller.go:167, nonstructuralschema/nonstructuralschema_controller.go:172, status/naming_controller.go:274, apiapproval/apiapproval_controller.go:166, finalizer/crd_finalizer.go:135,158,172-173,185,196-222; storage: staging/src/k8s.io/apiextensions-apiserver/pkg/apiserver/customresource_handler.go:606-612; staging/src/k8s.io/apiserver/pkg/registry/rest/rest.go:248-251"
+    },
+    {
+      "name": "ResourceQuota admission plugin (in-process, request-driven)",
+      "kind": "CONTROLLER",
+      "writes": "ResourceQuota status (usage) via UpdateStatus on every admitted quota-relevant request.",
+      "writesPolicyKinds": true,
+      "cadence": "CONTINUOUS",
+      "identity": "system:apiserver (UID random), groups [system:authenticated, system:masters] via the privileged loopback bearer token (staging/src/k8s.io/apiserver/pkg/server/config.go:1206-1213, wired at :748; token = random UUID, staging/src/k8s.io/apiserver/pkg/server/options/serving_with_loopback.go:92; hooks receive it via PostStartHookContext, staging/src/k8s.io/apiserver/pkg/server/hooks.go:161-164); loopback client injected into admission plugins at pkg/controlplane/apiserver/config.go:386-402 and staging/src/k8s.io/apiserver/pkg/admission/initializer/initializer.go:83",
+      "source": "staging/src/k8s.io/apiserver/pkg/admission/plugin/resourcequota/resource_access.go:79-80; default-on: pkg/kubeapiserver/options/plugins.go:174",
+      "enabledWhen": "ResourceQuota admission plugin enabled (default on)",
+      "notes": "Admission plugin, not a hook; cadence is per request."
+    },
+    {
+      "name": "NamespaceAutoProvision admission plugin (in-process, request-driven)",
+      "kind": "CONTROLLER",
+      "writes": "Creates Namespaces referenced by incoming namespaced requests.",
+      "writesPolicyKinds": true,
+      "cadence": "CONTINUOUS",
+      "identity": "system:apiserver (UID random), groups [system:authenticated, system:masters] via the privileged loopback bearer token (staging/src/k8s.io/apiserver/pkg/server/config.go:1206-1213, wired at :748; token = random UUID, staging/src/k8s.io/apiserver/pkg/server/options/serving_with_loopback.go:92; hooks receive it via PostStartHookContext, staging/src/k8s.io/apiserver/pkg/server/hooks.go:161-164)",
+      "source": "plugin/pkg/admission/namespace/autoprovision/admission.go:36,93,108-109",
+      "enabledWhen": "only if explicitly enabled (off by default; absent from defaultOnPlugins pkg/kubeapiserver/options/plugins.go:165-191)"
+    },
+    {
+      "name": "bootstrap-controller",
+      "kind": "POST_START_HOOK",
+      "writes": "Service default/kubernetes (create, or reset on drift) and its Endpoints/EndpointSlices via the endpoint reconciler (default 'lease' type also writes etcd keys under /masterleases/ directly).",
+      "writesPolicyKinds": false,
+      "cadence": "CONTINUOUS",
+      "identity": "system:apiserver (UID random), groups [system:authenticated, system:masters] via the privileged loopback bearer token (staging/src/k8s.io/apiserver/pkg/server/config.go:1206-1213, wired at :748; token = random UUID, staging/src/k8s.io/apiserver/pkg/server/options/serving_with_loopback.go:92; hooks receive it via PostStartHookContext, staging/src/k8s.io/apiserver/pkg/server/hooks.go:161-164)",
+      "source": "pkg/controlplane/instance.go:213-257,358-376; pkg/controlplane/controller/kubernetesservice/controller.go:146-165,212-245; interval/TTL defaults pkg/controlplane/instance.go:115-119",
+      "notes": "Default reconciler type is 'lease' when unset (pkg/controlplane/instance.go:249-250); endpoint interval 10s, TTL 15s (instance.go:115-119,299-304)."
+    },
+    {
+      "name": "start-kubernetes-service-cidr-controller",
+      "kind": "POST_START_HOOK",
+      "writes": "ServiceCIDR 'kubernetes' (create/update).",
+      "writesPolicyKinds": false,
+      "cadence": "CONTINUOUS",
+      "identity": "system:apiserver (UID random), groups [system:authenticated, system:masters] via the privileged loopback bearer token (staging/src/k8s.io/apiserver/pkg/server/config.go:1206-1213, wired at :748; token = random UUID, staging/src/k8s.io/apiserver/pkg/server/options/serving_with_loopback.go:92; hooks receive it via PostStartHookContext, staging/src/k8s.io/apiserver/pkg/server/hooks.go:161-164)",
+      "source": "pkg/controlplane/instance.go:378-390; pkg/controlplane/controller/defaultservicecidr/default_servicecidr_controller.go:47,61,123-179",
+      "enabledWhen": "MultiCIDRServiceAllocator (GA, locked on)"
+    },
+    {
+      "name": "start-service-ip-repair-controllers",
+      "kind": "POST_START_HOOK",
+      "writes": "ClusterIP/NodePort allocation repair (allocator state, IPAddress objects, events).",
+      "writesPolicyKinds": false,
+      "cadence": "CONTINUOUS",
+      "identity": "system:apiserver (UID random), groups [system:authenticated, system:masters] via the privileged loopback bearer token (staging/src/k8s.io/apiserver/pkg/server/config.go:1206-1213, wired at :748; token = random UUID, staging/src/k8s.io/apiserver/pkg/server/options/serving_with_loopback.go:92; hooks receive it via PostStartHookContext, staging/src/k8s.io/apiserver/pkg/server/hooks.go:161-164)",
+      "source": "pkg/registry/core/rest/storage_core.go:128-133,516-559; interval default 3m pkg/controlplane/instance.go:125-126"
+    },
+    {
+      "name": "start-legacy-token-tracking-controller",
+      "kind": "POST_START_HOOK",
+      "writes": "ConfigMap kube-system/kube-apiserver-legacy-service-account-token-tracking (create once with 'since' date; repair if unparsable).",
+      "writesPolicyKinds": false,
+      "cadence": "CONTINUOUS",
+      "identity": "system:apiserver (UID random), groups [system:authenticated, system:masters] via the privileged loopback bearer token (staging/src/k8s.io/apiserver/pkg/server/config.go:1206-1213, wired at :748; token = random UUID, staging/src/k8s.io/apiserver/pkg/server/options/serving_with_loopback.go:92; hooks receive it via PostStartHookContext, staging/src/k8s.io/apiserver/pkg/server/hooks.go:161-164)",
+      "source": "pkg/controlplane/apiserver/server.go:302-305; pkg/controlplane/controller/legacytokentracking/controller.go:40-47,165-208"
+    },
+    {
+      "name": "start-kube-apiserver-identity-lease-controller",
+      "kind": "POST_START_HOOK",
+      "writes": "Lease kube-system/<apiserver-id> (renew every 10s, duration 3600s).",
+      "writesPolicyKinds": false,
+      "cadence": "CONTINUOUS",
+      "identity": "system:apiserver (UID random), groups [system:authenticated, system:masters] via the privileged loopback bearer token (staging/src/k8s.io/apiserver/pkg/server/config.go:1206-1213, wired at :748; token = random UUID, staging/src/k8s.io/apiserver/pkg/server/options/serving_with_loopback.go:92; hooks receive it via PostStartHookContext, staging/src/k8s.io/apiserver/pkg/server/hooks.go:161-164)",
+      "source": "pkg/controlplane/apiserver/server.go:53-62,260-284",
+      "enabledWhen": "APIServerIdentity (Beta, default on)"
+    },
+    {
+      "name": "start-kube-apiserver-identity-lease-garbage-collector",
+      "kind": "POST_START_HOOK",
+      "writes": "Deletes expired kube-apiserver identity Leases in kube-system (label apiserver.kubernetes.io/identity=kube-apiserver), every 3600s.",
+      "writesPolicyKinds": false,
+      "cadence": "CONTINUOUS",
+      "identity": "system:apiserver (UID random), groups [system:authenticated, system:masters] via the privileged loopback bearer token (staging/src/k8s.io/apiserver/pkg/server/config.go:1206-1213, wired at :748; token = random UUID, staging/src/k8s.io/apiserver/pkg/server/options/serving_with_loopback.go:92; hooks receive it via PostStartHookContext, staging/src/k8s.io/apiserver/pkg/server/hooks.go:161-164)",
+      "source": "pkg/controlplane/apiserver/server.go:53-56,73-75,286-295 (name=kube-apiserver passed at pkg/controlplane/instance.go:326); pkg/controlplane/controller/apiserverleasegc/gc_controller.go:95,129",
+      "enabledWhen": "APIServerIdentity (Beta, default on)"
+    },
+    {
+      "name": "scheduling/bootstrap-system-priority-classes",
+      "kind": "POST_START_HOOK",
+      "writes": "Creates PriorityClasses system-node-critical / system-cluster-critical if missing.",
+      "writesPolicyKinds": false,
+      "cadence": "STARTUP_ONCE",
+      "identity": "system:apiserver (UID random), groups [system:authenticated, system:masters] via the privileged loopback bearer token (staging/src/k8s.io/apiserver/pkg/server/config.go:1206-1213, wired at :748; token = random UUID, staging/src/k8s.io/apiserver/pkg/server/options/serving_with_loopback.go:92; hooks receive it via PostStartHookContext, staging/src/k8s.io/apiserver/pkg/server/hooks.go:161-164)",
+      "source": "pkg/registry/scheduling/rest/storage_scheduling.go:48,168-214",
+      "enabledWhen": "scheduling.k8s.io group enabled"
+    },
+    {
+      "name": "start-kube-apiserver-coordinated-leader-election-controller",
+      "kind": "POST_START_HOOK",
+      "writes": "Leases and LeaseCandidates (coordinated leader election + LeaseCandidate GC).",
+      "writesPolicyKinds": false,
+      "cadence": "CONTINUOUS",
+      "identity": "system:apiserver (UID random), groups [system:authenticated, system:masters] via the privileged loopback bearer token (staging/src/k8s.io/apiserver/pkg/server/config.go:1206-1213, wired at :748; token = random UUID, staging/src/k8s.io/apiserver/pkg/server/options/serving_with_loopback.go:92; hooks receive it via PostStartHookContext, staging/src/k8s.io/apiserver/pkg/server/hooks.go:161-164)",
+      "source": "pkg/controlplane/apiserver/server.go:156-189",
+      "enabledWhen": "CoordinatedLeaderElection (Beta, default OFF: staging/src/k8s.io/apiserver/pkg/features/kube_features.go:372-375)"
+    },
+    {
+      "name": "built-in-resources-storage-version-updater",
+      "kind": "POST_START_HOOK",
+      "writes": "StorageVersion objects (internal.apiserver.k8s.io), reconciled every 10 minutes.",
+      "writesPolicyKinds": false,
+      "cadence": "CONTINUOUS",
+      "identity": "system:apiserver (UID random), groups [system:authenticated, system:masters] via the privileged loopback bearer token (staging/src/k8s.io/apiserver/pkg/server/config.go:1206-1213, wired at :748; token = random UUID, staging/src/k8s.io/apiserver/pkg/server/options/serving_with_loopback.go:92; hooks receive it via PostStartHookContext, staging/src/k8s.io/apiserver/pkg/server/hooks.go:161-164)",
+      "source": "staging/src/k8s.io/kube-aggregator/pkg/apiserver/apiserver.go:85,419-467",
+      "enabledWhen": "StorageVersionAPI (Alpha, default OFF) && APIServerIdentity"
+    },
+    {
+      "name": "peer-endpoint-reconciler-controller",
+      "kind": "POST_START_HOOK",
+      "writes": "Peer endpoint leases written directly to etcd under /peerserverleases/ (not API objects).",
+      "writesPolicyKinds": false,
+      "cadence": "CONTINUOUS",
+      "identity": "in-process storage (no request identity)",
+      "source": "pkg/controlplane/apiserver/server.go:191-208; pkg/controlplane/apiserver/peer.go:107; staging/src/k8s.io/apiserver/pkg/reconcilers/peer_endpoint_lease.go:54-95",
+      "enabledWhen": "UnknownVersionInteroperabilityProxy (Beta, default on: staging/src/k8s.io/apiserver/pkg/features/kube_features.go:476-479 relisted at pkg/features/kube_features.go:2484-2487)"
+    }
+  ],
+  "apiserverHooksWithoutApiWrites": [
+    {
+      "name": "generic-apiserver-start-informers",
+      "source": "staging/src/k8s.io/apiserver/pkg/server/config.go:924-934"
+    },
+    {
+      "name": "priority-and-fairness-filter",
+      "source": "staging/src/k8s.io/apiserver/pkg/server/config.go:958-968"
+    },
+    {
+      "name": "max-in-flight-filter (only when APF disabled)",
+      "source": "staging/src/k8s.io/apiserver/pkg/server/config.go:969-980"
+    },
+    {
+      "name": "storage-object-count-tracker-hook",
+      "source": "staging/src/k8s.io/apiserver/pkg/server/config.go:983-993"
+    },
+    {
+      "name": "start-apiserver-admission-initializer (RESTMapper reset loop)",
+      "source": "staging/src/k8s.io/apiserver/pkg/server/options/admission.go:163-169"
+    },
+    {
+      "name": "start-encryption-provider-config-automatic-reload (only with automatic reload)",
+      "source": "staging/src/k8s.io/apiserver/pkg/server/options/etcd.go:371-397"
+    },
+    {
+      "name": "mixed-version-proxy-handler / local-discovery-cache-sync / peer-discovery-workers (only when PeerProxy configured)",
+      "source": "pkg/controlplane/apiserver/server.go:209-229"
+    },
+    {
+      "name": "storage-readiness (WatchCacheInitializationPostStartHook GA locked on)",
+      "source": "pkg/controlplane/apiserver/server.go:298-300; staging/src/k8s.io/apiserver/pkg/features/kube_features.go:481-485"
+    },
+    {
+      "name": "aggregator-reload-proxy-client-cert (only with proxy client cert files)",
+      "source": "staging/src/k8s.io/kube-aggregator/pkg/apiserver/apiserver.go:304-321"
+    },
+    {
+      "name": "start-kube-aggregator-informers",
+      "source": "staging/src/k8s.io/kube-aggregator/pkg/apiserver/apiserver.go:323-327"
+    },
+    {
+      "name": "apiservice-registration-controller (in-memory proxy handlers only)",
+      "source": "staging/src/k8s.io/kube-aggregator/pkg/apiserver/apiserver.go:303,375-383"
+    },
+    {
+      "name": "apiservice-discovery-controller",
+      "source": "staging/src/k8s.io/kube-aggregator/pkg/apiserver/apiserver.go:392-417"
+    },
+    {
+      "name": "apiservice-openapi-controller / apiservice-openapiv3-controller",
+      "source": "staging/src/k8s.io/kube-aggregator/pkg/apiserver/apiserver.go:474-488"
+    },
+    {
+      "name": "start-apiextensions-informers",
+      "source": "staging/src/k8s.io/apiextensions-apiserver/pkg/apiserver/apiserver.go:226-229"
+    },
+    {
+      "name": "crd-informer-synced",
+      "source": "staging/src/k8s.io/apiextensions-apiserver/pkg/apiserver/apiserver.go:265-273"
+    }
+  ],
+  "apiserverHookMechanics": {
+    "runOnce": "RunPostStartHooks launches every registered hook once in its own goroutine; a hook returning an error kills the server (klog.Fatalf). Long-running behaviour exists only where the hook spawns its own goroutine/controller. Source: staging/src/k8s.io/apiserver/pkg/server/hooks.go:155-169,195-206",
+    "disableable": "Hooks named in DisabledPostStartHooks are skipped (hooks.go:90-93).",
+    "enumeration": "All AddPostStartHook/PostStartHook() registrations found by grep over pkg/, cmd/, plugin/, staging/src/k8s.io/{apiserver,kube-aggregator,apiextensions-apiserver,controller-manager} (non-test)."
+  },
+  "bootstrapRoles": {
+    "hookName": "rbac/bootstrap-roles",
+    "source": "pkg/registry/rbac/rest/storage_rbac.go:59,131-141",
+    "objectTypes": [
+      "ClusterRole",
+      "ClusterRoleBinding",
+      "Role",
+      "RoleBinding"
+    ],
+    "inputs": {
+      "clusterRoles": "bootstrappolicy.ClusterRoles() + ControllerRoles() (storage_rbac.go:133; plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:314-712; plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:59-619)",
+      "clusterRoleBindings": "bootstrappolicy.ClusterRoleBindings() + ControllerRoleBindings() (storage_rbac.go:134; plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:716-758; plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:36-53)",
+      "roles": "NamespaceRoles() (storage_rbac.go:135; plugin/pkg/auth/authorizer/rbac/bootstrappolicy/namespace_policy.go:74-153)",
+      "roleBindings": "NamespaceRoleBindings() (storage_rbac.go:136; plugin/pkg/auth/authorizer/rbac/bootstrappolicy/namespace_policy.go:124-151)"
+    },
+    "countsUnderDefaultFeatureGates": {
+      "clusterRoles": 73,
+      "clusterRoleBindings": 54,
+      "roles": 7,
+      "roleBindings": 7,
+      "breakdown": "32 general ClusterRoles + 41 controller ClusterRoles; 13 general ClusterRoleBindings + 41 controller ClusterRoleBindings",
+      "source": "golden fixtures asserted by unit tests: plugin/pkg/auth/authorizer/rbac/bootstrappolicy/testdata/{cluster-roles,controller-roles,cluster-role-bindings,controller-role-bindings,namespace-roles,namespace-role-bindings}.yaml (compared in policy_test.go:164-178,202-248,250-270); counts parsed from those files. Feature-gated roles change the count (e.g. plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:203,227,255,418,472,496,508,533,555,577,593; plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:701-708,751-753)."
+    },
+    "namespaces": {
+      "clusterScoped": "ClusterRoles/ClusterRoleBindings",
+      "kube-system": [
+        "Role extension-apiserver-authentication-reader",
+        "Role system:controller:bootstrap-signer",
+        "Role system:controller:cloud-provider",
+        "Role system:controller:token-cleaner",
+        "Role system::leader-locking-kube-controller-manager",
+        "Role system::leader-locking-kube-scheduler",
+        "RoleBinding system::extension-apiserver-authentication-reader",
+        "RoleBinding system::leader-locking-kube-controller-manager",
+        "RoleBinding system::leader-locking-kube-scheduler",
+        "RoleBinding system:controller:bootstrap-signer",
+        "RoleBinding system:controller:cloud-provider",
+        "RoleBinding system:controller:token-cleaner"
+      ],
+      "kube-public": [
+        "Role system:controller:bootstrap-signer",
+        "RoleBinding system:controller:bootstrap-signer"
+      ],
+      "restriction": "Namespaced bootstrap Roles/RoleBindings may only target namespaces starting with 'kube-' (plugin/pkg/auth/authorizer/rbac/bootstrappolicy/namespace_policy.go:38-41,56-59).",
+      "source": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/namespace_policy.go:75-151",
+      "namespaceCreation": "Creating a Role/RoleBinding first tries to Get and else Create its Namespace, ignoring Forbidden/AlreadyExists (staging/src/k8s.io/component-helpers/auth/rbac/reconciliation/role_interfaces.go:92-97; rolebinding_interfaces.go:94-99; namespace.go:28-45)."
+    },
+    "overwriteSemantics": {
+      "markers": "Every bootstrap object carries label kubernetes.io/bootstrapping=rbac-defaults and annotation rbac.authorization.kubernetes.io/autoupdate=\"true\" (plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:42-43,73-111; key constant staging/src/k8s.io/api/rbac/v1/types.go:38-39).",
+      "protection": "If an EXISTING object has annotation rbac.authorization.kubernetes.io/autoupdate == \"false\" it is Protected and left untouched (warning logged), including roleRef mismatches for bindings. Source: staging/src/k8s.io/component-helpers/auth/rbac/reconciliation/reconcile_role.go:134-137,181; reconcile_rolebindings.go:116-119,179; pkg/registry/rbac/rest/storage_rbac.go:221-222,251-252,284-285,316-317.",
+      "rolesUnionOnly": "Missing rules are appended; extra rules are NOT removed (RemoveExtraPermissions not set -> false; storage_rbac.go:209-213,272-276; reconcile_role.go:66-67,196-213).",
+      "aggregation": "Missing aggregation selectors are added; if the expected role has no aggregationRule but the existing one does, the aggregationRule is removed (reconcile_role.go:215-238).",
+      "bindingsUnionOnly": "Missing subjects are appended; extra subjects are kept (RemoveExtraSubjects not set; storage_rbac.go:239-243,304-308; reconcile_rolebindings.go:57-58,201-214).",
+      "roleRefChange": "If roleRef differs, the binding is deleted (UID precondition) and recreated from the bootstrap definition (reconcile_rolebindings.go:126-151,181-186).",
+      "labelsAnnotations": "Expected labels/annotations are merged with existing; existing values win on key conflict (reconcile_role.go:186-194,243-255; reconcile_rolebindings.go:191-199).",
+      "deletedObjects": "Missing objects are (re)created (ReconcileCreate on NotFound: reconcile_role.go:110-122; reconcile_rolebindings.go:97-104).",
+      "priming": "Before reconciling: copies legacy admin/edit/view into system:aggregate-to-* when those do not exist, and copies subjects of ClusterRoleBinding system:discovery into a new system:public-info-viewer binding if absent (storage_rbac.go:195-205,346-415; plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:760-780)."
+    },
+    "cadence": "STARTUP_ONCE per kube-apiserver start: the hook polls every 1s for up to 30s until a full pass succeeds; failure kills the apiserver (storage_rbac.go:162-181; staging/src/k8s.io/apiserver/pkg/server/hooks.go:195-206). No periodic re-reconciliation.",
+    "identity": "system:apiserver (UID random), groups [system:authenticated, system:masters] via the privileged loopback bearer token (staging/src/k8s.io/apiserver/pkg/server/config.go:1206-1213, wired at :748; token = random UUID, staging/src/k8s.io/apiserver/pkg/server/options/serving_with_loopback.go:92; hooks receive it via PostStartHookContext, staging/src/k8s.io/apiserver/pkg/server/hooks.go:161-164)",
+    "disabledWhen": [
+      "RBAC not among configured authorizers (pkg/controlplane/apiserver/config.go:241-243)",
+      "rbac.authorization.k8s.io/v1 API disabled (pkg/controlplane/apiserver/apis.go:109-136)",
+      "explicitly listed in DisabledPostStartHooks (staging/src/k8s.io/apiserver/pkg/server/hooks.go:90-93)"
+    ],
+    "rbacWriteChecksBypassedByIdentity": "The loopback identity is in system:masters, which skips RBAC escalation checks (pkg/registry/rbac/escalation_check.go:31-47) and is allowed by the privileged-group authorizer (pkg/kubeapiserver/authorizer/reload.go:110-115).",
+    "aggregatedRoleRulesNote": "admin/edit/view are aggregation-only ClusterRoles (plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:390-419); their rules are filled continuously by the KCM clusterrole-aggregation-controller, not by this hook.",
+    "policyKindGrantsInDefaultClusterRoles": [
+      {
+        "role": "cluster-admin",
+        "rules": [
+          {
+            "apiGroups": [
+              "*"
+            ],
+            "resources": [
+              "*"
+            ],
+            "verbs": [
+              "*"
+            ],
+            "source": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:342"
+          }
+        ],
+        "boundTo": "Group system:masters (plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:719)"
+      },
+      {
+        "role": "system:aggregate-to-admin (-> admin)",
+        "rules": [
+          {
+            "apiGroups": [
+              "rbac.authorization.k8s.io"
+            ],
+            "resources": [
+              "roles",
+              "rolebindings"
+            ],
+            "verbs": [
+              "get",
+              "list",
+              "watch",
+              "create",
+              "update",
+              "patch",
+              "delete",
+              "deletecollection"
+            ],
+            "source": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:426"
+          }
+        ]
+      },
+      {
+        "role": "system:aggregate-to-edit (-> edit, admin)",
+        "rules": [
+          {
+            "apiGroups": [
+              ""
+            ],
+            "resources": [
+              "serviceaccounts"
+            ],
+            "verbs": [
+              "impersonate"
+            ],
+            "source": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:166"
+          },
+          {
+            "apiGroups": [
+              ""
+            ],
+            "resources": [
+              "serviceaccounts"
+            ],
+            "verbs": [
+              "create",
+              "update",
+              "patch",
+              "delete",
+              "deletecollection"
+            ],
+            "source": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:170-171"
+          },
+          {
+            "apiGroups": [
+              ""
+            ],
+            "resources": [
+              "serviceaccounts/token"
+            ],
+            "verbs": [
+              "create"
+            ],
+            "source": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:172"
+          },
+          {
+            "apiGroups": [
+              "extensions"
+            ],
+            "resources": [
+              "networkpolicies"
+            ],
+            "verbs": [
+              "create",
+              "update",
+              "patch",
+              "delete",
+              "deletecollection"
+            ],
+            "source": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:186-189"
+          },
+          {
+            "apiGroups": [
+              "networking.k8s.io"
+            ],
+            "resources": [
+              "networkpolicies"
+            ],
+            "verbs": [
+              "create",
+              "update",
+              "patch",
+              "delete",
+              "deletecollection"
+            ],
+            "source": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:193"
+          }
+        ]
+      },
+      {
+        "role": "system:aggregate-to-view (-> view, edit, admin)",
+        "rules": [
+          {
+            "apiGroups": [
+              ""
+            ],
+            "resources": [
+              "serviceaccounts"
+            ],
+            "verbs": [
+              "get",
+              "list",
+              "watch"
+            ],
+            "source": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:115-116"
+          },
+          {
+            "apiGroups": [
+              ""
+            ],
+            "resources": [
+              "limitranges",
+              "resourcequotas",
+              "resourcequotas/status",
+              "namespaces/status"
+            ],
+            "verbs": [
+              "get",
+              "list",
+              "watch"
+            ],
+            "source": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:117-118"
+          },
+          {
+            "apiGroups": [
+              ""
+            ],
+            "resources": [
+              "namespaces"
+            ],
+            "verbs": [
+              "get",
+              "list",
+              "watch"
+            ],
+            "source": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:121"
+          },
+          {
+            "apiGroups": [
+              "extensions",
+              "networking.k8s.io"
+            ],
+            "resources": [
+              "networkpolicies"
+            ],
+            "verbs": [
+              "get",
+              "list",
+              "watch"
+            ],
+            "source": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:138-140,144"
+          }
+        ]
+      },
+      {
+        "role": "system:kube-controller-manager",
+        "rules": [
+          {
+            "apiGroups": [
+              ""
+            ],
+            "resources": [
+              "secrets",
+              "serviceaccounts"
+            ],
+            "verbs": [
+              "create"
+            ],
+            "source": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:500"
+          },
+          {
+            "apiGroups": [
+              ""
+            ],
+            "resources": [
+              "namespaces",
+              "secrets",
+              "serviceaccounts",
+              "configmaps"
+            ],
+            "verbs": [
+              "get"
+            ],
+            "source": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:502"
+          },
+          {
+            "apiGroups": [
+              ""
+            ],
+            "resources": [
+              "secrets",
+              "serviceaccounts"
+            ],
+            "verbs": [
+              "update"
+            ],
+            "source": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:503"
+          },
+          {
+            "apiGroups": [
+              "*"
+            ],
+            "resources": [
+              "*"
+            ],
+            "verbs": [
+              "list",
+              "watch"
+            ],
+            "source": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:508"
+          },
+          {
+            "apiGroups": [
+              ""
+            ],
+            "resources": [
+              "serviceaccounts/token"
+            ],
+            "verbs": [
+              "create"
+            ],
+            "source": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:509"
+          }
+        ],
+        "boundTo": "User system:kube-controller-manager (plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:725)"
+      },
+      {
+        "role": "system:kube-scheduler",
+        "rules": [
+          {
+            "apiGroups": [
+              ""
+            ],
+            "resources": [
+              "namespaces"
+            ],
+            "verbs": [
+              "get",
+              "list",
+              "watch"
+            ],
+            "source": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:659"
+          }
+        ],
+        "boundTo": "User system:kube-scheduler (plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:727)"
+      },
+      {
+        "role": "system:node",
+        "rules": [
+          {
+            "apiGroups": [
+              "certificates.k8s.io"
+            ],
+            "resources": [
+              "certificatesigningrequests"
+            ],
+            "verbs": [
+              "create",
+              "get",
+              "list",
+              "watch"
+            ],
+            "source": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:258"
+          },
+          {
+            "apiGroups": [
+              ""
+            ],
+            "resources": [
+              "serviceaccounts/token"
+            ],
+            "verbs": [
+              "create"
+            ],
+            "source": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:268"
+          },
+          {
+            "apiGroups": [
+              ""
+            ],
+            "resources": [
+              "serviceaccounts"
+            ],
+            "verbs": [
+              "get"
+            ],
+            "source": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:302-304"
+          }
+        ],
+        "boundTo": "nobody: ClusterRoleBinding system:node has no subjects (plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:730-735); rules are used by the Node authorizer (pkg/kubeapiserver/authorizer/config.go:124)"
+      },
+      {
+        "role": "system:node-bootstrapper",
+        "rules": [
+          {
+            "apiGroups": [
+              "certificates.k8s.io"
+            ],
+            "resources": [
+              "certificatesigningrequests"
+            ],
+            "verbs": [
+              "create",
+              "get",
+              "list",
+              "watch"
+            ],
+            "source": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:470"
+          }
+        ],
+        "boundTo": "not bound by bootstrap policy"
+      },
+      {
+        "role": "system:certificates.k8s.io:certificatesigningrequests:nodeclient / :selfnodeclient",
+        "rules": [
+          {
+            "apiGroups": [
+              "certificates.k8s.io"
+            ],
+            "resources": [
+              "certificatesigningrequests/nodeclient"
+            ],
+            "verbs": [
+              "create"
+            ],
+            "source": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:538"
+          },
+          {
+            "apiGroups": [
+              "certificates.k8s.io"
+            ],
+            "resources": [
+              "certificatesigningrequests/selfnodeclient"
+            ],
+            "verbs": [
+              "create"
+            ],
+            "source": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:545"
+          }
+        ],
+        "boundTo": "not bound by bootstrap policy"
+      },
+      {
+        "role": "system:certificates.k8s.io:{legacy-unknown,kubelet-serving,kube-apiserver-client,kube-apiserver-client-kubelet}-approver",
+        "rules": [
+          {
+            "apiGroups": [
+              "certificates.k8s.io"
+            ],
+            "resources": [
+              "signers"
+            ],
+            "verbs": [
+              "approve"
+            ],
+            "source": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:556-579"
+          }
+        ],
+        "boundTo": "not bound by bootstrap policy"
+      },
+      {
+        "role": "system:heapster",
+        "rules": [
+          {
+            "apiGroups": [
+              ""
+            ],
+            "resources": [
+              "namespaces"
+            ],
+            "verbs": [
+              "get",
+              "list",
+              "watch"
+            ],
+            "source": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:446"
+          }
+        ],
+        "boundTo": "not bound by bootstrap policy"
+      }
+    ],
+    "policyKindGrantsCrossCheck": "Rule lists for controller and general ClusterRoles were cross-checked by parsing the golden fixtures (policyrules.py in this directory); no namespaced bootstrap Role has a policy-kind rule."
+  },
+  "admissionPlugins": {
+    "enabledByDefault": [
+      "NamespaceLifecycle",
+      "LimitRanger",
+      "ServiceAccount",
+      "DefaultStorageClass",
+      "PersistentVolumeClaimResize",
+      "DefaultTolerationSeconds",
+      "MutatingAdmissionWebhook",
+      "ValidatingAdmissionWebhook",
+      "ResourceQuota",
+      "StorageObjectInUseProtection",
+      "PodGroupProtection",
+      "Priority",
+      "TaintNodesByCondition",
+      "RuntimeClass",
+      "CertificateApproval",
+      "CertificateSigning",
+      "ClusterTrustBundleAttest",
+      "CertificateSubjectRestriction",
+      "DefaultIngressClass",
+      "PodSecurity",
+      "PodTopologyLabels",
+      "MutatingAdmissionPolicy",
+      "ValidatingAdmissionPolicy",
+      "NodeDeclaredFeatureValidator",
+      "PodResizeValidator"
+    ],
+    "offByDefault": [
+      "AlwaysAdmit",
+      "NamespaceAutoProvision",
+      "NamespaceExists",
+      "LimitPodHardAntiAffinityTopology",
+      "NodeRestriction",
+      "AlwaysPullImages",
+      "ImagePolicyWebhook",
+      "PodNodeSelector",
+      "PodTolerationRestriction",
+      "EventRateLimit",
+      "ExtendedResourceToleration",
+      "OwnerReferencesPermissionEnforcement",
+      "DenyServiceExternalIPs",
+      "AlwaysDeny"
+    ],
+    "allOrderedPluginsCount": 39,
+    "source": "pkg/kubeapiserver/options/plugins.go:72-116 (AllOrderedPlugins, execution order), :163-194 (DefaultOffAdmissionPlugins = All - defaultOnPlugins); wired as DefaultOffPlugins/RecommendedPluginOrder at pkg/kubeapiserver/options/admission.go:60-63. PluginName constants resolved from each plugin package (e.g. staging/src/k8s.io/apiserver/pkg/admission/plugin/webhook/mutating/plugin.go:32, .../validating/plugin.go:32, .../policy/validating/plugin.go:44, .../policy/mutating/plugin.go:51, plugin/pkg/admission/noderestriction/admission.go:60).",
+    "specificPlugins": {
+      "MutatingAdmissionWebhook": {
+        "defaultOn": true,
+        "source": "pkg/kubeapiserver/options/plugins.go:172"
+      },
+      "ValidatingAdmissionWebhook": {
+        "defaultOn": true,
+        "source": "pkg/kubeapiserver/options/plugins.go:173"
+      },
+      "ValidatingAdmissionPolicy": {
+        "defaultOn": true,
+        "runtimeGate": "none - plugin always SetEnabled(true)",
+        "source": "pkg/kubeapiserver/options/plugins.go:188; staging/src/k8s.io/apiserver/pkg/admission/plugin/policy/validating/plugin.go:137"
+      },
+      "MutatingAdmissionPolicy": {
+        "defaultOn": true,
+        "runtimeGate": "enabled iff MutatingAdmissionPolicy gate (GA since 1.36, default true, not locked)",
+        "source": "pkg/kubeapiserver/options/plugins.go:187; staging/src/k8s.io/apiserver/pkg/admission/plugin/policy/mutating/plugin.go:163-164; staging/src/k8s.io/apiserver/pkg/features/kube_features.go:420-424"
+      },
+      "NodeRestriction": {
+        "defaultOn": false,
+        "note": "Off in the kube-apiserver binary defaults; kubeadm adds it (cmd/kubeadm/app/phases/controlplane/manifests.go:188).",
+        "source": "pkg/kubeapiserver/options/plugins.go:80,165-191"
+      }
+    },
+    "policyKindExemptions": {
+      "webhooks": "API-registered admission webhooks are never called for ValidatingWebhookConfiguration, MutatingWebhookConfiguration, ValidatingAdmissionPolicy(+Binding), MutatingAdmissionPolicy(+Binding); only static manifest-based webhooks may see them. Source: staging/src/k8s.io/apiserver/pkg/admission/plugin/webhook/predicates/rules/rules.go:119-129; staging/src/k8s.io/apiserver/pkg/admission/plugin/webhook/generic/webhook.go:401-425",
+      "admissionPolicies": "API-registered VAP/MAP are never evaluated for VAP/VAPB/MAP/MAPB objects (only static manifest policies are); they DO apply to webhook configurations and other policy kinds. Source: staging/src/k8s.io/apiserver/pkg/admission/plugin/policy/generic/plugin.go:58-65,302-328,343-347",
+      "virtualResources": "tokenreviews, selfsubjectreviews, (local|self)subjectaccessreviews, selfsubjectrulesreviews are excluded from all expression-based admission and, with ExcludeAdmissionWebhookVirtualResources (Beta, default on in 1.37), from webhooks. serviceaccounts/token is explicitly INCLUDED. Source: pkg/kubeapiserver/admission/exclusion/resources.go:30-54; pkg/controlplane/apiserver/admission/config.go:51-54; staging/src/k8s.io/apiserver/pkg/admission/plugin/webhook/generic/webhook.go:197-205,394-399; ExcludeAdmissionWebhookVirtualResources spec staging/src/k8s.io/apiserver/pkg/features/kube_features.go:400-402 (relisted pkg/features/kube_features.go:2408-2410)",
+      "manifestBasedConfig": "ManifestBasedAdmissionControlConfig is Beta and default ON in 1.37 (staging/src/k8s.io/apiserver/pkg/features/kube_features.go:415-418; relisted pkg/features/kube_features.go:2423-2426); it lets webhooks and VAP/MAP be loaded from manifest files (staticManifestsDir) at startup, with file reload (staging/src/k8s.io/apiserver/pkg/features/kube_features.go:182-189; pkg/kubeapiserver/admission/initializer.go:53-87; staging/src/k8s.io/apiserver/pkg/admission/plugin/policy/generic/plugin.go:255-275)."
+    },
+    "csrApprovalSigningEnforcement": "CertificateApproval requires verb 'approve' on signers/<signerName> for updates to certificatesigningrequests/approval; CertificateSigning requires 'sign' for certificatesigningrequests/status (plugin/pkg/admission/certificates/approval/admission.go:78,91; plugin/pkg/admission/certificates/signing/admission.go:81,100); ClusterTrustBundleAttest requires 'attest' (plugin/pkg/admission/certificates/ctbattest/admission.go:119)."
+  },
+  "nodeAuthorizer": {
+    "identification": "A request is a node iff username has prefix 'system:node:' AND groups contain 'system:nodes'; nodeName = suffix (pkg/auth/nodeidentifier/default.go:36-66; constants staging/src/k8s.io/apiserver/pkg/authentication/user/user.go:72).",
+    "construction": "Node authorizer = graph + NodeRules() static rules (pkg/kubeapiserver/authorizer/config.go:104-124).",
+    "policyKindPermissions": [
+      {
+        "permission": "create serviceaccounts/token",
+        "scope": "only for (namespace,name) ServiceAccounts reachable in the graph from the node, i.e. referenced by pod.spec.serviceAccountName of a pod bound to the node",
+        "source": "plugin/pkg/auth/authorizer/node/node_authorizer.go:150-151,248-288; edge pod<-serviceaccount plugin/pkg/auth/authorizer/node/graph.go:384-385"
+      },
+      {
+        "permission": "get serviceaccounts",
+        "scope": "same graph restriction; only when KubeletServiceAccountTokenForCredentialProviders (Beta, default on since 1.34: pkg/features/kube_features.go:1808-1811) or PodCertificateRequest (GA, default on in 1.37) is enabled",
+        "source": "plugin/pkg/auth/authorizer/node/node_authorizer.go:248-260"
+      },
+      {
+        "permission": "create/get/list/watch certificatesigningrequests",
+        "scope": "NOT graph-limited: allowed by the static NodeRules (any CSR object)",
+        "source": "plugin/pkg/auth/authorizer/node/node_authorizer.go:170-174; plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:256-258"
+      }
+    ],
+    "notGranted": "Nodes receive no rules for namespaces, resourcequotas, limitranges, roles/rolebindings/clusterroles/clusterrolebindings, networkpolicies, VAP/MAP(+bindings), webhook configurations, apiservices, customresourcedefinitions, CSR approval/signing (approve/sign on signers), impersonate, escalate or bind (full NodeRules list plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:214-312; golden plugin/pkg/auth/authorizer/rbac/bootstrappolicy/testdata/cluster-roles.yaml role system:node).",
+    "staticRuleNotReachedForServiceAccounts": "NodeRules contains create serviceaccounts/token (plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:266-268) and get serviceaccounts (plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:300-304), but serviceaccounts requests are always routed to the graph check first (node_authorizer.go:150-151), so these static rules never apply unrestricted.",
+    "nodeRestrictionAdmission": "With NodeRestriction enabled (off by default in kube-apiserver), node TokenRequests must be bound to a Pod (apiVersion v1, kind Pod, name+uid) scheduled on that node, plus audience validation when ServiceAccountNodeAudienceRestriction is on (Beta, default on since 1.33: pkg/features/kube_features.go:2131-2134). Source: plugin/pkg/admission/noderestriction/admission.go:182,186,233,248,672-715",
+    "rbacBinding": "ClusterRoleBinding system:node exists with zero subjects, so nodes get nothing from RBAC by default (plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:730-735).",
+    "otherGraphLimitedResources": "secrets/configmaps (get/list/watch), pvc (get; status update/patch), pv, resourceclaims, volumeattachments (get), leases in kube-node-lease (own name), csinodes, resourceslices, nodes, pods, podcertificaterequests (plugin/pkg/auth/authorizer/node/node_authorizer.go:132-167)."
+  },
+  "authorizationConfig": {
+    "flag": "--authorization-config (pkg/kubeapiserver/options/authorization.go:46,188-190); mutually exclusive with --authorization-mode and --authorization-webhook-* (authorization.go:108-112,193-204,224-228).",
+    "gaStatus": "No feature-gate check guards --authorization-config in v1.37.1 (authorization.go:103-121,217-233), and the string 'StructuredAuthorizationConfiguration' does not occur anywhere in the v1.37.1 tree (whole-tree grep), i.e. the gate has been removed after graduation. The release in which it went GA cannot be determined from this tree (see unverified).",
+    "defaultWithoutFlags": "If neither --authorization-config nor --authorization-mode is set, the mode defaults to AlwaysAllow (authorization.go:85-94).",
+    "reloadOnFileChange": true,
+    "reloadMechanics": "Only when --authorization-config is used: ReloadFile is set (authorization.go:241-249) and Config.New starts runReload (pkg/kubeapiserver/authorizer/config.go:157-159) with reloadInterval = 1 minute (config.go:92). runReload uses filesystem.WatchUntil = fsnotify events plus polling every interval (pkg/kubeapiserver/authorizer/reload.go:231-246; staging/src/k8s.io/apiserver/pkg/util/filesystem/watchuntil.go:38-90). checkFile re-reads, skips if bytes unchanged, validates, requires every non-webhook authorizer type present at startup to remain (config.go:142-144,217-219), rebuilds and atomically swaps the authorizer chain; on error the old chain stays (reload.go:248-292). Node/ABAC/RBAC cannot be added on reload if not enabled at startup (reload.go:120-123,143-146,199-202). Legacy --authorization-mode flags are converted to an in-memory AuthorizationConfiguration with no reload (authorization.go:234-239,252-...).",
+    "systemMastersAlwaysFirst": "Every built chain (initial and reloaded) prepends authorizer 'kubernetes.io/system-privileged-group' allowing group system:masters (pkg/kubeapiserver/authorizer/reload.go:110-115).",
+    "rbacHookCoupling": "If RBAC is not among the configured authorizers, the rbac/bootstrap-roles hook is disabled (pkg/controlplane/apiserver/config.go:241-243,273-279).",
+    "validatingAdmissionPolicy": {
+      "status": "GA: no ValidatingAdmissionPolicy feature gate exists in pkg/features or the apiserver feature list (grep found none; full apiserver gate map staging/src/k8s.io/apiserver/pkg/features/kube_features.go:320-502); VAP/VAPB are served at admissionregistration.k8s.io/v1 (pkg/registry/admissionregistration/rest/storage_apiserver.go:100-119) which is enabled by default (pkg/controlplane/instance.go:462-472); the admission plugin is unconditionally enabled (staging/src/k8s.io/apiserver/pkg/admission/plugin/policy/validating/plugin.go:137) and default-on (pkg/kubeapiserver/options/plugins.go:188); the KCM status controller has no required gates (cmd/kube-controller-manager/app/validatingadmissionpolicystatus.go:33-39)."
+    },
+    "mutatingAdmissionPolicy": {
+      "status": "GA since 1.36, default true, not locked (staging/src/k8s.io/apiserver/pkg/features/kube_features.go:420-424; relisted pkg/features/kube_features.go:2428-2432); served in admissionregistration.k8s.io/v1 (pkg/registry/admissionregistration/rest/storage_apiserver.go:120-139); plugin enabled iff gate (staging/src/k8s.io/apiserver/pkg/admission/plugin/policy/mutating/plugin.go:163-164)."
+    }
+  },
+  "builtInIdentities": {
+    "constants": {
+      "system:masters": "user.SystemPrivilegedGroup (staging/src/k8s.io/apiserver/pkg/authentication/user/user.go:71)",
+      "system:nodes": "user.NodesGroup (user.go:72)",
+      "system:monitoring": "user.MonitoringGroup (user.go:73)",
+      "system:unauthenticated / system:authenticated": "user.go:74-75",
+      "system:anonymous": "user.go:77",
+      "system:apiserver": "user.APIServerUser (user.go:78)",
+      "system:kube-proxy": "user.KubeProxy (user.go:81)",
+      "system:kube-controller-manager": "user.KubeControllerManager (user.go:82)",
+      "system:kube-scheduler": "user.KubeScheduler (user.go:83)",
+      "system:node:<name>": "nodeUserNamePrefix (pkg/auth/nodeidentifier/default.go:37)",
+      "system:serviceaccount:<ns>:<name>, groups system:serviceaccounts and system:serviceaccounts:<ns>": "staging/src/k8s.io/apiserver/pkg/authentication/serviceaccount/util.go:30-33,78-80,127-137"
+    },
+    "system:masters": {
+      "bypasses": [
+        "Authorization: privileged-group authorizer always first, allows everything (pkg/kubeapiserver/authorizer/reload.go:110-115).",
+        "RBAC escalation/bind checks skipped (EscalationAllowed) for role/binding writes (pkg/registry/rbac/escalation_check.go:31-47; used in pkg/registry/rbac/{role,clusterrole,rolebinding,clusterrolebinding}/policybased/storage.go).",
+        "Also bound to cluster-admin by bootstrap ClusterRoleBinding (plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:719).",
+        "APF: mandatory FlowSchema 'exempt' (matchingPrecedence 1) maps group system:masters to the exempt priority level (staging/src/k8s.io/apiserver/pkg/apis/flowcontrol/bootstrap/default.go:110-137)."
+      ],
+      "note": "No system:masters-specific skip was found in the admission dispatch paths read (staging/src/k8s.io/apiserver/pkg/admission/plugin/webhook/generic/webhook.go:409-425; staging/src/k8s.io/apiserver/pkg/admission/plugin/policy/generic/plugin.go:302-335); the resource-based exemptions under admissionPlugins.policyKindExemptions apply to every requester."
+    },
+    "system:apiserver": "Loopback identity: user system:apiserver, groups system:authenticated + system:masters, random UID, authenticated by a per-process random bearer token (staging/src/k8s.io/apiserver/pkg/server/config.go:1189-1217,748; staging/src/k8s.io/apiserver/pkg/server/options/serving_with_loopback.go:92). Used by all in-process writers listed in apiserverWriters.",
+    "system:kube-controller-manager": "Bound to ClusterRole system:kube-controller-manager (plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:490-511,725) and kube-system RoleBindings system::leader-locking-kube-controller-manager and system::extension-apiserver-authentication-reader (plugin/pkg/auth/authorizer/rbac/bootstrappolicy/namespace_policy.go:124-130). The username comes from the KCM's kubeconfig credential (kubeadm: client cert CN system:kube-controller-manager, cmd/kubeadm/app/phases/kubeconfig/kubeconfig.go:511; cmd/kubeadm/app/constants/constants.go:170).",
+    "system:kube-scheduler": "Bound to system:kube-scheduler and system:volume-scheduler (plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:727-728) plus kube-system RoleBindings (plugin/pkg/auth/authorizer/rbac/bootstrappolicy/namespace_policy.go:124-126,131-132). Policy-kind access: get/list/watch namespaces only (plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:659).",
+    "system:kube-proxy": "Bound to system:node-proxier (plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:724); rules plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:615-630 contain no policy kinds.",
+    "system:nodes / system:node:<name>": "No RBAC grants by default (system:node binding has no subjects: plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:730-735); authorized by the Node authorizer when Node mode is configured (see nodeAuthorizer).",
+    "serviceAccountsGroup": "Group system:serviceaccounts is bound to system:service-account-issuer-discovery and system:cluster-trust-bundle-discovery (plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:746-753); no policy kinds.",
+    "impersonation": "ConstrainedImpersonation is Beta and default ON since 1.36 (staging/src/k8s.io/apiserver/pkg/features/kube_features.go:367-370; relisted pkg/features/kube_features.go:2375-2378); the handler chain then uses WithConstrainedImpersonation (staging/src/k8s.io/apiserver/pkg/server/config.go:1055-1059), which tries modes associated-node, arbitrary-node, serviceaccount, user-info (verbs impersonate:<mode> plus secondary impersonate-on:<mode>:<verb>) and finally legacy verb 'impersonate' on users/groups/serviceaccounts/userextras/uids (staging/src/k8s.io/apiserver/pkg/endpoints/filters/impersonation/mode.go:60-68,247-259,548-557; impersonation.go:76-110)."
+  },
+  "apiPriorityAndFairness": {
+    "writers": [
+      {
+        "who": "kube-apiserver priority-and-fairness-config-producer (loopback identity)",
+        "what": "create/update/delete FlowSchemas and PriorityLevelConfigurations",
+        "cadence": "startup + every 1 minute",
+        "source": "pkg/registry/flowcontrol/rest/storage_flowcontrol.go:100-229"
+      },
+      {
+        "who": "kube-apiserver priority-and-fairness-config-consumer (loopback identity)",
+        "what": "FlowSchema status via SSA ApplyStatus",
+        "cadence": "continuous",
+        "source": "staging/src/k8s.io/apiserver/pkg/util/flowcontrol/apf_controller.go:613-633"
+      },
+      {
+        "who": "KCM garbage-collector (generic-garbage-collector)",
+        "what": "wildcard get/list/watch/patch/update/delete covers flowschemas/prioritylevelconfigurations",
+        "source": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:280"
+      },
+      {
+        "who": "KCM storage-version-migrator-controller",
+        "what": "wildcard list/patch covers them",
+        "source": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:585"
+      },
+      {
+        "who": "cluster-admin (system:masters)",
+        "what": "*",
+        "source": "plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:342,719"
+      }
+    ],
+    "ensureSemantics": {
+      "mandatory": "exempt + catch-all PLCs and FlowSchemas: spec always forced back to bootstrap (alwaysAutoUpdateSpec=true) (pkg/registry/flowcontrol/ensurer/strategy.go:149-155; staging/src/k8s.io/apiserver/pkg/apis/flowcontrol/bootstrap/default.go:34-43).",
+      "suggested": "system, node-high, leader-election, workload-high, workload-low, global-default PLCs and 9 suggested FlowSchemas (default.go:46-82) are updated only if annotation apf.kubernetes.io/autoupdate-spec parses true, or (annotation missing/unparsable and metadata.generation == 1) (strategy.go:141-147,199-217; key staging/src/k8s.io/api/flowcontrol/v1/types.go:103).",
+      "recreate": "Any missing bootstrap object is always re-created (strategy.go:252-275).",
+      "deleteDangling": "Objects annotated apf.kubernetes.io/autoupdate-spec=true whose names are not in the bootstrap set are deleted; objects without the annotation are skipped (strategy.go:306-334; storage_flowcontrol.go:211-229)."
+    },
+    "systemMastersExempt": "Mandatory FlowSchema 'exempt' (precedence 1) routes group system:masters to the exempt level; suggested FlowSchema 'probes' exempts GET /healthz,/readyz,/livez for everyone (staging/src/k8s.io/apiserver/pkg/apis/flowcontrol/bootstrap/default.go:110-137,282-293).",
+    "rbacNote": "No bootstrap role other than cluster-admin and the wildcard controller roles above grants writes to flowcontrol.apiserver.k8s.io (policyrules.py cross-check of testdata/*.yaml)."
+  },
+  "specialVerbs": {
+    "escalate": {
+      "enforcement": "Create/update of Roles/ClusterRoles is allowed if requester is in system:masters, OR holds verb 'escalate' on that roles/clusterroles object, OR already holds every rule being granted (ConfirmNoEscalation). Updates that only change GC fields skip the check. Setting/changing an aggregationRule needs '*' on '*.*'. Source: pkg/registry/rbac/escalation_check.go:31-98; pkg/registry/rbac/clusterrole/policybased/storage.go:68-122; pkg/registry/rbac/role/policybased/storage.go:68,74,81,94; pkg/registry/rbac/helpers.go:29-50",
+      "bootstrapHolders": [
+        "system:controller:clusterrole-aggregation-controller (plugin/pkg/auth/authorizer/rbac/bootstrappolicy/controller_policy.go:88)",
+        "cluster-admin via verb '*' (plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:342)"
+      ]
+    },
+    "bind": {
+      "enforcement": "Create/update of RoleBindings/ClusterRoleBindings is allowed if requester is in system:masters, OR holds verb 'bind' on the referenced role/clusterrole (checked in the binding's namespace, '' for ClusterRoleBindings), OR already holds every rule of the referenced role. Source: pkg/registry/rbac/escalation_check.go:100-140; pkg/registry/rbac/rolebinding/policybased/storage.go:70-96,103-137; pkg/registry/rbac/clusterrolebinding/policybased/storage.go:70-88,95-122",
+      "bootstrapHolders": [
+        "cluster-admin via verb '*' only (no bootstrap role names 'bind'; golden-fixture cross-check)"
+      ]
+    },
+    "impersonate": {
+      "enforcement": "See builtInIdentities.impersonation (ConstrainedImpersonation Beta default-on; legacy 'impersonate' on users/groups/serviceaccounts/userextras/uids still honored).",
+      "bootstrapHolders": [
+        "system:aggregate-to-edit -> edit/admin: impersonate serviceaccounts (plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:166)",
+        "cluster-admin via '*' (plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:342)"
+      ]
+    },
+    "createServiceAccountsToken": {
+      "bootstrapHolders": [
+        "system:aggregate-to-edit -> edit/admin (plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:172)",
+        "system:kube-controller-manager (plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:509)",
+        "system:node rules, graph-limited by the Node authorizer (plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:266-268; plugin/pkg/auth/authorizer/node/node_authorizer.go:265-288)",
+        "cluster-admin via '*' (plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go:342)"
+      ],
+      "admission": "serviceaccounts/token is explicitly included for expression-based admission (pkg/kubeapiserver/admission/exclusion/resources.go:38-39).",
+      "newIn1_37": "APIServerWebhookAuthenticationToken (Alpha, default off: staging/src/k8s.io/apiserver/pkg/features/kube_features.go:331-333; relisted pkg/features/kube_features.go:2339-2341) allows TokenRequests bound to ValidatingWebhookConfiguration/MutatingWebhookConfiguration objects; it additionally requires verb 'attest' on authentication.k8s.io resource 'admissionReviewAPIGroups' (name = requested group) for the ServiceAccount, rejects kube-apiserver audiences and caps expiry at 600s (pkg/registry/core/serviceaccount/storage/token.go:55,230-262,312-341; staging/src/k8s.io/api/authentication/v1/types.go:68)."
+    },
+    "csrApproveSign": "Verbs 'approve'/'sign' on certificates.k8s.io signers/<signerName> are enforced by the default-on CertificateApproval/CertificateSigning admission plugins (see admissionPlugins.csrApprovalSigningEnforcement)."
+  },
+  "kubeadmContext": {
+    "note": "Not kube-apiserver/KCM binary defaults: what kubeadm (cmd/kubeadm in the same v1.37.1 tree) passes, for comparison.",
+    "kube-apiserver": [
+      "--enable-admission-plugins=NodeRestriction (cmd/kubeadm/app/phases/controlplane/manifests.go:188)",
+      "--authorization-mode=Node,RBAC unless overridden (manifests.go:260-267,274-286)",
+      "--enable-bootstrap-token-auth=true (manifests.go:198)"
+    ],
+    "kube-controller-manager": [
+      "--use-service-account-credentials=true (manifests.go:361)",
+      "--controllers=*,bootstrapsigner,tokencleaner (manifests.go:362; aliases defined at cmd/kube-controller-manager/app/bootstrap.go:30,58)",
+      "--service-account-private-key-file and --cluster-signing-cert-file set (manifests.go:358-359)",
+      "--allocate-node-cidrs=true when a pod subnet is configured (manifests.go:375; condition not fully read)"
+    ],
+    "identities": [
+      "controller-manager.conf client cert CN system:kube-controller-manager (cmd/kubeadm/app/phases/kubeconfig/kubeconfig.go:511; constants.go:170)",
+      "super-admin.conf O=system:masters (kubeconfig.go:493-495); admin.conf O=kubeadm:cluster-admins (kubeconfig.go:484-486; constants.go:211)"
+    ]
+  },
+  "unverified": [
+    "Nothing was executed against a running cluster; all statements come from static reading of v1.37.1 sources. Object counts for bootstrap RBAC come from the unit-test golden fixtures, which assume default feature gates.",
+    "The release in which StructuredAuthorizationConfiguration (--authorization-config) and ValidatingAdmissionPolicy reached GA is not recorded in the v1.37.1 tree (gates removed; no CHANGELOG mention found by grep). Only 'GA, gate removed, unconditional' is verified.",
+    "The KCM identity's username depends on the credential in its --kubeconfig; only kubeadm's choice (CN=system:kube-controller-manager) was verified. Managed distributions (e.g. GKE) were not examined.",
+    "Inference, not verified: with the binary default --use-service-account-credentials=false, the bootstrap system:kube-controller-manager ClusterRole alone lacks the write permissions most controllers need (e.g. pods create/delete), so such deployments must give the KCM a broader identity.",
+    "ConstrainedImpersonation mode details were only partially read (mode list and verb shapes); per-mode authorization semantics beyond the cited lines were not traced.",
+    "ManifestBasedAdmissionControlConfig static-manifest loading/reload behaviour was read only at the wiring level (gate checks, loaders, composite source); manifest validation rules and file-reload timing were not traced.",
+    "Conditions under which pkg/controlplane/apiserver/config.go:334 creates the PeerEndpointLeaseReconciler were not read in full.",
+    "start-service-ip-repair-controllers: the exact object types written (RangeAllocation vs IPAddress depending on MultiCIDRServiceAllocator) were not traced.",
+    "kubeadm --allocate-node-cidrs condition (manifests.go:369-375) was not read in full.",
+    "Cloud-controller-manager controllers (route/service) are out of tree; only their bootstrap roles were observed."
+  ]
+}

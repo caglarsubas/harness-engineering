@@ -1,0 +1,62 @@
+{
+  "schemaVersion": "planeon.internal.i05-gate-channel-status/v1",
+  "contract": "planeon.internal.effect-gate-frame/v1",
+  "reviewRounds": [
+    {
+      "round": 1,
+      "record": "architecture/i05-gate-channel/review-round1.json",
+      "recordSha256": "6acb048519e2929fbda6b9f1a1d87b6f07ab8ed7284cb859065334d9b11ed4c5",
+      "verdict": "CHANGES_REQUIRED",
+      "subjectDirectory": "architecture/i05-gate-channel/round1/"
+    },
+    {
+      "round": 2,
+      "record": "architecture/i05-gate-channel/review-round2.json",
+      "recordSha256": "183944cccf2dcb4d8c5577338c52adb4e7e6ab6c1fafe8bea6c68d22e1eb76b8",
+      "verdict": "CHANGES_REQUIRED",
+      "subjectDirectory": "architecture/i05-gate-channel/round2/"
+    },
+    {
+      "round": 3,
+      "record": "architecture/i05-gate-channel/review-round3.json",
+      "recordSha256": "cc0553095d5a2e7790d63302c82275b2c35618b3bf20ddf55d43dceae1725e9d",
+      "verdict": "PASS_FOR_SOURCE_PUBLICATION",
+      "subjectDirectory": "CURRENT"
+    }
+  ],
+  "carriedFindings": {
+    "P1": "W02c and W02b-F: a gate-side drain must settle in every state once no consumed action lacks a terminal record (DRAINED, drainPending cleared, I07 answered), including INVALIDATED and after a refused seal; a WRITE_BEGIN arriving in INVALIDATED or DRAINING waits for the same fence or gets an answer W02c treats as no write; ARM outside ACTIVE after invalidation is refused NOT_ACTIVE",
+    "P2": "W02b-F: restrict a DELETE UID to this execution's own CREATE 201, or make manifest identity and digest resolve to at most one run across every run the gate has bound (durable, like priorBindings); until then Decision 10's cross-run cleanup claim relies on I02's one-case-per-digest and unique-name rules",
+    "P3": "W02b-F: the storage-failure path's denied actions are reported in deniedActionIds and in the EXPIRE and DRAIN outputs (T58 pins [] although the journal shows the deny)",
+    "P4": "W02b-F: a restart after a write failure that could not itself be recorded starts HELD (failure marker in a separate failure domain), or the residual against base section 5 is disclosed; the OK HELD answer to RECONCILIATION_REQUIRED is not durable in that case",
+    "P5": "W02b-F: the CREATE and DELETE 4xx agreement rows exclude 408; the DELETE 202 row is unreachable with the pinned DeleteOptions",
+    "P6": "W02b-F and W03: pin the upstream tag for the DELETE-body sources and re-check against the selected distribution; a deletion that is not immediate (finalizers) returns the object body and is held",
+    "P7": "W02b-F: decode_frame maps RecursionError to F06 or F01 and gives wrong-type input its own code",
+    "P8": "W02b-F: T74 and T81 intents claim cases the transcripts do not contain"
+  },
+  "ownerDecisions": [],
+  "contractState": "ADOPTED_DATA_CONTRACT",
+  "obligations": {
+    "E01": "OPEN_UNPROVEN",
+    "E02": "OPEN_UNPROVEN",
+    "E03": "OPEN_UNPROVEN",
+    "E04": "OPEN_UNPROVEN",
+    "E05": "OPEN_UNPROVEN",
+    "E06": "OPEN_UNPROVEN",
+    "E07": "OPEN_UNPROVEN",
+    "E08": "OPEN_UNPROVEN",
+    "E09": "OPEN_UNPROVEN",
+    "E10": "OPEN_UNPROVEN",
+    "E11": "OPEN_UNPROVEN",
+    "E12": "OPEN_UNPROVEN"
+  },
+  "independentReviewer": "SEPARATE_AGENT_NOT_AUTHOR",
+  "nativeAcceptance": false,
+  "tenantAcceptance": false,
+  "gateInstalled": false,
+  "substrateSelected": false,
+  "i07SchemaAdopted": false,
+  "productExecution": false,
+  "runnerActivated": false,
+  "phaseComplete": false
+}

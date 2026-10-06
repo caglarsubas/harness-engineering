@@ -1,6 +1,33 @@
 # Harness-Onion — unified development roadmap
 
-## Current checkpoint — MET-ENFORCE-006 source preparation, October 6, 2026
+## Current checkpoint — MET-ENFORCE-007 source preparation, October 6, 2026
+
+Alpha2 OPEN. MET-ENFORCE-006 passed required verify (64/64, 626 s) and merged as main
+fe50b57; W02g is ADOPTED_DATA_CONTRACT. MET-ENFORCE-007 is the W02b part. It publishes the
+closed I05 broker-gate channel contract `planeon.internal.effect-gate-frame/v1`:
+- the lockstep, hash-chained frame envelope and ten closed frame variants;
+- an executable gate model of connection stamping C1-C7, exact request rendering at A1, the
+  durable journal, the A3 drain fence and A4 urgent invalidation;
+- the ACTION_OUTCOME to I02 RESOURCE_RESULT mapping, with I02 unchanged;
+- 161 executable vector checks, counterexamples 17, 18, 21 and 22 included.
+
+It passed its third independent review (rounds 1 and 2 CHANGES_REQUIRED, round 3
+PASS_FOR_SOURCE_PUBLICATION); minor findings are carried to W02b-F and W02c. Nothing is
+installed or forwarded; all E01-E12 remain OPEN_UNPROVEN. MET-ENFORCE-007 is the sole 203rd
+specification.
+
+| Phase | ID | Status | Description / gate |
+|---|---|---|---|
+| Alpha2A | MET-ENFORCE-007 / W02b | SOURCE_PREPARED | I05 broker-gate channel contract as the 203rd packet; verify from the owner's App |
+| Alpha2A | MET-ENFORCE-006 / W02g | VERIFY_PASSED_MERGED | I06 backend profile, ADOPTED_DATA_CONTRACT |
+| Alpha2A | W02c-W02f, W02a-F, W02b-F, W02g-F | WAITING_EXACT_PACKETS | I07 schema, seccomp, SELinux matrix, admission; follow-ups |
+| Alpha2 qualification | CONF-LINUX-001 / CONF-A2-001 | WAITING_PREREQUISITES | Linux verification only when mandatory |
+
+Keep 65 argv, 420/750/900 s/15 min and 32 MiB. No cloud, runner registration,
+live/native/tenant or model-effort changes. Phase-end effort transition NOT_DUE.
+Prior checkpoints below are history only.
+
+## Historical ENFORCE-006 source checkpoint — MET-ENFORCE-006 source preparation, October 6, 2026
 
 Alpha2 OPEN. MET-ENFORCE-005 passed required verify (63/63, 605 s) and merged as main
 46bcc3e; W02a is ADOPTED_DATA_CONTRACT. MET-ENFORCE-006 is the W02g part. It publishes
@@ -718,7 +745,7 @@ The [item-level backlog](../architecture/unified-roadmap-backlog.json) records p
 | Alpha 2 CI capacity | MET-UNIFY-008 / PR #141 | BLOCKED_SELF_HOSTED_CI | Source PR open; `verify` queued with no registered runner |
 | Alpha 2 CI capacity | MET-LINUX-003 / PR #142 | BLOCKED_SELF_HOSTED_CI | Draft source PR open; `verify` queued on the same labels; queue must be serialized before one-job admission |
 | Alpha 2A | W01 / MET-ENFORCE-004 | DESIGN_RESOLVED_REVIEWED | G04–G07/G09 resolved at design level and independently reviewed; E01–E12 remain OPEN_UNPROVEN |
-| Alpha 2A | W02 (W02a MET-ENFORCE-005, W02g MET-ENFORCE-006) / W03–W07 | W02a VERIFY_PASSED_MERGED; W02g SOURCE_PREPARED; others WAITING_EXACT_PACKETS | W02a v2 record contract and W02g I06 backend profile reviewed; remaining W02 parts and W03–W07 are labels, not executable YAML |
+| Alpha 2A | W02 (W02a MET-ENFORCE-005, W02g MET-ENFORCE-006, W02b MET-ENFORCE-007) / W03–W07 | W02a and W02g VERIFY_PASSED_MERGED; W02b SOURCE_PREPARED; others WAITING_EXACT_PACKETS | W02a v2 record contract, W02g I06 backend profile and W02b I05 channel contract reviewed; remaining W02 parts and W03–W07 are labels, not executable YAML |
 | Alpha 2A | CONF-FIX-010 | BLOCKED_SAFE_DESIGN | Zero product attempts; requires separately reviewed safe design and bounded packet authority |
 | Alpha 2A | CONF-LIVE-004/005/006 | WAITING_PREREQUISITES | Native probes, package handoff and trusted campaign integration |
 | Alpha 2A | CONF-LINUX-001 native AMD64 | NOT_RUN_ENV_UNAVAILABLE | Fresh real-Linux PASS gates runtime coding of CTRL-INTEGRATE-001, MODEL-001, EXEC-001 and RUN-001; ARM64 separate |
@@ -751,7 +778,8 @@ These checkboxes count only the named deliverable at the stated evidence level. 
 - [x] Alpha 2 · MET-VERIFY-004 · Record the dedicated verifier account in the verifier contract; pass required verify through the owner's App from that account.
 - [x] Alpha 2A · W01 / MET-ENFORCE-004 · Resolve G04–G07/G09 and adopt a versioned host interface only after the required independent review; pass required verify through the owner's App.
 - [x] Alpha 2A · W02a / MET-ENFORCE-005 · Publish the independently reviewed v2 native qualification contract; pass required verify through the owner's App.
-- [ ] Alpha 2A · W02g / MET-ENFORCE-006 · Publish the independently reviewed I06 backend profile (selection criteria, writer inventory, identity closure incl. W01 F1); pass required verify through the owner's App.
+- [x] Alpha 2A · W02g / MET-ENFORCE-006 · Publish the independently reviewed I06 backend profile (selection criteria, writer inventory, identity closure incl. W01 F1); pass required verify through the owner's App.
+- [ ] Alpha 2A · W02b / MET-ENFORCE-007 · Publish the independently reviewed I05 broker-gate channel wire contract; pass required verify through the owner's App.
 - [ ] Alpha 2A · CONF-FIX-010 · Complete safe design and exact authority before any product attempt.
 - [ ] Alpha 2A · CONF-LIVE-004 · Produce the exact native-probe source implementation and separately qualify it.
 - [ ] Alpha 2A · CONF-LIVE-005 · Produce a reproducible selected package and operator handoff.

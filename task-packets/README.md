@@ -1,6 +1,13 @@
 # Sol-High Task Packet Catalog
 
-## Current source preparation — MET-ENFORCE-006
+## Current source preparation — MET-ENFORCE-007
+
+W02b: the closed I05 broker-gate channel contract (lockstep hash-chained frames, ten closed variants, an executable gate
+model with exact request rendering and a durable journal, the outcome mapping to I02 RESOURCE_RESULT, 161 vector checks)
+passed its third independent review. Nothing is installed or forwarded, and every E01-E12 obligation stays open.
+Alpha2 OPEN; 202 accepted plus ENFORCE-007 only. Native Linux, exact-main and tenant acceptance remain separate.
+
+## Historical ENFORCE-006 source preparation — MET-ENFORCE-006
 
 W02g: the I06 backend profile for the sealed single-node control plane on Kubernetes
 v1.37.1 has distribution selection criteria, a writer inventory and an identity closure
@@ -1106,3 +1113,4 @@ acceptance is claimed. Alpha2 ONGOING; model-effort transition NOT_DUE.
 | 200 | `MET-ENFORCE-004` | `Harness-Engineering` | W01 gate resolutions (G04-G07, G09) with independent source-only review |
 | 201 | `MET-ENFORCE-005` | `Harness-Engineering` | W02a v2 native qualification contract with three independent review rounds |
 | 202 | `MET-ENFORCE-006` | `Harness-Engineering` | W02g I06 backend profile: selection criteria, writer inventory and identity closure with two independent review rounds |
+| 203 | `MET-ENFORCE-007` | `Harness-Engineering` | W02b I05 broker-gate channel wire contract with three independent review rounds |

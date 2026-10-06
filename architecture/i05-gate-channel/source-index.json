@@ -1,0 +1,70 @@
+{
+  "schemaVersion": "planeon.internal.i05-gate-channel-index/v1",
+  "round": 3,
+  "baseMain": "fe50b57c0e6b6d5e5732b1b346bbad8727959a6f",
+  "baseTree": "db8c1a62e7e181dbf1f303b9a1e8f84dd0494ffd",
+  "subject": [
+    {
+      "path": "architecture/i05-gate-channel/README.md",
+      "sha256": "dc9aa22017b2cdf71f886fb7890aff3f6e7095b9afc25bd37645cb0dee23b498"
+    },
+    {
+      "path": "architecture/i05-gate-channel/REVIEW_BRIEF.md",
+      "sha256": "24c39eb5a497d6a3bedcd270a8bbcbb647db3e03f3f79db69a241b83dcceb14a"
+    },
+    {
+      "path": "architecture/i05-gate-channel/channel.schema.json",
+      "sha256": "5242d1b2a2817b867e8c5b68c0936a29b6d3e5300be998c53894e32ccd1638b4"
+    },
+    {
+      "path": "architecture/i05-gate-channel/outcome-mapping.json",
+      "sha256": "6d204f74c2a249ce615936c7573dce0a980837291cc98cdd97c76404cce52674"
+    },
+    {
+      "path": "architecture/i05-gate-channel/vectors.json",
+      "sha256": "8d6d8872216fae0f732c1f40fa84a4f9a68a417dd248aeffe15a874ff1a7b6f2"
+    },
+    {
+      "path": "scripts/i05_gate_channel.py",
+      "sha256": "857a15bf4c444b5ed9fc4b612e1fed2cdcb7631620f3a5cf56c117c91560ea8e"
+    }
+  ],
+  "predecessorInputs": [
+    {
+      "path": "architecture/host-interface-inputs/corrected/HOST_INTERFACE_SPEC.md",
+      "sha256": "1b0bee7e46e3cd730b3f878179ac36d0f062ce70ed6c843788ab634aead16ef0"
+    },
+    {
+      "path": "architecture/host-interface-inputs/resolved/HOST_INTERFACE_SPEC.md",
+      "sha256": "8a3a09bb5dbc08804dbea06dd0700a14648a9cdbc8efd62112dc64ba0b6ba1b4"
+    },
+    {
+      "path": "architecture/host-interface-inputs/resolution-review-round1.json",
+      "sha256": "619b7ac456097e1312fc0e42c2bf67911b7a1cc044119862724606b189b4861f"
+    },
+    {
+      "path": "architecture/host-interface-inputs/resolution-status.json",
+      "sha256": "e6a1333a66eeab4801c97902b7c1ae145b0f16693a8136d5dbce7d24b2837c6c"
+    },
+    {
+      "path": "architecture/broker-handoff-inputs/channel.schema.json",
+      "sha256": "e7e9558fb50b7ba804222065734d1d4fb4694327bb2427a34ef8dffc945d56f9"
+    },
+    {
+      "path": "docs/alpha-2/BROKER_HANDOFF_READINESS.md",
+      "sha256": "2cc6ebef252efb33744208378b29248d89597e5a0be7c4a1a113adc9d63b9fc3"
+    },
+    {
+      "path": "docs/alpha-2/PROXY_CONTRACT_READINESS.md",
+      "sha256": "3e3bf310ebd8a7b1aed696ed9b8d4d26cb67160aab3f862877e2b2a2e0c9f3d0"
+    },
+    {
+      "path": "architecture/i05-gate-channel/review-round1.json",
+      "sha256": "6acb048519e2929fbda6b9f1a1d87b6f07ab8ed7284cb859065334d9b11ed4c5"
+    },
+    {
+      "path": "architecture/i05-gate-channel/review-round2.json",
+      "sha256": "183944cccf2dcb4d8c5577338c52adb4e7e6ab6c1fafe8bea6c68d22e1eb76b8"
+    }
+  ]
+}

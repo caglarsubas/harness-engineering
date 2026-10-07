@@ -1,4 +1,4 @@
-"""Exact source lineage for MET-VERIFY-002; the isolated runner call is exercised by ci/test_offline_runner.py."""
+"""Exact source lineage for MET-PERF-031; test-only reuse of exact projections, validator semantics unchanged."""
 import ast
 from copy import deepcopy
 import os
@@ -7,6 +7,13 @@ from types import MappingProxyType
 
 import pytest
 
+from scripts import validate_projection_reuse as profile
+from scripts import validate_i05_gate_channel as gprofile
+from scripts import validate_i06_backend_profile as iprofile
+from scripts import validate_native_profile_v2 as nprofile
+from scripts import validate_host_interface_resolution as resolution
+from scripts import validate_dedicated_verifier_account as account
+from scripts import validate_isolated_network_canary as canary
 from scripts import validate_isolated_offline_runner as isolated
 from scripts import validate_portable_warm_snapshot_temp as portable
 from scripts import validate_in_session_predecessor_proof as proof
@@ -21,30 +28,26 @@ from scripts.safe_yaml import safe_load
 
 def packets():
     return {path.stem: safe_load(path.read_bytes())
-            for path in (isolated.ROOT / "task-packets").glob("*.yaml")}
-
-
-def layer_packets():
-    # The newer MET-VERIFY-003 layer is projected away before this layer's payload checks.
-    return isolated.successor.historical_catalog(packets())
+            for path in (profile.ROOT / "task-packets").glob("*.yaml")}
 
 
 def changed_test():
-    return next(path for path in isolated._PROJECTION_RULES if path.startswith("tests/"))
+    return next(path for path in profile._PROJECTION_RULES if path.startswith("tests/"))
 
 
 def test_exact_current_source_and_complete_history_chain():
-    assert isolated.validate() is None
+    assert profile.validate() is None
     current = packets()
-    accepted = isolated.historical_catalog(current)
-    assert len(current) == 204 and len(accepted) == 196
-    assert set(accepted) == set(current) - {isolated.NEW_PACKET, isolated.successor.NEW_PACKET,
-                                            isolated.successor.successor.NEW_PACKET,
-                                            isolated.successor.successor.successor.NEW_PACKET,
-                                            isolated.successor.successor.successor.successor.NEW_PACKET,
-                                            isolated.successor.successor.successor.successor.successor.NEW_PACKET,
-                                            isolated.successor.successor.successor.successor.successor.successor.NEW_PACKET,
-                                            isolated.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET}
+    accepted = profile.historical_catalog(current)
+    assert len(current) == 204 and len(accepted) == 203
+    assert set(accepted) == set(current) - {profile.NEW_PACKET}
+    assert len(gprofile.historical_catalog(current)) == 202
+    assert len(iprofile.historical_catalog(current)) == 201
+    assert len(nprofile.historical_catalog(current)) == 200
+    assert len(resolution.historical_catalog(current)) == 199
+    assert len(account.historical_catalog(current)) == 198
+    assert len(canary.historical_catalog(current)) == 197
+    assert len(isolated.historical_catalog(current)) == 196
     assert len(portable.historical_catalog(current)) == 195
     assert len(proof.historical_catalog(current)) == 194
     assert len(recheck.historical_catalog(current)) == 193
@@ -53,52 +56,52 @@ def test_exact_current_source_and_complete_history_chain():
     assert len(performance.historical_catalog(current)) == 190
     assert len(runner.historical_catalog(current)) == 189
     assert len(roadmap.historical_catalog(current)) == 188
-    for name, expected in isolated.authority()["baselinePackets"].items():
-        assert isolated.digest(isolated.regular_bytes("task-packets/" + name + ".yaml")) == expected
-    for path, rule in isolated._PROJECTION_RULES.items():
-        raw = isolated.successor.historical_bytes(path, isolated.regular_bytes(path))
-        assert isolated.digest(raw) == rule["afterSha256"]
-        before = isolated.historical_bytes(path, raw)
-        assert isolated.digest(before) == rule["beforeSha256"]
-        assert isolated.historical_bytes(path, before) == before
+    for name, expected in profile.authority()["baselinePackets"].items():
+        assert profile.digest(profile.regular_bytes("task-packets/" + name + ".yaml")) == expected
+    for path, rule in profile._PROJECTION_RULES.items():
+        raw = profile.regular_bytes(path)
+        assert profile.digest(raw) == rule["afterSha256"]
+        before = profile.historical_bytes(path, raw)
+        assert profile.digest(before) == rule["beforeSha256"]
+        assert profile.historical_bytes(path, before) == before
 
 
 @pytest.mark.parametrize("fault", ["missing_new", "missing_old", "extra", "new_payload", "old_payload", "projected"])
 def test_catalog_refuses_all_packet_substitution_and_loss(fault):
-    current = deepcopy(layer_packets())
+    current = deepcopy(packets())
     if fault == "missing_new":
-        current.pop(isolated.NEW_PACKET)
+        current.pop(profile.NEW_PACKET)
     elif fault == "missing_old":
         current.pop("MET-RUNNER-001")
     elif fault == "extra":
         current["UNREVIEWED-001"] = {}
     elif fault == "projected":
-        current = isolated.historical_catalog(deepcopy(packets()))
+        current = profile.historical_catalog(current)
     else:
-        name = isolated.NEW_PACKET if fault == "new_payload" else "MET-001"
+        name = profile.NEW_PACKET if fault == "new_payload" else "MET-001"
         current[name]["objective"] += " unreviewed"
     with pytest.raises(ValueError):
-        isolated.validate_packet_payloads(current)
+        profile.validate_packet_payloads(current)
 
 
 def test_every_predecessor_payload_is_checked_without_a_verdict_cache():
-    current = layer_packets()
-    isolated.validate_packet_payloads(current)
-    for name in sorted(isolated.authority()["baselinePackets"]):
+    current = packets()
+    profile.validate_packet_payloads(current)
+    for name in sorted(profile.authority()["baselinePackets"]):
         original = current[name]
         current[name] = dict(original, objective=original["objective"] + " unreviewed")
         with pytest.raises(ValueError, match="changed packet payload"):
-            isolated.validate_packet_payloads(current)
+            profile.validate_packet_payloads(current)
         current[name] = original
 
 
 def test_acceptance_retains_every_inherited_command_and_wrapper():
     current = packets()
-    packet, predecessor = current[isolated.NEW_PACKET], current[isolated.PREVIOUS_PACKET]
+    packet, predecessor = current[profile.NEW_PACKET], current[profile.PREVIOUS_PACKET]
     commands = packet["offlineAcceptanceCommands"]
-    assert len(commands) == 59
-    assert commands[:-3] + commands[-2:] == predecessor["offlineAcceptanceCommands"]
-    assert commands[-3][-1] == isolated.VALIDATOR_PATH
+    assert len(commands) == 64 and commands == predecessor["offlineAcceptanceCommands"]
+    assert not any(profile.VALIDATOR_PATH in argv for argv in commands)
+    assert commands[-2][-3:] == ["tests", "ci/test_offline_runner.py", "ci/test_warm_snapshot.py"]
     assert packet["offlineExecution"] == predecessor["offlineExecution"]
     assert packet["sourceReuse"] == packet["prefetchCommands"] == []
     assert "liveCampaignExecution" not in packet
@@ -106,12 +109,26 @@ def test_acceptance_retains_every_inherited_command_and_wrapper():
 
 def test_exact_inverse_and_forward_test_round_trip_across_layers():
     path = changed_test()
-    current = isolated.regular_bytes(path)
-    before = isolated.historical_bytes(path, current)
+    current = profile.regular_bytes(path)
+    before = profile.historical_bytes(path, current)
     assert before != current
-    assert isolated.historical_test_bytes(current) == before
-    assert isolated.current_test_bytes(before) == current
-    assert isolated.current_test_bytes(before + b" ") == before + b" "
+    assert profile.historical_test_bytes(current) == before
+    assert profile.current_test_bytes(before) == current
+    assert profile.current_test_bytes(before + b" ") == before + b" "
+    gprofile_before = gprofile.historical_bytes(path, current)
+    assert gprofile.current_test_bytes(gprofile_before) == current
+    iprofile_before = iprofile.historical_bytes(path, current)
+    assert iprofile.current_test_bytes(iprofile_before) == current
+    nprofile_before = nprofile.historical_bytes(path, current)
+    assert nprofile.current_test_bytes(nprofile_before) == current
+    resolution_before = resolution.historical_bytes(path, current)
+    assert resolution.current_test_bytes(resolution_before) == current
+    account_before = account.historical_bytes(path, current)
+    assert account.current_test_bytes(account_before) == current
+    canary_before = canary.historical_bytes(path, current)
+    assert canary.current_test_bytes(canary_before) == current
+    isolated_before = isolated.historical_bytes(path, current)
+    assert isolated.current_test_bytes(isolated_before) == current
     portable_before = portable.historical_bytes(path, current)
     assert portable.current_test_bytes(portable_before) == current
     proof_before = proof.historical_bytes(path, current)
@@ -129,17 +146,23 @@ def test_exact_inverse_and_forward_test_round_trip_across_layers():
     roadmap_before = roadmap.historical_bytes(path, current)
     assert roadmap.current_test_bytes(roadmap_before) == current
     with pytest.raises(ValueError, match="unreviewed current source"):
-        isolated.historical_bytes(path, current + b" ")
+        profile.historical_bytes(path, current + b" ")
 
 
-@pytest.mark.parametrize("route", ["authority", "changed", "old_bytes", "unchanged", "historical_test", "current_test", "catalog", "payloads", "portable_old", "proof_old", "recheck_old", "verifier_old", "linux_old", "performance_old", "runner_old", "roadmap_old"])
+@pytest.mark.parametrize("route", ["authority", "changed", "old_bytes", "unchanged", "historical_test", "current_test", "catalog", "payloads", "gprofile_old", "iprofile_old", "nprofile_old", "resolution_old", "account_old", "canary_old", "isolated_old", "portable_old", "proof_old", "recheck_old", "verifier_old", "linux_old", "performance_old", "runner_old", "roadmap_old"])
 def test_newest_authority_is_freshly_checked_on_every_route(monkeypatch, route):
     path = changed_test()
-    raw = isolated.regular_bytes(path)
-    before = isolated.historical_bytes(path, raw)
+    raw = profile.regular_bytes(path)
+    before = profile.historical_bytes(path, raw)
     current_packets = packets()
-    layer = layer_packets()
     master_raw = roadmap.regular_bytes(roadmap.MASTER_PATH)
+    old_gprofile = gprofile.historical_bytes(roadmap.MASTER_PATH, master_raw)
+    old_iprofile = iprofile.historical_bytes(roadmap.MASTER_PATH, master_raw)
+    old_nprofile = nprofile.historical_bytes(roadmap.MASTER_PATH, master_raw)
+    old_resolution = resolution.historical_bytes(roadmap.MASTER_PATH, master_raw)
+    old_account = account.historical_bytes(roadmap.MASTER_PATH, master_raw)
+    old_canary = canary.historical_bytes(roadmap.MASTER_PATH, master_raw)
+    old_isolated = isolated.historical_bytes(roadmap.MASTER_PATH, master_raw)
     old_portable = portable.historical_bytes(roadmap.MASTER_PATH, master_raw)
     old_proof = proof.historical_bytes(roadmap.MASTER_PATH, master_raw)
     old_recheck = recheck.historical_bytes(roadmap.MASTER_PATH, master_raw)
@@ -149,14 +172,21 @@ def test_newest_authority_is_freshly_checked_on_every_route(monkeypatch, route):
     old_runner = runner.historical_bytes(roadmap.MASTER_PATH, master_raw)
     old_roadmap = roadmap.historical_bytes(roadmap.MASTER_PATH, roadmap.regular_bytes(roadmap.MASTER_PATH))
     calls = {
-        "authority": isolated.authority,
-        "changed": lambda: isolated.historical_bytes(path, raw),
-        "old_bytes": lambda: isolated.historical_bytes(path, before),
-        "unchanged": lambda: isolated.historical_bytes("architecture/repositories.yaml", b"unrelated"),
-        "historical_test": lambda: isolated.historical_test_bytes(raw),
-        "current_test": lambda: isolated.current_test_bytes(before),
-        "catalog": lambda: isolated.historical_catalog(current_packets),
-        "payloads": lambda: isolated.validate_packet_payloads(layer),
+        "authority": profile.authority,
+        "changed": lambda: profile.historical_bytes(path, raw),
+        "old_bytes": lambda: profile.historical_bytes(path, before),
+        "unchanged": lambda: profile.historical_bytes("architecture/repositories.yaml", b"unrelated"),
+        "historical_test": lambda: profile.historical_test_bytes(raw),
+        "current_test": lambda: profile.current_test_bytes(before),
+        "catalog": lambda: profile.historical_catalog(current_packets),
+        "payloads": lambda: profile.validate_packet_payloads(current_packets),
+        "gprofile_old": lambda: gprofile.historical_bytes(roadmap.MASTER_PATH, old_gprofile),
+        "iprofile_old": lambda: iprofile.historical_bytes(roadmap.MASTER_PATH, old_iprofile),
+        "nprofile_old": lambda: nprofile.historical_bytes(roadmap.MASTER_PATH, old_nprofile),
+        "resolution_old": lambda: resolution.historical_bytes(roadmap.MASTER_PATH, old_resolution),
+        "account_old": lambda: account.historical_bytes(roadmap.MASTER_PATH, old_account),
+        "canary_old": lambda: canary.historical_bytes(roadmap.MASTER_PATH, old_canary),
+        "isolated_old": lambda: isolated.historical_bytes(roadmap.MASTER_PATH, old_isolated),
         "portable_old": lambda: portable.historical_bytes(roadmap.MASTER_PATH, old_portable),
         "proof_old": lambda: proof.historical_bytes(roadmap.MASTER_PATH, old_proof),
         "recheck_old": lambda: recheck.historical_bytes(roadmap.MASTER_PATH, old_recheck),
@@ -167,29 +197,29 @@ def test_newest_authority_is_freshly_checked_on_every_route(monkeypatch, route):
         "roadmap_old": lambda: roadmap.historical_bytes(roadmap.MASTER_PATH, old_roadmap),
     }
     calls[route]()
-    original = isolated.regular_bytes
+    original = profile.regular_bytes
 
     def changed_reader(relative):
         value = original(relative)
-        return value + b" " if relative == isolated.AUTHORITY_PATH else value
+        return value + b" " if relative == profile.AUTHORITY_PATH else value
 
-    monkeypatch.setattr(isolated, "regular_bytes", changed_reader)
-    with pytest.raises(ValueError, match="isolated runner history authority digest"):
+    monkeypatch.setattr(profile, "regular_bytes", changed_reader)
+    with pytest.raises(ValueError, match="projection reuse history authority digest"):
         calls[route]()
 
 
 def test_catalog_uses_only_pinned_parsed_data_and_checks_each_input_again(monkeypatch):
-    current = layer_packets()
-    isolated._packet_rules()
+    current = packets()
+    profile._packet_rules()
 
     def unexpected_yaml(_raw):
         pytest.fail("catalog projection must not reparse every predecessor YAML")
 
-    monkeypatch.setattr(isolated, "safe_load", unexpected_yaml)
-    assert isolated.validate_packet_payloads(current) is None
+    monkeypatch.setattr(profile, "safe_load", unexpected_yaml)
+    assert profile.validate_packet_payloads(current) is None
     current["MET-001"]["objective"] += " changed after a successful call"
     with pytest.raises(ValueError, match="changed packet payload"):
-        isolated.validate_packet_payloads(current)
+        profile.validate_packet_payloads(current)
 
 
 def test_historical_catalog_reuses_frozen_packet_pins_but_rechecks_authority(monkeypatch):
@@ -198,15 +228,15 @@ def test_historical_catalog_reuses_frozen_packet_pins_but_rechecks_authority(mon
     def unexpected(*_args, **_kwargs):
         pytest.fail("historical traversal must not reparse authority or packet YAML")
 
-    monkeypatch.setattr(isolated, "authority", unexpected)
-    monkeypatch.setattr(isolated, "safe_load", unexpected)
-    assert len(isolated.historical_catalog(current)) == 196
+    monkeypatch.setattr(profile, "authority", unexpected)
+    monkeypatch.setattr(profile, "safe_load", unexpected)
+    assert len(profile.historical_catalog(current)) == 203
 
 
 def test_historical_catalog_does_not_initialize_predecessor_packet_rules(monkeypatch):
     current = packets()
-    isolated._packet_rules_for.cache_clear()
-    original = isolated.regular_bytes
+    profile._packet_rules_for.cache_clear()
+    original = profile.regular_bytes
     packet_reads = []
 
     def counted(path):
@@ -214,72 +244,72 @@ def test_historical_catalog_does_not_initialize_predecessor_packet_rules(monkeyp
             packet_reads.append(path)
         return original(path)
 
-    monkeypatch.setattr(isolated, "regular_bytes", counted)
-    assert len(isolated.historical_catalog(current)) == 196
-    assert packet_reads == ["task-packets/" + isolated.NEW_PACKET + ".yaml"]
-    assert isolated._packet_rules_for.cache_info().currsize == 0
+    monkeypatch.setattr(profile, "regular_bytes", counted)
+    assert len(profile.historical_catalog(current)) == 203
+    assert packet_reads == ["task-packets/" + profile.NEW_PACKET + ".yaml"]
+    assert profile._packet_rules_for.cache_info().currsize == 0
 
 
 def test_full_packet_expectations_initialize_once_and_remain_immutable(monkeypatch):
-    isolated._packet_rules_for.cache_clear()
-    original = isolated.safe_load
+    profile._packet_rules_for.cache_clear()
+    original = profile.safe_load
     parsed = []
 
     def counted(raw):
         parsed.append(raw)
         return original(raw)
 
-    monkeypatch.setattr(isolated, "safe_load", counted)
-    rules = isolated._packet_rules()
-    assert len(rules) == 197 and len(parsed) == 196
-    assert isolated._packet_rules() is rules and len(parsed) == 196
+    monkeypatch.setattr(profile, "safe_load", counted)
+    rules = profile._packet_rules()
+    assert len(rules) == 204 and len(parsed) == 203
+    assert profile._packet_rules() is rules and len(parsed) == 203
     with pytest.raises(TypeError):
         rules["MET-001"] = ("0" * 64, "0" * 64)
 
 
 def test_first_full_packet_check_refuses_changed_old_yaml(monkeypatch):
-    current = layer_packets()
-    isolated._packet_rules_for.cache_clear()
-    original = isolated.regular_bytes
+    current = packets()
+    profile._packet_rules_for.cache_clear()
+    original = profile.regular_bytes
 
     def changed_reader(path):
         raw = original(path)
         return raw + b" " if path == "task-packets/MET-001.yaml" else raw
 
-    monkeypatch.setattr(isolated, "regular_bytes", changed_reader)
+    monkeypatch.setattr(profile, "regular_bytes", changed_reader)
     with pytest.raises(ValueError, match="packet YAML drift: MET-001"):
-        isolated.validate_packet_payloads(current)
-    assert isolated._packet_rules_for.cache_info().currsize == 0
+        profile.validate_packet_payloads(current)
+    assert profile._packet_rules_for.cache_info().currsize == 0
 
 
 def test_cached_expected_rules_do_not_cache_payload_or_authority_verdict(monkeypatch):
-    current = layer_packets()
-    isolated.validate_packet_payloads(current)
+    current = packets()
+    profile.validate_packet_payloads(current)
     current["MET-001"]["objective"] += " unreviewed"
     with pytest.raises(ValueError, match="changed packet payload: MET-001"):
-        isolated.validate_packet_payloads(current)
-    original = isolated.regular_bytes
+        profile.validate_packet_payloads(current)
+    original = profile.regular_bytes
 
     def changed_reader(path):
         raw = original(path)
-        return raw + b" " if path == isolated.AUTHORITY_PATH else raw
+        return raw + b" " if path == profile.AUTHORITY_PATH else raw
 
-    monkeypatch.setattr(isolated, "regular_bytes", changed_reader)
-    with pytest.raises(ValueError, match="isolated runner history authority digest"):
-        isolated.validate_packet_payloads(current)
+    monkeypatch.setattr(profile, "regular_bytes", changed_reader)
+    with pytest.raises(ValueError, match="projection reuse history authority digest"):
+        profile.validate_packet_payloads(current)
 
 
 def test_cached_expected_rules_are_bound_to_source_root(tmp_path, monkeypatch):
-    current = layer_packets()
-    isolated.validate_packet_payloads(current)
+    current = packets()
+    profile.validate_packet_payloads(current)
     authority_dir = tmp_path / "architecture"
     authority_dir.mkdir()
-    (authority_dir / "isolated-offline-runner-authority.json").write_bytes(
-        isolated.regular_bytes(isolated.AUTHORITY_PATH))
+    (authority_dir / "projection-reuse-authority.json").write_bytes(
+        profile.regular_bytes(profile.AUTHORITY_PATH))
     (tmp_path / "task-packets").mkdir()
-    monkeypatch.setattr(isolated, "ROOT", tmp_path)
+    monkeypatch.setattr(profile, "ROOT", tmp_path)
     with pytest.raises(FileNotFoundError):
-        isolated.validate_packet_payloads(current)
+        profile.validate_packet_payloads(current)
 
 
 @pytest.mark.parametrize("fault", ["opaque", "cycle", "changed"])
@@ -293,61 +323,60 @@ def test_historical_traversal_leaves_predecessor_refusal_to_its_owner(fault):
         current["MET-001"] = cycle
     else:
         current["MET-001"]["objective"] += " changed"
-    previous = isolated.historical_catalog(current)
+    previous = profile.historical_catalog(current)
     assert previous["MET-001"] is current["MET-001"]
     with pytest.raises(ValueError, match="changed packet payload"):
-        isolated.validate_packet_payloads(isolated.successor.historical_catalog(current))
+        profile.validate_packet_payloads(current)
 
 
 @pytest.mark.parametrize("fault", ["payload", "yaml"])
 def test_historical_traversal_freshly_checks_its_own_packet(monkeypatch, fault):
     current = packets()
     if fault == "payload":
-        current[isolated.NEW_PACKET]["objective"] += " changed"
+        current[profile.NEW_PACKET]["objective"] += " changed"
     else:
-        original = isolated.regular_bytes
+        original = profile.regular_bytes
 
         def changed_reader(path):
             raw = original(path)
-            return raw + b" " if path == "task-packets/" + isolated.NEW_PACKET + ".yaml" else raw
+            return raw + b" " if path == "task-packets/" + profile.NEW_PACKET + ".yaml" else raw
 
-        monkeypatch.setattr(isolated, "regular_bytes", changed_reader)
+        monkeypatch.setattr(profile, "regular_bytes", changed_reader)
     with pytest.raises(ValueError):
-        isolated.historical_catalog(current)
+        profile.historical_catalog(current)
 
 
 def test_validator_checks_current_disk_packet_bytes_after_parsing(monkeypatch):
-    original = isolated.regular_bytes
+    original = profile.regular_bytes
 
     def changed_reader(path):
         raw = original(path)
         return raw + b" " if path == "task-packets/MET-001.yaml" else raw
 
-    monkeypatch.setattr(isolated, "regular_bytes", changed_reader)
+    monkeypatch.setattr(profile, "regular_bytes", changed_reader)
     with pytest.raises(ValueError, match="packet YAML drift"):
-        isolated.validate()
+        profile.validate()
 
 
 @pytest.mark.parametrize("mutation", ["append", "duplicate_literal"])
 def test_normalized_validator_pin_rejects_source_mutation(monkeypatch, mutation):
-    original = isolated.regular_bytes
+    original = profile.regular_bytes
 
     def changed_reader(path):
         raw = original(path)
-        if path == isolated.VALIDATOR_PATH:
+        if path == profile.VALIDATOR_PATH:
             raw += (b"\n# unreviewed\n" if mutation == "append" else
-                    b'\nAUTHORITY_SHA256 = "' + isolated.AUTHORITY_SHA256.encode() + b'"\n')
+                    b'\nAUTHORITY_SHA256 = "' + profile.AUTHORITY_SHA256.encode() + b'"\n')
         return raw
 
-    monkeypatch.setattr(isolated, "regular_bytes", changed_reader)
-    # The newer MET-VERIFY-003 layer refuses a mutated validator before this layer.
-    with pytest.raises(ValueError, match="unreviewed current source: scripts/validate_isolated_offline_runner.py"):
-        isolated.validate()
+    monkeypatch.setattr(profile, "regular_bytes", changed_reader)
+    with pytest.raises(ValueError, match="projection reuse validator drift"):
+        profile.validate()
 
 
 @pytest.mark.parametrize("fault", ["duplicate", "boolean", "negative", "out_of_bounds", "encoding", "empty", "overlap"])
 def test_inverse_parser_refuses_ambiguous_or_unbounded_hunks(monkeypatch, fault):
-    record = deepcopy(isolated.authority())
+    record = deepcopy(profile.authority())
     path = next(iter(record["changedFiles"]))
     hunks = record["changedFiles"][path]["reverseHunks"]
     if fault == "duplicate":
@@ -357,7 +386,7 @@ def test_inverse_parser_refuses_ambiguous_or_unbounded_hunks(monkeypatch, fault)
     elif fault == "negative":
         hunks[0]["at"] = -1
     elif fault == "out_of_bounds":
-        hunks[0]["at"] = isolated.MAX_FILE_BYTES + 1
+        hunks[0]["at"] = profile.MAX_FILE_BYTES + 1
     elif fault == "encoding":
         hunks[0]["insertBase64"] += "!"
     elif fault == "empty":
@@ -365,48 +394,48 @@ def test_inverse_parser_refuses_ambiguous_or_unbounded_hunks(monkeypatch, fault)
     else:
         hunks[:] = [{"at": 0, "removeBase64": "YWJj", "insertBase64": "eA=="},
                     {"at": 1, "removeBase64": "Yg==", "insertBase64": "eQ=="}]
-    monkeypatch.setattr(isolated, "authority", lambda: record)
+    monkeypatch.setattr(profile, "authority", lambda: record)
     with pytest.raises(ValueError):
-        isolated._rules()
+        profile._rules()
 
 
 def test_inverse_rules_and_packet_expectations_are_immutable():
-    path = next(iter(isolated._PROJECTION_RULES))
+    path = next(iter(profile._PROJECTION_RULES))
     with pytest.raises(TypeError):
-        isolated._PROJECTION_RULES[path] = {}
+        profile._PROJECTION_RULES[path] = {}
     with pytest.raises(TypeError):
-        isolated._PROJECTION_RULES[path]["afterSha256"] = "0" * 64
+        profile._PROJECTION_RULES[path]["afterSha256"] = "0" * 64
     with pytest.raises(TypeError):
-        isolated._PACKET_BYTE_RULES["MET-001"] = "0" * 64
+        profile._PACKET_BYTE_RULES["MET-001"] = "0" * 64
     with pytest.raises(TypeError):
-        isolated._packet_rules()["MET-001"] = ("0" * 64, "0" * 64)
-    raw = isolated.regular_bytes(path)
+        profile._packet_rules()["MET-001"] = ("0" * 64, "0" * 64)
+    raw = profile.regular_bytes(path)
     with pytest.raises(ValueError, match="inverse hunk current bytes"):
-        isolated._inverse(raw, ((0, b"not-current", b"old"),))
+        profile._inverse(raw, ((0, b"not-current", b"old"),))
     with pytest.raises(ValueError, match="inverse hunk bounds"):
-        isolated._inverse(raw, ((len(raw) + 1, b"", b"old"),))
+        profile._inverse(raw, ((len(raw) + 1, b"", b"old"),))
 
 
 def test_ambiguous_test_projections_are_refused(monkeypatch):
     path = changed_test()
-    current = isolated.regular_bytes(path)
-    before = isolated.historical_bytes(path, current)
-    rules = dict(isolated._PROJECTION_RULES)
+    current = profile.regular_bytes(path)
+    before = profile.historical_bytes(path, current)
+    rules = dict(profile._PROJECTION_RULES)
     rules["tests/ambiguous_unreviewed.py"] = rules[path]
-    monkeypatch.setattr(isolated, "_PROJECTION_RULES", MappingProxyType(rules))
+    monkeypatch.setattr(profile, "_PROJECTION_RULES", MappingProxyType(rules))
     with pytest.raises(ValueError, match="ambiguous current test"):
-        isolated.historical_test_bytes(current)
+        profile.historical_test_bytes(current)
     with pytest.raises(ValueError, match="ambiguous predecessor test"):
-        isolated.current_test_bytes(before)
+        profile.current_test_bytes(before)
 
 
 @pytest.mark.parametrize("raw", [b'{"a":1,"a":2}', b'{"a":NaN}', b'{"a":Infinity}'])
 def test_authority_parser_rejects_duplicate_and_nonfinite_data(raw):
     with pytest.raises(ValueError):
-        isolated.parse(raw)
+        profile.parse(raw)
 
 
-@pytest.mark.parametrize("route", [isolated.historical_test_bytes, isolated.current_test_bytes])
+@pytest.mark.parametrize("route", [profile.historical_test_bytes, profile.current_test_bytes])
 def test_mutable_test_input_is_refused(route):
     with pytest.raises(ValueError, match="test bytes required"):
         route(bytearray(b"mutable"))
@@ -415,28 +444,28 @@ def test_mutable_test_input_is_refused(route):
 @pytest.mark.parametrize("path", ["/absolute", "../outside", "a/../b", "a//b", "a\\b", "a\nb"])
 def test_untrusted_source_paths_are_refused(path):
     with pytest.raises(ValueError, match="relative source path"):
-        isolated.historical_bytes(path, b"input")
+        profile.historical_bytes(path, b"input")
 
 
 def test_unlinked_bounded_source_reads(tmp_path, monkeypatch):
-    monkeypatch.setattr(isolated, "ROOT", tmp_path)
+    monkeypatch.setattr(profile, "ROOT", tmp_path)
     original = tmp_path / "plain"
     original.write_bytes(b"source")
-    assert isolated.regular_bytes("plain") == b"source"
+    assert profile.regular_bytes("plain") == b"source"
     (tmp_path / "alias").symlink_to(original)
     with pytest.raises(ValueError, match="bounded regular source file"):
-        isolated.regular_bytes("alias")
+        profile.regular_bytes("alias")
     os.link(original, tmp_path / "hardlink")
     with pytest.raises(ValueError, match="bounded regular source file"):
-        isolated.regular_bytes("plain")
+        profile.regular_bytes("plain")
     (tmp_path / "outside").mkdir()
     (tmp_path / "ancestor").symlink_to(tmp_path / "outside", target_is_directory=True)
     with pytest.raises(ValueError, match="linked source ancestor"):
-        isolated.regular_bytes("ancestor/file")
+        profile.regular_bytes("ancestor/file")
 
 
 def test_source_read_detects_concurrent_change(tmp_path, monkeypatch):
-    monkeypatch.setattr(isolated, "ROOT", tmp_path)
+    monkeypatch.setattr(profile, "ROOT", tmp_path)
     target = tmp_path / "plain"
     target.write_bytes(b"source")
     original = Path.read_bytes
@@ -449,7 +478,7 @@ def test_source_read_detects_concurrent_change(tmp_path, monkeypatch):
 
     monkeypatch.setattr(Path, "read_bytes", racing_read)
     with pytest.raises(ValueError, match="source changed during read"):
-        isolated.regular_bytes("plain")
+        profile.regular_bytes("plain")
 
 
 def test_changed_historical_tests_retain_their_test_identities():
@@ -467,27 +496,25 @@ def test_changed_historical_tests_retain_their_test_identities():
         assert len(names) == len(set(names))
         return set(names)
 
-    for path in isolated._PROJECTION_RULES:
+    for path in profile._PROJECTION_RULES:
         if path.startswith("tests/") and path.endswith(".py"):
-            current = isolated.regular_bytes(path)
-            before = isolated.historical_bytes(path, current)
+            current = profile.regular_bytes(path)
+            before = profile.historical_bytes(path, current)
             assert identities(before) <= identities(current), path
 
 
 def test_new_projection_has_no_predecessor_validator_import():
-    tree = ast.parse(isolated.regular_bytes(isolated.VALIDATOR_PATH))
+    tree = ast.parse(profile.regular_bytes(profile.VALIDATOR_PATH))
     for node in ast.walk(tree):
         if isinstance(node, ast.ImportFrom):
             assert "validate_" not in (node.module or "")
         elif isinstance(node, ast.Import):
-            # Only the newer successor layer may be imported, never a predecessor.
-            assert all("validate_" not in alias.name or alias.name == "validate_isolated_network_canary"
-                       for alias in node.names)
+            assert all("validate_" not in alias.name for alias in node.names)
 
 
 def _count_authority_reads(monkeypatch):
     counts = {}
-    for module in (isolated.successor, isolated, portable, proof, recheck, verifier, linux, performance, runner):
+    for module in (profile, gprofile, iprofile, nprofile, resolution, account, canary, isolated, portable, proof, recheck, verifier, linux, performance, runner):
         original = module.regular_bytes
 
         def counted(relative, _module=module, _original=original):
@@ -503,7 +530,7 @@ def _count_authority_reads(monkeypatch):
 def test_every_newer_authority_is_read_exactly_once_per_route(monkeypatch, route):
     """Linear rechecks: one fresh complete read of each authority per public call."""
     path = changed_test()
-    raw = isolated.regular_bytes(path)
+    raw = profile.regular_bytes(path)
     before = runner.historical_bytes(path, raw)
     counts = _count_authority_reads(monkeypatch)
     calls = {
@@ -514,9 +541,59 @@ def test_every_newer_authority_is_read_exactly_once_per_route(monkeypatch, route
         "current_test": lambda: runner.current_test_bytes(before),
     }
     calls[route]()
-    expected = {module.__name__: 1 for module in (isolated.successor, isolated, portable, proof, recheck, verifier, linux, performance, runner)}
+    expected = {module.__name__: 1 for module in (profile, gprofile, iprofile, nprofile, resolution, account, canary, isolated, portable, proof, recheck, verifier, linux, performance, runner)}
     if route == "current_test":
         # The forward route reads this layer's newest bytes and then projects them forward once more.
         assert all(counts[name] >= 1 for name in expected) and set(counts) == set(expected)
     else:
         assert counts == expected
+
+
+REUSE_LOOPS = {"tests/test_credential_lifecycle.py": {"test_every_input_pin_is_enforced",
+                                                     "test_performance_predecessor_and_exact_twenty_commands"},
+               "tests/test_ci_performance.py": {"test_each_protected_input_rechecked_not_cached"}}
+
+
+def _validator_calls(nodes):
+    return [node for node in nodes if isinstance(node, ast.Call)
+            and (getattr(node.func, "id", "") or getattr(node.func, "attr", "")).startswith("validate_")]
+
+
+@pytest.mark.parametrize("path", sorted(REUSE_LOOPS))
+def test_shared_projections_stay_in_the_reviewed_loops_and_are_undone(path):
+    """Structure only; the authority's exact byte pins remain the primary guard of these loops."""
+    assert path in profile.authority()["changedFiles"]
+    tree = ast.parse(profile.regular_bytes(path))
+    helpers = [node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "share_exact_projections"]
+    assert len(helpers) == 1
+    helper = ast.unparse(helpers[0])
+    assert helper.count("monkeypatch.setattr(module, name, projected)") == 1
+    assert ast.unparse(helpers[0].args) == "monkeypatch, module, name='historical_bytes'"
+    assert "key = tuple(((type(arg), arg if isinstance(arg, (bytes, str)) else canonical(arg)) for arg in args))" in helper
+    users = set()
+    for node in tree.body:
+        if not (isinstance(node, ast.FunctionDef) and node.name.startswith("test_")):
+            continue
+        calls = [call for call in ast.walk(node) if isinstance(call, ast.Call)]
+        shares = [call.lineno for call in calls if getattr(call.func, "id", "") == "share_exact_projections"]
+        if not shares:
+            continue
+        users.add(node.name)
+        loops = [loop for loop in node.body if isinstance(loop, ast.For)]
+        undos = [call.lineno for call in calls if getattr(call.func, "attr", "") == "undo"]
+        assert len(loops) == 1 and len(undos) == 1
+        loop, undo = loops[0], undos[0]
+        # A positive validation under the wrapper precedes the loop.
+        assert any(max(shares) < call.lineno < loop.lineno for call in _validator_calls(calls))
+        # The wrapper is undone after the loop, and a fresh validation that must pass follows.
+        assert loop.end_lineno < undo
+        finals = [stmt for stmt in node.body if isinstance(stmt, ast.Assert) and stmt.lineno > undo
+                  and isinstance(stmt.test, ast.Compare) and _validator_calls(ast.walk(stmt.test))
+                  and ast.unparse(stmt.test).endswith("== []")]
+        assert finals and finals[-1] is node.body[-1]
+    assert users == REUSE_LOOPS[path]
+
+
+def test_validators_do_not_share_projections():
+    for path in sorted((profile.ROOT / "scripts").glob("*.py")):
+        assert b"share_exact_projections" not in path.read_bytes(), path.name

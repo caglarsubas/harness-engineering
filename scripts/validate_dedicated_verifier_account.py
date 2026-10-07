@@ -369,12 +369,12 @@ def validate() -> None:
             == record["validatorNormalizedSha256"], "verifier account validator drift")
     paths = sorted((ROOT / "task-packets").glob("*.yaml"))
     old = set(record["baselinePackets"])
-    require(len(paths) == 203
-            and {path.stem for path in paths} == old | {NEW_PACKET, successor.NEW_PACKET, successor.successor.NEW_PACKET, successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.NEW_PACKET},
-            "closed 203-packet catalog retaining the 199-packet checkpoint")
+    require(len(paths) == 204
+            and {path.stem for path in paths} == old | {NEW_PACKET, successor.NEW_PACKET, successor.successor.NEW_PACKET, successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.NEW_PACKET},
+            "closed 204-packet catalog retaining the 199-packet checkpoint")
     packets = {}
     for path in paths:
-        if path.stem in (successor.NEW_PACKET, successor.successor.NEW_PACKET, successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.NEW_PACKET):
+        if path.stem in (successor.NEW_PACKET, successor.successor.NEW_PACKET, successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.NEW_PACKET):
             continue
         raw = regular_bytes("task-packets/" + path.name)
         expected = record["packetSha256"] if path.stem == NEW_PACKET else record["baselinePackets"][path.stem]
@@ -412,4 +412,4 @@ def validate() -> None:
 
 if __name__ == "__main__":
     validate()
-    print("Dedicated verifier account contract valid: 203 current specifications; 199-packet checkpoint and exact 198-packet predecessor; the verifier host itself is not in this repository.")
+    print("Dedicated verifier account contract valid: 204 current specifications; 199-packet checkpoint and exact 198-packet predecessor; the verifier host itself is not in this repository.")

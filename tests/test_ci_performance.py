@@ -25,9 +25,29 @@ def authority():
     return packets, *load_performance_inputs(ROOT)
 
 
+def share_exact_projections(monkeypatch, module, name="historical_bytes"):
+    """Within one test, compute each projection once per exact input.
+
+    The key is each argument's type with its exact bytes (dictionaries as canonical JSON).
+    Every input the loop has not seen yet, including each mutation, reaches the real
+    projection; only repeats of identical unchanged inputs are shared. The caller proves
+    the wrapper transparent with a positive validation before its loop, then undoes it
+    and ends with a fully fresh validation.
+    """
+    real, seen = getattr(module, name), {}
+
+    def projected(*args):
+        key = tuple((type(arg), arg if isinstance(arg, (bytes, str)) else canonical(arg)) for arg in args)
+        if key not in seen:
+            seen[key] = real(*args)
+        return seen[key]
+
+    monkeypatch.setattr(module, name, projected)
+
+
 def test_exact_packet_and_preservation_authority(authority):
     packets, record, inputs, current = authority
-    assert len(packets) == CURRENT_PACKET_COUNT == 203
+    assert len(packets) == CURRENT_PACKET_COUNT == 204
     assert len(record["protectedFiles"]) == 236
     assert len(record["mechanicalTestUpdates"]) == 20
     assert digest(canonical(record)) == RECORD_SHA256
@@ -54,12 +74,17 @@ def test_record_cannot_be_widened(authority, field):
     assert validate_ci_performance(packets, changed, inputs, current)
 
 
-def test_each_protected_input_rechecked_not_cached(authority):
+def test_each_protected_input_rechecked_not_cached(authority, monkeypatch):
     packets, record, inputs, current = authority
+    from scripts import validate_ci_performance as performance
+    share_exact_projections(monkeypatch, performance)
+    assert validate_ci_performance(*authority) == []
     for path in {**record["protectedFiles"], **record["inputFiles"]}:
         changed = dict(inputs)
         changed[path] += b" "
         assert validate_ci_performance(packets, record, changed, current), path
+    monkeypatch.undo()
+    assert performance.historical_bytes.__module__ == "scripts.validate_credential_ordering"
     assert validate_ci_performance(*authority) == []
 
 
@@ -81,7 +106,7 @@ def test_assertion_or_skip_substitution_refuses(authority, change):
     _, record, inputs, current = authority
     path = "tests/test_task_packets.py"
     changed = dict(current)
-    target = b"assert len(files) == EXPECTED_PACKET_COUNT == 203"
+    target = b"assert len(files) == EXPECTED_PACKET_COUNT == 204"
     assert target in changed[path]
     changed[path] = changed[path].replace(target, change, 1)
     assert validate_test_preservation(record, inputs[BEFORE_PATH], changed)
@@ -141,7 +166,7 @@ def test_malformed_and_executable_tags_refuse_without_side_effects(raw):
 def test_full_current_corpus_matches_the_python_safe_constructor():
     paths = sorted({p for folder in ("architecture", "legal", "policies", "release", "task-packets")
                     for p in (ROOT / folder).rglob("*.yaml")})
-    assert len(paths) == 219
+    assert len(paths) == 220
     for path in paths:
         raw = path.read_bytes()
         assert shape(safe_yaml.safe_load(raw)) == shape(yaml.load(raw, Loader=yaml.SafeLoader)), path

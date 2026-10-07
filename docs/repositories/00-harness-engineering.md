@@ -1,6 +1,14 @@
 # Repository Plan: `Harness-Engineering`
 
-## Current source preparation — MET-ENFORCE-008
+## Current source preparation — MET-ENFORCE-009
+
+W02e: the closed SELinux matrix (19 domains, 56 types, 100 deny assertions over three boot states, genfscon labelling,
+per-source closures, the corrected F2 closure and the W02a label values, 1,766 vector checks) passed its third
+independent review with 2 MINOR and 4 NOTE findings carried; owner decision E1 (runtime BPF) recorded. No policy is
+written or loaded, and every E01-E12 obligation stays open. Alpha2 OPEN; 205 accepted plus ENFORCE-009 only. Native
+Linux, exact-main and tenant acceptance remain separate.
+
+## Historical ENFORCE-008 source preparation — MET-ENFORCE-008
 
 W02c: the closed I07 policy-writer channel contract (four operations on the I05 envelope rules, a policy-kind table
 derived from the W02g writer grants, a gate model that opens maintenance only when the A3 drain fence holds, 180
@@ -894,6 +902,7 @@ Every packet uses branch `codex/<packet-id>`, changes only named paths, opens a 
 77. `MET-ENFORCE-007`: publish the W02b I05 broker-gate channel wire contract with independent review; source only.
 78. `MET-PERF-031`: share exact history projections inside three mutation loops to cut required-verify time; tests only.
 79. `MET-ENFORCE-008`: publish the W02c I07 policy-writer channel contract and closed policy-kind table with independent review; source only.
+80. `MET-ENFORCE-009`: publish the W02e SELinux domain, type, boolean and permission matrix with independent review; source only.
 
 ## Testing, verification, and acceptance
 

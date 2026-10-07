@@ -1,6 +1,14 @@
 # Sol-High Task Packet Catalog
 
-## Current source preparation — MET-ENFORCE-008
+## Current source preparation — MET-ENFORCE-009
+
+W02e: the closed SELinux matrix (19 domains, 56 types, 100 deny assertions over three boot states, genfscon labelling,
+per-source closures, the corrected F2 closure and the W02a label values, 1,766 vector checks) passed its third
+independent review with 2 MINOR and 4 NOTE findings carried; owner decision E1 (runtime BPF) recorded. No policy is
+written or loaded, and every E01-E12 obligation stays open. Alpha2 OPEN; 205 accepted plus ENFORCE-009 only. Native
+Linux, exact-main and tenant acceptance remain separate.
+
+## Historical ENFORCE-008 source preparation — MET-ENFORCE-008
 
 W02c: the closed I07 policy-writer channel contract (four operations on the I05 envelope rules, a policy-kind table
 derived from the W02g writer grants, a gate model that opens maintenance only when the A3 drain fence holds, 180
@@ -1134,3 +1142,4 @@ acceptance is claimed. Alpha2 ONGOING; model-effort transition NOT_DUE.
 | 203 | `MET-ENFORCE-007` | `Harness-Engineering` | W02b I05 broker-gate channel wire contract with three independent review rounds |
 | 204 | `MET-PERF-031` | `Harness-Engineering` | Test-local exact projection sharing in three mutation loops to cut verify time |
 | 205 | `MET-ENFORCE-008` | `Harness-Engineering` | W02c I07 policy-writer channel contract and closed policy-kind table, independently reviewed |
+| 206 | `MET-ENFORCE-009` | `Harness-Engineering` | W02e SELinux domain, type, boolean and permission matrix with the F2 closure, independently reviewed |

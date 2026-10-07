@@ -1,0 +1,98 @@
+{
+  "schemaVersion": "planeon.internal.selinux-matrix-review/v1",
+  "round": 3,
+  "reviewDate": "2026-10-07",
+  "verdict": "PASS_FOR_SOURCE_PUBLICATION",
+  "subjectSha256": {
+    "README.md": "6cb8603b46a00cfd28b4d3921fe9af37062ccf42503aeda4494516cb1c5a8a4f",
+    "REVIEW_BRIEF.md": "2979cc1f0831df12626c6fed934952bfd29f3090844b18c219c3cf48f4884d9d",
+    "matrix.json": "febb802dc8821ccecc88394433d58981e72e2a27960efb8b351105016ff4da20",
+    "vectors.json": "9be9e5eb774d6934b96004804a22f8748acd4f0d97bd66f3914768f0b5023329",
+    "selinux_matrix.py": "8790658f525edb85ab4477b91d6b965241d3bf55c555b0d0e684de86caf5cf24"
+  },
+  "findings": [
+    {
+      "id": "K1",
+      "severity": "MINOR",
+      "location": "README 'Booleans and states' ('the maintenance domain ... cannot leave maintenance mode or re-enable containment') and decision 10; A62-A65; security.load_policy for planeon_maint_t in MAINTENANCE_BOOT",
+      "finding": "The per-boolean selinuxfs types are real. sel_make_bools labels each boolean file from the genfscon path '/booleans/<name>' (selinuxfs.c line 1390), and both sel_write_bool and sel_commit_bools_write check setbool. But the maintenance domain also holds load_policy in the maintenance boot, and a policy load carries every current boolean value into the new policy by name (services.c security_preserve_bools, called at line 2297). A62-A65 therefore bind only while the pinned policy is loaded. A different policy loaded in maintenance can grant the boolean-file write, and a later reload of the pinned policy keeps whatever values were set in between. So 'cannot leave maintenance mode' is true only under the pinned policy, and W01 §5.5's 'no planeon role can qualify in a maintenance boot' still depends on something outside these assertions. In addition, before the maintenance unit commits, the maintenance boot is in the initial (1,0,0) state, in which the role and containment transitions are allowed. Only systemd's target selection keeps them unused in that window.",
+      "requiredChange": "State that A62-A65 hold under the pinned policy. Either name a record-level discriminator of the boot entry (a W02a-F/T04 item, for example a measured boot-entry or command-line identity), or state explicitly that the maintenance domain, as the trusted installer, can reach any boolean state, and carry that to W01's record. Also state that the early window relies on the systemd target. Carry this finding; it does not block source publication."
+    },
+    {
+      "id": "K2",
+      "severity": "MINOR",
+      "location": "A59 (8 targets, one shared allow list of gate, broker, server, observer); README A56-A59 row",
+      "finding": "A59 checks one allow list, the union of four peers, against all eight planeon targets. It does not check the enumerated pairs. In-memory mutations that add procAccess for gate to server, gate to containment, or broker to maintenance pass all 100 assertions. The closure itself is pair-exact (allowed() is False for those pairs, so W03 still may not grant them), but the assertion and the README row ('every planeon domain's /proc only for the enumerated peers') claim more than A59 checks.",
+      "requiredChange": "Split A59 into one assertion per target, each allowing only that target's procAccess peers, and add a mutation check for a pair outside procAccess."
+    },
+    {
+      "id": "K3",
+      "severity": "NOTE",
+      "location": "A21 (ENROLLED_SEALED only), A22 (MAINTENANCE_BOOT); security.load_policy",
+      "finding": "allowed() closes load_policy in ENROLLED_CONTAINMENT for every source, but no assertion pins that. A mutation that grants init_t load_policy before the seal breaks no assertion. W01 S1/S4 implies that the reviewed policy is the only one loaded throughout the enrolled boot.",
+      "requiredChange": "Extend A21's load_policy and setenforce part to ENROLLED_CONTAINMENT, or add an assertion, with a mutation check."
+    },
+    {
+      "id": "K4",
+      "severity": "NOTE",
+      "location": "README 'Cgroup creation and labels'; selinux_matrix.py GENFS_CATEGORIES comment; vector S11",
+      "finding": "The conclusion is right: no planeon cgroup node carries a security xattr, because the root has none and nothing relabels, so named transitions never fire and the genfscon path rules decide. Three statements are imprecise. (1) 'cgroup2 is kernfs without xattr labels': kernfs supports security xattrs (SE_SBGENFS_XATTR, kernfs_xattr_set). (2) 'They need the cgroup_seclabel policy capability': hooks.c sets SE_SBGENFS for cgroup2 unconditionally, and cgroup_seclabel only makes cgroup2 relabelable through setxattr (selinux_is_genfs_special_handling, SBLABEL_MNT). With it enabled, an xattr would override the genfs label, so the relabel denials (A44 and no relabelfrom grants) carry weight. (3) The kernel checks 'dir create' against the type computed from the parent (selinux_determine_inode_label gives the slice or delegate type), not against the genfs type the new node receives. S11 names planeon_cgroup_gate_t as the object; the grants happen to coincide.",
+      "requiredChange": "Correct the three statements, and point S11 at planeon_cgroup_slice_t, or state which object is checked."
+    },
+    {
+      "id": "K5",
+      "severity": "NOTE",
+      "location": "README N7 requirement list; decisions 2 and 10; planeon_server_port_t",
+      "finding": "The round-3 choices imply further W03 requirements. (a) Containment pre-creates the delegated leaves and sets their limits, which enables controllers in the delegated service cgroup. Under cgroup v2's no-internal-process rule, systemd then cannot place the broker's main process in the service cgroup itself, so the unit needs DelegateSubgroup=broker (systemd 254 or later) or an equivalent. (b) The maintenance unit must write the planeon booleans while running in init_t itself; a refpolicy setsebool domain transition would be denied by A62. (c) planeon_server_port_t must be assigned by portcon from the signed port in the maintenance install.",
+      "requiredChange": "Add these three items to the W03 and T04 requirement list."
+    },
+    {
+      "id": "K6",
+      "severity": "NOTE",
+      "location": "REVIEW_BRIEF.md Q4",
+      "finding": "Q4 still refers to '54 assertions'; the matrix has 100.",
+      "requiredChange": "Update the count when the brief is next revised."
+    }
+  ],
+  "openItemStatus": {
+    "R6": {"status": "CLOSED", "basis": "Containment creates the role cgroups and leaves before the seal. Eight cgroup2 genfscon path rules label them whoever creates them, including systemd re-creation after the seal. planeon_cgroup_delegate_t covers the CLONE_INTO_CGROUP common-ancestor write. check_matrix refuses cgroup type transitions (M49) and requires one genfscon rule per cgroup type (M50). Notes in K4 and K5."},
+    "R7": {"status": "CLOSED", "basis": "Judging the statement only: E1 now states that CAP_SYS_ADMIN reaches program families that attach to no cgroup, the effective-set rule as in compute_effective_progs (MULTI, or non-MULTI where nothing below contributes), and that the census sees only cgroup attachments and only when it runs, so everything else rests on W03 and T04. That is accurate and complete."},
+    "N1": {"status": "CLOSED", "basis": "Genfscon path rules replace the inert type transitions. The longest-prefix behaviour is disclosed. Wording fixes in K4."},
+    "N2": {"status": "CLOSED", "basis": "planeon_server_port_t is bound by the server alone (A61). A grant to every domain does not reach a closed source (P09, M46, M47). The server's name_bind closure stays for every other port."},
+    "N3": {"status": "CLOSED", "basis": "See R7."},
+    "N4": {"status": "PARTIAL", "basis": "Per-boolean selinuxfs types and A62-A65 are correct under the pinned policy (S16-S18, M44). The maintenance domain's load_policy, together with boolean preservation across policy loads, leaves the claimed property open (K1)."},
+    "N5": {"status": "CLOSED", "basis": "Per-source execute_no_trans closures cover every type, declared or not, for the seven planeon sources (A60.15-A60.21, P07, P08, M48). Seccomp is named as a separate layer."},
+    "N6": {"status": "CLOSED", "basis": "Four named type transitions on tmpfs (fs_use_trans), consistent with the W02a and W02b/W02c paths: /run/planeon/live-proxy/effect-admission.sock, /run/planeon/maintenance/policy-write.sock and /run/planeon/containment/sealed, whose parent directories inherit planeon_run_t. The rules for the remaining socket files are assigned to W03."},
+    "N7": {"status": "CLOSED", "basis": "The four requirements are listed. Further items in K5."},
+    "N8": {"status": "CLOSED", "basis": "A59 now covers every planeon domain target (M45). The host-policy refusal has its own message (M42). The broker's delegate WRITE is disclosed as an upper bound. A59's pair-level weakness is reported separately as K2."},
+    "roundOneRegression": "None. R1-R5 and R8-R18 hold in the round-3 bytes. Verified by replaying all vectors and by re-running the round-2 probes: prog_run on self, init_t capabilities, entry into the host-policy domains, self /proc outside, per-source closures, fs-verity only in maintenance, seal marker states, execute_no_trans, nnp_transition, the pin genfscon rule, the complete classmap, signals, and the ip_local_port_range and unit-source requirements."
+  },
+  "questionAnswers": {
+    "Q0": "R6, R7, N1-N3 and N5-N8 are CLOSED; N4 is PARTIAL (K1). No closed round-1 finding reopened. The round2/ archive is byte-identical to the r2b bytes I reviewed in round 2.",
+    "Q1": "The matrix encodes W01 without unacknowledged weakening, and the deviations (E1 and decisions 1-10) are disclosed. One gap remains: §5.5's maintenance-boot property depends on load_policy staying within the pinned policy (K1).",
+    "Q2": "F2 is correct and rests on the controls that decide it: the label check on non-O_PATH opens, the precise may_decode_fh text, the procfs magic-link route, and MULTI detach needing a program fd guarded by prog_run, with no bpf_link. The genfscon labelling makes item 1 applicable on a real host. Nothing is overclaimed.",
+    "Q3": "Correct throughout. The new semantics are also right: genfscon on cgroup2, bpffs and selinuxfs; per-boolean file write together with setbool; named type transitions on tmpfs; a listener port type. Wording on cgroup_seclabel and the object of the create check in K4.",
+    "Q4": "The closure is sound and the 100 assertions hold. All 37 grant mutations break exactly the stated assertions, and 11 structural refusals match. The per-pair /proc property is weaker in its assertion than in its statement (K2), and load_policy before the seal is unasserted (K3). Nothing granted is forbidden by W01.",
+    "Q5": "The seven slot values fit the W02a patterns, w02a_slots equals the vectors, and all 15 W02a processLabel consts equal the matrix labels. The N1 confinement requirement holds, with confinement itself checked in T04. With genfscon, the cgroup slot labels would now actually appear on a host.",
+    "Q6": "All 1,716 access checks (276 True, 1,432 False, 8 None) and all 50 mutation checks reproduce exactly, with matrixError compared by string equality. The stated reasons are right except for S11's checked object (K4).",
+    "Q7": "No claim of a policy module, compiled or loaded policy, native behaviour, selected distribution, seccomp filter or E01-E12 proof. The one remaining overclaim, about the maintenance domain and booleans, is K1."
+  },
+  "modelExecution": "Verified SHA256SUMS in review-w02e-r3 (29 entries, all OK). Every snapshot file is byte-identical to the working tree, and round2/ equals the r2b subject bytes. Diffed the evaluator and matrix against round 2. Imported the r3 scripts/selinux_matrix.py with uv run --offline --frozen --no-sync python from the repository root. check_matrix passed, failed_assertions returned [] over 100 assertions, w02a_slots matched, all 1,716 access checks and all 50 mutation checks matched exactly. Probe scripts r2_p1_vectors.py, r2_p2_probe.py and r3_probe.py, kept under the scratchpad w02e-review-probes directory, checked regressions, server-port reachability, load_policy per state, boolean-file writes, execute_no_trans on undeclared types and cgroup create objects, and ran four in-memory mutations: three /proc pairs outside procAccess, and init_t load_policy before the seal. No repository file was modified.",
+  "sourcesRead": [
+    "Snapshot r3: architecture/selinux-matrix/{README.md, REVIEW_BRIEF.md, matrix.json, vectors.json, source-index.json, review-round1.json, review-round2.json, round1/*, round2/*}, scripts/selinux_matrix.py; the r2b subject files for the diff",
+    "Predecessors: i05-gate-channel/README.md and i07-policy-write/README.md (socket paths), native-profile-v2/README.md and qualification.schema.json, HOST_INTERFACE_SPEC.md §5.2-§5.5",
+    "Linux v6.12 from raw.githubusercontent.com/torvalds/linux/v6.12: security/selinux/ss/services.c (security_preserve_bools and its call in policy load) and security/selinux/selinuxfs.c (sel_make_bools genfs labelling, sel_write_bool and sel_commit_bools_write setbool checks), fetched this round; security/selinux/hooks.c (kernfs init, SE_SBGENFS flags, sblabel, may_create path), kernel/bpf/cgroup.c, kernel/bpf/token.c and fs/fhandle.c, re-read from earlier fetches",
+    "From my own knowledge of upstream, not re-read: systemd DelegateSubgroup= and the cgroup v2 no-internal-process rule, genfscon longest-prefix ordering in policydb, refpolicy setsebool domain transitions, tmpfs fs_use_trans labelling"
+  ],
+  "actions": {
+    "filesEdited": false,
+    "githubMutated": false,
+    "nativeActions": false,
+    "referenceModelExecuted": true,
+    "repositoryValidatorsRun": false,
+    "runnerActivated": false,
+    "testsRun": false,
+    "warmSourcesAccessed": false
+  },
+  "reviewLimit": "A source-only review against Linux v6.12 source and upstream knowledge. No policy was compiled, loaded or queried, and no host, systemd, runtime or distribution behaviour was observed. The owner's E1 choice was not judged, only its statement. This PASS is for source publication with K1-K6 carried, and N4 stays PARTIAL until K1 is addressed. It is not a policy module, native qualification, or authorization for anything installed."
+}

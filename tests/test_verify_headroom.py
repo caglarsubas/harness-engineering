@@ -592,9 +592,16 @@ def test_every_route_test_computes_only_its_own_inputs():
     (lambda s: s.replace('if route in ("current_test", "old_bytes") else None', 'if route == "old_bytes" else None', 1),
      "route-local setup before"),
     (lambda s: s.replace("    calls[route]()\n", "    calls[route]()\n    assert before is not None or route\n", 1),
-     "route-local setup before"),
+     "route refusal tail"),
     (lambda s: s.replace('    calls = {\n        "authority": profile.authority,\n', '    calls = {\n', 1),
      "route table matches the parameters"),
+    (lambda s: s.replace('lambda: wprofile.historical_bytes(roadmap.MASTER_PATH, old_wprofile)',
+                         'lambda: wprofile.historical_bytes(roadmap.MASTER_PATH, '
+                         'wprofile.historical_bytes(roadmap.MASTER_PATH, master_raw))', 1),
+     "route call computes nothing itself"),
+    (lambda s: s.replace('    with pytest.raises(ValueError, match="selinux matrix history authority digest"):\n'
+                         '        calls[route]()\n', '    calls[route]()\n', 1), "route refusal tail"),
+    (lambda s: s.replace('match="selinux matrix history authority digest"', 'match="digest"', 1), "route refusal tail"),
 ])
 def test_eager_or_misrouted_setup_is_refused(change, message):
     source = _route_source()
@@ -607,15 +614,21 @@ def test_eager_or_misrouted_setup_is_refused(change, message):
 def test_status_mutations_stub_only_a_replay_that_reads_no_status():
     test_raw = profile.reviewed_bytes(profile.STATUS_TEST_PATH)
     validator_raw = profile.reviewed_bytes(profile.STATUS_VALIDATOR_PATH)
-    assert profile.validate_status_stub(test_raw, validator_raw) is None
+    model_raw = profile.reviewed_bytes(profile.STATUS_MODEL_PATH)
+    assert profile.validate_status_stub(test_raw, validator_raw, model_raw) is None
     without_control = test_raw.replace(b"    assert profile.validate_native_profile() is None and len(replays) == 1\n", b"", 1)
     with pytest.raises(ValueError, match="stub only the vector replay"):
-        profile.validate_status_stub(without_control, validator_raw)
+        profile.validate_status_stub(without_control, validator_raw, model_raw)
+    for changed_model in (model_raw.replace(b"import hashlib\n", b"import hashlib\nimport pathlib\n", 1),
+                          model_raw + b"\n\ndef _peek(path):\n    return path.read_bytes()\n"):
+        assert changed_model != model_raw
+        with pytest.raises(ValueError, match="reads no status bytes"):
+            profile.validate_status_stub(test_raw, validator_raw, changed_model)
     head = b"def validate_vectors(schema: dict, vectors: dict, v1_schema: dict, v1_vectors: dict) -> int:\n"
     reading = validator_raw.replace(head, head + b"    _json_file(STATUS_PATH)\n", 1)
     assert reading != validator_raw
     with pytest.raises(ValueError, match="reads no status bytes"):
-        profile.validate_status_stub(test_raw, reading)
+        profile.validate_status_stub(test_raw, reading, model_raw)
 
 
 @pytest.mark.parametrize("old,new", [
@@ -633,34 +646,43 @@ def test_inventory_shares_only_exact_projections(old, new):
         profile.validate_inventory_projection(raw.replace(old, new, 1))
 
 
+def _unique_sources():
+    return profile.reviewed_bytes(profile.READINESS_PATH), profile.reviewed_bytes(profile.UNIQUE_PATH)
+
+
 def test_grouped_unique_items_matches_jsonschema_on_the_fixed_corpus():
-    assert profile.validate_schema_unique(profile.reviewed_bytes(profile.READINESS_PATH)) == 4016
+    assert profile.validate_schema_unique(*_unique_sources()) == 4026
 
 
-def test_a_wrong_unique_items_answer_is_refused(monkeypatch):
+@pytest.mark.parametrize("old,new,message", [
+    (b"        bucket.append(item)\n", b"        pass\n", "uniqueItems answer differs"),
+    (b"    if not plain_and_shallow(container):\n        return _utils.uniq(container)\n", b"",
+     "uniqueItems answer differs"),
+    (b"MAX_GROUPED_DEPTH = 100\n", b"MAX_GROUPED_DEPTH = 1000\n", "reaches every comparison path"),
+    (b'{"uniqueItems": unique_items}', b'{"uniqueItems": unique_items, "minItems": unique_items}',
+     "only uniqueItems differs"),
+    (b'JSONSCHEMA_VERSION = "4.24.0"', b'JSONSCHEMA_VERSION = "4.25.0"', "only uniqueItems differs"),
+])
+def test_a_changed_grouped_check_is_refused(old, new, message):
+    readiness, unique = _unique_sources()
+    assert unique.count(old) == 1
+    with pytest.raises(ValueError, match=message):
+        profile.validate_schema_unique(readiness, unique.replace(old, new))
+
+
+def test_the_reviewed_module_is_the_one_under_test(monkeypatch):
     from scripts import schema_unique
     monkeypatch.setattr(schema_unique, "unique", lambda container: True)
-    with pytest.raises(ValueError, match="uniqueItems answer differs"):
-        profile.validate_schema_unique(profile.reviewed_bytes(profile.READINESS_PATH))
+    assert profile.validate_schema_unique(*_unique_sources()) == 4026
 
 
 def test_readiness_must_build_the_grouped_validator():
-    raw = profile.reviewed_bytes(profile.READINESS_PATH)
+    raw, unique = _unique_sources()
     old = b"    validator = SchemaInstanceValidator(schema, format_checker=SCHEMA_FORMAT_CHECKER)\n"
     assert raw.count(old) == 1
     changed = raw.replace(old, b"    validator = jsonschema.Draft202012Validator(schema, format_checker=SCHEMA_FORMAT_CHECKER)\n")
     with pytest.raises(ValueError, match="use SchemaInstanceValidator"):
-        profile.validate_schema_unique(changed)
-
-
-def test_only_unique_items_may_differ_from_draft_2020_12(monkeypatch):
-    import jsonschema
-    from scripts import schema_unique
-    other = jsonschema.validators.extend(schema_unique.SchemaInstanceValidator,
-                                         {"minItems": lambda validator, value, instance, schema: iter(())})
-    monkeypatch.setattr(schema_unique, "SchemaInstanceValidator", other)
-    with pytest.raises(ValueError, match="only uniqueItems differs"):
-        profile.validate_schema_unique(profile.reviewed_bytes(profile.READINESS_PATH))
+        profile.validate_schema_unique(changed, unique)
 
 
 def test_grouped_validator_reports_exactly_draft_2020_12_errors():
@@ -688,4 +710,4 @@ def test_reviewed_bytes_is_the_only_semantic_read(monkeypatch):
     monkeypatch.setattr(profile, "reviewed_bytes", recorded)
     profile.validate_verify_headroom()
     assert seen == [*profile.ROUTE_TEST_PATHS, profile.STATUS_TEST_PATH, profile.STATUS_VALIDATOR_PATH,
-                    profile.LIFECYCLE_TEST_PATH, profile.READINESS_PATH]
+                    profile.STATUS_MODEL_PATH, profile.LIFECYCLE_TEST_PATH, profile.READINESS_PATH, profile.UNIQUE_PATH]

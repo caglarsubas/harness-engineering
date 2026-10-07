@@ -14,11 +14,11 @@ history chain, with four repeats that the checks do not need:
 - the credential-lifecycle inventory builder re-projected the same inputs per case (15 s); it
   now projects each exact input set once per module;
 - the readiness validator compared every pair of 3,868 objects for uniqueItems (4.2 s, three
-  runs per verify); `scripts/schema_unique.py` gives jsonschema's answer comparing only items
-  with an equal key.
+  runs per verify); `scripts/schema_unique.py` compares only items with an equal key and
+  gives jsonschema's answer wherever jsonschema returns one.
 
-No validator caches a projection or verdict, and every refusal is unchanged. MET-PERF-032 is
-the sole 208th specification.
+No validator caches a projection or verdict, and every refusal is unchanged wherever jsonschema
+returns an answer. MET-PERF-032 is the sole 208th specification.
 
 | Phase | ID | Status | Description / gate |
 |---|---|---|---|

@@ -21,7 +21,7 @@ except ImportError:
 
 ROOT = Path(__file__).resolve().parents[1]
 AUTHORITY_PATH = "architecture/verify-headroom-authority.json"
-AUTHORITY_SHA256 = "3fc081b7b9612199fa334c69a1e22dcde77b37b9ea9abd43bd544a9d4b73d65b"
+AUTHORITY_SHA256 = "38bcc3ee0474edc4c6643b8ad724bc7098ea48c7453379d0ed1c69c36bee8633"
 VALIDATOR_PATH = "scripts/validate_verify_headroom.py"
 BASE_COMMIT = "8f77c3ff5289bade9752f2a3200645180f473e13"
 NEW_PACKET = "MET-PERF-032"
@@ -339,7 +339,9 @@ def validate_packet_payloads(packets: dict[str, Any]) -> None:
 
 
 # MET-PERF-032 changes four test or validation paths so that required verify does less repeated work.
-# Each check reads this packet's reviewed bytes, so a later bridged successor projects its own edits away first.
+# Each check reads repository bytes only through reviewed_bytes, so a later bridged successor projects its own edits
+# away first. The uniqueItems check also runs the installed jsonschema, whose version it requires to be 4.24.0: the
+# equivalence holds for that version, so a jsonschema upgrade needs a new reviewed equivalence, not just new bytes.
 ROUTE_TEST = "test_newest_authority_is_freshly_checked_on_every_route"
 # Cheap reads shared by several routes and by later setup lines; every other setup value is route-local.
 ROUTE_SHARED = frozenset({"path", "raw", "master_raw"})
@@ -350,6 +352,12 @@ ROUTE_TEST_PATHS = tuple("tests/test_%s.py" % name for name in (
     "portable_warm_snapshot_temp", "projection_reuse", "sector_direction", "selinux_matrix", "verify_headroom"))
 STATUS_TEST_PATH = "tests/test_native_profile_v2.py"
 STATUS_VALIDATOR_PATH = "scripts/validate_native_profile_v2.py"
+STATUS_MODEL_PATH = "scripts/native_qualification_v2.py"
+# Names that would let the stubbed replay read files; the model may import only these modules.
+READ_NAMES = frozenset({"STATUS_PATH", "regular_bytes", "historical_bytes", "_json_file", "open", "ROOT", "Path",
+                        "os", "io", "pathlib", "subprocess", "socket", "shutil"})
+READ_ATTRIBUTES = frozenset({"read_bytes", "read_text", "open", "write_bytes", "write_text"})
+MODEL_IMPORTS = frozenset({"__future__", "hashlib", "ipaddress", "json", "datetime", "typing", "jsonschema"})
 LIFECYCLE_TEST_PATH = "tests/test_credential_lifecycle.py"
 READINESS_PATH = "scripts/validate_readiness.py"
 UNIQUE_PATH = "scripts/schema_unique.py"
@@ -385,6 +393,17 @@ UNIQUE_EDGE_CASES = ([1, True], [0, False], [1, 1.0], [[1], [True]], [{"a": 1}, 
                      [{"a": [1, {"b": None}]}, {"a": [1, {"b": None}]}], [{1: "x"}, {True: "x"}], [{"a": 1}, [1]],
                      [{}, []], [{"a": 1, "b": 2}, {"b": 2, "a": 1}], [None, {"a": None}, None], [{"a": "1"}, {"a": 1}],
                      [float("inf"), {"a": 1}, float("inf")], [[{"a": 1}], [{"a": 1}]], [{"a": 0}, {"a": False}])
+# The tail every route test shares after its route table; LAYER stands for the test's own layer alias.
+ROUTE_TAIL = '''calls[route]()
+original = LAYER.regular_bytes
+
+def changed_reader(relative):
+    value = original(relative)
+    return value + b" " if relative == LAYER.AUTHORITY_PATH else value
+monkeypatch.setattr(LAYER, "regular_bytes", changed_reader)
+with pytest.raises(ValueError, match=""):
+    calls[route]()
+'''
 UNIQUE_SEED = 20261007
 UNIQUE_CASES = 4000
 
@@ -435,7 +454,28 @@ def validate_route_locality(path: str, source: bytes) -> int:
     require(all(isinstance(key, ast.Constant) and type(key.value) is str for key in table.keys)
             and [key.value for key in table.keys] == routes, "route table matches the parameters: " + path)
     calls = {key.value: value for key, value in zip(table.keys, table.values)}
+    for route, call in calls.items():
+        # A call reads only prepared names, module constants and literals; nothing is computed inside it.
+        body = call.body if isinstance(call, ast.Lambda) else call
+        require((isinstance(call, ast.Lambda) and isinstance(body, ast.Call) and not body.keywords
+                 and isinstance(body.func, ast.Attribute) and isinstance(body.func.value, ast.Name)
+                 and all(isinstance(arg, (ast.Name, ast.Constant))
+                         or (isinstance(arg, ast.Attribute) and isinstance(arg.value, ast.Name)) for arg in body.args))
+                or (isinstance(call, ast.Attribute) and isinstance(call.value, ast.Name)),
+                "route call computes nothing itself: %s %s" % (route, path))
     setup, rest = function.body[:tables[0]], function.body[tables[0] + 1:]
+    tail = ast.Module(body=rest, type_ignores=[])
+    aliases = [node.value.value.id for node in rest[1:2] if isinstance(node, ast.Assign)
+               and isinstance(node.value, ast.Attribute) and isinstance(node.value.value, ast.Name)]
+    matches = [node for node in ast.walk(tail) if isinstance(node, ast.keyword) and node.arg == "match"]
+    require(len(aliases) == 1 and len(matches) == 1 and isinstance(matches[0].value, ast.Constant)
+            and type(matches[0].value.value) is str
+            and matches[0].value.value.endswith(" history authority digest"), "route refusal tail: " + path)
+    for node in ast.walk(tail):
+        if isinstance(node, ast.Name) and node.id == aliases[0]:
+            node.id = "LAYER"
+    matches[0].value = ast.Constant("")
+    require(ast.dump(tail) == ast.dump(ast.parse(ROUTE_TAIL)), "route refusal tail: " + path)
     local = 0
     for index, statement in enumerate(setup):
         require(isinstance(statement, ast.Assign) and len(statement.targets) == 1
@@ -459,7 +499,7 @@ def _segment(source: bytes, name: str, path: str) -> str:
     return ast.get_source_segment(text, _function(ast.parse(text), name, path))
 
 
-def validate_status_stub(test_source: bytes, validator_source: bytes) -> None:
+def validate_status_stub(test_source: bytes, validator_source: bytes, model_source: bytes) -> None:
     """Status mutations stub only the vector replay, after a positive control; the replay stays fully tested."""
     require(_segment(test_source, "test_contract_status_cannot_overclaim", STATUS_TEST_PATH) == STATUS_TEST
             and _segment(test_source, "test_every_vector_replays_to_its_pinned_result", STATUS_TEST_PATH)
@@ -474,7 +514,14 @@ def validate_status_stub(test_source: bytes, validator_source: bytes) -> None:
         reached.add(name)
         pending.extend(_names(functions[name]) & set(functions))
     used = set().union(*(_names(functions[name]) for name in reached))
-    require("validate_vectors" in reached and not used & {"STATUS_PATH", "regular_bytes", "_json_file", "open"},
+    require("validate_vectors" in reached and not used & READ_NAMES,
+            "the stubbed vector replay reads no status bytes")
+    model = ast.parse(model_source)
+    imported = {alias.name.split(".")[0] for node in ast.walk(model) if isinstance(node, ast.Import)
+                for alias in node.names} | {(node.module or "").split(".")[0] for node in ast.walk(model)
+                                           if isinstance(node, ast.ImportFrom)}
+    require(imported <= MODEL_IMPORTS and not _names(model) & READ_NAMES
+            and not {node.attr for node in ast.walk(model) if isinstance(node, ast.Attribute)} & READ_ATTRIBUTES,
             "the stubbed vector replay reads no status bytes")
     caller = functions["validate_native_profile"]
     require(sum(isinstance(node, ast.Call) and ast.unparse(node.func) == "validate_vectors"
@@ -504,7 +551,20 @@ def _unique_corpus() -> list[list]:
             return [value(depth + 1) for _ in range(rng.randint(0, 3))]
         return {rng.choice(("a", "b", "c", 1, True)): value(depth + 1) for _ in range(rng.randint(0, 3))}
 
+    from collections import OrderedDict
+    from datetime import date
+
+    class Items(list):
+        pass
+
+    nan, cycle = float("nan"), []
+    cycle.append(cycle)
+    deep = lambda depth: [deep(depth - 1)] if depth else 1
     corpus = [list(case) for case in UNIQUE_EDGE_CASES]
+    # Non-plain and deep values must take jsonschema's own check.
+    corpus += [[(1, 2), [1, 2], {}], [OrderedDict(a=1), {"a": 1}, []], [Items([1]), [1], {}], [{"d": date(2026, 1, 1)},
+               {"d": date(2026, 1, 1)}], [{"n": nan}, {"n": nan}, []], [nan, {}, nan], [cycle, {}],
+               [deep(150), deep(150), {}], [deep(150), deep(151), {}], [{"a": deep(120)}, {"a": deep(120)}]]
     for _ in range(UNIQUE_CASES):
         pool = [value(0) for _ in range(rng.randint(1, 3))]
         corpus.append([json.loads(json.dumps(rng.choice(pool))) if rng.random() < 0.5 else value(0)
@@ -512,47 +572,53 @@ def _unique_corpus() -> list[list]:
     return corpus
 
 
-def validate_schema_unique(readiness_source: bytes) -> int:
+def reviewed_module(source: bytes) -> dict[str, Any]:
+    """This packet's reviewed scripts/schema_unique.py, compiled into a fresh namespace."""
+    namespace: dict[str, Any] = {"__name__": "reviewed_schema_unique"}
+    exec(compile(source, UNIQUE_PATH, "exec"), namespace)
+    return namespace
+
+
+def validate_schema_unique(readiness_source: bytes, unique_source: bytes) -> int:
     """validate_schema_instance uses SchemaInstanceValidator, which differs from Draft 2020-12 only in
     uniqueItems and gives jsonschema's own answer on every corpus array."""
     from importlib.metadata import version
     import jsonschema
     from jsonschema import _utils
-    try:
-        import schema_unique
-    except ImportError:
-        from scripts import schema_unique
+    module = reviewed_module(unique_source)
     function = _function(ast.parse(readiness_source), "validate_schema_instance", READINESS_PATH)
     built = [ast.unparse(node.func) for node in ast.walk(function) if isinstance(node, ast.Call)
              and ast.unparse(node.func).endswith("Validator")]
     require(built == ["SchemaInstanceValidator"]
             and readiness_source.count(b"    from schema_unique import SchemaInstanceValidator\n") == 1,
             "readiness schema instances use SchemaInstanceValidator")
-    base, fast = jsonschema.Draft202012Validator, schema_unique.SchemaInstanceValidator
-    require(version("jsonschema") == schema_unique.JSONSCHEMA_VERSION == "4.24.0"
+    base, fast = jsonschema.Draft202012Validator, module["SchemaInstanceValidator"]
+    require(version("jsonschema") == module["JSONSCHEMA_VERSION"] == "4.24.0"
             and fast.META_SCHEMA == base.META_SCHEMA and fast.TYPE_CHECKER is base.TYPE_CHECKER
             and set(fast.VALIDATORS) == set(base.VALIDATORS)
             and {key for key in base.VALIDATORS if fast.VALIDATORS[key] is not base.VALIDATORS[key]} == {"uniqueItems"}
-            and fast.VALIDATORS["uniqueItems"] is schema_unique.unique_items, "only uniqueItems differs")
-    corpus, unsortable, duplicated = _unique_corpus(), 0, 0
+            and fast.VALIDATORS["uniqueItems"] is module["unique_items"], "only uniqueItems differs")
+    corpus, unsortable, duplicated, kept = _unique_corpus(), 0, 0, 0
     for container in corpus:
         expected = _utils.uniq(container)
-        require(schema_unique.unique(container) is expected, "uniqueItems answer differs: " + repr(container))
+        require(module["unique"](container) is expected, "uniqueItems answer differs: " + repr(container)[:200])
         try:
             sorted(_utils.unbool(item) for item in container)
         except TypeError:
             unsortable += 1
             duplicated += not expected
-    require(unsortable >= 1000 and duplicated >= 100, "the corpus reaches the grouped comparison")
+            kept += not module["plain_and_shallow"](container)
+    require(unsortable >= 1000 and duplicated >= 100 and kept >= 8, "the corpus reaches every comparison path")
     return len(corpus)
 
 
 def validate_verify_headroom() -> None:
     for path in ROUTE_TEST_PATHS:
         validate_route_locality(path, reviewed_bytes(path))
-    validate_status_stub(reviewed_bytes(STATUS_TEST_PATH), reviewed_bytes(STATUS_VALIDATOR_PATH))
+    validate_status_stub(reviewed_bytes(STATUS_TEST_PATH), reviewed_bytes(STATUS_VALIDATOR_PATH),
+                         reviewed_bytes(STATUS_MODEL_PATH))
     validate_inventory_projection(reviewed_bytes(LIFECYCLE_TEST_PATH))
-    validate_schema_unique(reviewed_bytes(READINESS_PATH))
+    validate_schema_unique(reviewed_bytes(READINESS_PATH), reviewed_bytes(UNIQUE_PATH))
 
 
 def validate() -> None:

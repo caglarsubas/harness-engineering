@@ -22,6 +22,26 @@ def authority():
     return packets, *load_credential_inputs(ROOT)
 
 
+def share_exact_projections(monkeypatch, module, name="historical_bytes"):
+    """Within one test, compute each projection once per exact input.
+
+    The key is each argument's type with its exact bytes (dictionaries as canonical JSON).
+    Every input the loop has not seen yet, including each mutation, reaches the real
+    projection; only repeats of identical unchanged inputs are shared. The caller proves
+    the wrapper transparent with a positive validation before its loop, then undoes it
+    and ends with a fully fresh validation.
+    """
+    real, seen = getattr(module, name), {}
+
+    def projected(*args):
+        key = tuple((type(arg), arg if isinstance(arg, (bytes, str)) else canonical(arg)) for arg in args)
+        if key not in seen:
+            seen[key] = real(*args)
+        return seen[key]
+
+    monkeypatch.setattr(module, name, projected)
+
+
 def seal(after, proof, before):
     after[DOC_PATH] = before[DOC_PATH].encode() + b"\n\nUNIT_ONLY synthetic accounting, not repaired behavior.\n```harness-credential-source-proof\n" + canonical(proof) + b"\n```\n"
 
@@ -87,7 +107,7 @@ def inventory(authority, stage=2):
 def test_exact_authority_and_all_historical_bytes(authority):
     packets, record, inputs = authority
     assert validate_credential_lifecycle(*authority) == []
-    assert len(packets) == 203 and len(record["protectedFiles"]) == 245
+    assert len(packets) == 204 and len(record["protectedFiles"]) == 245
     assert len(packets["MET-REPAIR-012"]["offlineAcceptanceCommands"]) == 20
     assert len(packets["CONF-FIX-005"]["allowedPaths"]) == 5
     assert len(packets["CONF-FIX-005"]["offlineAcceptanceCommands"]) == 8
@@ -214,13 +234,19 @@ def test_exact_packet_fields_cannot_expand(authority, packet, field, bad):
     assert validate_additions(packets)
 
 
-def test_every_input_pin_is_enforced(authority):
+def test_every_input_pin_is_enforced(authority, monkeypatch):
     packets, record, inputs = authority
+    from scripts import validate_credential_lifecycle as lifecycle
+    share_exact_projections(monkeypatch, lifecycle)
+    assert validate_credential_lifecycle(packets, record, inputs) == []
     for path in inputs:
         changed = dict(inputs); changed[path] += b"\n"
         assert validate_credential_lifecycle(packets, record, changed), path
+    monkeypatch.undo()
+    assert lifecycle.historical_bytes.__module__ == "scripts.validate_credential_ordering"
     changed = dict(packets); changed["UNDECLARED"] = {}
     assert validate_credential_lifecycle(changed, record, inputs)
+    assert validate_credential_lifecycle(packets, record, inputs) == []
 
 
 def test_no_snapshot_execution_network_or_native_claim():
@@ -250,8 +276,9 @@ def test_lifecycle_bounds_dispatch_and_evidence_are_not_flags(authority):
     assert "CONF-FIX-005" in current and "NOT_DUE" in current
 
 
-def test_performance_predecessor_and_exact_twenty_commands(authority):
+def test_performance_predecessor_and_exact_twenty_commands(authority, monkeypatch):
     packets, record, inputs = authority
+    from scripts import validate_ci_performance as performance
     from scripts.validate_ci_performance import (
         load_performance_inputs, validate_ci_performance, HISTORICAL_PACKET_COUNT,
     )
@@ -263,12 +290,18 @@ def test_performance_predecessor_and_exact_twenty_commands(authority):
     assert current == [*old[:-2], ["uv", "run", "--offline", "--frozen", "--no-sync", "python",
                                   "scripts/validate_credential_lifecycle.py"], *old[-2:]]
     args = load_performance_inputs(ROOT)
+    share_exact_projections(monkeypatch, performance)
+    share_exact_projections(monkeypatch, performance, "expected_current_test_source")
     assert validate_ci_performance(packets, *args) == []
     for name in ADDITIONS:
         changed = deepcopy(packets)
         changed[name]["allowedPaths"] = ["unreviewed/**"]
         assert validate_ci_performance(changed, *args)
+    monkeypatch.undo()
+    assert performance.historical_bytes.__module__ == "scripts.validate_credential_ordering"
+    assert performance.expected_current_test_source.__module__ == performance.__name__
     assert record["metaReconciliation"]["limits"] == {"nestedSeconds": 420, "hostSeconds": 900, "workflowMinutes": 15}
+    assert validate_ci_performance(packets, *args) == []
 
 
 def test_all_accepted_meta_test_bytes_and_ids_remain_accounted(authority):
@@ -308,7 +341,7 @@ def test_meta_reconciliation_has_no_broad_test_exemption(authority, kind):
     if kind == "before": before += b" "
     if kind == "record": record["metaReconciliation"]["currentPacketCount"] = 142
     if kind == "assertion":
-        target = b"assert len(paths) == 219"
+        target = b"assert len(paths) == 220"
         assert current[path].count(target) == 1
         current[path] = current[path].replace(target, b"assert True", 1)
     if kind == "skip": current[path] = b"import pytest\npytest.skip('fast', allow_module_level=True)\n" + current[path]

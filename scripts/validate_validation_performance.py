@@ -241,8 +241,8 @@ def validate_authority(packets, record, inputs):
                     "changed source: " + path)
         old = {Path(p).stem for p in record["protectedFiles"]
                if p.startswith("task-packets/") and p.endswith(".yaml")}
-        require(len(old) == 166 and len(packets) == 203
-                and set(packets) == old | set(NEW_IDS) | {"MET-PERF-009", "CONF-DIAG-003", "MET-PERF-011", "MET-PERF-012", "CONF-PERF-006", "CONF-BENCH-002", "MET-PERF-013", "CONF-BENCH-003", "MET-REPAIR-018", "CONF-FIX-008", "MET-PERF-014", "CONF-DIAG-004", "MET-PERF-015", "CONF-FIX-009", "MET-PERF-016", "MET-PERF-017", "MET-REPAIR-019", "MET-ENFORCE-001", "MET-PERF-018", "MET-ENFORCE-003", "CONF-FIX-010", "MET-UNIFY-005", "MET-RUNNER-001", "MET-PERF-028", "MET-LINUX-005", "MET-VERIFY-001", "MET-PERF-029", "MET-PERF-030", "MET-LINUX-006", "MET-VERIFY-002", "MET-VERIFY-003", "MET-VERIFY-004", "MET-ENFORCE-004", "MET-ENFORCE-005", "MET-ENFORCE-006", "MET-ENFORCE-007"}, "166 immutable predecessors plus one repair")
+        require(len(old) == 166 and len(packets) == 204
+                and set(packets) == old | set(NEW_IDS) | {"MET-PERF-009", "CONF-DIAG-003", "MET-PERF-011", "MET-PERF-012", "CONF-PERF-006", "CONF-BENCH-002", "MET-PERF-013", "CONF-BENCH-003", "MET-REPAIR-018", "CONF-FIX-008", "MET-PERF-014", "CONF-DIAG-004", "MET-PERF-015", "CONF-FIX-009", "MET-PERF-016", "MET-PERF-017", "MET-REPAIR-019", "MET-ENFORCE-001", "MET-PERF-018", "MET-ENFORCE-003", "CONF-FIX-010", "MET-UNIFY-005", "MET-RUNNER-001", "MET-PERF-028", "MET-LINUX-005", "MET-VERIFY-001", "MET-PERF-029", "MET-PERF-030", "MET-LINUX-006", "MET-VERIFY-002", "MET-VERIFY-003", "MET-VERIFY-004", "MET-ENFORCE-004", "MET-ENFORCE-005", "MET-ENFORCE-006", "MET-ENFORCE-007", "MET-PERF-031"}, "166 immutable predecessors plus one repair")
         for name in old | set(NEW_IDS):
             require(canonical(packets[name]) == canonical(safe_load(inputs["task-packets/" + name + ".yaml"])),
                     "raw packet parity")
@@ -285,5 +285,5 @@ if __name__ == "__main__":
     if errors:
         print("\n".join(errors))
         raise SystemExit(1)
-    print("Validation-performance authority valid:203 specifications;166 unchanged packets; "
+    print("Validation-performance authority valid:204 specifications;166 unchanged packets; "
           "bounded digest/fixture repair; no product or acceptance promotion.")

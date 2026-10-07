@@ -40,10 +40,11 @@ def test_exact_current_source_and_complete_history_chain():
     assert resolution.validate() is None
     current = packets()
     accepted = resolution.historical_catalog(current)
-    assert len(current) == 203 and len(accepted) == 199
+    assert len(current) == 204 and len(accepted) == 199
     assert set(accepted) == set(current) - {resolution.NEW_PACKET, resolution.successor.NEW_PACKET,
                                             resolution.successor.successor.NEW_PACKET,
-                                            resolution.successor.successor.successor.NEW_PACKET}
+                                            resolution.successor.successor.successor.NEW_PACKET,
+                                            resolution.successor.successor.successor.successor.NEW_PACKET}
     assert len(account.historical_catalog(current)) == 198
     assert len(canary.historical_catalog(current)) == 197
     assert len(isolated.historical_catalog(current)) == 196

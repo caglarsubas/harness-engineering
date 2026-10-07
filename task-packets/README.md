@@ -1,6 +1,16 @@
 # Sol-High Task Packet Catalog
 
-## Current source preparation — MET-ENFORCE-007
+## Current source preparation — MET-PERF-031
+
+MET-PERF-031 cuts required-verify time before the 900 s cap: MET-ENFORCE-007 verified in 786 s. Three inherited
+mutation loops re-projected identical unchanged inputs through the whole history chain on every validator call
+(162 s of 569 s of Mac pytest at packet 203). Within those three tests only, each projection is now computed once
+per exact input and reused; every mutation is still projected fresh and validated, and each test ends with a fresh
+validation. In the full Mac dry run the two files drop from 137 s to 46 s and
+from 62 s to 16 s. No validator, launcher, transport or acceptance semantics change; 64 inherited argv.
+Alpha2 OPEN; 203 accepted plus PERF-031 only. Native Linux, exact-main and tenant acceptance remain separate.
+
+## Historical ENFORCE-007 source preparation — MET-ENFORCE-007
 
 W02b: the closed I05 broker-gate channel contract (lockstep hash-chained frames, ten closed variants, an executable gate
 model with exact request rendering and a durable journal, the outcome mapping to I02 RESOURCE_RESULT, 161 vector checks)
@@ -1114,3 +1124,4 @@ acceptance is claimed. Alpha2 ONGOING; model-effort transition NOT_DUE.
 | 201 | `MET-ENFORCE-005` | `Harness-Engineering` | W02a v2 native qualification contract with three independent review rounds |
 | 202 | `MET-ENFORCE-006` | `Harness-Engineering` | W02g I06 backend profile: selection criteria, writer inventory and identity closure with two independent review rounds |
 | 203 | `MET-ENFORCE-007` | `Harness-Engineering` | W02b I05 broker-gate channel wire contract with three independent review rounds |
+| 204 | `MET-PERF-031` | `Harness-Engineering` | Test-local exact projection sharing in three mutation loops to cut verify time |

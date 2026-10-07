@@ -5,8 +5,8 @@
 Owner decision SECTOR-D1 (October 7, 2026): banking replaces white goods as the first and only release
 sector from Alpha 2 through the first enterprise release; [sector direction](../alpha-2/SECTOR_DIRECTION.md)
 gives every disposition. Source inventory, quality thresholds and fixtures move to banking customer, account
-and transaction sources with synthetic, non-personal data (`IND-BANK-002`). White-goods material below
-records what was specified or built; it is historical, not current direction.
+and transaction sources with synthetic, non-personal data (`IND-BANK-002`, `KN-BANK-001`). White-goods
+material below records what was specified or built; it is historical, not current direction.
 
 ## Current research-led implementation direction — MET-ADOPT-002
 

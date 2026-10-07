@@ -570,12 +570,9 @@ def test_every_newer_authority_is_read_exactly_once_per_route(monkeypatch, route
 
 
 def _era():
-    # This packet's reviewed bytes; a newer layer's test projects them back first.
+    # This packet's reviewed bytes through the validator's own reviewed_era (bridged by a newer layer).
     record = profile.authority()
-    era = {path: profile.regular_bytes(path) for path in record["changedFiles"]}
-    for path in (profile.SECTOR_PATH, profile.SECTOR_DOC):
-        era[path] = profile.regular_bytes(path)
-    return record, era
+    return record, profile.reviewed_era(record)
 
 
 def _with_sector(era, change):
@@ -586,18 +583,31 @@ def _with_sector(era, change):
     return changed
 
 
+def _successor(sector, name):
+    return next(row for row in sector["successorProposals"] if row["id"] == name)
+
+
 def test_decision_record_holds_against_accepted_packets_and_documents():
     record, era = _era()
-    assert profile.validate_sector_direction(record, era) is None
+    assert profile.validate_sector_direction(record, era, packets()) is None
     sector = json.loads(era[profile.SECTOR_PATH])
     assert sector["decision"]["sector"] == "banking" and sector["decision"]["previousSector"] == "white-goods"
     dispositions = sector["publishedPacketDispositions"]
     assert len(dispositions) == 28
-    assert {name for name, row in dispositions.items() if row["disposition"] == "ID_RETAINED_SCOPE_RETARGETED"} \
-        == {"CONF-A2-001", "CONF-WG-001"}
+    kinds = {}
+    for name, row in dispositions.items():
+        kinds.setdefault(row["disposition"], set()).add(name)
+    assert kinds["ID_RETAINED_SCOPE_RETARGETED"] == {"CONF-A2-001", "CONF-WG-001"}
+    assert kinds["SECTOR_FIXTURES_HISTORICAL"] == {"CTRL-002", "CTRL-006", "DIST-004", "KN-DATA-001", "KN-DATA-002",
+                                                   "KN-DOM-001", "KN-RET-001"}
+    assert kinds["OBLIGATION_TRANSFERRED"] == {"IND-001"} and kinds["HISTORICAL_EVIDENCE"] == {"CONF-002"}
+    assert len(kinds["WARM_SOURCE_REFERENCE_ONLY"]) == 11
     assert {row["id"]: row["supersedes"] for row in sector["successorProposals"]} == {
         "IND-BANK-001": "IND-WG-001", "IND-BANK-002": "IND-WG-002", "IND-BANK-003": "IND-WG-003",
-        "IND-BANK-004": "IND-WG-004", "IND-BANK-005": "IND-WG-005", "CONF-BANK-001": "CONF-A1-001"}
+        "IND-BANK-004": "IND-WG-004", "IND-BANK-005": "IND-WG-005", "KN-BANK-001": None, "CTRL-BANK-001": None,
+        "DIST-BANK-001": None, "CONF-BANK-001": "CONF-A1-001"}
+    assert {"CONF-LINUX-001", "CONF-FIX-001", "MET-A2-001", "TRUST-FIX-001", "IND-FIX-001"} \
+        <= set(sector["retainedPredecessorEdges"]["dependents"])
     assert set(sector["nonClaims"].values()) == {False}
 
 
@@ -607,54 +617,76 @@ def test_disposition_set_is_recomputed_from_the_accepted_packet_bytes():
     expected = {name for name in record["baselinePackets"]
                 if pattern.search(profile.regular_bytes("task-packets/" + name + ".yaml").decode("utf-8"))}
     assert set(json.loads(era[profile.SECTOR_PATH])["publishedPacketDispositions"]) == expected
-    for change in (lambda s: s["publishedPacketDispositions"].pop("KN-RET-001"),
+    for change in (lambda s: s["publishedPacketDispositions"].pop("KN-MEM-001"),
                    lambda s: s["publishedPacketDispositions"].update({"MET-001": {
-                       "disposition": "INCIDENTAL_REFERENCE", "note": "unrelated"}})):
+                       "disposition": "HISTORICAL_EVIDENCE", "note": "unrelated"}})):
         with pytest.raises(ValueError, match="exactly one disposition"):
-            profile.validate_sector_direction(record, _with_sector(era, change))
+            profile.validate_sector_direction(record, _with_sector(era, change), packets())
 
 
-@pytest.mark.parametrize("change", [
-    lambda s: s["decision"].update(sector="white-goods"),
-    lambda s: s["decision"].update(appliesThrough="ALPHA_4"),
-    lambda s: s["decision"].update(decidedBy="AGENT"),
-    lambda s: s["domainSemantic"].update(alphaCapability="White-goods glossary and ontology versions"),
-    lambda s: s.update(detectionPattern="(?i)white goods"),
-    lambda s: s["nonClaims"].update(bankingPackBuilt=True),
-    lambda s: s["nonClaims"].update(tenantAcceptance=True),
-    lambda s: s["nonClaims"].pop("catalogChanged"),
-    lambda s: s["successorProposals"][0].update(executionAuthority="GRANTED"),
-    lambda s: s["successorProposals"][0].update(publishedPacket=True),
-    lambda s: s["successorProposals"][0].update(id="IND-WG-001"),
-    lambda s: s["successorProposals"][1].update(predecessorIds=["IND-BANK-005"]),
-    lambda s: s["successorProposals"].pop(),
-    lambda s: s["publishedPacketDispositions"].update({"IND-WG-001": {
-        "disposition": "INCIDENTAL_REFERENCE", "note": "dropped"}}),
-    lambda s: s["publishedPacketDispositions"].update({"CONF-A2-001": {
-        "disposition": "SUPERSEDED_BY_SUCCESSOR", "successor": "IND-BANK-001"}}),
-    lambda s: s["publishedPacketDispositions"].update({"KN-DOM-001": {
-        "disposition": "ID_RETAINED_SCOPE_RETARGETED", "newScope": "banking", "requires": "a revised packet"}}),
-    lambda s: s["publishedPacketDispositions"]["CONF-WG-001"].update(requires="none"),
-    lambda s: s["unchangedAuthorities"].append("docs/MASTER_DEVELOPMENT_PLAN.md"),
-    lambda s: s["catalogFollowUps"].append({"path": "architecture/taxonomy.yaml", "current": "white-goods",
-                                            "proposed": "banking"}),
-    lambda s: s["directionDocs"].remove("docs/alpha-2/SECTOR_DIRECTION.md"),
-    lambda s: s.update(extra=True),
+@pytest.mark.parametrize("change,message", [
+    (lambda s: s["decision"].update(sector="white-goods"), "owner decision SECTOR-D1"),
+    (lambda s: s["decision"].update(appliesThrough="ALPHA_4"), "owner decision SECTOR-D1"),
+    (lambda s: s["decision"].update(decidedBy="AGENT"), "owner decision SECTOR-D1"),
+    (lambda s: s["decision"].update(statement="White goods stays first; banking later."), "owner decision SECTOR-D1"),
+    (lambda s: s["domainSemantic"].update(alphaCapability="White-goods glossary and ontology versions"),
+     "banking domain-semantic scope"),
+    (lambda s: s.update(detectionPattern="(?i)white goods"), "fixed white-goods detection pattern"),
+    (lambda s: s["nonClaims"].update(bankingPackBuilt=True), "cannot overclaim"),
+    (lambda s: s["nonClaims"].update(tenantAcceptance=True), "cannot overclaim"),
+    (lambda s: s["nonClaims"].pop("catalogChanged"), "cannot overclaim"),
+    (lambda s: s["successorProposals"][0].update(executionAuthority="GRANTED"), "without execution authority"),
+    (lambda s: s["successorProposals"][0].update(publishedPacket=True), "without execution authority"),
+    (lambda s: s["successorProposals"][0].update(id="IND-WG-001"), "new successor identity"),
+    (lambda s: s["successorProposals"][1].update(predecessorIds=["IND-BANK-005"]), "earlier successors"),
+    (lambda s: s["successorProposals"][0].update(predecessorIds=["IND-WG-001"]), "retained accepted packets"),
+    (lambda s: _successor(s, "CONF-BANK-001")["predecessorIds"].append("CONF-A1-001"), "retained accepted packets"),
+    (lambda s: s["successorProposals"].pop(), "names its successor"),
+    (lambda s: _successor(s, "KN-BANK-001")["replacesInputsOf"].remove("KN-RET-001"), "banking replacements: KN-RET-001"),
+    (lambda s: _successor(s, "CTRL-BANK-001").update(replacesInputsOf=["CTRL-002", "CTRL-006", "KN-MEM-001"]),
+     "banking replacements: KN-MEM-001|only historical sector fixtures"),
+    (lambda s: _successor(s, "DIST-BANK-001").update(replacesInputsOf=[]), "supersedes a packet or replaces"),
+    (lambda s: s["publishedPacketDispositions"].update({"IND-WG-001": {
+        "disposition": "WARM_SOURCE_REFERENCE_ONLY", "note": "dropped"}}), "supersedes a packet or replaces|one successor"),
+    (lambda s: s["publishedPacketDispositions"].update({"CONF-A2-001": {
+        "disposition": "SUPERSEDED_BY_SUCCESSOR", "successor": "IND-BANK-001"}}), "keep their IDs"),
+    (lambda s: s["publishedPacketDispositions"].update({"KN-DOM-001": {
+        "disposition": "ID_RETAINED_SCOPE_RETARGETED", "newScope": "banking", "requires": "a revision amendment"}}),
+     "keep their IDs"),
+    (lambda s: s["publishedPacketDispositions"]["CONF-WG-001"].update(requires="none"), "revision amendment"),
+    (lambda s: s["publishedPacketDispositions"]["IND-001"].update(transfersTo="IND-WG-001"), "transferred obligation"),
+    (lambda s: s["publishedPacketDispositions"].update({"KN-RET-001": {
+        "disposition": "WARM_SOURCE_REFERENCE_ONLY", "note": "only an example"}}), "only historical sector fixtures"),
+    (lambda s: s["retainedPredecessorEdges"]["dependents"].pop("CONF-LINUX-001"), "accepted edge"),
+    (lambda s: s["retainedPredecessorEdges"].update(rule="Superseded packets no longer count."), "accepted edge"),
+    (lambda s: s["unchangedAuthorities"].pop("architecture/services.yaml"), "closed unchanged authorities"),
+    (lambda s: s["unchangedAuthorities"]["architecture/providers.yaml"].update(sha256="0" * 64), "changed by this packet"),
+    (lambda s: s["unchangedAuthorities"]["docs/PROVIDER_MODULE_CATALOG.md"].update(role="SNAPSHOT"),
+     "changed by this packet"),
+    (lambda s: s["catalogFollowUps"].append({"path": "architecture/taxonomy.yaml", "current": "white-goods",
+                                             "proposed": "banking"}), "existing catalog text"),
+    (lambda s: s["catalogFollowUps"].append({"path": "architecture/providers.yaml",
+                                             "current": "white-goods.nonexistent", "proposed": "banking"}),
+     "existing catalog text"),
+    (lambda s: s["catalogFollowUps"].pop(), "has a follow-up: docs/PROVIDER_MODULE_CATALOG.md"),
+    (lambda s: s["directionDocs"].remove("docs/alpha-2/SECTOR_DIRECTION.md"), "sorted direction documents"),
+    (lambda s: s.update(extra=True), "closed sector direction record"),
 ])
-def test_record_cannot_overclaim_or_drop_a_disposition(change):
+def test_record_cannot_overclaim_or_drop_a_disposition(change, message):
     record, era = _era()
-    with pytest.raises(ValueError):
-        profile.validate_sector_direction(record, _with_sector(era, change))
+    with pytest.raises(ValueError, match=message):
+        profile.validate_sector_direction(record, _with_sector(era, change), packets())
 
 
 def test_duplicate_or_nonfinite_record_members_are_refused():
     record, era = _era()
     raw = era[profile.SECTOR_PATH]
-    for bad in (raw.replace(b'"schemaVersion"', b'"detectionPattern": "x", "schemaVersion"', 1),
-                raw.replace(b'"date": "2026-10-07"', b'"date": NaN', 1)):
+    for bad, message in ((raw.replace(b'"schemaVersion"', b'"detectionPattern": "x", "schemaVersion"', 1),
+                          "duplicate sector direction member"),
+                         (raw.replace(b'"date": "2026-10-07"', b'"date": NaN', 1), "nonfinite sector direction number")):
         assert bad != raw
-        with pytest.raises(ValueError):
-            profile.validate_sector_direction(record, {**era, profile.SECTOR_PATH: bad})
+        with pytest.raises(ValueError, match=message):
+            profile.validate_sector_direction(record, {**era, profile.SECTOR_PATH: bad}, packets())
 
 
 def test_master_plan_must_name_banking_as_the_first_sector_pack():
@@ -663,7 +695,7 @@ def test_master_plan_must_name_banking_as_the_first_sector_pack():
     old = master.replace(b"The first sector pack is banking", b"The first sector pack is white goods", 1)
     assert old != master
     with pytest.raises(ValueError, match="first sector pack"):
-        profile.validate_sector_direction(record, {**era, profile.MASTER_PATH: old})
+        profile.validate_sector_direction(record, {**era, profile.MASTER_PATH: old}, packets())
 
 
 @pytest.mark.parametrize("path", ["docs/repositories/03-mas-harness-industry-packs.md",
@@ -671,17 +703,37 @@ def test_master_plan_must_name_banking_as_the_first_sector_pack():
 def test_direction_documents_must_carry_the_decision(path):
     record, era = _era()
     assert path in era
-    with pytest.raises(ValueError, match="direction document"):
-        profile.validate_sector_direction(record, {**era, path: era[path].replace(b"SECTOR-D1", b"SECTOR-XX")})
+    with pytest.raises(ValueError, match="direction document names SECTOR-D1"):
+        profile.validate_sector_direction(record, {**era, path: era[path].replace(b"SECTOR-D1", b"SECTOR-XX")},
+                                          packets())
+
+
+def test_a_catalog_entry_without_a_follow_up_is_refused():
+    record, era = _era()
+    path = "architecture/services.yaml"
+    added = era[path] + b"# industry.white-goods-extra\n"
+    sector = json.loads(era[profile.SECTOR_PATH])
+    sector["unchangedAuthorities"][path]["sha256"] = profile.digest(added)
+    changed = {**era, path: added, profile.SECTOR_PATH: json.dumps(sector).encode("utf-8")}
+    with pytest.raises(ValueError, match="has a follow-up: architecture/services.yaml"):
+        profile.validate_sector_direction(record, changed, packets())
 
 
 def test_catalogs_snapshots_and_published_packets_stay_untouched():
-    record = profile.authority()
-    sector = json.loads(profile.regular_bytes(profile.SECTOR_PATH))
-    for path in sector["unchangedAuthorities"]:
+    record, era = _era()
+    sector = json.loads(era[profile.SECTOR_PATH])
+    assert set(sector["unchangedAuthorities"]) == set(profile.REQUIRED_UNCHANGED)
+    for path, row in sector["unchangedAuthorities"].items():
         assert path not in record["changedFiles"] and path not in record["newFiles"]
-        raw = profile.regular_bytes(path)
-        assert profile.historical_bytes(path, raw) == raw
+        assert profile.digest(era[path]) == row["sha256"]
     assert not any(path.startswith("task-packets/") and path != "task-packets/README.md"
                    for path in record["changedFiles"])
     assert set(record["newFiles"]) == {profile.SECTOR_PATH, profile.SECTOR_DOC, "tests/test_sector_direction.py"}
+
+
+def test_reviewed_bytes_is_the_only_era_read():
+    # A newer layer's bridge wraps reviewed_bytes; every era read must go through it.
+    tree = ast.parse(profile.regular_bytes(profile.VALIDATOR_PATH))
+    era = next(node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "reviewed_era")
+    calls = {getattr(node.func, "id", "") for node in ast.walk(era) if isinstance(node, ast.Call)}
+    assert "reviewed_bytes" in calls and "regular_bytes" not in calls

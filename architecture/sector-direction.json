@@ -36,65 +36,77 @@
   },
   "CONF-A2-001": {
    "disposition": "ID_RETAINED_SCOPE_RETARGETED",
-   "newScope": "Certify a cited read-only banking agent using local inference, retrieval, protocol gateway, durable orchestration and failure injection; the revision replaces the CONF-A1-001 predecessor with CONF-BANK-001.",
-   "requires": "A revised packet that restates the banking scope is required before dispatch; the published YAML stays byte-identical."
+   "newScope": "Certify a cited read-only banking agent using local inference, retrieval, protocol gateway, durable orchestration and failure injection, with CONF-BANK-001 and KN-BANK-001 in place of the white-goods journey and retrieval vectors.",
+   "requires": "A revision amendment, published by its own packet and independent review in the style of architecture/*-amendment.json, must bind the kept ID to the banking scope before dispatch; the published YAML stays byte-identical."
   },
   "CONF-A3-001": {
-   "disposition": "INCIDENTAL_REFERENCE",
-   "note": "Names white goods only as an example profile or fixture; successors use banking."
+   "disposition": "WARM_SOURCE_REFERENCE_ONLY",
+   "note": "Names white goods only in reference-only warm-source test paths (tests/reference_labs/test_white_goods_*.py); no scope change."
   },
   "CONF-AIR-001": {
-   "disposition": "INCIDENTAL_REFERENCE",
-   "note": "Names white goods only as an example profile or fixture; successors use banking."
+   "disposition": "WARM_SOURCE_REFERENCE_ONLY",
+   "note": "Names white goods only in reference-only warm-source test paths (tests/reference_labs/test_white_goods_*.py); no scope change."
   },
   "CONF-K3S-001": {
-   "disposition": "INCIDENTAL_REFERENCE",
-   "note": "Names white goods only as an example profile or fixture; successors use banking."
+   "disposition": "WARM_SOURCE_REFERENCE_ONLY",
+   "note": "Names white goods only in reference-only warm-source test paths (tests/reference_labs/test_white_goods_*.py); no scope change."
   },
   "CONF-WG-001": {
    "disposition": "ID_RETAINED_SCOPE_RETARGETED",
    "newScope": "Execute the complete banking enterprise journey and create an unsigned banking tenant-acceptance candidate; the WG prefix is historical.",
-   "requires": "A revised packet that restates the banking scope is required before dispatch; the published YAML stays byte-identical."
+   "requires": "A revision amendment, published by its own packet and independent review in the style of architecture/*-amendment.json, must bind the kept ID to the banking scope before dispatch; the published YAML stays byte-identical."
   },
   "CTRL-002": {
-   "disposition": "INCIDENTAL_REFERENCE",
-   "note": "Names white goods only as an example profile or fixture; successors use banking."
+   "disposition": "SECTOR_FIXTURES_HISTORICAL",
+   "note": "Signed pack intake and guided journey kept; the white-goods 0.5.0 acceptance baseline and release intake binding are historical.",
+   "bankingInputs": [
+    "CTRL-BANK-001",
+    "IND-BANK-005"
+   ]
   },
   "CTRL-006": {
-   "disposition": "INCIDENTAL_REFERENCE",
-   "note": "Names white goods only as an example profile or fixture; successors use banking."
+   "disposition": "SECTOR_FIXTURES_HISTORICAL",
+   "note": "Alpha 1 control-plane closure kept; the white-goods end-to-end journey spec, make target and evidence are historical.",
+   "bankingInputs": [
+    "CTRL-BANK-001"
+   ]
   },
   "DIST-004": {
-   "disposition": "INCIDENTAL_REFERENCE",
-   "note": "Names white goods only as an example profile or fixture; successors use banking."
+   "disposition": "SECTOR_FIXTURES_HISTORICAL",
+   "note": "Modular Helm profiles kept; the white-goods provider-profile recommendations and pack digest binding are historical.",
+   "bankingInputs": [
+    "DIST-BANK-001",
+    "IND-BANK-004"
+   ]
   },
   "DIST-AIR-001": {
-   "disposition": "INCIDENTAL_REFERENCE",
-   "note": "Names white goods only as an example profile or fixture; successors use banking."
+   "disposition": "WARM_SOURCE_REFERENCE_ONLY",
+   "note": "Names white goods only in reference-only warm-source test paths (tests/reference_labs/test_white_goods_*.py); no scope change."
   },
   "EXEC-002": {
-   "disposition": "INCIDENTAL_REFERENCE",
-   "note": "Names white goods only as an example profile or fixture; successors use banking."
+   "disposition": "WARM_SOURCE_REFERENCE_ONLY",
+   "note": "Names white goods only in reference-only warm-source test paths (tests/reference_labs/test_white_goods_*.py); no scope change."
   },
   "EXEC-ORCH-001": {
-   "disposition": "INCIDENTAL_REFERENCE",
-   "note": "Names white goods only as an example profile or fixture; successors use banking."
+   "disposition": "WARM_SOURCE_REFERENCE_ONLY",
+   "note": "Names white goods only in reference-only warm-source test paths (tests/reference_labs/test_white_goods_*.py); no scope change."
   },
   "EXEC-PROT-001": {
-   "disposition": "INCIDENTAL_REFERENCE",
-   "note": "Names white goods only as an example profile or fixture; successors use banking."
+   "disposition": "WARM_SOURCE_REFERENCE_ONLY",
+   "note": "Names white goods only in reference-only warm-source test paths (tests/reference_labs/test_white_goods_*.py); no scope change."
   },
   "EXEC-SBX-001": {
-   "disposition": "INCIDENTAL_REFERENCE",
-   "note": "Names white goods only as an example profile or fixture; successors use banking."
+   "disposition": "WARM_SOURCE_REFERENCE_ONLY",
+   "note": "Names white goods only in reference-only warm-source test paths (tests/reference_labs/test_white_goods_*.py); no scope change."
   },
   "EXEC-TOOL-001": {
-   "disposition": "INCIDENTAL_REFERENCE",
-   "note": "Names white goods only as an example profile or fixture; successors use banking."
+   "disposition": "WARM_SOURCE_REFERENCE_ONLY",
+   "note": "Names white goods only in reference-only warm-source test paths (tests/reference_labs/test_white_goods_*.py); no scope change."
   },
   "IND-001": {
-   "disposition": "INCIDENTAL_REFERENCE",
-   "note": "Names white goods only as an example profile or fixture; successors use banking."
+   "disposition": "OBLIGATION_TRANSFERRED",
+   "transfersTo": "IND-BANK-001",
+   "note": "Industry-pack framework kept; its rule that the sector ontology packet admits and locks RDFLib and pySHACL before claiming SHACL validation now applies to IND-BANK-001."
   },
   "IND-WG-001": {
    "disposition": "SUPERSEDED_BY_SUCCESSOR",
@@ -117,28 +129,43 @@
    "successor": "IND-BANK-005"
   },
   "KN-002": {
-   "disposition": "INCIDENTAL_REFERENCE",
-   "note": "Names white goods only as an example profile or fixture; successors use banking."
+   "disposition": "WARM_SOURCE_REFERENCE_ONLY",
+   "note": "Names white goods only in reference-only warm-source test paths (tests/reference_labs/test_white_goods_*.py); no scope change."
   },
   "KN-DATA-001": {
-   "disposition": "INCIDENTAL_REFERENCE",
-   "note": "Names white goods only as an example profile or fixture; successors use banking."
+   "disposition": "SECTOR_FIXTURES_HISTORICAL",
+   "note": "Sector-neutral connector and ingest core kept; its four synthetic white-goods records are historical.",
+   "bankingInputs": [
+    "IND-BANK-002",
+    "KN-BANK-001"
+   ]
   },
   "KN-DATA-002": {
    "disposition": "SECTOR_FIXTURES_HISTORICAL",
-   "note": "Sector-neutral service scope retained; white-goods parity fixtures are historical and banking fixtures come from IND-BANK-001, IND-BANK-002 and IND-BANK-005."
+   "note": "Sector-neutral readiness processor kept; its white-goods source fixtures are historical.",
+   "bankingInputs": [
+    "IND-BANK-002",
+    "KN-BANK-001"
+   ]
   },
   "KN-DOM-001": {
    "disposition": "SECTOR_FIXTURES_HISTORICAL",
-   "note": "Sector-neutral service scope retained; white-goods parity fixtures are historical and banking fixtures come from IND-BANK-001, IND-BANK-002 and IND-BANK-005."
+   "note": "Sector-neutral domain service kept; its white-goods ontology parity fixtures are historical.",
+   "bankingInputs": [
+    "IND-BANK-001",
+    "KN-BANK-001"
+   ]
   },
   "KN-MEM-001": {
-   "disposition": "INCIDENTAL_REFERENCE",
-   "note": "Names white goods only as an example profile or fixture; successors use banking."
+   "disposition": "WARM_SOURCE_REFERENCE_ONLY",
+   "note": "Names white goods only in reference-only warm-source test paths (tests/reference_labs/test_white_goods_*.py); no scope change."
   },
   "KN-RET-001": {
-   "disposition": "INCIDENTAL_REFERENCE",
-   "note": "Names white goods only as an example profile or fixture; successors use banking."
+   "disposition": "SECTOR_FIXTURES_HISTORICAL",
+   "note": "Sector-neutral retrieval kept; its white-goods cited retrieval vectors are historical, and the banking revision of CONF-A2-001 needs banking vectors.",
+   "bankingInputs": [
+    "KN-BANK-001"
+   ]
   }
  },
  "successorProposals": [
@@ -147,10 +174,13 @@
    "ownerRepoId": "R03",
    "phase": "ALPHA_2",
    "supersedes": "IND-WG-001",
+   "replacesInputsOf": [
+    "KN-DOM-001"
+   ],
    "predecessorIds": [
     "IND-001"
    ],
-   "description": "Define the banking business objectives, roles, glossary and ontology (parties, products, accounts, transactions, channels, credit, risk and compliance concepts), KPIs and representative answer sets.",
+   "description": "Define the banking business objectives, roles, glossary and ontology (parties, products, accounts, transactions, channels, credit, risk and compliance concepts), KPIs and representative answer sets; admit and lock RDFLib and pySHACL before claiming SHACL validation.",
    "status": "WAITING_PACKET_PUBLICATION",
    "publishedPacket": false,
    "executionAuthority": "NONE"
@@ -160,6 +190,10 @@
    "ownerRepoId": "R03",
    "phase": "ALPHA_2",
    "supersedes": "IND-WG-002",
+   "replacesInputsOf": [
+    "KN-DATA-001",
+    "KN-DATA-002"
+   ],
    "predecessorIds": [
     "IND-BANK-001"
    ],
@@ -173,6 +207,7 @@
    "ownerRepoId": "R03",
    "phase": "ALPHA_2",
    "supersedes": "IND-WG-003",
+   "replacesInputsOf": [],
    "predecessorIds": [
     "IND-BANK-002"
    ],
@@ -186,11 +221,14 @@
    "ownerRepoId": "R03",
    "phase": "ALPHA_2",
    "supersedes": "IND-WG-004",
+   "replacesInputsOf": [
+    "DIST-004"
+   ],
    "predecessorIds": [
     "IND-BANK-003",
     "CON-004"
    ],
-   "description": "Publish deterministic banking provider recommendations and explicit-selector questionnaire choices for the minimal, regulated OpenShift, silo and air-gap environments.",
+   "description": "Publish deterministic banking provider recommendations and explicit-selector questionnaire choices for minimal ARM64, minimal AMD64, regulated OpenShift, silo and air-gap environments.",
    "status": "WAITING_PACKET_PUBLICATION",
    "publishedPacket": false,
    "executionAuthority": "NONE"
@@ -200,6 +238,9 @@
    "ownerRepoId": "R03",
    "phase": "ALPHA_2",
    "supersedes": "IND-WG-005",
+   "replacesInputsOf": [
+    "CTRL-002"
+   ],
    "predecessorIds": [
     "IND-BANK-004"
    ],
@@ -209,10 +250,69 @@
    "executionAuthority": "NONE"
   },
   {
+   "id": "KN-BANK-001",
+   "ownerRepoId": "R07",
+   "phase": "ALPHA_2",
+   "supersedes": null,
+   "replacesInputsOf": [
+    "KN-DATA-001",
+    "KN-DATA-002",
+    "KN-DOM-001",
+    "KN-RET-001"
+   ],
+   "predecessorIds": [
+    "KN-DOM-001",
+    "KN-DATA-002",
+    "KN-RET-001",
+    "IND-BANK-001",
+    "IND-BANK-002"
+   ],
+   "description": "Add banking ontology parity, synthetic non-personal source records and cited retrieval vectors to the domain, data and retrieval services, replacing their white-goods fixtures.",
+   "status": "WAITING_PACKET_PUBLICATION",
+   "publishedPacket": false,
+   "executionAuthority": "NONE"
+  },
+  {
+   "id": "CTRL-BANK-001",
+   "ownerRepoId": "R04",
+   "phase": "ALPHA_2",
+   "supersedes": null,
+   "replacesInputsOf": [
+    "CTRL-002",
+    "CTRL-006"
+   ],
+   "predecessorIds": [
+    "CTRL-006",
+    "IND-BANK-005"
+   ],
+   "description": "Bind the signed banking pack release as the control-plane intake acceptance baseline and add the banking guided-session end-to-end journey, make target and evidence.",
+   "status": "WAITING_PACKET_PUBLICATION",
+   "publishedPacket": false,
+   "executionAuthority": "NONE"
+  },
+  {
+   "id": "DIST-BANK-001",
+   "ownerRepoId": "R11",
+   "phase": "ALPHA_2",
+   "supersedes": null,
+   "replacesInputsOf": [
+    "DIST-004"
+   ],
+   "predecessorIds": [
+    "DIST-004",
+    "IND-BANK-004"
+   ],
+   "description": "Publish the banking provider-profile recommendations in the modular Helm profiles and bind the banking pack digest.",
+   "status": "WAITING_PACKET_PUBLICATION",
+   "publishedPacket": false,
+   "executionAuthority": "NONE"
+  },
+  {
    "id": "CONF-BANK-001",
    "ownerRepoId": "R12",
    "phase": "ALPHA_2",
    "supersedes": "CONF-A1-001",
+   "replacesInputsOf": [],
    "predecessorIds": [
     "CONF-002",
     "CTRL-007",
@@ -220,14 +320,67 @@
     "TRUST-OBS-001",
     "OP-003",
     "DIST-004",
-    "IND-BANK-005"
+    "IND-BANK-005",
+    "KN-BANK-001",
+    "CTRL-BANK-001",
+    "DIST-BANK-001"
    ],
-   "description": "Certify the banking journey from questionnaire through business, domain, data readiness, signed bundle and installed foundation harnesses.",
+   "description": "Certify the banking journey from questionnaire through business, domain, data readiness, signed bundle and installed foundation harnesses; the banking inputs of KN-BANK-001, CTRL-BANK-001 and DIST-BANK-001 complement its white-goods-era intake, data and bundle predecessors.",
    "status": "WAITING_PACKET_PUBLICATION",
    "publishedPacket": false,
    "executionAuthority": "NONE"
   }
  ],
+ "retainedPredecessorEdges": {
+  "rule": "Superseded for release scope does not reopen or invalidate accepted predecessor edges: the historical acceptance of IND-WG-001 to IND-WG-005 and CONF-A1-001 still satisfies every dependent listed here.",
+  "dependents": {
+   "CONF-A2-001": [
+    "CONF-A1-001"
+   ],
+   "CONF-FIX-001": [
+    "CONF-A1-001"
+   ],
+   "CONF-LINUX-001": [
+    "CONF-A1-001"
+   ],
+   "CTRL-002": [
+    "IND-WG-005"
+   ],
+   "DIST-004": [
+    "IND-WG-004"
+   ],
+   "IND-FIX-001": [
+    "IND-WG-005"
+   ],
+   "IND-WG-002": [
+    "IND-WG-001"
+   ],
+   "IND-WG-003": [
+    "IND-WG-002"
+   ],
+   "IND-WG-004": [
+    "IND-WG-003"
+   ],
+   "IND-WG-005": [
+    "IND-WG-004"
+   ],
+   "KN-DATA-001": [
+    "IND-WG-002"
+   ],
+   "KN-DATA-002": [
+    "IND-WG-002"
+   ],
+   "KN-DOM-001": [
+    "IND-WG-001"
+   ],
+   "MET-A2-001": [
+    "CONF-A1-001"
+   ],
+   "TRUST-FIX-001": [
+    "CONF-A1-001"
+   ]
+  }
+ },
  "catalogFollowUps": [
   {
    "path": "architecture/providers.yaml",
@@ -241,13 +394,18 @@
   },
   {
    "path": "architecture/providers.yaml",
+   "current": "packs/white-goods/manifest.json",
+   "proposed": "packs/banking/manifest.json"
+  },
+  {
+   "path": "architecture/providers.yaml",
    "current": "profile.whitegoods-readonly-amd64",
    "proposed": "profile.banking-readonly-amd64"
   },
   {
    "path": "architecture/providers.yaml",
-   "current": "packs/white-goods/manifest.json",
-   "proposed": "packs/banking/manifest.json"
+   "current": "Read-only white-goods assistant",
+   "proposed": "Read-only banking assistant"
   },
   {
    "path": "architecture/services.yaml",
@@ -258,6 +416,11 @@
    "path": "docs/PROVIDER_MODULE_CATALOG.md",
    "current": "profile.whitegoods-readonly-amd64",
    "proposed": "profile.banking-readonly-amd64"
+  },
+  {
+   "path": "docs/PROVIDER_MODULE_CATALOG.md",
+   "current": "White-goods pack",
+   "proposed": "Banking pack"
   }
  ],
  "candidateRegulatoryInputs": [
@@ -284,14 +447,32 @@
   "docs/repositories/12-mas-harness-conformance-labs.md",
   "task-packets/README.md"
  ],
- "unchangedAuthorities": [
-  "architecture/providers.yaml",
-  "architecture/services.yaml",
-  "architecture/unified-roadmap-backlog.json",
-  "architecture/unified-roadmap-source-index.json",
-  "docs/PROVIDER_MODULE_CATALOG.md",
-  "docs/alpha-2/UNIFIED_ROADMAP_TRACEABILITY.md"
- ],
+ "unchangedAuthorities": {
+  "architecture/providers.yaml": {
+   "role": "CATALOG",
+   "sha256": "9e2b43dac1ca4531dcdeb3a1b6ead8002d7384e2a0d0e6b57e972accb8631c02"
+  },
+  "architecture/services.yaml": {
+   "role": "CATALOG",
+   "sha256": "857376b5e2b10a2a2542124a7d36b770eca531d15e463d68415416b887dd90a6"
+  },
+  "docs/PROVIDER_MODULE_CATALOG.md": {
+   "role": "CATALOG",
+   "sha256": "1723f1ea35ecc87529c2d680f7e51fda61923a368f1e241b7a82982b10935b1d"
+  },
+  "architecture/unified-roadmap-backlog.json": {
+   "role": "SNAPSHOT",
+   "sha256": "84193210e40d848c78114653cee0ebdf74dc8d64efc76febcceb6c1ae3fa3049"
+  },
+  "architecture/unified-roadmap-source-index.json": {
+   "role": "SNAPSHOT",
+   "sha256": "3e4ac9e8fbd995f13c1f9123b3bae7c003d4009d674dc3d0e3897f97eacf2de9"
+  },
+  "docs/alpha-2/UNIFIED_ROADMAP_TRACEABILITY.md": {
+   "role": "SNAPSHOT",
+   "sha256": "973bcc48e846691401eecc2280ad6b4c1f78c09c278308ab52f082d4231ba96f"
+  }
+ },
  "nonClaims": {
   "bankingPackBuilt": false,
   "ontologyPublished": false,

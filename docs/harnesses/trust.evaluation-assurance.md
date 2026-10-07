@@ -4,8 +4,9 @@
 
 Owner decision SECTOR-D1 (October 7, 2026): banking replaces white goods as the first and only release
 sector from Alpha 2 through the first enterprise release; [sector direction](../alpha-2/SECTOR_DIRECTION.md)
-gives every disposition. `CONF-BANK-001` succeeds `CONF-A1-001`; `CONF-A2-001` and `CONF-WG-001` now certify
-the banking agent and the banking tenant-acceptance candidate. White-goods material below records what was
+gives every disposition. `CONF-BANK-001` succeeds `CONF-A1-001`; `CONF-A2-001` and `CONF-WG-001` are
+retargeted to certify the banking agent and the banking tenant-acceptance candidate once a revision
+amendment binds the banking scope (published YAML unchanged). White-goods material below records what was
 specified or built; it is historical, not current direction.
 
 ## Current research-led implementation direction — MET-ADOPT-002

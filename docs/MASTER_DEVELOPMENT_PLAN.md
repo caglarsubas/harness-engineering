@@ -8,9 +8,10 @@ banking replaces white goods as the first and only release sector from Alpha 2 t
 first enterprise release. It publishes:
 - the decision record `planeon.internal.sector-direction/v1`, with a disposition for each of the
   28 published packets that name white goods, recomputed by its validator;
-- six unpublished successor proposals (IND-BANK-001 to IND-BANK-005, CONF-BANK-001);
-- CONF-A2-001 and CONF-WG-001 retargeted to banking with their IDs kept (each needs a revised
-  packet before dispatch), and the catalog follow-ups for a later packet.
+- nine unpublished proposals: successors IND-BANK-001 to IND-BANK-005 and CONF-BANK-001, and the
+  banking inputs KN-BANK-001, CTRL-BANK-001 and DIST-BANK-001;
+- CONF-A2-001 and CONF-WG-001 retargeted to banking with their IDs kept (each needs a revision
+  amendment before dispatch), retained accepted edges, and exhaustive catalog follow-ups.
 
 No published packet, catalog, pack, fixture or backlog snapshot changes, and nothing is built or
 qualified. MET-SECTOR-001 is the sole 207th specification.
@@ -19,7 +20,7 @@ qualified. MET-SECTOR-001 is the sole 207th specification.
 |---|---|---|---|
 | Alpha2 | MET-SECTOR-001 / SECTOR-D1 | SOURCE_PREPARED | Banking sector direction as the 207th packet; verify from the owner's App |
 | Alpha2A | MET-ENFORCE-009 / W02e | VERIFY_PASSED_MERGED | SELinux matrix, ADOPTED_DATA_CONTRACT |
-| Alpha2 | IND-BANK-001 to IND-BANK-005, CONF-BANK-001 | WAITING_PACKET_PUBLICATION | Banking pack and journey successors |
+| Alpha2 | IND-BANK-001 to IND-BANK-005, KN-BANK-001, CTRL-BANK-001, DIST-BANK-001, CONF-BANK-001 | WAITING_PACKET_PUBLICATION | Banking pack, inputs and journey |
 | Alpha2A | W02d, W02f, W02a-F, W02b-F, W02c-F, W02e-F, W02g-F | WAITING_EXACT_PACKETS | seccomp, admission; follow-ups |
 | Alpha2 qualification | CONF-LINUX-001 / CONF-A2-001 | WAITING_PREREQUISITES | Linux verification only when mandatory |
 
@@ -868,8 +869,8 @@ The [item-level backlog](../architecture/unified-roadmap-backlog.json) records p
 | Alpha 2B onward | Sixteen OSS adoption proposal IDs | WAITING_PACKET_PUBLICATION | Owner-specific actual pinned upstream integrations and qualification |
 | Alpha 2B onward | JEV/Laya/SemIF SEM proposals | WAITING_PACKET_PUBLICATION | Optional local semantic contracts, adapters and independent evidence |
 | Alpha 2 sector | MET-SECTOR-001 / SECTOR-D1 | SOURCE_PREPARED | Banking replaces white goods through the first enterprise release; dispositions for 28 published packets; no catalog, pack or packet change |
-| Alpha 2 sector | IND-BANK-001 to IND-BANK-005, CONF-BANK-001 | WAITING_PACKET_PUBLICATION | Banking pack and journey successors of IND-WG-001 to IND-WG-005 and CONF-A1-001 |
-| Alpha 2 acceptance | CONF-A2-001 | WAITING | Integrated cited read-only banking profile (ID kept; revised packet before dispatch), installed foundations and real overview |
+| Alpha 2 sector | IND-BANK-001 to IND-BANK-005, KN-BANK-001, CTRL-BANK-001, DIST-BANK-001, CONF-BANK-001 | WAITING_PACKET_PUBLICATION | Banking pack, banking inputs for retained packets and journey certification |
+| Alpha 2 acceptance | CONF-A2-001 | WAITING | Integrated cited read-only banking profile (ID kept; revision amendment before dispatch), installed foundations and real overview |
 | Alpha 3 | Governed action / CONF-A3-001 | WAITING | Approval, memory, sandbox, tools, decision service and full interaction |
 | Alpha 4 | Enterprise campaigns / CONF-WG-001 | WAITING | Qualified baseline per released capability, disconnected install, lifecycle/security and independent banking tenant acceptance |
 | Post-release | E1–E3 and provider expansion | DEFERRED | Governed improvement research and additional meaningful provider options |

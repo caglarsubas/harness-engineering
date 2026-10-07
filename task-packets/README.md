@@ -4,9 +4,10 @@
 
 SECTOR-D1: banking replaces white goods as the first and only release sector from Alpha 2 through the first
 enterprise release. A decision record gives each of the 28 published packets that name white goods a disposition,
-adds six unpublished successor proposals (IND-BANK-001 to IND-BANK-005, CONF-BANK-001) and keeps the CONF-A2-001 and
-CONF-WG-001 IDs with banking scope. No published packet, catalog, pack or fixture changes. Alpha2 OPEN; 206 accepted
-plus SECTOR-001 only. Native Linux, exact-main and tenant acceptance remain separate.
+adds nine unpublished proposals (IND-BANK-001 to IND-BANK-005, KN-BANK-001, CTRL-BANK-001, DIST-BANK-001,
+CONF-BANK-001) and keeps the CONF-A2-001 and CONF-WG-001 IDs with banking scope. No published packet, catalog, pack
+or fixture changes. Alpha2 OPEN; 206 accepted plus SECTOR-001 only. Native Linux, exact-main and tenant acceptance
+remain separate.
 
 ## Historical ENFORCE-009 source preparation — MET-ENFORCE-009
 

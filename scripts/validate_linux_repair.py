@@ -81,8 +81,8 @@ def validate_linux_repair(packets: Any, amendment: Any, historical_policy_bytes:
         errors.append("original 118-packet Linux policy must remain byte-identical")
     if not isinstance(packets, dict):
         return [*errors, "Linux repair requires a packet mapping"]
-    if len(packets) != 206:
-        errors.append("Current catalog requires exactly 206 packets; consumed amendment remains 120")
+    if len(packets) != 207:
+        errors.append("Current catalog requires exactly 207 packets; consumed amendment remains 120")
     for packet_id, expected_digest in CURRENT_PACKET_DIGESTS.items():
         try:
             actual = hashlib.sha256(packet_bytes(packets.get(packet_id))).hexdigest()
@@ -104,7 +104,7 @@ def main() -> int:
     for error in errors:
         print("ERROR: " + error)
     if not errors:
-        print("Linux repair authority valid: 206 packets; 120-packet record preserved; native Linux remains unproven.")
+        print("Linux repair authority valid: 207 packets; 120-packet record preserved; native Linux remains unproven.")
     return int(bool(errors))
 
 

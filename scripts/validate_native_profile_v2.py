@@ -586,12 +586,12 @@ def validate() -> None:
             == record["validatorNormalizedSha256"], "native profile v2 validator drift")
     paths = sorted((ROOT / "task-packets").glob("*.yaml"))
     old = set(record["baselinePackets"])
-    require(len(paths) == 206
-            and {path.stem for path in paths} == old | {NEW_PACKET, successor.NEW_PACKET, successor.successor.NEW_PACKET, successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.NEW_PACKET},
-            "closed 206-packet catalog retaining the 201-packet checkpoint")
+    require(len(paths) == 207
+            and {path.stem for path in paths} == old | {NEW_PACKET, successor.NEW_PACKET, successor.successor.NEW_PACKET, successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.NEW_PACKET},
+            "closed 207-packet catalog retaining the 201-packet checkpoint")
     packets = {}
     for path in paths:
-        if path.stem in (successor.NEW_PACKET, successor.successor.NEW_PACKET, successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.NEW_PACKET):
+        if path.stem in (successor.NEW_PACKET, successor.successor.NEW_PACKET, successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.NEW_PACKET):
             continue
         raw = regular_bytes("task-packets/" + path.name)
         expected = record["packetSha256"] if path.stem == NEW_PACKET else record["baselinePackets"][path.stem]
@@ -630,4 +630,4 @@ def validate() -> None:
 
 if __name__ == "__main__":
     validate()
-    print("Native profile v2 contract valid: 206 current specifications; 201-packet checkpoint and exact 200-packet predecessor; DATA_CHECK_ONLY, every E01-E12 obligation open.")
+    print("Native profile v2 contract valid: 207 current specifications; 201-packet checkpoint and exact 200-packet predecessor; DATA_CHECK_ONLY, every E01-E12 obligation open.")

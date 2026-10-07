@@ -1,5 +1,14 @@
 # Repository Plan: `mas-harness-industry-packs`
 
+## Sector direction — MET-SECTOR-001
+
+Owner decision SECTOR-D1 (October 7, 2026): banking replaces white goods as the first and only release
+sector from Alpha 2 through the first enterprise release; [sector direction](../alpha-2/SECTOR_DIRECTION.md)
+gives every disposition. The banking pack succeeds `IND-WG-001` to `IND-WG-005` through the unpublished
+proposals `IND-BANK-001` to `IND-BANK-005`; the white-goods pack versions 0.1.0 to 0.4.0 stay historical
+source. White-goods material below records what was specified or built; it is historical, not current
+direction.
+
 ## Current research-led implementation direction — MET-ADOPT-002
 
 [Harness / paper / upstream repository map](../alpha-2/HARNESS_PAPER_REPOSITORY_MAP.md)

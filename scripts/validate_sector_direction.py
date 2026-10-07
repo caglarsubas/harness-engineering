@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""Validate the in-session predecessor proof and the exact 195-to-194 projection."""
+"""Validate owner decision SECTOR-D1 (banking replaces white goods) and the exact 207-to-206 projection."""
 from __future__ import annotations
 
 import base64
 import binascii
 import hashlib
 import json
+import re
 import stat
 from functools import lru_cache
 from pathlib import Path
@@ -14,20 +15,20 @@ from typing import Any
 
 try:
     from safe_yaml import safe_load
-    import validate_portable_warm_snapshot_temp as successor
 except ImportError:
     from scripts.safe_yaml import safe_load
-    from scripts import validate_portable_warm_snapshot_temp as successor
 
 
 ROOT = Path(__file__).resolve().parents[1]
-AUTHORITY_PATH = "architecture/in-session-predecessor-proof-authority.json"
-AUTHORITY_SHA256 = "f55b5e14d917af5ee5e5f4be2adbac0013eebd45a72e3ba4b48a9b843e5ef619"
-VALIDATOR_PATH = "scripts/validate_in_session_predecessor_proof.py"
-BASE_COMMIT = "f031ceac31e79f0bce5885bcd0b58f702e5dab4d"
-NEW_PACKET = "MET-PERF-030"
-PREVIOUS_PACKET = "MET-PERF-029"
+AUTHORITY_PATH = "architecture/sector-direction-authority.json"
+AUTHORITY_SHA256 = "27b38285e2a5dda341dc07f2f806315d0269fcfad4b41b8ee6e3f4abd44a3b10"
+VALIDATOR_PATH = "scripts/validate_sector_direction.py"
+BASE_COMMIT = "2c14e512d902a44425ffeec4b1dbb54a5dbbb284"
+NEW_PACKET = "MET-SECTOR-001"
+PREVIOUS_PACKET = "MET-ENFORCE-009"
 MAX_FILE_BYTES = 16_777_216
+# Test routes cover the top-level ci/test_ files as well as tests/.
+TEST_PREFIXES = ("tests/", "ci/test_")
 
 
 def require(ok: bool, message: str) -> None:
@@ -48,12 +49,12 @@ def parse(raw: bytes) -> Any:
     def unique(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
         result: dict[str, Any] = {}
         for key, value in pairs:
-            require(key not in result, "duplicate predecessor-proof authority member")
+            require(key not in result, "duplicate sector-direction authority member")
             result[key] = value
         return result
 
     def no_constant(_value: str) -> Any:
-        raise ValueError("nonfinite predecessor-proof authority number")
+        raise ValueError("nonfinite sector-direction authority number")
 
     return json.loads(raw, object_pairs_hook=unique, parse_constant=no_constant)
 
@@ -91,18 +92,10 @@ _VERIFIED_AUTHORITY: tuple[str, bytes] | None = None
 
 
 def _checked_authority_raw() -> bytes:
-    """Newest first: every newer authority, then this one, each read exactly once."""
-    successor._checked_authority_raw()
-    return _checked_own_authority_raw()
-
-
-def _checked_own_authority_raw() -> bytes:
-    """Fresh complete read of this layer's authority only; callers reach newer
-    authorities through exactly one successor route per public call."""
     global _VERIFIED_AUTHORITY
     raw = regular_bytes(AUTHORITY_PATH)
     if type(raw) is not bytes or _VERIFIED_AUTHORITY != (AUTHORITY_SHA256, raw):
-        require(digest(raw) == AUTHORITY_SHA256, "predecessor proof history authority digest")
+        require(digest(raw) == AUTHORITY_SHA256, "sector direction history authority digest")
         if type(raw) is bytes:
             _VERIFIED_AUTHORITY = (AUTHORITY_SHA256, raw)
     return raw
@@ -122,18 +115,18 @@ def authority() -> dict[str, Any]:
     require(type(value) is dict and set(value) == {
         "schemaVersion", "authorityPacket", "acceptedBase", "baselinePackets",
         "packetSha256", "changedFiles", "newFiles", "validatorNormalizedSha256",
-    }, "closed predecessor proof history authority")
-    require(value["schemaVersion"] == "harness.planeon.ai/in-session-predecessor-proof-authority/v1"
+    }, "closed sector direction history authority")
+    require(value["schemaVersion"] == "harness.planeon.ai/sector-direction-authority/v1"
             and value["authorityPacket"] == NEW_PACKET
             and value["acceptedBase"] == BASE_COMMIT
             and type(value["baselinePackets"]) is dict
-            and len(value["baselinePackets"]) == 194
+            and len(value["baselinePackets"]) == 206
             and NEW_PACKET not in value["baselinePackets"]
             and type(value["changedFiles"]) is dict
             and type(value["newFiles"]) is dict
             and _sha(value["packetSha256"])
             and _sha(value["validatorNormalizedSha256"]),
-            "accepted 194-packet base")
+            "accepted 206-packet base")
     for name, expected in value["baselinePackets"].items():
         require(type(name) is str and name and "/" not in name
                 and all(char in "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-" for char in name)
@@ -259,18 +252,10 @@ def _inverse(raw: bytes, hunks: tuple[tuple[int, bytes, bytes], ...]) -> bytes:
 
 
 def historical_bytes(path: str, raw: bytes) -> bytes:
-    """Undo the newer successor, then this step; every authority is read once."""
+    """Recheck the pinned authority and undo only this reviewed successor."""
+    _checked_authority_raw()
     _path(path)
     require(type(raw) is bytes and len(raw) <= MAX_FILE_BYTES, "bounded source bytes required")
-    rule = _PROJECTION_RULES.get(path)
-    # An exact 194-era byte string is already older than the successor layer.
-    # Every newer authority and this one are still rechecked before this fast return.
-    if rule is not None and digest(raw) == rule["beforeSha256"]:
-        _checked_authority_raw()
-        return raw
-    # The successor route freshly rechecks every newer authority exactly once.
-    raw = successor.historical_bytes(path, raw)
-    _checked_own_authority_raw()
     return _undo_this_layer(path, raw)
 
 
@@ -290,37 +275,33 @@ def _undo_this_layer(path: str, raw: bytes) -> bytes:
 
 
 def historical_test_bytes(raw: bytes) -> bytes:
+    _checked_authority_raw()
     require(type(raw) is bytes and len(raw) <= MAX_FILE_BYTES, "bounded test bytes required")
-    raw = successor.historical_test_bytes(raw)
-    _checked_own_authority_raw()
     current_sha = digest(raw)
     matches = [path for path, rule in _PROJECTION_RULES.items()
-               if path.startswith("tests/") and current_sha == rule["afterSha256"]]
+               if path.startswith(TEST_PREFIXES) and current_sha == rule["afterSha256"]]
     require(len(matches) <= 1, "ambiguous current test")
     return _undo_this_layer(matches[0], raw) if matches else raw
 
 
 def current_test_bytes(before: bytes) -> bytes:
+    _checked_authority_raw()
     require(type(before) is bytes and len(before) <= MAX_FILE_BYTES, "bounded test bytes required")
     before_sha = digest(before)
     matches = [path for path, rule in _PROJECTION_RULES.items()
-               if path.startswith("tests/") and before_sha == rule["beforeSha256"]]
+               if path.startswith(TEST_PREFIXES) and before_sha == rule["beforeSha256"]]
     require(len(matches) <= 1, "ambiguous predecessor test")
     if not matches:
-        current = successor.current_test_bytes(before)
-        _checked_own_authority_raw()
-        return current
-    current = successor.historical_bytes(matches[0], regular_bytes(matches[0]))
-    _checked_own_authority_raw()
+        return before
+    current = regular_bytes(matches[0])
     require(digest(current) == _PROJECTION_RULES[matches[0]]["afterSha256"],
             "current test drift")
-    return successor.current_test_bytes(current)
+    return current
 
 
 def historical_catalog(packets: dict[str, Any]) -> dict[str, Any]:
     """Remove only this layer, leaving predecessor checks to their owners."""
-    packets = successor.historical_catalog(packets)
-    _checked_own_authority_raw()
+    _checked_authority_raw()
     require(type(packets) is dict, "packet mapping")
     current_ids = set(_PACKET_BYTE_RULES)
     require(NEW_PACKET in current_ids and set(packets) == current_ids,
@@ -357,23 +338,160 @@ def validate_packet_payloads(packets: dict[str, Any]) -> None:
         require(supplied_sha == payload_sha, "changed packet payload: " + name)
 
 
+SECTOR_PATH = "architecture/sector-direction.json"
+SECTOR_DOC = "docs/alpha-2/SECTOR_DIRECTION.md"
+MASTER_PATH = "docs/MASTER_DEVELOPMENT_PLAN.md"
+# The detection pattern is fixed here and in the record; the disposition set must equal the predecessor
+# packets whose exact accepted bytes match it.
+SECTOR_PATTERN = r"(?i)white[- ]goods|whitegoods|white_goods"
+DISPOSITIONS = {"SUPERSEDED_BY_SUCCESSOR": {"disposition", "successor"},
+                "ID_RETAINED_SCOPE_RETARGETED": {"disposition", "newScope", "requires"},
+                "SECTOR_FIXTURES_HISTORICAL": {"disposition", "note"},
+                "HISTORICAL_EVIDENCE": {"disposition", "note"},
+                "INCIDENTAL_REFERENCE": {"disposition", "note"}}
+RETARGETED = ("CONF-A2-001", "CONF-WG-001")
+REPOSITORIES = frozenset("R%02d" % number for number in range(13))
+NON_CLAIMS = ("bankingPackBuilt", "ontologyPublished", "fixturesBuilt", "catalogChanged", "publishedPacketChanged",
+              "backlogSnapshotChanged", "providerSelected", "campaignRun", "regulatoryApplicabilityAsserted",
+              "tenantAcceptance")
+DECISION = {"id": "SECTOR-D1", "decidedBy": "OWNER", "date": "2026-10-07", "packet": NEW_PACKET,
+            "previousSector": "white-goods", "sector": "banking", "appliesFrom": "ALPHA_2",
+            "appliesThrough": "FIRST_ENTERPRISE_RELEASE"}
+
+
+def _text(value: Any) -> bool:
+    return type(value) is str and bool(value.strip()) and value == value.strip()
+
+
+def _sector_record(raw: bytes) -> dict[str, Any]:
+    def unique(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+        result: dict[str, Any] = {}
+        for key, value in pairs:
+            require(key not in result, "duplicate sector direction member")
+            result[key] = value
+        return result
+
+    def no_constant(_value: str) -> Any:
+        raise ValueError("nonfinite sector direction number")
+
+    value = json.loads(raw, object_pairs_hook=unique, parse_constant=no_constant)
+    require(type(value) is dict and set(value) == {
+        "schemaVersion", "decision", "domainSemantic", "detectionPattern", "publishedPacketDispositions",
+        "successorProposals", "catalogFollowUps", "candidateRegulatoryInputs", "directionDocs",
+        "unchangedAuthorities", "nonClaims"}, "closed sector direction record")
+    require(value["schemaVersion"] == "planeon.internal.sector-direction/v1", "sector direction schema")
+    return value
+
+
+def validate_sector_direction(record: dict[str, Any], era: dict[str, bytes]) -> None:
+    """Check the owner decision record against the exact accepted packets and this layer's documents.
+
+    era holds this packet's reviewed bytes for every changed or new path it names."""
+    sector = _sector_record(era[SECTOR_PATH])
+    decision = sector["decision"]
+    require(type(decision) is dict and set(decision) == set(DECISION) | {"statement"}
+            and all(decision[key] == expected for key, expected in DECISION.items())
+            and _text(decision["statement"]) and "banking" in decision["statement"].lower(),
+            "owner decision SECTOR-D1 banking through the first enterprise release")
+    domain = sector["domainSemantic"]
+    require(type(domain) is dict and set(domain) == {"harness", "alphaCapability", "proposedNamespace", "conceptAreas"}
+            and domain["harness"] == "knowledge.domain-semantic"
+            and _text(domain["alphaCapability"]) and domain["alphaCapability"].startswith("Banking glossary and ontology")
+            and domain["proposedNamespace"] == "urn:planeon:banking:*"
+            and type(domain["conceptAreas"]) is list and domain["conceptAreas"]
+            and all(_text(area) for area in domain["conceptAreas"])
+            and len(set(domain["conceptAreas"])) == len(domain["conceptAreas"]),
+            "banking domain-semantic scope")
+    require(sector["detectionPattern"] == SECTOR_PATTERN, "fixed white-goods detection pattern")
+    pattern = re.compile(SECTOR_PATTERN)
+    mentioning = {name for name in record["baselinePackets"]
+                  if pattern.search(regular_bytes("task-packets/" + name + ".yaml").decode("utf-8"))}
+    dispositions = sector["publishedPacketDispositions"]
+    require(type(dispositions) is dict and set(dispositions) == mentioning,
+            "every predecessor packet naming white goods has exactly one disposition")
+    successors = sector["successorProposals"]
+    require(type(successors) is list and successors, "successor proposals")
+    by_id: dict[str, dict[str, Any]] = {}
+    for row in successors:
+        require(type(row) is dict and set(row) == {
+            "id", "ownerRepoId", "phase", "supersedes", "predecessorIds", "description", "status",
+            "publishedPacket", "executionAuthority"}, "closed successor proposal")
+        name = row["id"]
+        require(type(name) is str and name not in by_id and name not in record["baselinePackets"]
+                and name != NEW_PACKET
+                and all(char in "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-" for char in name),
+                "new successor identity")
+        require(row["ownerRepoId"] in REPOSITORIES and row["phase"] == "ALPHA_2"
+                and row["status"] == "WAITING_PACKET_PUBLICATION" and row["publishedPacket"] is False
+                and row["executionAuthority"] == "NONE"
+                and _text(row["description"]) and "banking" in row["description"].lower(),
+                "unpublished banking successor without execution authority: " + name)
+        require(type(row["predecessorIds"]) is list and row["predecessorIds"]
+                and len(set(row["predecessorIds"])) == len(row["predecessorIds"])
+                and all(pred in record["baselinePackets"] or pred in by_id for pred in row["predecessorIds"]),
+                "successor predecessors are accepted packets or earlier successors: " + name)
+        by_id[name] = row
+    for name, row in dispositions.items():
+        require(type(row) is dict and row.get("disposition") in DISPOSITIONS
+                and set(row) == DISPOSITIONS[row["disposition"]], "closed packet disposition: " + name)
+        kind = row["disposition"]
+        require((kind == "ID_RETAINED_SCOPE_RETARGETED") == (name in RETARGETED),
+                "only CONF-A2-001 and CONF-WG-001 keep their IDs with banking scope")
+        if kind == "SUPERSEDED_BY_SUCCESSOR":
+            require(row["successor"] in by_id and by_id[row["successor"]]["supersedes"] == name,
+                    "superseded packet names its successor: " + name)
+        elif kind == "ID_RETAINED_SCOPE_RETARGETED":
+            require(_text(row["newScope"]) and "banking" in row["newScope"] and _text(row["requires"])
+                    and "revised packet" in row["requires"], "retargeted scope needs a revised packet: " + name)
+        else:
+            require(_text(row["note"]), "disposition note: " + name)
+    require({row["supersedes"] for row in successors}
+            == {name for name, row in dispositions.items() if row["disposition"] == "SUPERSEDED_BY_SUCCESSOR"}
+            and len(successors) == len({row["supersedes"] for row in successors}),
+            "one successor per superseded packet")
+    unchanged = sector["unchangedAuthorities"]
+    require(type(unchanged) is list and unchanged and len(set(unchanged)) == len(unchanged), "unchanged authorities")
+    for path in unchanged:
+        _path(path)
+        require(path not in record["changedFiles"] and path not in record["newFiles"],
+                "catalog or snapshot changed by this packet: " + path)
+    follow = sector["catalogFollowUps"]
+    require(type(follow) is list and follow and all(
+        type(row) is dict and set(row) == {"path", "current", "proposed"} and row["path"] in unchanged
+        and _text(row["current"]) and _text(row["proposed"]) and "banking" in row["proposed"]
+        and pattern.search(row["current"]) for row in follow), "catalog follow-ups stay for a later packet")
+    inputs = sector["candidateRegulatoryInputs"]
+    require(type(inputs) is list and inputs and all(_text(row) for row in inputs)
+            and len(set(inputs)) == len(inputs), "candidate regulatory inputs")
+    claims = sector["nonClaims"]
+    require(type(claims) is dict and set(claims) == set(NON_CLAIMS) and all(claims[key] is False for key in NON_CLAIMS),
+            "sector direction cannot overclaim")
+    docs = sector["directionDocs"]
+    require(type(docs) is list and docs == sorted(set(docs)) and SECTOR_DOC in docs and MASTER_PATH in docs,
+            "sorted direction documents")
+    for path in docs:
+        require(path in era, "direction document changed by this packet: " + path)
+        text = era[path].decode("utf-8")
+        require("SECTOR-D1" in text and "banking" in text, "direction document names SECTOR-D1: " + path)
+    master = era[MASTER_PATH].decode("utf-8")
+    require("The first sector pack is banking" in master and "The first sector pack is white goods" not in master,
+            "master plan names banking as the first sector pack")
+
+
 def validate() -> None:
     record = authority()
-    validator_raw = successor.historical_bytes(VALIDATOR_PATH, regular_bytes(VALIDATOR_PATH))
+    validator_raw = regular_bytes(VALIDATOR_PATH)
     literal = b'AUTHORITY_SHA256 = "' + AUTHORITY_SHA256.encode("ascii") + b'"'
     placeholder = b'AUTHORITY_SHA256 = "TO_BE_PINNED_AFTER_SOURCE_FREEZE"'
     require(validator_raw.count(literal) == 1
             and digest(validator_raw.replace(literal, placeholder))
-            == record["validatorNormalizedSha256"], "predecessor proof validator drift")
+            == record["validatorNormalizedSha256"], "sector direction validator drift")
     paths = sorted((ROOT / "task-packets").glob("*.yaml"))
     old = set(record["baselinePackets"])
-    require(len(paths) == 207
-            and {path.stem for path in paths} == old | {NEW_PACKET, successor.NEW_PACKET, successor.successor.NEW_PACKET, successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET},
-            "closed 207-packet catalog retaining the 195-packet checkpoint")
+    require(len(paths) == 207 and {path.stem for path in paths} == old | {NEW_PACKET},
+            "closed 207-packet catalog")
     packets = {}
     for path in paths:
-        if path.stem in (successor.NEW_PACKET, successor.successor.NEW_PACKET, successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET):
-            continue
         raw = regular_bytes("task-packets/" + path.name)
         expected = record["packetSha256"] if path.stem == NEW_PACKET else record["baselinePackets"][path.stem]
         require(digest(raw) == expected, "packet YAML drift: " + path.stem)
@@ -383,31 +501,38 @@ def validate() -> None:
     previous = packets[PREVIOUS_PACKET]
     commands = packet["offlineAcceptanceCommands"]
     require(packet["id"] == NEW_PACKET and packet["repository"] == "Harness-Engineering"
-            and packet["predecessors"] == ["MET-LINUX-005", PREVIOUS_PACKET]
+            and packet["predecessors"] == [PREVIOUS_PACKET]
             and packet["warmSourceAccess"] == "PROHIBITED_DURING_IMPLEMENTATION"
             and packet["sourceReuse"] == packet["prefetchCommands"] == []
             and packet["offlineExecution"] == previous["offlineExecution"]
             and "liveCampaignExecution" not in packet
-            and len(commands) == 57
-            and commands[:-3] + commands[-2:] == previous["offlineAcceptanceCommands"]
-            and commands[-3] == ["uv", "run", "--offline", "--frozen", "--no-sync",
-                                 "python", VALIDATOR_PATH],
-            "closed source-only predecessor-proof packet and inherited commands")
+            and len(commands) == 64
+            and commands == previous["offlineAcceptanceCommands"]
+            and not any(VALIDATOR_PATH in argv for argv in commands),
+            "closed source-only sector-direction packet and inherited commands")
     require(len(packet["allowedPaths"]) == len(set(packet["allowedPaths"]))
             and set(packet["allowedPaths"]) == set(record["changedFiles"])
             | set(record["newFiles"]) | {AUTHORITY_PATH, VALIDATOR_PATH,
                                          "task-packets/" + NEW_PACKET + ".yaml"},
-            "unreviewed or omitted predecessor-proof packet path")
+            "unreviewed or omitted sector-direction packet path")
+    # This packet's reviewed bytes for the semantic check; a newer layer projects them back first.
+    era: dict[str, bytes] = {}
     for path, rule in record["changedFiles"].items():
-        current = successor.historical_bytes(path, regular_bytes(path))
+        current = regular_bytes(path)
         require(digest(current) == rule["afterSha256"]
                 and digest(historical_bytes(path, current)) == rule["beforeSha256"],
                 "unreviewed current source: " + path)
+        era[path] = current
     for path, expected in record["newFiles"].items():
-        require(digest(successor.historical_bytes(path, regular_bytes(path))) == expected,
-                "new source drift: " + path)
+        require(digest(regular_bytes(path)) == expected, "new source drift: " + path)
+    for path in (SECTOR_PATH, SECTOR_DOC):
+        require(path in record["newFiles"], "new sector source: " + path)
+        raw = regular_bytes(path)
+        require(digest(raw) == record["newFiles"][path], "new source drift: " + path)
+        era[path] = raw
+    validate_sector_direction(record, era)
 
 
 if __name__ == "__main__":
     validate()
-    print("In-session predecessor proof valid: 207 current specifications; 195-packet checkpoint and exact 194-packet predecessor; predecessor suite proven once per session.")
+    print("Sector direction valid: 207 current specifications; exact 206-packet predecessor; SECTOR-D1 banking through the first enterprise release, nothing built or qualified.")

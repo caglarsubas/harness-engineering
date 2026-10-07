@@ -1,6 +1,34 @@
 # Harness-Onion — unified development roadmap
 
-## Current checkpoint — MET-ENFORCE-009 source preparation, October 7, 2026
+## Current checkpoint — MET-SECTOR-001 source preparation, October 7, 2026
+
+Alpha2 OPEN. MET-ENFORCE-009 passed required verify (64/64, 639 s) and merged as main
+2c14e51; W02e is ADOPTED_DATA_CONTRACT. MET-SECTOR-001 records owner decision SECTOR-D1:
+banking replaces white goods as the first and only release sector from Alpha 2 through the
+first enterprise release. It publishes:
+- the decision record `planeon.internal.sector-direction/v1`, with a disposition for each of the
+  28 published packets that name white goods, recomputed by its validator;
+- six unpublished successor proposals (IND-BANK-001 to IND-BANK-005, CONF-BANK-001);
+- CONF-A2-001 and CONF-WG-001 retargeted to banking with their IDs kept (each needs a revised
+  packet before dispatch), and the catalog follow-ups for a later packet.
+
+No published packet, catalog, pack, fixture or backlog snapshot changes, and nothing is built or
+qualified. MET-SECTOR-001 is the sole 207th specification.
+
+| Phase | ID | Status | Description / gate |
+|---|---|---|---|
+| Alpha2 | MET-SECTOR-001 / SECTOR-D1 | SOURCE_PREPARED | Banking sector direction as the 207th packet; verify from the owner's App |
+| Alpha2A | MET-ENFORCE-009 / W02e | VERIFY_PASSED_MERGED | SELinux matrix, ADOPTED_DATA_CONTRACT |
+| Alpha2 | IND-BANK-001 to IND-BANK-005, CONF-BANK-001 | WAITING_PACKET_PUBLICATION | Banking pack and journey successors |
+| Alpha2A | W02d, W02f, W02a-F, W02b-F, W02c-F, W02e-F, W02g-F | WAITING_EXACT_PACKETS | seccomp, admission; follow-ups |
+| Alpha2 qualification | CONF-LINUX-001 / CONF-A2-001 | WAITING_PREREQUISITES | Linux verification only when mandatory |
+
+Keep the inherited 64 argv unchanged (the installed activation cap and the verifier's inheritance rule; the new
+layer validator adds no argv and runs inside the outer pytest), 420/750/900 s/15 min and 32 MiB. No cloud, runner registration,
+live/native/tenant or model-effort changes. Phase-end effort transition NOT_DUE.
+Prior checkpoints below are history only.
+
+## Historical ENFORCE-009 source checkpoint — MET-ENFORCE-009 source preparation, October 7, 2026
 
 Alpha2 OPEN. MET-ENFORCE-008 passed required verify (64/64, 554 s) and merged as main
 f4edb9a; W02c is ADOPTED_DATA_CONTRACT. MET-ENFORCE-009 is the W02e part. It publishes the
@@ -750,7 +778,7 @@ The common industry journey has eight ordered gates:
 7. Retrieval, memory, model, ML and orchestration requirements.
 8. SLO, recovery, observability, evaluation and tenant acceptance.
 
-The first sector pack is white goods. Sector overlays append to the common journey; tenant-specific answers determine applicable controls, technology and readiness. A mandatory predecessor finding that is OPEN, FAIL or STALE blocks dependent approval. Production control waivers document exceptions but never replace fresh required PASS evidence.
+The first sector pack is banking: owner decision SECTOR-D1 ([sector direction](alpha-2/SECTOR_DIRECTION.md), October 7, 2026) replaces white goods from Alpha 2 through the first enterprise release, and the white-goods pack and its published packets remain historical source. Sector overlays append to the common journey; tenant-specific answers determine applicable controls, technology and readiness. A mandatory predecessor finding that is OPEN, FAIL or STALE blocks dependent approval. Production control waivers document exceptions but never replace fresh required PASS evidence.
 
 The UI and file workflow share the same schema and deterministic compiler:
 
@@ -832,16 +860,18 @@ The [item-level backlog](../architecture/unified-roadmap-backlog.json) records p
 | Alpha 2 CI capacity | MET-UNIFY-008 / PR #141 | BLOCKED_SELF_HOSTED_CI | Source PR open; `verify` queued with no registered runner |
 | Alpha 2 CI capacity | MET-LINUX-003 / PR #142 | BLOCKED_SELF_HOSTED_CI | Draft source PR open; `verify` queued on the same labels; queue must be serialized before one-job admission |
 | Alpha 2A | W01 / MET-ENFORCE-004 | DESIGN_RESOLVED_REVIEWED | G04–G07/G09 resolved at design level and independently reviewed; E01–E12 remain OPEN_UNPROVEN |
-| Alpha 2A | W02 (W02a MET-ENFORCE-005, W02g MET-ENFORCE-006, W02b MET-ENFORCE-007, W02c MET-ENFORCE-008, W02e MET-ENFORCE-009) / W03–W07 | W02a, W02g, W02b and W02c VERIFY_PASSED_MERGED; W02e SOURCE_PREPARED; others WAITING_EXACT_PACKETS | W02a v2 record contract, W02g I06 backend profile, W02b I05 channel, W02c I07 writer and W02e SELinux matrix contracts reviewed; remaining W02 parts and W03–W07 are labels, not executable YAML |
+| Alpha 2A | W02 (W02a MET-ENFORCE-005, W02g MET-ENFORCE-006, W02b MET-ENFORCE-007, W02c MET-ENFORCE-008, W02e MET-ENFORCE-009) / W03–W07 | W02a, W02g, W02b, W02c and W02e VERIFY_PASSED_MERGED; others WAITING_EXACT_PACKETS | W02a v2 record contract, W02g I06 backend profile, W02b I05 channel, W02c I07 writer and W02e SELinux matrix contracts reviewed; remaining W02 parts and W03–W07 are labels, not executable YAML |
 | Alpha 2A | CONF-FIX-010 | BLOCKED_SAFE_DESIGN | Zero product attempts; requires separately reviewed safe design and bounded packet authority |
 | Alpha 2A | CONF-LIVE-004/005/006 | WAITING_PREREQUISITES | Native probes, package handoff and trusted campaign integration |
 | Alpha 2A | CONF-LINUX-001 native AMD64 | NOT_RUN_ENV_UNAVAILABLE | Fresh real-Linux PASS gates runtime coding of CTRL-INTEGRATE-001, MODEL-001, EXEC-001 and RUN-001; ARM64 separate |
 | Alpha 2B | Seven EXT proposal IDs | WAITING_PACKET_PUBLICATION | Contract-first provider/adapter/binding qualification, registry, UI, packaging and mode-aware reconciliation |
 | Alpha 2B onward | Sixteen OSS adoption proposal IDs | WAITING_PACKET_PUBLICATION | Owner-specific actual pinned upstream integrations and qualification |
 | Alpha 2B onward | JEV/Laya/SemIF SEM proposals | WAITING_PACKET_PUBLICATION | Optional local semantic contracts, adapters and independent evidence |
-| Alpha 2 acceptance | CONF-A2-001 | WAITING | Integrated cited read-only white-goods profile, installed foundations and real overview |
+| Alpha 2 sector | MET-SECTOR-001 / SECTOR-D1 | SOURCE_PREPARED | Banking replaces white goods through the first enterprise release; dispositions for 28 published packets; no catalog, pack or packet change |
+| Alpha 2 sector | IND-BANK-001 to IND-BANK-005, CONF-BANK-001 | WAITING_PACKET_PUBLICATION | Banking pack and journey successors of IND-WG-001 to IND-WG-005 and CONF-A1-001 |
+| Alpha 2 acceptance | CONF-A2-001 | WAITING | Integrated cited read-only banking profile (ID kept; revised packet before dispatch), installed foundations and real overview |
 | Alpha 3 | Governed action / CONF-A3-001 | WAITING | Approval, memory, sandbox, tools, decision service and full interaction |
-| Alpha 4 | Enterprise campaigns / CONF-WG-001 | WAITING | Qualified baseline per released capability, disconnected install, lifecycle/security and independent tenant acceptance |
+| Alpha 4 | Enterprise campaigns / CONF-WG-001 | WAITING | Qualified baseline per released capability, disconnected install, lifecycle/security and independent banking tenant acceptance |
 | Post-release | E1–E3 and provider expansion | DEFERRED | Governed improvement research and additional meaningful provider options |
 
 Historical no-go and exhausted work stays closed: PLAN-CANON-001 is a recorded no-go; CONF-PERF-005 is unauthorized; CONF-FIX-007/008 retain prior outcomes; CONF-FIX-009 consumed its local allowance. No old attempt allowance transfers to a successor.
@@ -869,7 +899,8 @@ These checkboxes count only the named deliverable at the stated evidence level. 
 - [x] Alpha 2A · W02b / MET-ENFORCE-007 · Publish the independently reviewed I05 broker-gate channel wire contract; pass required verify through the owner's App.
 - [x] Alpha 2A · PERF-031 / MET-PERF-031 · Cut required-verify time with test-local exact projection sharing in three mutation loops; pass required verify through the owner's App.
 - [x] Alpha 2A · W02c / MET-ENFORCE-008 · Publish the independently reviewed I07 policy-writer channel contract and closed policy-kind table; pass required verify through the owner's App.
-- [ ] Alpha 2A · W02e / MET-ENFORCE-009 · Publish the independently reviewed SELinux domain, type, boolean and permission matrix with the F2 closure; pass required verify through the owner's App.
+- [x] Alpha 2A · W02e / MET-ENFORCE-009 · Publish the independently reviewed SELinux domain, type, boolean and permission matrix with the F2 closure; pass required verify through the owner's App.
+- [ ] Alpha 2 · MET-SECTOR-001 · Record owner decision SECTOR-D1 (banking replaces white goods through the first enterprise release) with packet dispositions and successor proposals; pass required verify through the owner's App.
 - [ ] Alpha 2A · CONF-FIX-010 · Complete safe design and exact authority before any product attempt.
 - [ ] Alpha 2A · CONF-LIVE-004 · Produce the exact native-probe source implementation and separately qualify it.
 - [ ] Alpha 2A · CONF-LIVE-005 · Produce a reproducible selected package and operator handoff.
@@ -878,7 +909,7 @@ These checkboxes count only the named deliverable at the stated evidence level. 
 - [ ] Alpha 2 · CTRL-INTEGRATE-001 · Complete production tenant overview and durable status projection after its Linux gate.
 - [ ] Alpha 2 · CONF-A2-001 · Qualify the exact integrated read-only profile and inherited foundation evidence.
 - [ ] Alpha 3 · CONF-A3-001 · Qualify governed action and interaction.
-- [ ] Alpha 4 · CONF-WG-001 · Produce an unsigned white-goods tenant-acceptance candidate after required enterprise campaigns.
+- [ ] Alpha 4 · CONF-WG-001 · Produce an unsigned banking tenant-acceptance candidate (ID kept from the white-goods plan) after required enterprise campaigns.
 
 ## Retained MET-PERF-019-era launch order (historical; not current dispatch)
 

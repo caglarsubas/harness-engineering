@@ -1,0 +1,307 @@
+{
+ "schemaVersion": "planeon.internal.sector-direction/v1",
+ "decision": {
+  "id": "SECTOR-D1",
+  "decidedBy": "OWNER",
+  "date": "2026-10-07",
+  "packet": "MET-SECTOR-001",
+  "previousSector": "white-goods",
+  "sector": "banking",
+  "appliesFrom": "ALPHA_2",
+  "appliesThrough": "FIRST_ENTERPRISE_RELEASE",
+  "statement": "Banking replaces white goods as the first and only release sector from Alpha 2 through the first enterprise release. The common eight-gate journey is unchanged; banking is its sector overlay."
+ },
+ "domainSemantic": {
+  "harness": "knowledge.domain-semantic",
+  "alphaCapability": "Banking glossary and ontology versions with provenance and business-question readiness",
+  "proposedNamespace": "urn:planeon:banking:*",
+  "conceptAreas": [
+   "parties and customers",
+   "products and accounts",
+   "transactions and payments",
+   "channels",
+   "credit and lending",
+   "risk, compliance and controls"
+  ]
+ },
+ "detectionPattern": "(?i)white[- ]goods|whitegoods|white_goods",
+ "publishedPacketDispositions": {
+  "CONF-002": {
+   "disposition": "HISTORICAL_EVIDENCE",
+   "note": "Warm-source parity vectors record what was registered; unchanged."
+  },
+  "CONF-A1-001": {
+   "disposition": "SUPERSEDED_BY_SUCCESSOR",
+   "successor": "CONF-BANK-001"
+  },
+  "CONF-A2-001": {
+   "disposition": "ID_RETAINED_SCOPE_RETARGETED",
+   "newScope": "Certify a cited read-only banking agent using local inference, retrieval, protocol gateway, durable orchestration and failure injection; the revision replaces the CONF-A1-001 predecessor with CONF-BANK-001.",
+   "requires": "A revised packet that restates the banking scope is required before dispatch; the published YAML stays byte-identical."
+  },
+  "CONF-A3-001": {
+   "disposition": "INCIDENTAL_REFERENCE",
+   "note": "Names white goods only as an example profile or fixture; successors use banking."
+  },
+  "CONF-AIR-001": {
+   "disposition": "INCIDENTAL_REFERENCE",
+   "note": "Names white goods only as an example profile or fixture; successors use banking."
+  },
+  "CONF-K3S-001": {
+   "disposition": "INCIDENTAL_REFERENCE",
+   "note": "Names white goods only as an example profile or fixture; successors use banking."
+  },
+  "CONF-WG-001": {
+   "disposition": "ID_RETAINED_SCOPE_RETARGETED",
+   "newScope": "Execute the complete banking enterprise journey and create an unsigned banking tenant-acceptance candidate; the WG prefix is historical.",
+   "requires": "A revised packet that restates the banking scope is required before dispatch; the published YAML stays byte-identical."
+  },
+  "CTRL-002": {
+   "disposition": "INCIDENTAL_REFERENCE",
+   "note": "Names white goods only as an example profile or fixture; successors use banking."
+  },
+  "CTRL-006": {
+   "disposition": "INCIDENTAL_REFERENCE",
+   "note": "Names white goods only as an example profile or fixture; successors use banking."
+  },
+  "DIST-004": {
+   "disposition": "INCIDENTAL_REFERENCE",
+   "note": "Names white goods only as an example profile or fixture; successors use banking."
+  },
+  "DIST-AIR-001": {
+   "disposition": "INCIDENTAL_REFERENCE",
+   "note": "Names white goods only as an example profile or fixture; successors use banking."
+  },
+  "EXEC-002": {
+   "disposition": "INCIDENTAL_REFERENCE",
+   "note": "Names white goods only as an example profile or fixture; successors use banking."
+  },
+  "EXEC-ORCH-001": {
+   "disposition": "INCIDENTAL_REFERENCE",
+   "note": "Names white goods only as an example profile or fixture; successors use banking."
+  },
+  "EXEC-PROT-001": {
+   "disposition": "INCIDENTAL_REFERENCE",
+   "note": "Names white goods only as an example profile or fixture; successors use banking."
+  },
+  "EXEC-SBX-001": {
+   "disposition": "INCIDENTAL_REFERENCE",
+   "note": "Names white goods only as an example profile or fixture; successors use banking."
+  },
+  "EXEC-TOOL-001": {
+   "disposition": "INCIDENTAL_REFERENCE",
+   "note": "Names white goods only as an example profile or fixture; successors use banking."
+  },
+  "IND-001": {
+   "disposition": "INCIDENTAL_REFERENCE",
+   "note": "Names white goods only as an example profile or fixture; successors use banking."
+  },
+  "IND-WG-001": {
+   "disposition": "SUPERSEDED_BY_SUCCESSOR",
+   "successor": "IND-BANK-001"
+  },
+  "IND-WG-002": {
+   "disposition": "SUPERSEDED_BY_SUCCESSOR",
+   "successor": "IND-BANK-002"
+  },
+  "IND-WG-003": {
+   "disposition": "SUPERSEDED_BY_SUCCESSOR",
+   "successor": "IND-BANK-003"
+  },
+  "IND-WG-004": {
+   "disposition": "SUPERSEDED_BY_SUCCESSOR",
+   "successor": "IND-BANK-004"
+  },
+  "IND-WG-005": {
+   "disposition": "SUPERSEDED_BY_SUCCESSOR",
+   "successor": "IND-BANK-005"
+  },
+  "KN-002": {
+   "disposition": "INCIDENTAL_REFERENCE",
+   "note": "Names white goods only as an example profile or fixture; successors use banking."
+  },
+  "KN-DATA-001": {
+   "disposition": "INCIDENTAL_REFERENCE",
+   "note": "Names white goods only as an example profile or fixture; successors use banking."
+  },
+  "KN-DATA-002": {
+   "disposition": "SECTOR_FIXTURES_HISTORICAL",
+   "note": "Sector-neutral service scope retained; white-goods parity fixtures are historical and banking fixtures come from IND-BANK-001, IND-BANK-002 and IND-BANK-005."
+  },
+  "KN-DOM-001": {
+   "disposition": "SECTOR_FIXTURES_HISTORICAL",
+   "note": "Sector-neutral service scope retained; white-goods parity fixtures are historical and banking fixtures come from IND-BANK-001, IND-BANK-002 and IND-BANK-005."
+  },
+  "KN-MEM-001": {
+   "disposition": "INCIDENTAL_REFERENCE",
+   "note": "Names white goods only as an example profile or fixture; successors use banking."
+  },
+  "KN-RET-001": {
+   "disposition": "INCIDENTAL_REFERENCE",
+   "note": "Names white goods only as an example profile or fixture; successors use banking."
+  }
+ },
+ "successorProposals": [
+  {
+   "id": "IND-BANK-001",
+   "ownerRepoId": "R03",
+   "phase": "ALPHA_2",
+   "supersedes": "IND-WG-001",
+   "predecessorIds": [
+    "IND-001"
+   ],
+   "description": "Define the banking business objectives, roles, glossary and ontology (parties, products, accounts, transactions, channels, credit, risk and compliance concepts), KPIs and representative answer sets.",
+   "status": "WAITING_PACKET_PUBLICATION",
+   "publishedPacket": false,
+   "executionAuthority": "NONE"
+  },
+  {
+   "id": "IND-BANK-002",
+   "ownerRepoId": "R03",
+   "phase": "ALPHA_2",
+   "supersedes": "IND-WG-002",
+   "predecessorIds": [
+    "IND-BANK-001"
+   ],
+   "description": "Add the banking source inventory, synthetic non-personal mock data, and explicit completeness, freshness, provenance and classification thresholds for customer, account and transaction sources.",
+   "status": "WAITING_PACKET_PUBLICATION",
+   "publishedPacket": false,
+   "executionAuthority": "NONE"
+  },
+  {
+   "id": "IND-BANK-003",
+   "ownerRepoId": "R03",
+   "phase": "ALPHA_2",
+   "supersedes": "IND-WG-003",
+   "predecessorIds": [
+    "IND-BANK-002"
+   ],
+   "description": "Define banking control mappings, autonomy categories, integrations, credentials, side effects, compensation and waiver requirements; candidate regulatory inputs are evaluated per tenant jurisdiction.",
+   "status": "WAITING_PACKET_PUBLICATION",
+   "publishedPacket": false,
+   "executionAuthority": "NONE"
+  },
+  {
+   "id": "IND-BANK-004",
+   "ownerRepoId": "R03",
+   "phase": "ALPHA_2",
+   "supersedes": "IND-WG-004",
+   "predecessorIds": [
+    "IND-BANK-003",
+    "CON-004"
+   ],
+   "description": "Publish deterministic banking provider recommendations and explicit-selector questionnaire choices for the minimal, regulated OpenShift, silo and air-gap environments.",
+   "status": "WAITING_PACKET_PUBLICATION",
+   "publishedPacket": false,
+   "executionAuthority": "NONE"
+  },
+  {
+   "id": "IND-BANK-005",
+   "ownerRepoId": "R03",
+   "phase": "ALPHA_2",
+   "supersedes": "IND-WG-005",
+   "predecessorIds": [
+    "IND-BANK-004"
+   ],
+   "description": "Freeze deterministic banking source-contract scenarios, a non-recursive payload lock and an unsigned offline-signing-ready manifest for later conformance campaigns.",
+   "status": "WAITING_PACKET_PUBLICATION",
+   "publishedPacket": false,
+   "executionAuthority": "NONE"
+  },
+  {
+   "id": "CONF-BANK-001",
+   "ownerRepoId": "R12",
+   "phase": "ALPHA_2",
+   "supersedes": "CONF-A1-001",
+   "predecessorIds": [
+    "CONF-002",
+    "CTRL-007",
+    "KN-DATA-002",
+    "TRUST-OBS-001",
+    "OP-003",
+    "DIST-004",
+    "IND-BANK-005"
+   ],
+   "description": "Certify the banking journey from questionnaire through business, domain, data readiness, signed bundle and installed foundation harnesses.",
+   "status": "WAITING_PACKET_PUBLICATION",
+   "publishedPacket": false,
+   "executionAuthority": "NONE"
+  }
+ ],
+ "catalogFollowUps": [
+  {
+   "path": "architecture/providers.yaml",
+   "current": "industry.white-goods",
+   "proposed": "industry.banking"
+  },
+  {
+   "path": "architecture/providers.yaml",
+   "current": "imply.white-goods-guidance",
+   "proposed": "imply.banking-guidance"
+  },
+  {
+   "path": "architecture/providers.yaml",
+   "current": "profile.whitegoods-readonly-amd64",
+   "proposed": "profile.banking-readonly-amd64"
+  },
+  {
+   "path": "architecture/providers.yaml",
+   "current": "packs/white-goods/manifest.json",
+   "proposed": "packs/banking/manifest.json"
+  },
+  {
+   "path": "architecture/services.yaml",
+   "current": "white-goods semantic vectors",
+   "proposed": "banking semantic vectors"
+  },
+  {
+   "path": "docs/PROVIDER_MODULE_CATALOG.md",
+   "current": "profile.whitegoods-readonly-amd64",
+   "proposed": "profile.banking-readonly-amd64"
+  }
+ ],
+ "candidateRegulatoryInputs": [
+  "BCBS 239 principles for risk data aggregation and risk reporting",
+  "EU DORA, Regulation (EU) 2022/2554, ICT operational resilience",
+  "EU AI Act, Regulation (EU) 2024/1689; creditworthiness evaluation of natural persons is a high-risk use",
+  "GDPR, Regulation (EU) 2016/679",
+  "PSD2, Directive (EU) 2015/2366",
+  "AML/CFT and KYC rules of the tenant's jurisdiction",
+  "Model risk management guidance such as US SR 11-7"
+ ],
+ "directionDocs": [
+  "docs/MASTER_DEVELOPMENT_PLAN.md",
+  "docs/SCOPE_PROVENANCE.md",
+  "docs/alpha-2/SECTOR_DIRECTION.md",
+  "docs/harnesses/knowledge.data-integration.md",
+  "docs/harnesses/knowledge.domain-semantic.md",
+  "docs/harnesses/knowledge.retrieval-context.md",
+  "docs/harnesses/trust.evaluation-assurance.md",
+  "docs/repositories/00-harness-engineering.md",
+  "docs/repositories/03-mas-harness-industry-packs.md",
+  "docs/repositories/04-mas-harness-control-plane.md",
+  "docs/repositories/07-mas-harness-knowledge-plane.md",
+  "docs/repositories/12-mas-harness-conformance-labs.md",
+  "task-packets/README.md"
+ ],
+ "unchangedAuthorities": [
+  "architecture/providers.yaml",
+  "architecture/services.yaml",
+  "architecture/unified-roadmap-backlog.json",
+  "architecture/unified-roadmap-source-index.json",
+  "docs/PROVIDER_MODULE_CATALOG.md",
+  "docs/alpha-2/UNIFIED_ROADMAP_TRACEABILITY.md"
+ ],
+ "nonClaims": {
+  "bankingPackBuilt": false,
+  "ontologyPublished": false,
+  "fixturesBuilt": false,
+  "catalogChanged": false,
+  "publishedPacketChanged": false,
+  "backlogSnapshotChanged": false,
+  "providerSelected": false,
+  "campaignRun": false,
+  "regulatoryApplicabilityAsserted": false,
+  "tenantAcceptance": false
+ }
+}

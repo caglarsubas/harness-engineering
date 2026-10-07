@@ -24,8 +24,10 @@ into this open-source repository.
   conflict, provider, evidence, upgrade, rollback, and removal contracts.
 - A questionnaire-driven compiler that produces the smallest valid profile only
   after the tenant accepts its proposed prerequisites.
-- Industry guidance delivered as signed data packs, beginning with a white-goods
-  reference flow; guidance cannot execute code or silently add authority.
+- Industry guidance delivered as signed data packs, beginning with a banking
+  reference flow (owner decision SECTOR-D1, October 7, 2026, replacing the earlier
+  white-goods reference flow; see [sector direction](alpha-2/SECTOR_DIRECTION.md));
+  guidance cannot execute code or silently add authority.
 - Immutable, signed OCI profile bundles that contain only selected install units.
 - Four explicit operating modes: operator-hosted SaaS on pre-authorized capacity,
   tenant public cloud on a pre-existing managed cluster, self-managed

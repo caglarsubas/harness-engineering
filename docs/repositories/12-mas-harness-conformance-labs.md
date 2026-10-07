@@ -1,5 +1,14 @@
 # Repository Plan: `mas-harness-conformance-labs`
 
+## Sector direction — MET-SECTOR-001
+
+Owner decision SECTOR-D1 (October 7, 2026): banking replaces white goods as the first and only release
+sector from Alpha 2 through the first enterprise release; [sector direction](../alpha-2/SECTOR_DIRECTION.md)
+gives every disposition. `CONF-BANK-001` succeeds `CONF-A1-001`; `CONF-A2-001` and `CONF-WG-001` keep their
+IDs and each needs a revision amendment that binds the banking scope before dispatch. Accepted predecessor
+edges, such as `CONF-LINUX-001` on `CONF-A1-001`, stay satisfied. White-goods material below records what
+was specified or built; it is historical, not current direction.
+
 ## Current reviewed interface candidate — MET-ENFORCE-003
 
 [W01 reviewed candidate and unresolved gates](../alpha-2/HOST_INTERFACE_PUBLICATION.md): Alpha2 ONGOING.

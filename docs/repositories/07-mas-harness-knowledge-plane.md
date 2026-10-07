@@ -1,5 +1,14 @@
 # Repository Plan: `mas-harness-knowledge-plane`
 
+## Sector direction — MET-SECTOR-001
+
+Owner decision SECTOR-D1 (October 7, 2026): banking replaces white goods as the first and only release
+sector from Alpha 2 through the first enterprise release; [sector direction](../alpha-2/SECTOR_DIRECTION.md)
+gives every disposition. Ontology parity, source records and cited retrieval vectors move to banking through
+the unpublished proposals `IND-BANK-001`, `IND-BANK-002` and `KN-BANK-001`; the white-goods fixtures of
+`KN-DOM-001`, `KN-DATA-001`, `KN-DATA-002` and `KN-RET-001` are historical. White-goods material below
+records what was specified or built; it is historical, not current direction.
+
 ## Current research-led implementation direction — MET-ADOPT-002
 
 [Harness / paper / upstream repository map](../alpha-2/HARNESS_PAPER_REPOSITORY_MAP.md)

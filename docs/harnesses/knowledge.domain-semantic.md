@@ -1,5 +1,13 @@
 # Harness Specification: `knowledge.domain-semantic`
 
+## Sector direction — MET-SECTOR-001
+
+Owner decision SECTOR-D1 (October 7, 2026): banking replaces white goods as the first and only release
+sector from Alpha 2 through the first enterprise release; [sector direction](../alpha-2/SECTOR_DIRECTION.md)
+gives every disposition. The alpha capability is a banking glossary and ontology: versioned terms with
+provenance and business-question readiness, under the proposed namespace `urn:planeon:banking:*`.
+White-goods material below records what was specified or built; it is historical, not current direction.
+
 ## Current research-led implementation direction — MET-ADOPT-002
 
 [Harness / paper / upstream repository map](../alpha-2/HARNESS_PAPER_REPOSITORY_MAP.md)

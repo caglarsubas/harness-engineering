@@ -1,6 +1,15 @@
 # Sol-High Task Packet Catalog
 
-## Current source preparation — MET-ENFORCE-009
+## Current source preparation — MET-SECTOR-001
+
+SECTOR-D1: banking replaces white goods as the first and only release sector from Alpha 2 through the first
+enterprise release. A decision record gives each of the 28 published packets that name white goods a disposition,
+adds nine unpublished proposals (IND-BANK-001 to IND-BANK-005, KN-BANK-001, CTRL-BANK-001, DIST-BANK-001,
+CONF-BANK-001) and keeps the CONF-A2-001 and CONF-WG-001 IDs with banking scope. No published packet, catalog, pack
+or fixture changes. Alpha2 OPEN; 206 accepted plus SECTOR-001 only. Native Linux, exact-main and tenant acceptance
+remain separate.
+
+## Historical ENFORCE-009 source preparation — MET-ENFORCE-009
 
 W02e: the closed SELinux matrix (19 domains, 56 types, 100 deny assertions over three boot states, genfscon labelling,
 per-source closures, the corrected F2 closure and the W02a label values, 1,766 vector checks) passed its third
@@ -1143,3 +1152,4 @@ acceptance is claimed. Alpha2 ONGOING; model-effort transition NOT_DUE.
 | 204 | `MET-PERF-031` | `Harness-Engineering` | Test-local exact projection sharing in three mutation loops to cut verify time |
 | 205 | `MET-ENFORCE-008` | `Harness-Engineering` | W02c I07 policy-writer channel contract and closed policy-kind table, independently reviewed |
 | 206 | `MET-ENFORCE-009` | `Harness-Engineering` | W02e SELinux domain, type, boolean and permission matrix with the F2 closure, independently reviewed |
+| 207 | `MET-SECTOR-001` | `Harness-Engineering` | Owner decision SECTOR-D1: banking replaces white goods through the first enterprise release |

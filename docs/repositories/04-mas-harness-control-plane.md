@@ -1,5 +1,14 @@
 # Repository Plan: `mas-harness-control-plane`
 
+## Sector direction — MET-SECTOR-001
+
+Owner decision SECTOR-D1 (October 7, 2026): banking replaces white goods as the first and only release
+sector from Alpha 2 through the first enterprise release; [sector direction](../alpha-2/SECTOR_DIRECTION.md)
+gives every disposition. The banking pack release becomes the intake acceptance baseline and the
+guided-session end-to-end journey moves to banking through the unpublished proposal `CTRL-BANK-001`; the
+white-goods baseline, spec and make target in `CTRL-002` and `CTRL-006` are historical. White-goods material
+below records what was specified or built; it is historical, not current direction.
+
 ## Current research-led implementation direction — MET-ADOPT-002
 
 [Harness / paper / upstream repository map](../alpha-2/HARNESS_PAPER_REPOSITORY_MAP.md)

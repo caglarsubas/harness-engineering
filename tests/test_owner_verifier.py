@@ -33,7 +33,7 @@ def test_exact_current_source_and_complete_history_chain():
     assert verifier.validate() is None
     current = packets()
     accepted = verifier.historical_catalog(current)
-    assert len(current) == 204 and len(accepted) == 192
+    assert len(current) == 205 and len(accepted) == 192
     assert set(accepted) == set(current) - {verifier.NEW_PACKET, verifier.successor.NEW_PACKET,
                                             verifier.successor.successor.NEW_PACKET,
                                             verifier.successor.successor.successor.NEW_PACKET,
@@ -44,7 +44,8 @@ def test_exact_current_source_and_complete_history_chain():
                                             verifier.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET,
                                             verifier.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET,
                                             verifier.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET,
-                                            verifier.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET}
+                                            verifier.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET,
+                                            verifier.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET}
     assert len(linux.historical_catalog(current)) == 191
     assert len(performance.historical_catalog(current)) == 190
     assert len(runner.historical_catalog(current)) == 189

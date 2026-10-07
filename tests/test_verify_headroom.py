@@ -602,6 +602,15 @@ def test_every_route_test_computes_only_its_own_inputs():
     (lambda s: s.replace('    with pytest.raises(ValueError, match="selinux matrix history authority digest"):\n'
                          '        calls[route]()\n', '    calls[route]()\n', 1), "route refusal tail"),
     (lambda s: s.replace('match="selinux matrix history authority digest"', 'match="digest"', 1), "route refusal tail"),
+    (lambda s: s.replace('match="selinux matrix history authority digest"', 'match="| history authority digest"', 1),
+     "route refusal tail"),
+    (lambda s: s.replace("original = profile.regular_bytes", "original = linux.regular_bytes", 1)
+     .replace("relative == profile.AUTHORITY_PATH", "relative == linux.AUTHORITY_PATH", 1)
+     .replace('monkeypatch.setattr(profile, "regular_bytes"', 'monkeypatch.setattr(linux, "regular_bytes"', 1),
+     "route refusal tail"),
+    (lambda s: s.replace('    before = profile.historical_bytes(path, raw) if route in ("current_test", "old_bytes") else None',
+                         '    before = (lambda: profile.historical_bytes(path, raw)) if route in ("current_test", "old_bytes") '
+                         'else None', 1), "route setup defers no computation"),
 ])
 def test_eager_or_misrouted_setup_is_refused(change, message):
     source = _route_source()
@@ -620,7 +629,10 @@ def test_status_mutations_stub_only_a_replay_that_reads_no_status():
     with pytest.raises(ValueError, match="stub only the vector replay"):
         profile.validate_status_stub(without_control, validator_raw, model_raw)
     for changed_model in (model_raw.replace(b"import hashlib\n", b"import hashlib\nimport pathlib\n", 1),
-                          model_raw + b"\n\ndef _peek(path):\n    return path.read_bytes()\n"):
+                          model_raw + b"\n\ndef _peek(path):\n    return path.read_bytes()\n",
+                          model_raw + b"\n\ndef _peek(url):\n    from jsonschema.validators import urlopen\n    return urlopen(url)\n",
+                          model_raw + b"\n\ndef _peek(path):\n    return __import__('o' + 's').listdir(path)\n",
+                          model_raw + b"\n\ndef _peek(path):\n    return __builtins__['open'](path)\n"):
         assert changed_model != model_raw
         with pytest.raises(ValueError, match="reads no status bytes"):
             profile.validate_status_stub(test_raw, validator_raw, changed_model)
@@ -651,7 +663,7 @@ def _unique_sources():
 
 
 def test_grouped_unique_items_matches_jsonschema_on_the_fixed_corpus():
-    assert profile.validate_schema_unique(*_unique_sources()) == 4026
+    assert profile.validate_schema_unique(*_unique_sources()) == 4028
 
 
 @pytest.mark.parametrize("old,new,message", [
@@ -659,6 +671,7 @@ def test_grouped_unique_items_matches_jsonschema_on_the_fixed_corpus():
     (b"    if not plain_and_shallow(container):\n        return _utils.uniq(container)\n", b"",
      "uniqueItems answer differs"),
     (b"MAX_GROUPED_DEPTH = 100\n", b"MAX_GROUPED_DEPTH = 1000\n", "reaches every comparison path"),
+    (b"            if id(value) in seen:\n                return False\n", b"", "reaches every comparison path"),
     (b'{"uniqueItems": unique_items}', b'{"uniqueItems": unique_items, "minItems": unique_items}',
      "only uniqueItems differs"),
     (b'JSONSCHEMA_VERSION = "4.24.0"', b'JSONSCHEMA_VERSION = "4.25.0"', "only uniqueItems differs"),
@@ -666,14 +679,30 @@ def test_grouped_unique_items_matches_jsonschema_on_the_fixed_corpus():
 def test_a_changed_grouped_check_is_refused(old, new, message):
     readiness, unique = _unique_sources()
     assert unique.count(old) == 1
+    changed = unique.replace(old, new)
+    with pytest.raises(ValueError, match="reviewed schema_unique bytes"):
+        profile.validate_schema_unique(readiness, changed)
+    # Beyond the byte pin, the behavioural check refuses each change on its own.
     with pytest.raises(ValueError, match=message):
-        profile.validate_schema_unique(readiness, unique.replace(old, new))
+        profile.check_grouped_module(profile.reviewed_module(changed))
+
+
+def test_the_grouped_module_cannot_rebind_its_oracle():
+    unique = _unique_sources()[1]
+    rebinding = unique + b"\n_utils.uniq = unique\n"
+    from jsonschema import _utils
+    original = _utils.uniq
+    try:
+        with pytest.raises(ValueError, match="leaves jsonschema unchanged"):
+            profile.reviewed_module(rebinding)
+    finally:
+        _utils.uniq = original
 
 
 def test_the_reviewed_module_is_the_one_under_test(monkeypatch):
     from scripts import schema_unique
     monkeypatch.setattr(schema_unique, "unique", lambda container: True)
-    assert profile.validate_schema_unique(*_unique_sources()) == 4026
+    assert profile.validate_schema_unique(*_unique_sources()) == 4028
 
 
 def test_readiness_must_build_the_grouped_validator():

@@ -2,11 +2,12 @@
 
 ## Current source preparation — MET-PERF-032
 
-PERF-032: verify reached 692 s of the 900 s cap at packet 207. Four repeats are removed with the same assertions,
-refusals and answers: route tests compute only their own route's input, native-profile status mutations stub
-only the pure vector replay after a passing control, the credential-lifecycle inventory builder projects each
-exact input set once, and the readiness uniqueItems check groups items by an equality-sound key
-(scripts/schema_unique.py). No validator caches a projection or verdict. Alpha2 OPEN; 207 accepted plus PERF-032
+PERF-032: verify reached 692 s of the 900 s cap at packet 207. Four repeats are removed with the same assertions:
+route tests compute only their own route's input, native-profile status mutations stub only the pure vector replay
+after a passing control, the credential-lifecycle inventory builder projects each exact input set once, and the
+readiness uniqueItems check groups items by an equality-sound key (scripts/schema_unique.py), giving jsonschema's
+answer wherever jsonschema returns one, apart from inputs within one stack frame of the recursion limit. No
+validator caches a projection or verdict. Alpha2 OPEN; 207 accepted plus PERF-032
 only. Native Linux, exact-main and tenant acceptance remain separate.
 
 ## Historical SECTOR-001 source preparation — MET-SECTOR-001

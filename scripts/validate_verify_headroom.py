@@ -21,7 +21,7 @@ except ImportError:
 
 ROOT = Path(__file__).resolve().parents[1]
 AUTHORITY_PATH = "architecture/verify-headroom-authority.json"
-AUTHORITY_SHA256 = "38bcc3ee0474edc4c6643b8ad724bc7098ea48c7453379d0ed1c69c36bee8633"
+AUTHORITY_SHA256 = "fff96c2f623f67d8d3d8e3deaca010d2d687056cebf7da070457366e4898ab9f"
 VALIDATOR_PATH = "scripts/validate_verify_headroom.py"
 BASE_COMMIT = "8f77c3ff5289bade9752f2a3200645180f473e13"
 NEW_PACKET = "MET-PERF-032"
@@ -355,12 +355,16 @@ STATUS_VALIDATOR_PATH = "scripts/validate_native_profile_v2.py"
 STATUS_MODEL_PATH = "scripts/native_qualification_v2.py"
 # Names that would let the stubbed replay read files; the model may import only these modules.
 READ_NAMES = frozenset({"STATUS_PATH", "regular_bytes", "historical_bytes", "_json_file", "open", "ROOT", "Path",
-                        "os", "io", "pathlib", "subprocess", "socket", "shutil"})
-READ_ATTRIBUTES = frozenset({"read_bytes", "read_text", "open", "write_bytes", "write_text"})
-MODEL_IMPORTS = frozenset({"__future__", "hashlib", "ipaddress", "json", "datetime", "typing", "jsonschema"})
+                        "os", "io", "pathlib", "subprocess", "socket", "shutil", "urlopen", "importlib", "__import__",
+                        "__builtins__", "eval", "exec", "compile", "getattr", "globals", "vars"})
+READ_ATTRIBUTES = frozenset({"read_bytes", "read_text", "open", "write_bytes", "write_text", "urlopen"})
+# The model's exact import statements; anything else it imports is refused.
+MODEL_IMPORTS = frozenset({"from __future__ import annotations", "import hashlib", "import ipaddress", "import json",
+                           "from datetime import datetime", "from typing import Any", "import jsonschema"})
 LIFECYCLE_TEST_PATH = "tests/test_credential_lifecycle.py"
 READINESS_PATH = "scripts/validate_readiness.py"
 UNIQUE_PATH = "scripts/schema_unique.py"
+UNIQUE_SHA256 = "730dfc0bba6ed053ec9841e034f15b7a873c84a80f4ab3c445d1e0f1a30cf8bd"
 STATUS_TEST = '''def test_contract_status_cannot_overclaim(monkeypatch, change):
     # The vector replay reads no status bytes; test_every_vector_replays_to_its_pinned_result
     # runs it and the full validator unstubbed. Under the same stub the unchanged status passes,
@@ -468,9 +472,13 @@ def validate_route_locality(path: str, source: bytes) -> int:
     aliases = [node.value.value.id for node in rest[1:2] if isinstance(node, ast.Assign)
                and isinstance(node.value, ast.Attribute) and isinstance(node.value.value, ast.Name)]
     matches = [node for node in ast.walk(tail) if isinstance(node, ast.keyword) and node.arg == "match"]
+    authority = calls.get("authority")
     require(len(aliases) == 1 and len(matches) == 1 and isinstance(matches[0].value, ast.Constant)
             and type(matches[0].value.value) is str
-            and matches[0].value.value.endswith(" history authority digest"), "route refusal tail: " + path)
+            and matches[0].value.value.endswith(" history authority digest")
+            and not set(matches[0].value.value) & set(".^$*+?{}[]\\|()")
+            and isinstance(authority, ast.Attribute) and isinstance(authority.value, ast.Name)
+            and authority.attr == "authority" and authority.value.id == aliases[0], "route refusal tail: " + path)
     for node in ast.walk(tail):
         if isinstance(node, ast.Name) and node.id == aliases[0]:
             node.id = "LAYER"
@@ -481,6 +489,8 @@ def validate_route_locality(path: str, source: bytes) -> int:
         require(isinstance(statement, ast.Assign) and len(statement.targets) == 1
                 and isinstance(statement.targets[0], ast.Name), "route setup holds only assignments: " + path)
         name = statement.targets[0].id
+        require(not any(isinstance(node, ast.Lambda) for node in ast.walk(statement.value)),
+                "route setup defers no computation: %s %s" % (name, path))
         if name in ROUTE_SHARED:
             continue
         readers = {route for route, call in calls.items() if name in _names(call)}
@@ -517,10 +527,8 @@ def validate_status_stub(test_source: bytes, validator_source: bytes, model_sour
     require("validate_vectors" in reached and not used & READ_NAMES,
             "the stubbed vector replay reads no status bytes")
     model = ast.parse(model_source)
-    imported = {alias.name.split(".")[0] for node in ast.walk(model) if isinstance(node, ast.Import)
-                for alias in node.names} | {(node.module or "").split(".")[0] for node in ast.walk(model)
-                                           if isinstance(node, ast.ImportFrom)}
-    require(imported <= MODEL_IMPORTS and not _names(model) & READ_NAMES
+    imported = {ast.unparse(node) for node in ast.walk(model) if isinstance(node, (ast.Import, ast.ImportFrom))}
+    require(imported == MODEL_IMPORTS and not _names(model) & READ_NAMES
             and not {node.attr for node in ast.walk(model) if isinstance(node, ast.Attribute)} & READ_ATTRIBUTES,
             "the stubbed vector replay reads no status bytes")
     caller = functions["validate_native_profile"]
@@ -565,6 +573,8 @@ def _unique_corpus() -> list[list]:
     corpus += [[(1, 2), [1, 2], {}], [OrderedDict(a=1), {"a": 1}, []], [Items([1]), [1], {}], [{"d": date(2026, 1, 1)},
                {"d": date(2026, 1, 1)}], [{"n": nan}, {"n": nan}, []], [nan, {}, nan], [cycle, {}],
                [deep(150), deep(150), {}], [deep(150), deep(151), {}], [{"a": deep(120)}, {"a": deep(120)}]]
+    shared = [1, [2]]
+    corpus += [[shared, shared, {}], [{"a": shared}, {"b": shared}, {"a": [1, [2]]}]]
     for _ in range(UNIQUE_CASES):
         pool = [value(0) for _ in range(rng.randint(1, 3))]
         corpus.append([json.loads(json.dumps(rng.choice(pool))) if rng.random() < 0.5 else value(0)
@@ -572,26 +582,40 @@ def _unique_corpus() -> list[list]:
     return corpus
 
 
+def _jsonschema_state() -> tuple:
+    import jsonschema
+    from jsonschema import _keywords, _utils, validators
+    return (_utils.uniq, _utils.equal, _utils.unbool, _keywords.uniqueItems, dict(validators._VALIDATORS),
+            dict(jsonschema.Draft202012Validator.VALIDATORS))
+
+
 def reviewed_module(source: bytes) -> dict[str, Any]:
-    """This packet's reviewed scripts/schema_unique.py, compiled into a fresh namespace."""
+    """Reviewed scripts/schema_unique.py compiled into a fresh namespace; it must leave jsonschema as it found it."""
+    before = _jsonschema_state()
     namespace: dict[str, Any] = {"__name__": "reviewed_schema_unique"}
     exec(compile(source, UNIQUE_PATH, "exec"), namespace)
+    require(_jsonschema_state() == before, "the grouped module leaves jsonschema unchanged")
     return namespace
 
 
 def validate_schema_unique(readiness_source: bytes, unique_source: bytes) -> int:
-    """validate_schema_instance uses SchemaInstanceValidator, which differs from Draft 2020-12 only in
-    uniqueItems and gives jsonschema's own answer on every corpus array."""
-    from importlib.metadata import version
-    import jsonschema
-    from jsonschema import _utils
-    module = reviewed_module(unique_source)
+    """validate_schema_instance uses SchemaInstanceValidator from exactly this packet's reviewed module."""
     function = _function(ast.parse(readiness_source), "validate_schema_instance", READINESS_PATH)
     built = [ast.unparse(node.func) for node in ast.walk(function) if isinstance(node, ast.Call)
              and ast.unparse(node.func).endswith("Validator")]
     require(built == ["SchemaInstanceValidator"]
             and readiness_source.count(b"    from schema_unique import SchemaInstanceValidator\n") == 1,
             "readiness schema instances use SchemaInstanceValidator")
+    require(digest(unique_source) == UNIQUE_SHA256, "reviewed schema_unique bytes")
+    return check_grouped_module(reviewed_module(unique_source))
+
+
+def check_grouped_module(module: dict[str, Any]) -> int:
+    """The grouped class differs from Draft 2020-12 only in uniqueItems and gives jsonschema's own answer on every
+    corpus array, reaching every comparison path."""
+    from importlib.metadata import version
+    import jsonschema
+    from jsonschema import _utils
     base, fast = jsonschema.Draft202012Validator, module["SchemaInstanceValidator"]
     require(version("jsonschema") == module["JSONSCHEMA_VERSION"] == "4.24.0"
             and fast.META_SCHEMA == base.META_SCHEMA and fast.TYPE_CHECKER is base.TYPE_CHECKER
@@ -608,7 +632,7 @@ def validate_schema_unique(readiness_source: bytes, unique_source: bytes) -> int
             unsortable += 1
             duplicated += not expected
             kept += not module["plain_and_shallow"](container)
-    require(unsortable >= 1000 and duplicated >= 100 and kept >= 8, "the corpus reaches every comparison path")
+    require(unsortable >= 1000 and duplicated >= 100 and kept >= 10, "the corpus reaches every comparison path")
     return len(corpus)
 
 

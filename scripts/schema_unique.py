@@ -3,10 +3,11 @@
 jsonschema 4.24.0 checks uniqueItems by sorting the items; when they do not sort (objects, mixed types) it
 compares every pair with its ``equal``, which is quadratic. Items that are ``equal`` always share the key
 below, so comparing only items with the same key gives the same answer. The sorted path is unchanged.
-Arrays holding anything but plain JSON, or nested deeper than MAX_GROUPED_DEPTH (a cycle always is), keep
-jsonschema's own check, and so does any array whose grouping exceeds the recursion limit. So ``unique``
-returns jsonschema's answer whenever jsonschema returns one; only where jsonschema itself would exceed the
-recursion limit may this return an answer instead.
+Arrays holding anything but plain JSON, nested deeper than MAX_GROUPED_DEPTH, or reaching any list or dict
+twice (a shared alias or a cycle) keep jsonschema's own check, and so does any array whose grouping exceeds
+the recursion limit. So ``unique`` returns jsonschema's answer wherever jsonschema returns one, apart from
+inputs within one stack frame of the recursion limit (the fallback runs one frame deeper); where jsonschema
+itself would exceed the limit this may return an answer instead.
 
 The class is not registered for a ``$schema`` URI, so a subschema that names its own ``$schema`` is checked
 by jsonschema's stock class: the same answers, without the speed-up.
@@ -39,12 +40,17 @@ def equality_key(value: Any) -> Any:
 
 
 def plain_and_shallow(container: list) -> bool:
-    """Every value is a plain-JSON dict, list or scalar, nested at most MAX_GROUPED_DEPTH deep."""
-    pending = [(container, 0)]
+    """Every value is a plain-JSON dict, list or scalar, nested at most MAX_GROUPED_DEPTH deep, and no list or
+    dict is reached twice; the walk is linear in the number of distinct containers."""
+    pending, seen = [(container, 0)], set()
     while pending:
         value, depth = pending.pop()
         if depth > MAX_GROUPED_DEPTH:
             return False
+        if type(value) in (dict, list):
+            if id(value) in seen:
+                return False
+            seen.add(id(value))
         if type(value) is dict:
             if not all(type(key) in _PLAIN_SCALARS for key in value):
                 return False

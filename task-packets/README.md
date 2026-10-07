@@ -1,6 +1,15 @@
 # Sol-High Task Packet Catalog
 
-## Current source preparation — MET-SECTOR-001
+## Current source preparation — MET-PERF-032
+
+PERF-032: verify reached 692 s of the 900 s cap at packet 207. Four repeats are removed with the same assertions,
+refusals and answers: route tests compute only their own route's input, native-profile status mutations stub
+only the pure vector replay after a passing control, the credential-lifecycle inventory builder projects each
+exact input set once, and the readiness uniqueItems check groups items by an equality-sound key
+(scripts/schema_unique.py). No validator caches a projection or verdict. Alpha2 OPEN; 207 accepted plus PERF-032
+only. Native Linux, exact-main and tenant acceptance remain separate.
+
+## Historical SECTOR-001 source preparation — MET-SECTOR-001
 
 SECTOR-D1: banking replaces white goods as the first and only release sector from Alpha 2 through the first
 enterprise release. A decision record gives each of the 28 published packets that name white goods a disposition,
@@ -1153,3 +1162,4 @@ acceptance is claimed. Alpha2 ONGOING; model-effort transition NOT_DUE.
 | 205 | `MET-ENFORCE-008` | `Harness-Engineering` | W02c I07 policy-writer channel contract and closed policy-kind table, independently reviewed |
 | 206 | `MET-ENFORCE-009` | `Harness-Engineering` | W02e SELinux domain, type, boolean and permission matrix with the F2 closure, independently reviewed |
 | 207 | `MET-SECTOR-001` | `Harness-Engineering` | Owner decision SECTOR-D1: banking replaces white goods through the first enterprise release |
+| 208 | `MET-PERF-032` | `Harness-Engineering` | Verify-time headroom: route-local test inputs, stubbed status replay, shared inventory projection, grouped uniqueItems |

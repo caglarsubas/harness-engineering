@@ -34,7 +34,7 @@ def test_exact_current_source_and_complete_history_chain():
     assert recheck.validate() is None
     current = packets()
     accepted = recheck.historical_catalog(current)
-    assert len(current) == 207 and len(accepted) == 193
+    assert len(current) == 208 and len(accepted) == 193
     assert set(accepted) == set(current) - {recheck.NEW_PACKET, recheck.successor.NEW_PACKET,
                                             recheck.successor.successor.NEW_PACKET,
                                             recheck.successor.successor.successor.NEW_PACKET,
@@ -47,7 +47,8 @@ def test_exact_current_source_and_complete_history_chain():
                                             recheck.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET,
                                             recheck.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET,
                                             recheck.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET,
-                                            recheck.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET}
+                                            recheck.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET,
+                                            recheck.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET}
     assert len(verifier.historical_catalog(current)) == 192
     assert len(linux.historical_catalog(current)) == 191
     assert len(performance.historical_catalog(current)) == 190
@@ -130,15 +131,15 @@ def test_exact_inverse_and_forward_test_round_trip_across_layers():
 def test_newest_authority_is_freshly_checked_on_every_route(monkeypatch, route):
     path = changed_test()
     raw = recheck.regular_bytes(path)
-    before = recheck.historical_bytes(path, raw)
-    current_packets = packets()
-    layer = layer_packets()
+    before = recheck.historical_bytes(path, raw) if route in ("current_test", "old_bytes") else None
+    current_packets = packets() if route == "catalog" else None
+    layer = layer_packets() if route == "payloads" else None
     master_raw = roadmap.regular_bytes(roadmap.MASTER_PATH)
-    old_verifier = verifier.historical_bytes(roadmap.MASTER_PATH, master_raw)
-    old_linux = linux.historical_bytes(roadmap.MASTER_PATH, master_raw)
-    old_performance = performance.historical_bytes(roadmap.MASTER_PATH, master_raw)
-    old_runner = runner.historical_bytes(roadmap.MASTER_PATH, master_raw)
-    old_roadmap = roadmap.historical_bytes(roadmap.MASTER_PATH, roadmap.regular_bytes(roadmap.MASTER_PATH))
+    old_verifier = verifier.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "verifier_old" else None
+    old_linux = linux.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "linux_old" else None
+    old_performance = performance.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "performance_old" else None
+    old_runner = runner.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "runner_old" else None
+    old_roadmap = roadmap.historical_bytes(roadmap.MASTER_PATH, roadmap.regular_bytes(roadmap.MASTER_PATH)) if route == "roadmap_old" else None
     calls = {
         "authority": recheck.authority,
         "changed": lambda: recheck.historical_bytes(path, raw),

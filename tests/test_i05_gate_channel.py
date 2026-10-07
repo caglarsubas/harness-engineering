@@ -43,11 +43,12 @@ def test_exact_current_source_and_complete_history_chain():
     assert profile.validate() is None
     current = packets()
     accepted = profile.historical_catalog(current)
-    assert len(current) == 207 and len(accepted) == 202
+    assert len(current) == 208 and len(accepted) == 202
     assert set(accepted) == set(current) - {profile.NEW_PACKET, profile.successor.NEW_PACKET,
                                             profile.successor.successor.NEW_PACKET,
                                             profile.successor.successor.successor.NEW_PACKET,
-                                            profile.successor.successor.successor.successor.NEW_PACKET}
+                                            profile.successor.successor.successor.successor.NEW_PACKET,
+                                            profile.successor.successor.successor.successor.successor.NEW_PACKET}
     assert len(iprofile.historical_catalog(current)) == 201
     assert len(nprofile.historical_catalog(current)) == 200
     assert len(resolution.historical_catalog(current)) == 199
@@ -157,24 +158,24 @@ def test_exact_inverse_and_forward_test_round_trip_across_layers():
 def test_newest_authority_is_freshly_checked_on_every_route(monkeypatch, route):
     path = changed_test()
     raw = profile.regular_bytes(path)
-    before = profile.historical_bytes(path, raw)
-    current_packets = packets()
-    layer = layer_packets()
+    before = profile.historical_bytes(path, raw) if route in ("current_test", "old_bytes") else None
+    current_packets = packets() if route == "catalog" else None
+    layer = layer_packets() if route == "payloads" else None
     master_raw = roadmap.regular_bytes(roadmap.MASTER_PATH)
-    old_iprofile = iprofile.historical_bytes(roadmap.MASTER_PATH, master_raw)
-    old_nprofile = nprofile.historical_bytes(roadmap.MASTER_PATH, master_raw)
-    old_resolution = resolution.historical_bytes(roadmap.MASTER_PATH, master_raw)
-    old_account = account.historical_bytes(roadmap.MASTER_PATH, master_raw)
-    old_canary = canary.historical_bytes(roadmap.MASTER_PATH, master_raw)
-    old_isolated = isolated.historical_bytes(roadmap.MASTER_PATH, master_raw)
-    old_portable = portable.historical_bytes(roadmap.MASTER_PATH, master_raw)
-    old_proof = proof.historical_bytes(roadmap.MASTER_PATH, master_raw)
-    old_recheck = recheck.historical_bytes(roadmap.MASTER_PATH, master_raw)
-    old_verifier = verifier.historical_bytes(roadmap.MASTER_PATH, master_raw)
-    old_linux = linux.historical_bytes(roadmap.MASTER_PATH, master_raw)
-    old_performance = performance.historical_bytes(roadmap.MASTER_PATH, master_raw)
-    old_runner = runner.historical_bytes(roadmap.MASTER_PATH, master_raw)
-    old_roadmap = roadmap.historical_bytes(roadmap.MASTER_PATH, roadmap.regular_bytes(roadmap.MASTER_PATH))
+    old_iprofile = iprofile.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "iprofile_old" else None
+    old_nprofile = nprofile.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "nprofile_old" else None
+    old_resolution = resolution.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "resolution_old" else None
+    old_account = account.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "account_old" else None
+    old_canary = canary.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "canary_old" else None
+    old_isolated = isolated.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "isolated_old" else None
+    old_portable = portable.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "portable_old" else None
+    old_proof = proof.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "proof_old" else None
+    old_recheck = recheck.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "recheck_old" else None
+    old_verifier = verifier.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "verifier_old" else None
+    old_linux = linux.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "linux_old" else None
+    old_performance = performance.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "performance_old" else None
+    old_runner = runner.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "runner_old" else None
+    old_roadmap = roadmap.historical_bytes(roadmap.MASTER_PATH, roadmap.regular_bytes(roadmap.MASTER_PATH)) if route == "roadmap_old" else None
     calls = {
         "authority": profile.authority,
         "changed": lambda: profile.historical_bytes(path, raw),

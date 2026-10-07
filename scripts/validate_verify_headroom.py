@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
-"""Validate the portable warm-snapshot fixture parent and the exact 196-to-195 projection."""
+"""Validate the MET-PERF-032 verify-time changes and the exact 208-to-207 projection."""
 from __future__ import annotations
 
+import ast
 import base64
 import binascii
 import hashlib
@@ -14,21 +15,19 @@ from typing import Any
 
 try:
     from safe_yaml import safe_load
-    import validate_isolated_offline_runner as successor
 except ImportError:
     from scripts.safe_yaml import safe_load
-    from scripts import validate_isolated_offline_runner as successor
 
 
 ROOT = Path(__file__).resolve().parents[1]
-AUTHORITY_PATH = "architecture/portable-warm-snapshot-temp-authority.json"
-AUTHORITY_SHA256 = "1b4931145e59264d2a10576e088211cda3d7c1dc2e817f9868d0c5ac421394f9"
-VALIDATOR_PATH = "scripts/validate_portable_warm_snapshot_temp.py"
-BASE_COMMIT = "a5badfd6c448c549e8bf1119041006b514cdb8cd"
-NEW_PACKET = "MET-LINUX-006"
-PREVIOUS_PACKET = "MET-PERF-030"
+AUTHORITY_PATH = "architecture/verify-headroom-authority.json"
+AUTHORITY_SHA256 = "3fc081b7b9612199fa334c69a1e22dcde77b37b9ea9abd43bd544a9d4b73d65b"
+VALIDATOR_PATH = "scripts/validate_verify_headroom.py"
+BASE_COMMIT = "8f77c3ff5289bade9752f2a3200645180f473e13"
+NEW_PACKET = "MET-PERF-032"
+PREVIOUS_PACKET = "MET-SECTOR-001"
 MAX_FILE_BYTES = 16_777_216
-# This layer changes the top-level ci/test_warm_snapshot.py test as well as tests/.
+# Test routes cover the top-level ci/test_ files as well as tests/.
 TEST_PREFIXES = ("tests/", "ci/test_")
 
 
@@ -50,12 +49,12 @@ def parse(raw: bytes) -> Any:
     def unique(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
         result: dict[str, Any] = {}
         for key, value in pairs:
-            require(key not in result, "duplicate portable-temp authority member")
+            require(key not in result, "duplicate verify-headroom authority member")
             result[key] = value
         return result
 
     def no_constant(_value: str) -> Any:
-        raise ValueError("nonfinite portable-temp authority number")
+        raise ValueError("nonfinite verify-headroom authority number")
 
     return json.loads(raw, object_pairs_hook=unique, parse_constant=no_constant)
 
@@ -93,18 +92,10 @@ _VERIFIED_AUTHORITY: tuple[str, bytes] | None = None
 
 
 def _checked_authority_raw() -> bytes:
-    """Newest first: every newer authority, then this one, each read exactly once."""
-    successor._checked_authority_raw()
-    return _checked_own_authority_raw()
-
-
-def _checked_own_authority_raw() -> bytes:
-    """Fresh complete read of this layer's authority only; callers reach newer
-    authorities through exactly one successor route per public call."""
     global _VERIFIED_AUTHORITY
     raw = regular_bytes(AUTHORITY_PATH)
     if type(raw) is not bytes or _VERIFIED_AUTHORITY != (AUTHORITY_SHA256, raw):
-        require(digest(raw) == AUTHORITY_SHA256, "portable temp history authority digest")
+        require(digest(raw) == AUTHORITY_SHA256, "verify headroom history authority digest")
         if type(raw) is bytes:
             _VERIFIED_AUTHORITY = (AUTHORITY_SHA256, raw)
     return raw
@@ -124,18 +115,18 @@ def authority() -> dict[str, Any]:
     require(type(value) is dict and set(value) == {
         "schemaVersion", "authorityPacket", "acceptedBase", "baselinePackets",
         "packetSha256", "changedFiles", "newFiles", "validatorNormalizedSha256",
-    }, "closed portable temp history authority")
-    require(value["schemaVersion"] == "harness.planeon.ai/portable-warm-snapshot-temp-authority/v1"
+    }, "closed verify headroom history authority")
+    require(value["schemaVersion"] == "harness.planeon.ai/verify-headroom-authority/v1"
             and value["authorityPacket"] == NEW_PACKET
             and value["acceptedBase"] == BASE_COMMIT
             and type(value["baselinePackets"]) is dict
-            and len(value["baselinePackets"]) == 195
+            and len(value["baselinePackets"]) == 207
             and NEW_PACKET not in value["baselinePackets"]
             and type(value["changedFiles"]) is dict
             and type(value["newFiles"]) is dict
             and _sha(value["packetSha256"])
             and _sha(value["validatorNormalizedSha256"]),
-            "accepted 195-packet base")
+            "accepted 207-packet base")
     for name, expected in value["baselinePackets"].items():
         require(type(name) is str and name and "/" not in name
                 and all(char in "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-" for char in name)
@@ -261,18 +252,10 @@ def _inverse(raw: bytes, hunks: tuple[tuple[int, bytes, bytes], ...]) -> bytes:
 
 
 def historical_bytes(path: str, raw: bytes) -> bytes:
-    """Undo the newer successor, then this step; every authority is read once."""
+    """Recheck the pinned authority and undo only this reviewed successor."""
+    _checked_authority_raw()
     _path(path)
     require(type(raw) is bytes and len(raw) <= MAX_FILE_BYTES, "bounded source bytes required")
-    rule = _PROJECTION_RULES.get(path)
-    # An exact 195-era byte string is already older than the successor layer.
-    # Every newer authority and this one are still rechecked before this fast return.
-    if rule is not None and digest(raw) == rule["beforeSha256"]:
-        _checked_authority_raw()
-        return raw
-    # The successor route freshly rechecks every newer authority exactly once.
-    raw = successor.historical_bytes(path, raw)
-    _checked_own_authority_raw()
     return _undo_this_layer(path, raw)
 
 
@@ -292,9 +275,8 @@ def _undo_this_layer(path: str, raw: bytes) -> bytes:
 
 
 def historical_test_bytes(raw: bytes) -> bytes:
+    _checked_authority_raw()
     require(type(raw) is bytes and len(raw) <= MAX_FILE_BYTES, "bounded test bytes required")
-    raw = successor.historical_test_bytes(raw)
-    _checked_own_authority_raw()
     current_sha = digest(raw)
     matches = [path for path, rule in _PROJECTION_RULES.items()
                if path.startswith(TEST_PREFIXES) and current_sha == rule["afterSha256"]]
@@ -303,26 +285,23 @@ def historical_test_bytes(raw: bytes) -> bytes:
 
 
 def current_test_bytes(before: bytes) -> bytes:
+    _checked_authority_raw()
     require(type(before) is bytes and len(before) <= MAX_FILE_BYTES, "bounded test bytes required")
     before_sha = digest(before)
     matches = [path for path, rule in _PROJECTION_RULES.items()
                if path.startswith(TEST_PREFIXES) and before_sha == rule["beforeSha256"]]
     require(len(matches) <= 1, "ambiguous predecessor test")
     if not matches:
-        current = successor.current_test_bytes(before)
-        _checked_own_authority_raw()
-        return current
-    current = successor.historical_bytes(matches[0], regular_bytes(matches[0]))
-    _checked_own_authority_raw()
+        return before
+    current = regular_bytes(matches[0])
     require(digest(current) == _PROJECTION_RULES[matches[0]]["afterSha256"],
             "current test drift")
-    return successor.current_test_bytes(current)
+    return current
 
 
 def historical_catalog(packets: dict[str, Any]) -> dict[str, Any]:
     """Remove only this layer, leaving predecessor checks to their owners."""
-    packets = successor.historical_catalog(packets)
-    _checked_own_authority_raw()
+    _checked_authority_raw()
     require(type(packets) is dict, "packet mapping")
     current_ids = set(_PACKET_BYTE_RULES)
     require(NEW_PACKET in current_ids and set(packets) == current_ids,
@@ -359,23 +338,237 @@ def validate_packet_payloads(packets: dict[str, Any]) -> None:
         require(supplied_sha == payload_sha, "changed packet payload: " + name)
 
 
+# MET-PERF-032 changes four test or validation paths so that required verify does less repeated work.
+# Each check reads this packet's reviewed bytes, so a later bridged successor projects its own edits away first.
+ROUTE_TEST = "test_newest_authority_is_freshly_checked_on_every_route"
+# Cheap reads shared by several routes and by later setup lines; every other setup value is route-local.
+ROUTE_SHARED = frozenset({"path", "raw", "master_raw"})
+ROUTE_TEST_PATHS = tuple("tests/test_%s.py" % name for name in (
+    "dedicated_verifier_account", "host_interface_resolution", "i05_gate_channel", "i06_backend_profile",
+    "i07_policy_write", "in_session_predecessor_proof", "isolated_network_canary", "isolated_offline_runner",
+    "linear_history_rechecks", "linux_runner_contract", "native_profile_v2", "owner_verifier",
+    "portable_warm_snapshot_temp", "projection_reuse", "sector_direction", "selinux_matrix", "verify_headroom"))
+STATUS_TEST_PATH = "tests/test_native_profile_v2.py"
+STATUS_VALIDATOR_PATH = "scripts/validate_native_profile_v2.py"
+LIFECYCLE_TEST_PATH = "tests/test_credential_lifecycle.py"
+READINESS_PATH = "scripts/validate_readiness.py"
+UNIQUE_PATH = "scripts/schema_unique.py"
+STATUS_TEST = '''def test_contract_status_cannot_overclaim(monkeypatch, change):
+    # The vector replay reads no status bytes; test_every_vector_replays_to_its_pinned_result
+    # runs it and the full validator unstubbed. Under the same stub the unchanged status passes,
+    # so the refusal below comes from the changed status alone.
+    replays = []
+    monkeypatch.setattr(profile, "validate_vectors", lambda *args: replays.append(args))
+    assert profile.validate_native_profile() is None and len(replays) == 1
+    _status_reader(monkeypatch, change)
+    with pytest.raises(ValueError):
+        profile.validate_native_profile()'''
+FULL_REPLAY_TEST = '''def test_every_vector_replays_to_its_pinned_result():
+    schema, vectors, v1_schema, v1_vectors = _contract()
+    checks = profile.validate_vectors(schema, vectors, v1_schema, v1_vectors)
+    assert checks == 4 + sum(len(vectors[key]) for key in ("negative", "accepted", "crossVersion", "migration"))
+    assert profile.validate_native_profile() is None'''
+PROJECTED_INPUTS = '''def projected_inputs(inputs):
+    """Project each exact input set once per module for the inventory builder.
+
+    The key is every (path, bytes) pair, so any new or changed input set reaches the real
+    projection. Bytes are immutable and each caller gets its own mapping. This only prepares
+    arguments for validate_inventory; validate_credential_lifecycle still projects afresh.
+    """
+    from scripts.validate_credential_ordering import historical_bytes
+    key = tuple(sorted(inputs.items()))
+    if key not in _PROJECTED:
+        _PROJECTED[key] = {path: historical_bytes(path, raw) for path, raw in inputs.items()}
+    return dict(_PROJECTED[key])'''
+# A fixed corpus: hand-picked cases where jsonschema's equality differs from Python's, then seeded random arrays.
+UNIQUE_EDGE_CASES = ([1, True], [0, False], [1, 1.0], [[1], [True]], [{"a": 1}, {"a": True}], [{"a": 1}, {"a": 1.0}],
+                     [{"a": [1, {"b": None}]}, {"a": [1, {"b": None}]}], [{1: "x"}, {True: "x"}], [{"a": 1}, [1]],
+                     [{}, []], [{"a": 1, "b": 2}, {"b": 2, "a": 1}], [None, {"a": None}, None], [{"a": "1"}, {"a": 1}],
+                     [float("inf"), {"a": 1}, float("inf")], [[{"a": 1}], [{"a": 1}]], [{"a": 0}, {"a": False}])
+UNIQUE_SEED = 20261007
+UNIQUE_CASES = 4000
+
+
+def reviewed_bytes(path: str) -> bytes:
+    """This packet's reviewed bytes of path; a bridged successor projects newer bytes back first."""
+    return regular_bytes(path)
+
+
+def _function(tree: ast.Module, name: str, path: str) -> ast.FunctionDef:
+    found = [node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == name]
+    require(len(found) == 1, "one %s in %s" % (name, path))
+    return found[0]
+
+
+def _names(node: ast.AST) -> set[str]:
+    return {child.id for child in ast.walk(node) if isinstance(child, ast.Name)}
+
+
+def _selected_routes(test: ast.expr) -> set[str] | None:
+    """`route == "a"` or `route in ("a", "b", ...)`, else None."""
+    if not (isinstance(test, ast.Compare) and isinstance(test.left, ast.Name) and test.left.id == "route"
+            and len(test.ops) == 1):
+        return None
+    right = test.comparators[0]
+    if isinstance(test.ops[0], ast.Eq) and isinstance(right, ast.Constant) and type(right.value) is str:
+        return {right.value}
+    if (isinstance(test.ops[0], ast.In) and isinstance(right, ast.Tuple) and len(right.elts) >= 2
+            and all(isinstance(item, ast.Constant) and type(item.value) is str for item in right.elts)
+            and len({item.value for item in right.elts}) == len(right.elts)):
+        return {item.value for item in right.elts}
+    return None
+
+
+def validate_route_locality(path: str, source: bytes) -> int:
+    """Each parametrized route computes exactly the setup values its own call reads, before the authority changes."""
+    function = _function(ast.parse(source), ROUTE_TEST, path)
+    marks = [node for node in function.decorator_list if isinstance(node, ast.Call)
+             and ast.unparse(node.func) == "pytest.mark.parametrize" and len(node.args) == 2]
+    require(len(marks) == 1 and isinstance(marks[0].args[1], ast.List)
+            and all(isinstance(item, ast.Constant) and type(item.value) is str for item in marks[0].args[1].elts),
+            "closed route parameters: " + path)
+    routes = [item.value for item in marks[0].args[1].elts]
+    tables = [index for index, node in enumerate(function.body) if isinstance(node, ast.Assign)
+              and [ast.unparse(target) for target in node.targets] == ["calls"] and isinstance(node.value, ast.Dict)]
+    require(len(tables) == 1, "one route table: " + path)
+    table = function.body[tables[0]].value
+    require(all(isinstance(key, ast.Constant) and type(key.value) is str for key in table.keys)
+            and [key.value for key in table.keys] == routes, "route table matches the parameters: " + path)
+    calls = {key.value: value for key, value in zip(table.keys, table.values)}
+    setup, rest = function.body[:tables[0]], function.body[tables[0] + 1:]
+    local = 0
+    for index, statement in enumerate(setup):
+        require(isinstance(statement, ast.Assign) and len(statement.targets) == 1
+                and isinstance(statement.targets[0], ast.Name), "route setup holds only assignments: " + path)
+        name = statement.targets[0].id
+        if name in ROUTE_SHARED:
+            continue
+        readers = {route for route, call in calls.items() if name in _names(call)}
+        value = statement.value
+        require(isinstance(value, ast.IfExp) and isinstance(value.orelse, ast.Constant) and value.orelse.value is None
+                and readers and _selected_routes(value.test) == readers
+                and not any(name in _names(later) for later in setup[index + 1:] + rest),
+                "route-local setup %s: %s" % (name, path))
+        local += 1
+    require(local >= 6, "route setup is route-local: " + path)
+    return local
+
+
+def _segment(source: bytes, name: str, path: str) -> str:
+    text = source.decode("utf-8")
+    return ast.get_source_segment(text, _function(ast.parse(text), name, path))
+
+
+def validate_status_stub(test_source: bytes, validator_source: bytes) -> None:
+    """Status mutations stub only the vector replay, after a positive control; the replay stays fully tested."""
+    require(_segment(test_source, "test_contract_status_cannot_overclaim", STATUS_TEST_PATH) == STATUS_TEST
+            and _segment(test_source, "test_every_vector_replays_to_its_pinned_result", STATUS_TEST_PATH)
+            == FULL_REPLAY_TEST, "status mutations stub only the vector replay")
+    tree = ast.parse(validator_source)
+    functions = {node.name: node for node in tree.body if isinstance(node, ast.FunctionDef)}
+    reached, pending = set(), ["validate_vectors"]
+    while pending:
+        name = pending.pop()
+        if name in reached or name not in functions:
+            continue
+        reached.add(name)
+        pending.extend(_names(functions[name]) & set(functions))
+    used = set().union(*(_names(functions[name]) for name in reached))
+    require("validate_vectors" in reached and not used & {"STATUS_PATH", "regular_bytes", "_json_file", "open"},
+            "the stubbed vector replay reads no status bytes")
+    caller = functions["validate_native_profile"]
+    require(sum(isinstance(node, ast.Call) and ast.unparse(node.func) == "validate_vectors"
+                for node in ast.walk(caller)) == 1, "the full validator replays the vectors once")
+
+
+def validate_inventory_projection(source: bytes) -> None:
+    """The inventory builder projects each exact input set once per module and hands out copies."""
+    text = source.decode("utf-8")
+    inventory = _segment(source, "inventory", LIFECYCLE_TEST_PATH)
+    require(_segment(source, "projected_inputs", LIFECYCLE_TEST_PATH) == PROJECTED_INPUTS
+            and text.count("\n_PROJECTED = {}\n") == 1 and text.count("_PROJECTED") == 4
+            and "    inputs = projected_inputs(inputs)\n" in inventory and "historical_bytes" not in inventory,
+            "the inventory builder shares only exact projections")
+
+
+def _unique_corpus() -> list[list]:
+    import random
+    rng = random.Random(UNIQUE_SEED)
+    atoms = [0, 1, 1.0, 2, -0.0, 0.5, 10 ** 30, True, False, None, "", "a", "b", "1", "true"]
+
+    def value(depth: int) -> Any:
+        roll = rng.random()
+        if depth > 2 or roll < 0.4:
+            return rng.choice(atoms)
+        if roll < 0.65:
+            return [value(depth + 1) for _ in range(rng.randint(0, 3))]
+        return {rng.choice(("a", "b", "c", 1, True)): value(depth + 1) for _ in range(rng.randint(0, 3))}
+
+    corpus = [list(case) for case in UNIQUE_EDGE_CASES]
+    for _ in range(UNIQUE_CASES):
+        pool = [value(0) for _ in range(rng.randint(1, 3))]
+        corpus.append([json.loads(json.dumps(rng.choice(pool))) if rng.random() < 0.5 else value(0)
+                       for _ in range(rng.randint(0, 6))])
+    return corpus
+
+
+def validate_schema_unique(readiness_source: bytes) -> int:
+    """validate_schema_instance uses SchemaInstanceValidator, which differs from Draft 2020-12 only in
+    uniqueItems and gives jsonschema's own answer on every corpus array."""
+    from importlib.metadata import version
+    import jsonschema
+    from jsonschema import _utils
+    try:
+        import schema_unique
+    except ImportError:
+        from scripts import schema_unique
+    function = _function(ast.parse(readiness_source), "validate_schema_instance", READINESS_PATH)
+    built = [ast.unparse(node.func) for node in ast.walk(function) if isinstance(node, ast.Call)
+             and ast.unparse(node.func).endswith("Validator")]
+    require(built == ["SchemaInstanceValidator"]
+            and readiness_source.count(b"    from schema_unique import SchemaInstanceValidator\n") == 1,
+            "readiness schema instances use SchemaInstanceValidator")
+    base, fast = jsonschema.Draft202012Validator, schema_unique.SchemaInstanceValidator
+    require(version("jsonschema") == schema_unique.JSONSCHEMA_VERSION == "4.24.0"
+            and fast.META_SCHEMA == base.META_SCHEMA and fast.TYPE_CHECKER is base.TYPE_CHECKER
+            and set(fast.VALIDATORS) == set(base.VALIDATORS)
+            and {key for key in base.VALIDATORS if fast.VALIDATORS[key] is not base.VALIDATORS[key]} == {"uniqueItems"}
+            and fast.VALIDATORS["uniqueItems"] is schema_unique.unique_items, "only uniqueItems differs")
+    corpus, unsortable, duplicated = _unique_corpus(), 0, 0
+    for container in corpus:
+        expected = _utils.uniq(container)
+        require(schema_unique.unique(container) is expected, "uniqueItems answer differs: " + repr(container))
+        try:
+            sorted(_utils.unbool(item) for item in container)
+        except TypeError:
+            unsortable += 1
+            duplicated += not expected
+    require(unsortable >= 1000 and duplicated >= 100, "the corpus reaches the grouped comparison")
+    return len(corpus)
+
+
+def validate_verify_headroom() -> None:
+    for path in ROUTE_TEST_PATHS:
+        validate_route_locality(path, reviewed_bytes(path))
+    validate_status_stub(reviewed_bytes(STATUS_TEST_PATH), reviewed_bytes(STATUS_VALIDATOR_PATH))
+    validate_inventory_projection(reviewed_bytes(LIFECYCLE_TEST_PATH))
+    validate_schema_unique(reviewed_bytes(READINESS_PATH))
+
+
 def validate() -> None:
     record = authority()
-    validator_raw = successor.historical_bytes(VALIDATOR_PATH, regular_bytes(VALIDATOR_PATH))
+    validator_raw = regular_bytes(VALIDATOR_PATH)
     literal = b'AUTHORITY_SHA256 = "' + AUTHORITY_SHA256.encode("ascii") + b'"'
     placeholder = b'AUTHORITY_SHA256 = "TO_BE_PINNED_AFTER_SOURCE_FREEZE"'
     require(validator_raw.count(literal) == 1
             and digest(validator_raw.replace(literal, placeholder))
-            == record["validatorNormalizedSha256"], "portable temp validator drift")
+            == record["validatorNormalizedSha256"], "verify headroom validator drift")
     paths = sorted((ROOT / "task-packets").glob("*.yaml"))
     old = set(record["baselinePackets"])
-    require(len(paths) == 208
-            and {path.stem for path in paths} == old | {NEW_PACKET, successor.NEW_PACKET, successor.successor.NEW_PACKET, successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET},
-            "closed 208-packet catalog retaining the 196-packet checkpoint")
+    require(len(paths) == 208 and {path.stem for path in paths} == old | {NEW_PACKET},
+            "closed 208-packet catalog")
     packets = {}
     for path in paths:
-        if path.stem in (successor.NEW_PACKET, successor.successor.NEW_PACKET, successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET):
-            continue
         raw = regular_bytes("task-packets/" + path.name)
         expected = record["packetSha256"] if path.stem == NEW_PACKET else record["baselinePackets"][path.stem]
         require(digest(raw) == expected, "packet YAML drift: " + path.stem)
@@ -385,31 +578,30 @@ def validate() -> None:
     previous = packets[PREVIOUS_PACKET]
     commands = packet["offlineAcceptanceCommands"]
     require(packet["id"] == NEW_PACKET and packet["repository"] == "Harness-Engineering"
-            and packet["predecessors"] == ["MET-LINUX-005", PREVIOUS_PACKET]
+            and packet["predecessors"] == [PREVIOUS_PACKET]
             and packet["warmSourceAccess"] == "PROHIBITED_DURING_IMPLEMENTATION"
             and packet["sourceReuse"] == packet["prefetchCommands"] == []
             and packet["offlineExecution"] == previous["offlineExecution"]
             and "liveCampaignExecution" not in packet
-            and len(commands) == 58
-            and commands[:-3] + commands[-2:] == previous["offlineAcceptanceCommands"]
-            and commands[-3] == ["uv", "run", "--offline", "--frozen", "--no-sync",
-                                 "python", VALIDATOR_PATH],
-            "closed source-only portable-temp packet and inherited commands")
+            and len(commands) == 64
+            and commands == previous["offlineAcceptanceCommands"]
+            and not any(VALIDATOR_PATH in argv for argv in commands),
+            "closed source-only verify-headroom packet and inherited commands")
     require(len(packet["allowedPaths"]) == len(set(packet["allowedPaths"]))
             and set(packet["allowedPaths"]) == set(record["changedFiles"])
             | set(record["newFiles"]) | {AUTHORITY_PATH, VALIDATOR_PATH,
                                          "task-packets/" + NEW_PACKET + ".yaml"},
-            "unreviewed or omitted portable-temp packet path")
+            "unreviewed or omitted verify-headroom packet path")
     for path, rule in record["changedFiles"].items():
-        current = successor.historical_bytes(path, regular_bytes(path))
+        current = regular_bytes(path)
         require(digest(current) == rule["afterSha256"]
                 and digest(historical_bytes(path, current)) == rule["beforeSha256"],
                 "unreviewed current source: " + path)
     for path, expected in record["newFiles"].items():
-        require(digest(successor.historical_bytes(path, regular_bytes(path))) == expected,
-                "new source drift: " + path)
+        require(digest(regular_bytes(path)) == expected, "new source drift: " + path)
+    validate_verify_headroom()
 
 
 if __name__ == "__main__":
     validate()
-    print("Portable warm-snapshot temp valid: 208 current specifications; 196-packet checkpoint and exact 195-packet predecessor; native Linux qualification remains separate.")
+    print("Verify headroom valid: 208 current specifications; exact 207-packet predecessor; route-local setup, stubbed status replay, shared inventory projection and grouped uniqueItems checked.")

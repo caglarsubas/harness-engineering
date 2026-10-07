@@ -1,6 +1,39 @@
 # Harness-Onion — unified development roadmap
 
-## Current checkpoint — MET-SECTOR-001 source preparation, October 7, 2026
+## Current checkpoint — MET-PERF-032 source preparation, October 7, 2026
+
+Alpha2 OPEN. MET-SECTOR-001 passed required verify (64/64, 692 s) and merged as main
+8f77c3f; SECTOR-D1 is recorded. Verify has grown 545, 554, 639 and 692 s over packets 204-207,
+against the 900 s cap. MET-PERF-032 comes before the remaining W02 and banking packets. A
+per-test profile of the 206-packet suite (Mac pytest 495 s) found the cost spread over the
+history chain, with four repeats that the checks do not need:
+- each layer's route test computed every route's input for every route (36 s, quadratic in
+  the number of layers); each route now computes only its own;
+- each native-profile status mutation replayed all contract vectors (14 s); it now stubs only
+  that pure replay after a passing control, and the replay keeps its own full test;
+- the credential-lifecycle inventory builder re-projected the same inputs per case (15 s); it
+  now projects each exact input set once per module;
+- the readiness validator compared every pair of 3,868 objects for uniqueItems (4.2 s, three
+  runs per verify); `scripts/schema_unique.py` gives jsonschema's answer comparing only items
+  with an equal key.
+
+No validator caches a projection or verdict, and every refusal is unchanged. MET-PERF-032 is
+the sole 208th specification.
+
+| Phase | ID | Status | Description / gate |
+|---|---|---|---|
+| Alpha2 | MET-PERF-032 / PERF-032 | SOURCE_PREPARED | Verify headroom as the 208th packet; verify from the owner's App |
+| Alpha2 | MET-SECTOR-001 / SECTOR-D1 | VERIFY_PASSED_MERGED | Banking sector direction recorded |
+| Alpha2 | IND-BANK-001 to IND-BANK-005, KN-BANK-001, CTRL-BANK-001, DIST-BANK-001, CONF-BANK-001 | WAITING_PACKET_PUBLICATION | Banking pack, inputs and journey |
+| Alpha2A | W02d, W02f, W02a-F, W02b-F, W02c-F, W02e-F, W02g-F | WAITING_EXACT_PACKETS | seccomp, admission; follow-ups |
+| Alpha2 qualification | CONF-LINUX-001 / CONF-A2-001 | WAITING_PREREQUISITES | Linux verification only when mandatory |
+
+Keep the inherited 64 argv unchanged (the installed activation cap and the verifier's inheritance rule; the new
+layer validator adds no argv and runs inside the outer pytest), 420/750/900 s/15 min and 32 MiB. No cloud, runner registration,
+live/native/tenant or model-effort changes. Phase-end effort transition NOT_DUE.
+Prior checkpoints below are history only.
+
+## Historical SECTOR-001 source checkpoint — MET-SECTOR-001 source preparation, October 7, 2026
 
 Alpha2 OPEN. MET-ENFORCE-009 passed required verify (64/64, 639 s) and merged as main
 2c14e51; W02e is ADOPTED_DATA_CONTRACT. MET-SECTOR-001 records owner decision SECTOR-D1:
@@ -868,7 +901,7 @@ The [item-level backlog](../architecture/unified-roadmap-backlog.json) records p
 | Alpha 2B | Seven EXT proposal IDs | WAITING_PACKET_PUBLICATION | Contract-first provider/adapter/binding qualification, registry, UI, packaging and mode-aware reconciliation |
 | Alpha 2B onward | Sixteen OSS adoption proposal IDs | WAITING_PACKET_PUBLICATION | Owner-specific actual pinned upstream integrations and qualification |
 | Alpha 2B onward | JEV/Laya/SemIF SEM proposals | WAITING_PACKET_PUBLICATION | Optional local semantic contracts, adapters and independent evidence |
-| Alpha 2 sector | MET-SECTOR-001 / SECTOR-D1 | SOURCE_PREPARED | Banking replaces white goods through the first enterprise release; dispositions for 28 published packets; no catalog, pack or packet change |
+| Alpha 2 sector | MET-SECTOR-001 / SECTOR-D1 | VERIFY_PASSED_MERGED | Banking replaces white goods through the first enterprise release; dispositions for 28 published packets; no catalog, pack or packet change |
 | Alpha 2 sector | IND-BANK-001 to IND-BANK-005, KN-BANK-001, CTRL-BANK-001, DIST-BANK-001, CONF-BANK-001 | WAITING_PACKET_PUBLICATION | Banking pack, banking inputs for retained packets and journey certification |
 | Alpha 2 acceptance | CONF-A2-001 | WAITING | Integrated cited read-only banking profile (ID kept; revision amendment before dispatch), installed foundations and real overview |
 | Alpha 3 | Governed action / CONF-A3-001 | WAITING | Approval, memory, sandbox, tools, decision service and full interaction |
@@ -901,7 +934,8 @@ These checkboxes count only the named deliverable at the stated evidence level. 
 - [x] Alpha 2A · PERF-031 / MET-PERF-031 · Cut required-verify time with test-local exact projection sharing in three mutation loops; pass required verify through the owner's App.
 - [x] Alpha 2A · W02c / MET-ENFORCE-008 · Publish the independently reviewed I07 policy-writer channel contract and closed policy-kind table; pass required verify through the owner's App.
 - [x] Alpha 2A · W02e / MET-ENFORCE-009 · Publish the independently reviewed SELinux domain, type, boolean and permission matrix with the F2 closure; pass required verify through the owner's App.
-- [ ] Alpha 2 · MET-SECTOR-001 · Record owner decision SECTOR-D1 (banking replaces white goods through the first enterprise release) with packet dispositions and successor proposals; pass required verify through the owner's App.
+- [x] Alpha 2 · MET-SECTOR-001 · Record owner decision SECTOR-D1 (banking replaces white goods through the first enterprise release) with packet dispositions and successor proposals; pass required verify through the owner's App.
+- [ ] Alpha 2 · PERF-032 / MET-PERF-032 · Cut required-verify time by removing four repeated computations with unchanged refusals; pass required verify through the owner's App.
 - [ ] Alpha 2A · CONF-FIX-010 · Complete safe design and exact authority before any product attempt.
 - [ ] Alpha 2A · CONF-LIVE-004 · Produce the exact native-probe source implementation and separately qualify it.
 - [ ] Alpha 2A · CONF-LIVE-005 · Produce a reproducible selected package and operator handoff.

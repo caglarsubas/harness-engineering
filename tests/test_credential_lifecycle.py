@@ -66,10 +66,26 @@ def synthetic(authority):
     return after, proof
 
 
+_PROJECTED = {}
+
+
+def projected_inputs(inputs):
+    """Project each exact input set once per module for the inventory builder.
+
+    The key is every (path, bytes) pair, so any new or changed input set reaches the real
+    projection. Bytes are immutable and each caller gets its own mapping. This only prepares
+    arguments for validate_inventory; validate_credential_lifecycle still projects afresh.
+    """
+    from scripts.validate_credential_ordering import historical_bytes
+    key = tuple(sorted(inputs.items()))
+    if key not in _PROJECTED:
+        _PROJECTED[key] = {path: historical_bytes(path, raw) for path, raw in inputs.items()}
+    return dict(_PROJECTED[key])
+
+
 def inventory(authority, stage=2):
     _, record, inputs = authority
-    from scripts.validate_credential_ordering import historical_bytes
-    inputs = {path: historical_bytes(path, raw) for path, raw in inputs.items()}
+    inputs = projected_inputs(inputs)
     checkpoint = json.loads(inputs[CHECKPOINT_PATH])
     after, proof = synthetic(authority)
     rows = {p: dict(path=p, mode=r["mode"], size=r["size"], sha256=r["sha256"].removeprefix("sha256:"),
@@ -107,7 +123,7 @@ def inventory(authority, stage=2):
 def test_exact_authority_and_all_historical_bytes(authority):
     packets, record, inputs = authority
     assert validate_credential_lifecycle(*authority) == []
-    assert len(packets) == 207 and len(record["protectedFiles"]) == 245
+    assert len(packets) == 208 and len(record["protectedFiles"]) == 245
     assert len(packets["MET-REPAIR-012"]["offlineAcceptanceCommands"]) == 20
     assert len(packets["CONF-FIX-005"]["allowedPaths"]) == 5
     assert len(packets["CONF-FIX-005"]["offlineAcceptanceCommands"]) == 8
@@ -341,7 +357,7 @@ def test_meta_reconciliation_has_no_broad_test_exemption(authority, kind):
     if kind == "before": before += b" "
     if kind == "record": record["metaReconciliation"]["currentPacketCount"] = 142
     if kind == "assertion":
-        target = b"assert len(paths) == 223"
+        target = b"assert len(paths) == 224"
         assert current[path].count(target) == 1
         current[path] = current[path].replace(target, b"assert True", 1)
     if kind == "skip": current[path] = b"import pytest\npytest.skip('fast', allow_module_level=True)\n" + current[path]

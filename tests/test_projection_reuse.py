@@ -44,8 +44,9 @@ def test_exact_current_source_and_complete_history_chain():
     assert profile.validate() is None
     current = packets()
     accepted = profile.historical_catalog(current)
-    assert len(current) == 205 and len(accepted) == 203
-    assert set(accepted) == set(current) - {profile.NEW_PACKET, profile.successor.NEW_PACKET}
+    assert len(current) == 206 and len(accepted) == 203
+    assert set(accepted) == set(current) - {profile.NEW_PACKET, profile.successor.NEW_PACKET,
+                                            profile.successor.successor.NEW_PACKET}
     assert len(gprofile.historical_catalog(current)) == 202
     assert len(iprofile.historical_catalog(current)) == 201
     assert len(nprofile.historical_catalog(current)) == 200

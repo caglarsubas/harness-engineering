@@ -1,0 +1,119 @@
+{
+  "schemaVersion": "planeon.internal.selinux-matrix-review/v1",
+  "round": 2,
+  "reviewDate": "2026-10-07",
+  "verdict": "CHANGES_REQUIRED",
+  "subjectSha256": {
+    "README.md": "56536038484eee7f03d11c45f2eeb22db44867c7ad940bb4d6fd5fee6c96aa2d",
+    "REVIEW_BRIEF.md": "f849b5ef8eaa79f293b90b533ce31440d941e2d87403249ae9de80f3c1606540",
+    "matrix.json": "d60ce3fff3cdeb6d30a3f91b750eadb7298bdfcdd73145239921ac5e96039398",
+    "vectors.json": "795f7e6c869affcf80f0f04b2fb968bebb4b62a2146c302204ecc2f458e69e12",
+    "selinux_matrix.py": "52575163edc4a2c144f2be21854a0dde3ef44ec40a9d8bc41c78131ab88eb7ba"
+  },
+  "findings": [
+    {
+      "id": "N1",
+      "severity": "MAJOR",
+      "location": "matrix.json typeTransitions (16 rows, the first with parent cgroup_t); check_matrix's cgroup_t exception for SYSTEM; README 'Cgroup creation and labels', decision 2; W02a slot values",
+      "finding": "The named type transitions never fire. In v6.12, selinux_kernfs_init_security reads the parent kernfs node's security.selinux xattr and returns 0 without labelling the new node when it gets -ENODATA (hooks.c, selinux_kernfs_init_security). The cgroup2 root is labelled cgroup_t by genfscon. That label lives only in memory; it is not an xattr. So 'planeon.slice' created by init_t gets no xattr and keeps its genfs label (inode_doinit_with_dentry with SE_SBGENFS). Its children then find no xattr on their parent either, and so on down the tree. With no relabel allowed anywhere (A44), no planeon cgroup would ever carry planeon_cgroup_*_t. That breaks the W02a slot values, F2 item 1, which rests on the labels, and A38-A43 on a real host. The evaluator cannot see this, because it treats a typeTransitions row as effective.",
+      "requiredChange": "Choose a mechanism that the kernel actually applies, and pin it. Option 1: cgroup2 genfscon path rules for /planeon.slice and each role and leaf path. SE_SBGENFS applies to cgroup2 and labels nodes when they are instantiated, including cgroups systemd re-creates. Note that genfscon matches by prefix. Option 2: one pre-seal relabel of planeon.slice by containment, which makes the named transitions apply below it. That needs a relabel grant, a matching A44 change, and relabelling the slice's own interface files. Make check_matrix reject a typeTransition whose parent is labelled only by genfscon."
+    },
+    {
+      "id": "N2",
+      "severity": "MAJOR",
+      "location": "matrix.json sourceClosures (planeon_server_t tcp_socket name_bind); A60.1.name_bind; capabilities planeon_server_t net_bind_service; A48",
+      "finding": "The server's per-source closure makes name_bind False for every port, declared or not. No port type is declared for the server's own listener. But W01 §5.3 gives the server a listener ('CAP_NET_BIND_SERVICE only if the signed listener port is below 1024'; the observer is 'as SERVER without listener'), and W02a records SERVER listenEndpointIds. selinux_socket_bind checks name_bind for every port below ip_unprivileged_port_start and every port outside ip_local_port_range. The matrix therefore forbids the server's enrolled listener on any such port. That includes every port below 1024, for which the matrix itself grants the server CAP_NET_BIND_SERVICE, so the two grants contradict each other.",
+      "requiredChange": "Declare a server listener port type: bound by the server only, outside ip_local_port_range, with an assertion and vectors. Keep the server's name_bind closure for every other port. Alternatively, state that the listener must lie inside the ephemeral range, and drop the CAP_NET_BIND_SERVICE grant."
+    },
+    {
+      "id": "N3",
+      "severity": "MINOR",
+      "location": "README 'Owner decision' E1 ('What it cannot enforce', 'Accepted' controls)",
+      "finding": "Judging the statement, not the owner's choice. These parts are accurate: SELinux restricts neither program type, attach type nor attach target; bpf_ns_capable lets CAP_SYS_ADMIN satisfy the other BPF capability checks (kernel/bpf/token.c line 14); a program attached at an ancestor is effective on descendant cgroups. These parts are imprecise or incomplete. (a) 'with BPF_F_ALLOW_MULTI' is narrower than the kernel rule. compute_effective_progs also includes an ancestor program attached without that flag, for any attach type on which the planeon cgroup has no program of its own (kernel/bpf/cgroup.c line 430). The census of every attach type covers both cases, so this is wording only. (b) The same capability substitution makes BPF program families loadable whose attachment points are not cgroups. A census of planeon cgroups' effective programs does not observe them, and neither do the W02a readers. For those families the listed controls reduce to W03 selection and T04. (c) The census is point-in-time, so an attachment made and removed between two census points is not observed. The trust statement covers all of this in principle, but the list of controls implies a coverage it does not have.",
+      "requiredChange": "Say that the census covers only cgroup attachments and that the runtime's other BPF use rests on W03 and T04 alone. Replace 'with BPF_F_ALLOW_MULTI' with the actual effective-set rule. State the point-in-time residual of the census."
+    },
+    {
+      "id": "N4",
+      "severity": "MINOR",
+      "location": "security.setbool and load_policy for planeon_maint_t in MAINTENANCE_BOOT; A22, A30; W01 §5.5 ('no planeon role can qualify in a maintenance boot')",
+      "finding": "The maintenance domain holds setbool, and the matrix does not limit which boolean it may change. In the maintenance boot it can therefore clear planeon_maintenance_mode at runtime. From then on the enrolled-boot conditional rules apply inside a boot that came from the maintenance entry. A30 holds only in the static MAINTENANCE_BOOT state, so 'no planeon role starts in the maintenance boot' is really a property of the boolean, not of the boot entry. Per-boolean control is expressible: selinuxfs labels each boolean file by genfscon, and sel_write_bool goes through a file write check on that label as well as security setbool.",
+      "requiredChange": "Either deny planeon_maint_t write on the planeon_maintenance_mode and planeon_containment_enabled boolean files (per-boolean genfscon types), with an assertion, or state that the W02a record must tell the maintenance boot entry apart by something other than the booleans."
+    },
+    {
+      "id": "N5",
+      "severity": "MINOR",
+      "location": "README '/proc access' ('Executable identity follows from the peer's label') and decision 7; A37",
+      "finding": "Inferring the executable from the label requires that no planeon domain can exec any file without a transition. A37 closes execute_no_trans only on the matrix's own 18 types. On undeclared types (bin_t, shell_exec_t, ...) the evaluator returns None, which is outside the matrix, so W03 could grant it. A planeon_broker_t process could then be running a binary other than planeon_broker_exec_t, and the inference would not hold. Seccomp denials in W02d are a separate layer.",
+      "requiredChange": "Add a per-source closure: no execute_no_trans on any type for the planeon domains (and containment). Or weaken the claim to 'entered through its entrypoint', and name the seccomp dependency."
+    },
+    {
+      "id": "N6",
+      "severity": "MINOR",
+      "location": "matrix.json typeTransitions; types planeon_seal_t, planeon_i05_sock_t, planeon_i07_sock_t, planeon_run_t; decision 2 ('relabels nothing')",
+      "finding": "Round 2 removed every relabel grant and introduced a table of creation-time labelling rules, but that table covers only cgroups. The seal marker on tmpfs (/run/planeon/containment/sealed), the gate's I05 and I07 socket files, the other socket files and the /run/planeon directories have no stated labelling mechanism. A real create check is made against the computed label (selinux_determine_inode_label), so without a named type_transition (or setfscreatecon) these objects would get their parent's type, not the matrix types.",
+      "requiredChange": "Add the named type transitions for the marker, socket files and run directories, or state that W03 adds them and what they must produce."
+    },
+    {
+      "id": "N7",
+      "severity": "NOTE",
+      "location": "process2 table, transitions without noNewPrivs, A33; README systemd paragraph",
+      "finding": "The round-2 closures imply W03 requirements that are not stated. (1) init_t to role and backend transitions have no nnp_transition grant, so their units must not set NoNewPrivileges= or any option that implies it. (2) nosuid_transition is closed to False, so no entrypoint or container rootfs may sit on a nosuid mount (check_nnp_nosuid). (3) setexec is closed for qualk8s_runtime_t, so the CRI must not set per-Pod process labels: there is no setexeccon and no per-Pod MCS. (4) init_t has no prog_load, so distribution units' BPF-backed directives (IPAddressDeny=, DeviceAllow=, ...) fail open.",
+      "requiredChange": "List these four items as W03 and T04 requirements."
+    },
+    {
+      "id": "N8",
+      "severity": "NOTE",
+      "location": "A59; README F2 item 2 ('no /proc access to any role (A59)'); M42; planeon_cgroup_delegate_t WRITE for the broker",
+      "finding": "A59 lists only the gate and the broker as targets. Admin access to the other roles' /proc is closed by the evaluator but not asserted. F2 item 2 nevertheless cites A59 for 'any role', and readers, systemd and containment also hold cgroup descriptors. M42 is refused by the rule on the target's kind, but its message says 'needs an entrypoint type', and planeon_maint_exec_t is an entrypoint type. The broker's WRITE group on the delegate cgroup includes dir create and rmdir, so after the seal it could replace the enrolled probe-worker leaf, and the leaf's programs would go with it. W01 §5.4 needs only cgroup.procs, cgroup.freeze and cgroup.kill writes. The readers would detect the missing programs.",
+      "requiredChange": "Extend A59 to every planeon domain target. Give the target-kind refusal its own message. Consider narrowing the broker's delegate-cgroup grant, or record it as an upper bound."
+    }
+  ],
+  "openItemStatus": {
+    "R1": {"status": "CLOSED", "basis": "prog_run self grants for containment (before the seal) and the runtime; A17-A19; S03; M12-M14. Matches bpf_prog_load followed by bpf_prog_new_fd and security_bpf_prog."},
+    "R2": {"status": "CLOSED", "basis": "init_t capability set enumerated; A45-A48 now range over declared domains and allow init_t where it needs the capability; capabilities of undeclared host domains return None (O04)."},
+    "R3": {"status": "CLOSED", "basis": "Transitions into the ADMIN and SYSTEM kinds return None and check_matrix refuses them (O06, O07, M42). setexec is checked on the caller (A33). See N7 for the runtime consequence."},
+    "R4": {"status": "CLOSED", "basis": "procAccess covers dir, file and lnk_file READ and process getattr; self /proc is outside (O03); the commoncap and uid preconditions are stated correctly; captures use only ungated entries. See N5 for the separate claim about executable identity."},
+    "R5": {"status": "CLOSED", "basis": "sourceClosures plus 21 A60 assertions make undeclared targets False for the seven planeon sources (P01-P06, M35). See N2: the server's name_bind closure now over-denies."},
+    "R6": {"status": "PARTIAL", "basis": "Creation is fixed: containment has WRITE before the seal, planeon_cgroup_delegate_t exists, and nothing relabels. But the labelling mechanism does not work in the kernel (N1)."},
+    "R7": {"status": "PARTIAL", "basis": "E1 is restated and is accurate on the cgroup paths; systemd BPF is excluded (M10). The statement is incomplete about non-cgroup BPF families, the point-in-time census, and the effective-set rule (N3)."},
+    "R8": {"status": "CLOSED", "basis": "fs-verity is enabled by planeon_maint_t in the maintenance boot (write, ioctl and dac_override); containment only measures; A12 and M08."},
+    "R9": {"status": "CLOSED", "basis": "The may_decode_fh text matches v6.12 fs/fhandle.c (it omits only the no-locked-children condition). The magic-link route is added (F08). PROG_ATTACH-only attachment is stated, and the claim that BPF_LINK_GET_FD_BY_ID has no LSM check is verified."},
+    "R10": {"status": "CLOSED", "basis": "Atomic S4 commit stated, which is correct for sel_write_bool and commit_pending_bools. The seal marker can be written in ENROLLED_SEALED (S14) and not in maintenance (S15, A52, A53). See N6 for the marker's labelling."},
+    "R11": {"status": "CLOSED", "basis": "EXECUTE_NO_TRANS is its own group; nobody holds it on declared types (A37, M23)."},
+    "R12": {"status": "CLOSED", "basis": "noNewPrivs transitions require process2 nnp_transition; the nnp_nosuid_transition policy capability is listed; M18. See N7 for the implied unit and mount requirements."},
+    "R13": {"status": "CLOSED", "basis": "genfscon rule 'bpf /planeon'; no relabel on pins (A44); consistent with bpffs being SE_SBGENFS without SBLABEL_MNT."},
+    "R14": {"status": "CLOSED", "basis": "FILE_PERMS equals the v6.12 classmap file, dir and common permissions; execmod assertion A36 and M22."},
+    "R15": {"status": "CLOSED", "basis": "Permissions outside the closed set return None (O05, O08); sigkill, sigstop and signal are closed (A57, A58, M33)."},
+    "R16": {"status": "CLOSED", "basis": "The ip_local_port_range requirement is stated as a W03 and T04 item; correct per selinux_socket_bind."},
+    "R17": {"status": "CLOSED", "basis": "Sealed unit types are required on every unit search path and drop-in directory; the unit types now include the dir class."},
+    "R18": {"status": "CLOSED", "basis": "A39 adds the cgroup-file assertion; BPF_F_RDONLY is stated; every matrixError, including M43 in r2b, replays with exact equality; the broad socket-file grants are disclosed as upper bounds."}
+  },
+  "questionAnswers": {
+    "Q0": "R1-R5, R8-R18 CLOSED; R6 and R7 PARTIAL (see openItemStatus). Each README disposition is true in the r2b bytes except R6's labelling mechanism (N1) and R7's completeness (N3).",
+    "Q1": "The matrix is close to W01 for P1, P2, P4, P5 and P9, the §5.3 per-role denials (now including the per-source 'only' rows), the §5.1 BPF controls, the §5.2 sequence and the §5.5 maintenance. The disclosed deviations are present (E1 and decisions 1-9). Three weaknesses remain: the server listener contradiction (N2), cgroup labels that would not be applied (N1), and A30 depending on a boolean the maintenance domain can change (N4).",
+    "Q2": "F2 is now stated correctly. Item 1 (the label check on non-O_PATH opens, do_handle_open going through file_open_root) is right. Item 2 matches v6.12 may_decode_fh and adds the procfs magic-link route. Item 3 (MULTI detach needs the program fd, every route to that fd is checked by prog_run, never bpf_link) is the control that decides. Item 1, however, depends on labels that N1 shows would not be applied. The outcome is not overclaimed, apart from the reliance on A59 (N8).",
+    "Q3": "Correct: connectto for SOCK_SEQPACKET against the listening socket's SID, with setsockcreate; sock_file write on connect; name_bind and name_connect, with the ephemeral-range caveat now stated; ptrace read checked as file read on the target, plus the commoncap and uid rules; transition with execute, entrypoint and nnp_transition; bpf permissions including prog_run on self; security permissions and the atomic boolean commit; capability class names; the cgroup_seclabel, open_perms and nnp_nosuid_transition policy capabilities. Not expressible as modelled: kernfs named type transitions under a parent that is labelled only by genfscon (N1).",
+    "Q4": "The closure is now coherent about what is outside it (undeclared domains' capabilities, entry into the admin and systemd domains, self /proc, unlisted permissions). All 88 assertions hold, and the 43 mutation checks bite exactly as stated. Gaps: the server's name_bind closure over-denies (N2); execute_no_trans is not closed per source for the label-to-executable claim (N5); A59 has narrow coverage (N8); no assertion protects against the maintenance-boot boolean flip (N4).",
+    "Q5": "Yes. The seven slot values match the W02a pattern, w02a_slots equals vectors.w02aSlots, and all 15 W02a const processLabel values equal the matrix domain labels. The N1 closure (confined qualk8s types with closed accesses) holds as a requirement, and T04 checks confinement. The cgroup slot values would not appear on a host until N1 is fixed.",
+    "Q6": "All 1,209 access checks (266 True, 935 False, 8 None) and all 43 mutation checks reproduce exactly, with matrixError compared by string equality; M43 is correct in r2b. One stated reason is off: M42's message names the entrypoint type, but the refusal comes from the target-kind rule (N8).",
+    "Q7": "No claim of a policy module, compiled or loaded policy, native behaviour, selected distribution, seccomp filter or E01-E12 proof. Text overclaims: E1's list of controls (N3), executable identity from the label (N5), and F2 item 2's reliance on A59 for 'any role' (N8)."
+  },
+  "modelExecution": "Verified SHA256SUMS in review-w02e-r2b (23 entries, all OK). Confirmed that only vectors.json (M43's expectation) and source-index.json differ from r2, and that every r2b file is byte-identical to the working tree. Discarded everything derived from r2's M43 entry. Imported the r2b scripts/selinux_matrix.py from its snapshot path, using uv run --offline --frozen --no-sync python from the repository root. check_matrix passed, failed_assertions returned [] over 88 assertions, w02a_slots matched, all 1,209 access checks matched, and all 43 mutation checks matched exactly. Probe scripts r2_p1_vectors.py and r2_p2_probe.py, written only under the scratchpad w02e-review-probes directory, queried: server name_bind, self and peer /proc, init_t and OTHER_DOMAIN capabilities, entry into the admin and systemd domains, setexec, execute_no_trans on undeclared types, nnp and nosuid transitions, seal-marker writes per state, containment cgroup creation, broker delegate-cgroup grants, signals, and the presence of typeTransitions for the marker and socket files. No repository file was modified.",
+  "sourcesRead": [
+    "Snapshot r2b: architecture/selinux-matrix/{README.md, REVIEW_BRIEF.md, matrix.json, vectors.json, source-index.json, review-round1.json, round1/*}, scripts/selinux_matrix.py; r2 vectors.json and source-index.json, for the M43 diff only",
+    "Predecessors in the snapshot: HOST_INTERFACE_SPEC.md (§2.1, §4.2, §5.1-§5.5), native-profile-v2/README.md and qualification.schema.json (processLabel consts, SERVER listenEndpointIds, bpfPrograms hooks)",
+    "Linux v6.12 source, fetched in round 1 from raw.githubusercontent.com/torvalds/linux/v6.12 and re-read for round 2: security/selinux/hooks.c (selinux_kernfs_init_security, inode_doinit_with_dentry genfs and xattr path, selinux_is_sblabel_mnt, selinux_socket_bind, selinux_lsm_getattr, check_nnp_nosuid, selinux_bpf*), security/selinux/include/classmap.h, fs/fhandle.c, kernel/bpf/syscall.c, kernel/bpf/cgroup.c, kernel/bpf/token.c, kernel/cgroup/cgroup.c, fs/verity/enable.c, include/linux/fs.h, kernel/ptrace.c, security/commoncap.c",
+    "From my own knowledge of upstream, not re-read: systemd cgroup realization at unit start, its NoNewPrivileges implication and label handling; selinuxfs per-boolean genfs labels and the sel_write_bool / commit_pending_bools checks; genfscon prefix matching; refpolicy cgroup_t and secure_mode_policyload; CRI and runc setexeccon behaviour"
+  ],
+  "actions": {
+    "filesEdited": false,
+    "githubMutated": false,
+    "nativeActions": false,
+    "referenceModelExecuted": true,
+    "repositoryValidatorsRun": false,
+    "runnerActivated": false,
+    "testsRun": false,
+    "warmSourcesAccessed": false
+  },
+  "reviewLimit": "A source-only review of data and an evaluator against Linux v6.12 source and upstream knowledge. No policy was compiled, loaded or queried, and no host, distribution, runtime or systemd behaviour was observed. Kernel readings are reviewer notes for T04. The owner's E1 choice was not judged, only the accuracy and completeness of its statement. A PASS would not be a policy module, native qualification or authorization for anything installed."
+}

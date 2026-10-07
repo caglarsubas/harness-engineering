@@ -1,0 +1,168 @@
+{
+  "schemaVersion": "planeon.internal.selinux-matrix-review/v1",
+  "round": 1,
+  "reviewDate": "2026-10-07",
+  "verdict": "CHANGES_REQUIRED",
+  "subjectSha256": {
+    "architecture/selinux-matrix/README.md": "3eba350332c1fdc49f6791680730537527b1a79c6e6fb9963c0a044bc59d9dc0",
+    "architecture/selinux-matrix/REVIEW_BRIEF.md": "723b1f10cab3c0a8b1512250240653047b9a0da0f67e10af8db3f7d9560303a1",
+    "architecture/selinux-matrix/matrix.json": "9a22f6bb1d838a0a1942275058f8d006fd33211be9206847a4374be1d16c086c",
+    "architecture/selinux-matrix/vectors.json": "009679252cd912f637f06651aecedf4c3a49ee80617cf8e220a9b62d238caaad",
+    "scripts/selinux_matrix.py": "d25a7f7d12d3d6ff78c125743de8d138f3a2066f13ae444898a91220ece5fa30"
+  },
+  "findings": [
+    {
+      "id": "R1",
+      "severity": "MAJOR",
+      "location": "matrix.json bpf.prog_run; assertion A17; README 'Owner decision' E1 and F2 item 3",
+      "finding": "bpf_prog_load ends with bpf_prog_new_fd(prog), and that calls security_bpf_prog. selinux_bpf_prog checks BPF__PROG_RUN from the current SID to the program's SID, and selinux_bpf_prog_load sets the program's SID to the loader's SID (v6.12 kernel/bpf/syscall.c:2876, security/selinux/hooks.c:6879-6925). So a loader needs 'bpf prog_run' on its own SID to receive the descriptor of the program it just loaded. The matrix gives prog_run only to server, observer and broker on planeon_contain_t. allowed(ENROLLED_CONTAINMENT, planeon_contain_t, planeon_contain_t, bpf, prog_run) is False, and the same holds for qualk8s_runtime_t on itself. A17 then forbids containment from getting prog_run on its own programs in every state. As written, S3 (load, attach, pin) cannot work, and neither can the E1 runtime load. E1's 'nothing else of the BPF surface' and F2 item 3's 'Only the reader roles get either' are wrong as stated.",
+      "requiredChange": "Grant planeon_contain_t prog_run on planeon_contain_t only while planeon_containment_enabled=1 and secure_mode_policyload=0. Grant qualk8s_runtime_t prog_run on qualk8s_runtime_t. Amend A17 so containment is allowed before the seal (and denied after it), reword E1 and F2 item 3, and add vectors for both self grants."
+    },
+    {
+      "id": "R2",
+      "severity": "MAJOR",
+      "location": "matrix.json capabilities (no init_t entry); A37, A39, A46 evaluated over init_t and OTHER_DOMAIN; README 'What the matrix closes'",
+      "finding": "The capability classes are closed for every declared domain and for OTHER_DOMAIN. init_t has no capability entries, so allowed() returns False for init_t sys_admin, setuid, setgid, setpcap, kill, net_bind_service and every other capability. A39 asserts init_t lacks sys_admin and A46 asserts it lacks net_bind_service. Every undeclared host domain (kernel threads, login programs, udev, journald, auditd and so on) is also closed to every capability. Under 'W03 may grant nothing the matrix closes', systemd could not run: it needs at least sys_admin, setuid/setgid, and setpcap to set the bounding sets W01 requires for the roles. No other process on the host could hold any capability either. The matrix states no such constraint and could not satisfy it if it did.",
+      "requiredChange": "Enumerate init_t's capability set as an explicit trusted grant, and change A39 and A46 to allow init_t or to exclude the system domain. For OTHER_DOMAIN, either keep the capability closure only for the capabilities that matter to the deny properties and mark the rest outside, or enumerate the other host domains. State the result in the closure section."
+    },
+    {
+      "id": "R3",
+      "severity": "MAJOR",
+      "location": "matrix.json transitions; process closure; A30; README Domains ('Root logins map to planeon_admin_t')",
+      "finding": "Process transitions into every declared domain are closed, but no transition targets planeon_admin_t or init_t. allowed(*, OTHER_DOMAIN, planeon_admin_t, process, transition) and allowed(*, OTHER_DOMAIN, init_t, process, transition) are False in all states, and setexec is denied to every source, which rules out the pam_selinux route. Under the closure rule, no login path could ever reach the admin domain, so the policy-writer and maintenance entries (A24, A29) could never be used, and the kernel_t to init_t boot transition would be forbidden. A30 also treats setexec as having a destination domain. In SELinux, setexec is checked on the caller itself, and the destination is constrained by 'process transition' at exec time.",
+      "requiredChange": "Add the login-domain to planeon_admin_t entry (the login domain, its entrypoint or setexec, and the transition) and the kernel_t to init_t boot transition, or mark transitions into the admin and system domains as outside and say so. Restate A30 as 'setexec on self' plus the transition targets it constrains."
+    },
+    {
+      "id": "R4",
+      "severity": "MAJOR",
+      "location": "selinux_matrix.py allowed() file-class branch for domain targets; README 'What the matrix closes' and decision 5",
+      "finding": "(a) The README says a domain's own /proc entries are outside the matrix (None). The evaluator returns False for every declared domain targeting itself: file read and open, dir search and lnk_file read. That would forbid /proc/self access, which Python, glibc and systemd need. (b) For peer reads only 'file read' can ever be True. dir search on /proc/<pid>, file open (open_perms), lnk_file read (exe, fd and cwd links) and getattr are closed to False, and 'process getattr', which /proc/<pid>/attr/current needs (hooks.c selinux_lsm_getattr), raises ValueError. Decision 5's captures and the gate's peer-label check therefore cannot be implemented without breaking the closure. (c) selinux_ptrace_access_check maps PTRACE_MODE_READ to file read, so that part is correct. But that check is necessary, not sufficient. commoncap requires the reader's capability set to be a superset of the target's, and __ptrace_may_access requires matching uids, unless the reader has CAP_SYS_PTRACE, which every role is denied. So the gate cannot ptrace-read the broker, and the readers cannot ptrace-read the kubelet, the runtime, or the worker (which runs under a different uid), whatever SELinux allows.",
+      "requiredChange": "Model /proc access as its own grant set: dir search, file open/read/getattr and lnk_file read on the target domain, plus process getattr. Make self access outside, or grant it, consistently with the README. In decision 5, state the commoncap and uid preconditions and which captures avoid ptrace-gated files (status, stat and cgroup are not gated)."
+    },
+    {
+      "id": "R5",
+      "severity": "MAJOR",
+      "location": "Closure design (per-target only); vectors O02 and O03; W01 §5.3 SERVER, WORKER and POLICY_WRITER rows",
+      "finding": "W01 states per-source denials: the server may name_connect only to the I04 port and connectto only its observer and broker sockets; the worker has no network name_connect; the writer may connectto only I07. The matrix closes access only for targets it declares, so these properties hold only against declared ports and sockets. O02 (server name_connect to http_port_t is None) and O03 (server connectto syslogd_t is None) pin the gap: W03 could grant the server or writer access to any undeclared port or socket without violating the matrix. This weakens W01 and is not disclosed.",
+      "requiredChange": "Add per-source closure rows, for example 'for source X and class C, every target not listed is False', for the W01 'only' properties of the server, worker, writer, gate and observer. Replace O02 and O03 with False vectors and add mutation checks."
+    },
+    {
+      "id": "R6",
+      "severity": "MAJOR",
+      "location": "Cgroup type access (containment READ+RELABEL only, WRITE init/broker); A34, A35; decision 2; W01 §5.2 S3; W02a program placement (WORKER and BROKER leaves)",
+      "finding": "systemd creates a service's cgroup only when the unit starts. At S3 the role services have not started (they start in S6), so their cgroups and the broker's broker and probe-worker leaves do not exist. Containment has no WRITE (dir create) on planeon cgroups, so it cannot create them, and A34/A35 forbid it from writing their limits. Containment therefore cannot attach the seven programs or label cgroups that will only exist after the seal. Cgroups created after the seal by systemd or the broker get their labels from selinux_kernfs_init_security (the parent's label or a type_transition, hooks.c around line 3559), not from a relabel. The matrix models neither the named type_transition rules nor the label of the delegated planeon-capacity-broker.service directory. That directory is the common ancestor for which clone3 CLONE_INTO_CGROUP checks cgroup.procs write (cgroup.c cgroup_may_write, used at line 6520). W01 S3 says containment 'creates or verifies role cgroups and limits'. The matrix silently chose 'verifies', and with that choice S3 cannot be carried out.",
+      "requiredChange": "Grant containment dir create and file write on planeon cgroups before the seal, and amend A34/A35 to allow it, or specify a different creation order. Declare the type of the delegated service cgroup and the named type_transition rules that label cgroups created after the seal, and disclose this as a decision."
+    },
+    {
+      "id": "R7",
+      "severity": "MAJOR",
+      "location": "README 'Owner decision' E1; capabilities of qualk8s_runtime_t (sys_admin, net_admin, bpf)",
+      "finding": "E1 is justified only for cgroup-device programs on container cgroups, but SELinux bpf prog_load does not restrict program type, attach type or attach target. (1) Cgroup programs attached with BPF_F_ALLOW_MULTI to an ancestor such as the root cgroup become effective on descendant cgroups (kernel/bpf/cgroup.c compute_effective_progs, line 430). Attaching needs only a cgroup fd from fdget_raw, which an O_PATH open of the cgroup root provides, so 'cannot attach to a planeon cgroup' does not mean 'cannot affect planeon cgroups'. W02a readers query only the seven containment hooks, so a foreign program at the root under any other attach type (sockopt, skb, sysctl, device, UNIX sock_addr, ...) is not detected. The README's claim that the reader comparison 'refuses any foreign program on a planeon cgroup' is too strong. (2) bpf_ns_capable lets CAP_SYS_ADMIN satisfy the CAP_BPF, CAP_NET_ADMIN and CAP_PERFMON checks in bpf_prog_load (kernel/bpf/token.c line 14). With sys_admin, the runtime's prog_load reaches program families far beyond cgroup-device, and lockdown=integrity does not stop all of them. 'nothing else of the BPF surface' is therefore an overclaim. (3) systemd also loads cgroup-device programs on cgroup v2 (DeviceAllow, PrivateDevices, and transient scopes under the systemd cgroup driver), and A14-A16 deny init_t any prog_load or map_create. E1's feasibility analysis leaves this case out.",
+      "requiredChange": "Restate E1's scope accurately, or narrow it: remove sys_admin from the runtime, or add an owner-level control outside SELinux and a T04 check. Extend the reader census (a W02a-F revision) to every cgroup attach type in effective view, or disclose this residual. Decide systemd's BPF use explicitly: either an E1-style decision or a W03 requirement for no BPF-backed unit directives plus the cgroupfs driver."
+    },
+    {
+      "id": "R8",
+      "severity": "MAJOR",
+      "location": "Containment capabilities and A12; W01 §5.2 S3 ('enables fs-verity on artifacts') and §5.3 ('which W02 enumerates')",
+      "finding": "FS_IOC_ENABLE_VERITY calls file_permission(filp, MAY_WRITE), which is inode_permission (fs/verity/enable.c line 350; fs.h line 2897). Root therefore needs CAP_DAC_OVERRIDE on the 0555 artifacts, and SELinux needs file write on the artifact's sealed type. The matrix gives containment only net_admin and bpf, and A12 forbids every domain from writing sealed types in an enrolled boot. As enumerated, containment cannot enable fs-verity at S3. The matrix resolves W01's internal tension (S3 versus §5.5) without saying so.",
+      "requiredChange": "Disclose a decision: either move fs-verity enabling to the maintenance domain, with containment only measuring at S3, or grant the needed write and capability before the seal and amend A12."
+    },
+    {
+      "id": "R9",
+      "severity": "MINOR",
+      "location": "README F2 section, item 2",
+      "finding": "Verified against v6.12 fs/fhandle.c. The default path needs capable(CAP_DAC_READ_SEARCH). The relaxed path in may_decode_fh needs O_DIRECTORY, CAP_SYS_ADMIN in the superblock's user namespace or in the user namespace of the mount namespace (with no locked children), and CAP_DAC_READ_SEARCH in the caller's current user namespace, not 'the user namespace that owns the mount'. Its HANDLE_CHECK_PERMS step checks uid/gid mappability only, not dir search. cgroup2's superblock is always in init_user_ns (cgroup.c line 2297, fc->global), but the mount-namespace branch still exists; A38 and the absence of cap_userns sys_admin close it. The conclusion holds, but the text is imprecise. Item 2 also omits a third O_PATH route: magic links under /proc/<pid>/fd and cwd, which are gated by the ptrace-read check on the holder rather than by dir search on the cgroup ancestors. The gate has peerRead on the broker, which holds the probe-worker cgroup fd. Item 3 (the program fd) is the control that actually decides detach, and it holds only for BPF_PROG_ATTACH: bpf_link attachments can be fetched by any CAP_SYS_ADMIN holder through BPF_LINK_GET_FD_BY_ID, which has no LSM check (syscall.c line 5442).",
+      "requiredChange": "Correct the may_decode_fh description. List the procfs magic-link route and say that item 3, not O_PATH denial, decides detach. Require containment to attach with BPF_PROG_ATTACH and never with bpf_link."
+    },
+    {
+      "id": "R10",
+      "severity": "MINOR",
+      "location": "Seal marker WRITE condition; A42; decision 2; W01 §5.2 S4/S5",
+      "finding": "W01 writes the seal marker in S5, after S4 has set planeon_containment_enabled=0 and secure_mode_policyload=1. The matrix allows the marker write only while containment_enabled=1 and secure_mode_policyload=0, which moves the write before S4. Separately, setbool is conditioned on containment_enabled=1, so W01's sequential 'set containment_enabled=0, then secure_mode_policyload=1' would be denied at the second step. Only one atomic commit of both pending booleans works (selinuxfs commit_pending_bools). Neither point is disclosed.",
+      "requiredChange": "Disclose the S5 reordering and require S4 to set both booleans in a single atomic commit, or adjust the conditions. Model or explicitly exclude the transient S4 state."
+    },
+    {
+      "id": "R11",
+      "severity": "MINOR",
+      "location": "FILE_PERMS EXECUTE group; broker/server/worker EXECUTE on planeon_interpreter_exec_t; W01 §5.3 BROKER row",
+      "finding": "EXECUTE groups execute together with execute_no_trans. The broker therefore holds execute_no_trans on the interpreter, so it can run Python directly in planeon_broker_t. For a script exec, the broker needs only execute on the interpreter (the open_exec check happens before creds are committed), not execute_no_trans. W01 says the broker gets 'execute only on the worker executable type, with a forced transition'. The matrix permits a grant that W01 forbids.",
+      "requiredChange": "Split execute and execute_no_trans. Deny execute_no_trans on entrypoint and interpreter types to every domain that does not need it, and add an assertion."
+    },
+    {
+      "id": "R12",
+      "severity": "MINOR",
+      "location": "README Transition semantics; policyCapabilities; W01 §5.4 W4/W5",
+      "finding": "W4 sets no_new_privs before W5's exec into planeon_worker_t. check_nnp_nosuid (hooks.c line 2238) then requires 'process2 nnp_transition' with the nnp_nosuid_transition policy capability, or a typebounds relation. Otherwise the exec fails with EPERM. Containers run with allowPrivilegeEscalation=false hit the same rule on the runtime-to-container transition. The matrix says broker-to-worker is effective, but lists neither requirement.",
+      "requiredChange": "Add nnp_transition (or typebounds) to the transition model and nnp_nosuid_transition to the required policy capabilities, or record them as W03 requirements."
+    },
+    {
+      "id": "R13",
+      "severity": "MINOR",
+      "location": "planeon_bpf_pin_t RELABEL; A41; decision 2",
+      "finding": "bpffs is SE_SBGENFS without xattr support, and selinux_is_sblabel_mnt is false for it (hooks.c lines 462-500 and 735), so a setxattr relabel fails with EOPNOTSUPP. Pin labels come from genfscon path rules in the loaded policy, not from containment. The RELABEL grant cannot be used, and 'containment labels pins' is inaccurate.",
+      "requiredChange": "State that pin labels come from genfscon paths under /sys/fs/bpf/planeon, remove the RELABEL grant or mark it unused, and adjust A41's wording."
+    },
+    {
+      "id": "R14",
+      "severity": "MINOR",
+      "location": "FILE_PERMS comment and contents; A32; W01 §5.3 SERVER ('no execmem/execmod/execstack')",
+      "finding": "FILE_PERMS claims to cover every v6.12 file-class permission but omits quotaon, audit_access, execmod, watch_mount, watch_sb and watch_with_perm (classmap.h lines 10-14). For these, allowed() raises ValueError instead of returning a result. execmod is a W01 deny property with no assertion.",
+      "requiredChange": "Complete FILE_PERMS and add an execmod deny assertion with a vector and a mutation check."
+    },
+    {
+      "id": "R15",
+      "severity": "MINOR",
+      "location": "README closure claim ('process permissions'); evaluator PROCESS_PERMS and SOCKET_PERMS",
+      "finding": "The process class is closed over only 8 permissions. sigkill, sigstop, signal, getattr, setsched and the others raise ValueError, as do unix_stream_socket read and write. The README says anything outside is None. The admin domain holds CAP_KILL, so unless W03 denies process sigkill/sigstop, W01's denial of service stop on planeon units can be sidestepped by signalling the roles.",
+      "requiredChange": "Return None for permissions outside the closed set, or close them. Consider closing process signal permissions from the admin domain to planeon domains, and state the scope of the closure exactly."
+    },
+    {
+      "id": "R16",
+      "severity": "MINOR",
+      "location": "Port rows; A02, A03; tcp_socket name_bind semantics",
+      "finding": "selinux_socket_bind checks name_bind only for ports below the unprivileged-port start or outside the local ephemeral range (hooks.c lines 4764-4778). A labelled port inside ip_local_port_range, such as a signed I04 port, gets no name_bind check, so A02 and A03 would not hold. name_connect is always checked.",
+      "requiredChange": "Require that every labelled port lies outside net.ipv4.ip_local_port_range (or is reserved and checked), as a W03 and T04 item."
+    },
+    {
+      "id": "R17",
+      "severity": "MINOR",
+      "location": "UNIT_FILE types; W01 §5.2 S2 and §2.6 ('sealed systemd units')",
+      "finding": "systemd merges drop-ins and other unit sources (/etc/systemd/system/<unit>.d, service.d, /run/systemd/system, transient and generator directories) into planeon units whatever their labels, and it runs ExecStart* in init_t unless a transition applies. The matrix seals only the main unit file types and assigns no paths, so unit sealing could be bypassed for the next enrolled boot.",
+      "requiredChange": "Require that every systemd unit search path and drop-in directory carries a sealed type, as a W03 and T04 requirement."
+    },
+    {
+      "id": "R18",
+      "severity": "NOTE",
+      "location": "A33 statement; access-group coarseness; connector WRITE on sock_file",
+      "finding": "A33 is checked for class dir only but says 'directories and files'. It still bites inside the model, because the access groups apply to all of a type's classes. The groups make the upper bounds broad: a connector gets create, unlink, rename and setattr on the socket file, where refpolicy's stream_connect_pattern grants getattr, write, open and append. BPF_OBJ_GET with file_flags=0 needs pin write (ACC_MODE O_RDWR), so readers must pass BPF_F_RDONLY. The structural errors expected by M26 and M27 are prefixes of the actual messages.",
+      "requiredChange": "Align A33's text with its class. Consider narrowing the connector grants. State the BPF_F_RDONLY requirement for readers. State whether matrixError is matched as a prefix."
+    }
+  ],
+  "questionAnswers": {
+    "Q1": "Partly. Sockets, ports, credentials, sealed-type writes, booleans and entry conditions follow W01 P1/P2/P4/P5/P9 and §5.2/§5.5 for declared targets. W01 is weakened or contradicted in four places without disclosure: the per-source 'only' properties hold only for declared targets (R5); broker execute_no_trans on the interpreter (R11); fs-verity at S3 (R8); and the S3 cgroup creation order and S5 marker order (R6, R10). The disclosed deviations are present: E1, gate setsockcreate, labelling before the seal, the admin capability set, reader /proc reads and the backend capability sets. E1, however, is scoped too narrowly (R7).",
+    "Q2": "The outcome is plausible, but the text is not exact. Item 1, the SELinux open check whether the dentry came from a path walk or a file handle, is correct (do_handle_open uses file_open_root; O_PATH goes through do_o_path and skips may_open and security_file_open). Item 2 misdescribes the v6.10 relaxation and omits the procfs magic-link route (R9). Item 3 is the control that decides detach; it is correct for BPF_F_ALLOW_MULTI PROG_ATTACH (find_detach_entry, bpf_prog_new_fd), but it ignores the loader's own prog_run (R1) and assumes no bpf_link. cgroup2's s_user_ns is init_user_ns (fc->global).",
+    "Q3": "Mostly correct. connectto on unix_stream_socket for SEQPACKET, checked against the listening socket's SID with setsockcreate labelling; sock_file write on connect; name_connect; ptrace read checked as file read; bpf, security and capability class names; the cap_userns names; and the policy capability names are all right. Wrong or incomplete: prog_load also needs prog_run on self (R1); name_bind is skipped inside the ephemeral range (R16); NNP transitions need nnp_transition (R12); process getattr is needed for attr/current (R4); bpffs cannot be relabelled (R13); FILE_PERMS is incomplete (R14). The service permissions (start, stop, status, reload, enable, disable) match refpolicy's userspace class. systemd checks them for D-Bus callers, and some manager operations use class system, which the matrix does not model.",
+    "Q4": "Not sound as stated. The closure over capabilities, transitions and /proc makes init_t, login and self-/proc access impossible (R2, R3, R4), and the per-target design leaves W01's per-source denials open (R5). Every one of the 54 assertions holds on the shipped matrix, and all 24 mutation checks of the failedAssertions kind bite. A17 is wrong (R1); A39 and A46 constrain init_t and OTHER_DOMAIN incorrectly (R2); an execmod assertion is missing (R14). One grant is forbidden by W01: broker execute_no_trans (R11).",
+    "Q5": "Yes. The seven slot values match the W02a pattern ^system_u:(system_r|object_r):[a-z0-9_]+_t:s0$, w02a_slots(matrix) equals vectors.w02aSlots, and every domain label equals the W02a const processLabel. The N1 closure is real as a requirement (closed accesses for qualk8s_* types), but the naming check in M25 alone proves only the prefix; confinement must be checked on the policy in T04.",
+    "Q6": "All 738 access checks return their expected value (202 True, 533 False, 3 None), and all 29 mutation checks behave as stated, with M26 and M27 matched by prefix. Several stated reasons are wrong in substance: O02 and O03 are 'outside' only because the per-source closure is missing (R5); F04's reasoning about the relaxation (R9); and S01 'containment loads programs' would fail at the descriptor step (R1).",
+    "Q7": "Nothing claims a policy module, a compiled or loaded policy, native behaviour, a selected distribution, seccomp filters or any E01-E12 proof. The overclaims are in the text: E1's 'nothing else of the BPF surface' and the effectiveness of the reader comparison (R7); 'process permissions' and 'own /proc outside' in the closure statement (R4, R15); 'containment labels pins' (R13); and decision 5's implication that file read suffices for ptrace-gated reads (R4)."
+  },
+  "modelExecution": "Verified SHA256SUMS; all 17 snapshot files are byte-identical to the working tree. Imported scripts/selinux_matrix.py with uv run --offline --frozen --no-sync python from the repository root. check_matrix passed, failed_assertions returned [], and w02a_slots matched the vectors. All 738 access checks and 29 mutation checks reproduced their expectations. Wrote two probe scripts under the scratchpad w02e-review-probes directory (p1_vectors.py, p2_probe.py). They queried self /proc access, peer /proc permissions, self prog_run, init_t and OTHER_DOMAIN capabilities, transitions into the admin and init domains, process permissions outside the closed set, execute_no_trans, seal marker and setbool conditions in transient states, containment cgroup write, and connector sock_file permissions, and evaluated in-memory state mutations. No file in the repository was modified.",
+  "sourcesRead": [
+    "Snapshot: architecture/selinux-matrix/{README.md, REVIEW_BRIEF.md, matrix.json, vectors.json, source-index.json}, scripts/selinux_matrix.py",
+    "Snapshot predecessors: architecture/host-interface-inputs/resolved/HOST_INTERFACE_SPEC.md (§2, §4-§10), resolution-review-round1.json (F1-F3), native-profile-v2/README.md and qualification.schema.json (label slots, processLabel consts, bpfPrograms hook set)",
+    "Linux v6.12 source from raw.githubusercontent.com/torvalds/linux/v6.12: fs/fhandle.c, security/selinux/hooks.c, security/selinux/include/classmap.h, kernel/bpf/syscall.c, kernel/bpf/cgroup.c, kernel/bpf/token.c, kernel/cgroup/cgroup.c, fs/verity/enable.c, include/linux/fs.h, kernel/ptrace.c, security/commoncap.c",
+    "From my own knowledge of upstream, not re-read: refpolicy secure_mode_policyload and stream_connect_pattern idioms; systemd's SELinux access mapping and its cgroup and BPF device behaviour; container-selinux unconfined types; runc/crun device filters; the v6.12 policy capability names (the fetch of policycap_names.h was rate-limited)"
+  ],
+  "actions": {
+    "filesEdited": false,
+    "githubMutated": false,
+    "nativeActions": false,
+    "referenceModelExecuted": true,
+    "repositoryValidatorsRun": false,
+    "runnerActivated": false,
+    "testsRun": false,
+    "warmSourcesAccessed": false
+  },
+  "reviewLimit": "A source-only review of data and an evaluator against Linux v6.12 source and upstream knowledge. No policy was compiled, loaded or analysed with sesearch, and no host, distribution or native behaviour was observed. Kernel readings are reviewer notes for T04, not observations. systemd, refpolicy and container-runtime behaviour comes from memory where noted. A PASS would not be a policy module, native qualification or authorization for anything installed."
+}

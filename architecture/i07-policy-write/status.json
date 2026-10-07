@@ -1,0 +1,51 @@
+{
+ "schemaVersion": "planeon.internal.i07-policy-write-status/v1",
+ "contract": "planeon.internal.policy-write-frame/v1",
+ "reviewRounds": [
+  {
+   "round": 1,
+   "record": "architecture/i07-policy-write/review-round1.json",
+   "recordSha256": "837333a076eb794c501d1d2cf754a360eda13d52179423d1199f6cdd60ed4a5a",
+   "verdict": "PASS_FOR_SOURCE_PUBLICATION",
+   "subjectDirectory": "CURRENT"
+  }
+ ],
+ "carriedFindings": {
+  "R1": "W02b-F (with P4) and W02c-F: after a restart that follows unrecorded write failures, refuse MAINT_REQUESTED in the rebuilt generation (or keep a failure marker in a separate failure domain); pin probes PA and PA2 as vectors",
+  "R2": "W02c-F and W02f: closed name allowlist for ValidatingAdmissionPolicy and ValidatingAdmissionPolicyBinding writes once the A2 names are pinned; record the deferral of the W02g README name obligation and add the W02g README to the inputs",
+  "R3": "W02c-F: conditional response-schema constraints (maintenance OPEN implies CLOSED or INVALIDATED, no in-flight action and no ambiguous write; HELD agreement; delivered statuses) with frame vectors",
+  "R4": "W02c-F and W03: define events during an outstanding write (WRITE_TERMINAL before WRITER_SESSION_ENDED and MAINT_ENDED; no successor generation while a write lacks WRITE_TERMINAL or an ambiguous write is unreconciled); split the upstream outcome into its own event or qualify Decision 7",
+  "R5": "W02c-F: define requestDigest's input and the observed fields on rejected results (null for a Status body); correct the T11 and T40 fixtures",
+  "R6": "W02c-F: reword Decision 2 (the generation never returns to ACTIVE; WRITE_END reports DRAINING, CLOSED, INVALIDATED or HELD) and state that INVALIDATED after the fence counts as closed for maintenance",
+  "R7": "W02b-F (with P3): WRITE_BEGIN's deniedActionIds omits an action the storage-failure path denied",
+  "R8": "W02c-F: member-name bound 317 for a maximal qualified label or annotation key"
+ },
+ "ownerDecisions": [],
+ "contractState": "ADOPTED_DATA_CONTRACT",
+ "obligations": {
+  "E01": "OPEN_UNPROVEN",
+  "E02": "OPEN_UNPROVEN",
+  "E03": "OPEN_UNPROVEN",
+  "E04": "OPEN_UNPROVEN",
+  "E05": "OPEN_UNPROVEN",
+  "E06": "OPEN_UNPROVEN",
+  "E07": "OPEN_UNPROVEN",
+  "E08": "OPEN_UNPROVEN",
+  "E09": "OPEN_UNPROVEN",
+  "E10": "OPEN_UNPROVEN",
+  "E11": "OPEN_UNPROVEN",
+  "E12": "OPEN_UNPROVEN"
+ },
+ "independentReviewer": "SEPARATE_AGENT_NOT_AUTHOR",
+ "w02bP1": "WRITE_SIDE_RESOLVED_I05_SIDE_CARRIED",
+ "nativeAcceptance": false,
+ "tenantAcceptance": false,
+ "gateInstalled": false,
+ "writerInstalled": false,
+ "substrateSelected": false,
+ "a2PoliciesPinned": false,
+ "w02bI05BookkeepingFixed": false,
+ "productExecution": false,
+ "runnerActivated": false,
+ "phaseComplete": false
+}

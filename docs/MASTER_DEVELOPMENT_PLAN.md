@@ -1,6 +1,34 @@
 # Harness-Onion — unified development roadmap
 
-## Current checkpoint — MET-PERF-031 source preparation, October 7, 2026
+## Current checkpoint — MET-ENFORCE-008 source preparation, October 7, 2026
+
+Alpha2 OPEN. MET-PERF-031 passed required verify (64/64, 545 s, down from 786 s) and merged as
+main f94229a. MET-ENFORCE-008 is the W02c part. It publishes the closed I07 policy-writer
+channel contract `planeon.internal.policy-write-frame/v1`:
+- MAINTENANCE_STATUS, WRITE_BEGIN, WRITE_OBJECT and WRITE_END on the I05 envelope rules;
+- a closed policy-kind table derived from the W02g `planeon:policy-writer` grants, refusing
+  effect kinds, policy kinds outside the closure and every other kind;
+- a gate model that extends the unchanged W02b model: maintenance opens only when the A3 drain
+  fence holds, never on a drain reply (W02b finding P1, write side);
+- 180 executable vector checks, counterexamples 18 and 23 and the P1 probes included.
+
+It passed its first independent review (PASS_FOR_SOURCE_PUBLICATION, 4 MINOR and 4 NOTE
+findings carried to W02c-F, W02b-F, W02f and W03). Nothing is installed or forwarded; all
+E01-E12 remain OPEN_UNPROVEN. MET-ENFORCE-008 is the sole 205th specification.
+
+| Phase | ID | Status | Description / gate |
+|---|---|---|---|
+| Alpha2A | MET-ENFORCE-008 / W02c | SOURCE_PREPARED | I07 policy-writer channel contract as the 205th packet; verify from the owner's App |
+| Alpha2A | MET-PERF-031 / PERF-031 | VERIFY_PASSED_MERGED | Test-local exact projection sharing; verify 545 s |
+| Alpha2A | W02d-W02f, W02a-F, W02b-F, W02c-F, W02g-F | WAITING_EXACT_PACKETS | seccomp, SELinux matrix, admission; follow-ups |
+| Alpha2 qualification | CONF-LINUX-001 / CONF-A2-001 | WAITING_PREREQUISITES | Linux verification only when mandatory |
+
+Keep the inherited 64 argv unchanged (the installed activation cap and the verifier's inheritance rule; the new
+layer validator adds no argv and runs inside the outer pytest), 420/750/900 s/15 min and 32 MiB. No cloud, runner registration,
+live/native/tenant or model-effort changes. Phase-end effort transition NOT_DUE.
+Prior checkpoints below are history only.
+
+## Historical PERF-031 source checkpoint — MET-PERF-031 source preparation, October 7, 2026
 
 Alpha2 OPEN. MET-ENFORCE-007 passed required verify (64/64, 786 s) and merged as main
 b46446d; W02b is ADOPTED_DATA_CONTRACT. That left 114 s under the trusted 900 s cap, so
@@ -774,7 +802,7 @@ The [item-level backlog](../architecture/unified-roadmap-backlog.json) records p
 | Alpha 2 CI capacity | MET-UNIFY-008 / PR #141 | BLOCKED_SELF_HOSTED_CI | Source PR open; `verify` queued with no registered runner |
 | Alpha 2 CI capacity | MET-LINUX-003 / PR #142 | BLOCKED_SELF_HOSTED_CI | Draft source PR open; `verify` queued on the same labels; queue must be serialized before one-job admission |
 | Alpha 2A | W01 / MET-ENFORCE-004 | DESIGN_RESOLVED_REVIEWED | G04–G07/G09 resolved at design level and independently reviewed; E01–E12 remain OPEN_UNPROVEN |
-| Alpha 2A | W02 (W02a MET-ENFORCE-005, W02g MET-ENFORCE-006, W02b MET-ENFORCE-007) / W03–W07 | W02a, W02g and W02b VERIFY_PASSED_MERGED; others WAITING_EXACT_PACKETS | W02a v2 record contract, W02g I06 backend profile and W02b I05 channel contract reviewed; remaining W02 parts and W03–W07 are labels, not executable YAML |
+| Alpha 2A | W02 (W02a MET-ENFORCE-005, W02g MET-ENFORCE-006, W02b MET-ENFORCE-007, W02c MET-ENFORCE-008) / W03–W07 | W02a, W02g and W02b VERIFY_PASSED_MERGED; W02c SOURCE_PREPARED; others WAITING_EXACT_PACKETS | W02a v2 record contract, W02g I06 backend profile, W02b I05 channel and W02c I07 writer contracts reviewed; remaining W02 parts and W03–W07 are labels, not executable YAML |
 | Alpha 2A | CONF-FIX-010 | BLOCKED_SAFE_DESIGN | Zero product attempts; requires separately reviewed safe design and bounded packet authority |
 | Alpha 2A | CONF-LIVE-004/005/006 | WAITING_PREREQUISITES | Native probes, package handoff and trusted campaign integration |
 | Alpha 2A | CONF-LINUX-001 native AMD64 | NOT_RUN_ENV_UNAVAILABLE | Fresh real-Linux PASS gates runtime coding of CTRL-INTEGRATE-001, MODEL-001, EXEC-001 and RUN-001; ARM64 separate |
@@ -809,7 +837,8 @@ These checkboxes count only the named deliverable at the stated evidence level. 
 - [x] Alpha 2A · W02a / MET-ENFORCE-005 · Publish the independently reviewed v2 native qualification contract; pass required verify through the owner's App.
 - [x] Alpha 2A · W02g / MET-ENFORCE-006 · Publish the independently reviewed I06 backend profile (selection criteria, writer inventory, identity closure incl. W01 F1); pass required verify through the owner's App.
 - [x] Alpha 2A · W02b / MET-ENFORCE-007 · Publish the independently reviewed I05 broker-gate channel wire contract; pass required verify through the owner's App.
-- [ ] Alpha 2A · PERF-031 / MET-PERF-031 · Cut required-verify time with test-local exact projection sharing in three mutation loops; pass required verify through the owner's App.
+- [x] Alpha 2A · PERF-031 / MET-PERF-031 · Cut required-verify time with test-local exact projection sharing in three mutation loops; pass required verify through the owner's App.
+- [ ] Alpha 2A · W02c / MET-ENFORCE-008 · Publish the independently reviewed I07 policy-writer channel contract and closed policy-kind table; pass required verify through the owner's App.
 - [ ] Alpha 2A · CONF-FIX-010 · Complete safe design and exact authority before any product attempt.
 - [ ] Alpha 2A · CONF-LIVE-004 · Produce the exact native-probe source implementation and separately qualify it.
 - [ ] Alpha 2A · CONF-LIVE-005 · Produce a reproducible selected package and operator handoff.

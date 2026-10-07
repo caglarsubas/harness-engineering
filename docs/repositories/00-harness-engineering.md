@@ -1,6 +1,14 @@
 # Repository Plan: `Harness-Engineering`
 
-## Current source preparation — MET-PERF-031
+## Current source preparation — MET-ENFORCE-008
+
+W02c: the closed I07 policy-writer channel contract (four operations on the I05 envelope rules, a policy-kind table
+derived from the W02g writer grants, a gate model that opens maintenance only when the A3 drain fence holds, 180
+vector checks) passed its first independent review with 4 MINOR and 4 NOTE findings carried. Nothing is installed or
+forwarded, and every E01-E12 obligation stays open. Alpha2 OPEN; 204 accepted plus ENFORCE-008 only. Native Linux,
+exact-main and tenant acceptance remain separate.
+
+## Historical PERF-031 source preparation — MET-PERF-031
 
 MET-PERF-031 cuts required-verify time before the 900 s cap: MET-ENFORCE-007 verified in 786 s. Three inherited
 mutation loops re-projected identical unchanged inputs through the whole history chain on every validator call
@@ -885,6 +893,7 @@ Every packet uses branch `codex/<packet-id>`, changes only named paths, opens a 
 76. `MET-ENFORCE-006`: publish the W02g I06 backend profile (selection criteria, writer inventory, identity closure incl. W01 F1) with independent review; source only.
 77. `MET-ENFORCE-007`: publish the W02b I05 broker-gate channel wire contract with independent review; source only.
 78. `MET-PERF-031`: share exact history projections inside three mutation loops to cut required-verify time; tests only.
+79. `MET-ENFORCE-008`: publish the W02c I07 policy-writer channel contract and closed policy-kind table with independent review; source only.
 
 ## Testing, verification, and acceptance
 

@@ -1,0 +1,82 @@
+{
+ "schemaVersion": "planeon.internal.i07-policy-write-index/v1",
+ "round": 1,
+ "baseMain": "f94229a7c81c39016d83213bb17cce8c6f862c65",
+ "baseTree": "8c606790f7d6d458251698275988adbc61e4d892",
+ "subject": [
+  {
+   "path": "architecture/i07-policy-write/README.md",
+   "sha256": "9e5cb3d1023bc12b9e2643ae42dde5a87640cf04fc8ac1aa88350c65b12ba2dc"
+  },
+  {
+   "path": "architecture/i07-policy-write/REVIEW_BRIEF.md",
+   "sha256": "45731028bf94ceb9422441090416731b9c44f98827612c126bb1e9bead08a8a3"
+  },
+  {
+   "path": "architecture/i07-policy-write/channel.schema.json",
+   "sha256": "ef11c86adff57ede63129a1408c887f4957622583c2fbdbac028577f2d6ace14"
+  },
+  {
+   "path": "architecture/i07-policy-write/policy-kinds.json",
+   "sha256": "8abc0d9610bf3530fcec1343ad201a2ce4b9b82e70d098b4371978d3bf7696f1"
+  },
+  {
+   "path": "architecture/i07-policy-write/vectors.json",
+   "sha256": "7340800e3559621e0d8e144dbaeab39b8980cb5ca36c7d8dcc2219c1e0db35b7"
+  },
+  {
+   "path": "scripts/i07_policy_write.py",
+   "sha256": "91311e08c9c7dc4291c8974d26250117ced6254ac20bd6e4cbe9cd6053f696ed"
+  }
+ ],
+ "predecessorInputs": [
+  {
+   "path": "architecture/host-interface-inputs/resolved/HOST_INTERFACE_SPEC.md",
+   "sha256": "8a3a09bb5dbc08804dbea06dd0700a14648a9cdbc8efd62112dc64ba0b6ba1b4"
+  },
+  {
+   "path": "architecture/host-interface-inputs/resolution-review-round1.json",
+   "sha256": "619b7ac456097e1312fc0e42c2bf67911b7a1cc044119862724606b189b4861f"
+  },
+  {
+   "path": "architecture/host-interface-inputs/resolution-status.json",
+   "sha256": "e6a1333a66eeab4801c97902b7c1ae145b0f16693a8136d5dbce7d24b2837c6c"
+  },
+  {
+   "path": "architecture/i06-backend-profile/identity-closure.json",
+   "sha256": "0a9b82ffa2d63bf48a8850574cdf3ece02bf1913f33a72cbb96ed30a40f1f3bb"
+  },
+  {
+   "path": "architecture/i06-backend-profile/status.json",
+   "sha256": "73d8df607e90568e06f14b3548f8c727805f68072d9753134a32a2eb049f60c3"
+  },
+  {
+   "path": "architecture/i06-backend-profile/review-round2.json",
+   "sha256": "c46c825e59efa8ba7a79e1db5efff5b981e10147e826542b6967b24921b90235"
+  },
+  {
+   "path": "architecture/i05-gate-channel/README.md",
+   "sha256": "dc9aa22017b2cdf71f886fb7890aff3f6e7095b9afc25bd37645cb0dee23b498"
+  },
+  {
+   "path": "architecture/i05-gate-channel/channel.schema.json",
+   "sha256": "5242d1b2a2817b867e8c5b68c0936a29b6d3e5300be998c53894e32ccd1638b4"
+  },
+  {
+   "path": "architecture/i05-gate-channel/vectors.json",
+   "sha256": "8d6d8872216fae0f732c1f40fa84a4f9a68a417dd248aeffe15a874ff1a7b6f2"
+  },
+  {
+   "path": "architecture/i05-gate-channel/status.json",
+   "sha256": "da7266c4447f73b695ba93603f691b64f56b131df85c448ad752e0e314fa7016"
+  },
+  {
+   "path": "architecture/i05-gate-channel/review-round3.json",
+   "sha256": "cc0553095d5a2e7790d63302c82275b2c35618b3bf20ddf55d43dceae1725e9d"
+  },
+  {
+   "path": "scripts/i05_gate_channel.py",
+   "sha256": "857a15bf4c444b5ed9fc4b612e1fed2cdcb7631620f3a5cf56c117c91560ea8e"
+  }
+ ]
+}

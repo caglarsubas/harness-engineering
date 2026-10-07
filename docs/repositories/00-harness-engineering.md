@@ -1,6 +1,13 @@
 # Repository Plan: `Harness-Engineering`
 
-## Current source preparation — MET-ENFORCE-006
+## Current source preparation — MET-ENFORCE-007
+
+W02b: the closed I05 broker-gate channel contract (lockstep hash-chained frames, ten closed variants, an executable gate
+model with exact request rendering and a durable journal, the outcome mapping to I02 RESOURCE_RESULT, 161 vector checks)
+passed its third independent review. Nothing is installed or forwarded, and every E01-E12 obligation stays open.
+Alpha2 OPEN; 202 accepted plus ENFORCE-007 only. Native Linux, exact-main and tenant acceptance remain separate.
+
+## Historical ENFORCE-006 source preparation — MET-ENFORCE-006
 
 W02g: the I06 backend profile for the sealed single-node control plane on Kubernetes
 v1.37.1 has distribution selection criteria, a writer inventory and an identity closure
@@ -866,6 +873,7 @@ Every packet uses branch `codex/<packet-id>`, changes only named paths, opens a 
 74. `MET-ENFORCE-004`: resolve W01 gates G04-G07 and G09 at design level with independent review; source only.
 75. `MET-ENFORCE-005`: publish the W02a v2 native qualification contract with independent review; source only.
 76. `MET-ENFORCE-006`: publish the W02g I06 backend profile (selection criteria, writer inventory, identity closure incl. W01 F1) with independent review; source only.
+77. `MET-ENFORCE-007`: publish the W02b I05 broker-gate channel wire contract with independent review; source only.
 
 ## Testing, verification, and acceptance
 

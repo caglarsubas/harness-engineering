@@ -1,0 +1,177 @@
+{
+ "schemaVersion": "planeon.internal.i05-gate-channel-review/v1",
+ "round": 2,
+ "reviewDate": "2026-10-06",
+ "verdict": "CHANGES_REQUIRED",
+ "subjectSha256": {
+  "README.md": "e290751cfc49f499e45e6117ae286fa5d00b8e78974fe301f0e182d8aed20137",
+  "REVIEW_BRIEF.md": "9b8cc5c13b26a601a55f1288e0b783367226a4a2b496e528f64c0f805cd149bd",
+  "channel.schema.json": "6cfae1ca9b83e22d05739c70e4be9d44c5701dedd7276663b9c51b2b53ab0c24",
+  "outcome-mapping.json": "f190573e4f26a78b47a74f3ced13a33b5c0887b45fb591728849d4c133f4d438",
+  "vectors.json": "47e79201eaeacb8054ecf9fa0cda4e0dd3dc9244304e78058ba33d346882871f",
+  "i05_gate_channel.py": "ad310a49b04e3ec5cc56f9986adc1035e6461bbb906cdb4702ec8cd6b4fe89e0",
+  "source-index.json": "f49002d2b3b9476ebb550b056acbea5b4af889885cf69737a9fc0c4d1bdca7a6"
+ },
+ "findings": [
+  {
+   "id": "N1",
+   "severity": "MAJOR",
+   "location": "scripts/i05_gate_channel.py Gate._upstream (every UPSTREAM_RESPONSE becomes DELIVERED_RESULT whatever its status), Gate._settle_drain and the CLOSE_GENERATION normal-drain branch (only IO_AMBIGUOUS counts as ambiguous); README Decisions 1 and 8, durable journal row TERMINAL, Outcome mapping rows CREATE/DELETE 5xx -> AMBIGUOUS; resolved section 3.2 A3 and its rationale ('The synchronous create/delete response comes after the apiserver's persist step'); base section 4 step 6 ('uncertain durability means IO_AMBIGUOUS')",
+   "finding": "A CREATE or DELETE that gets a 5xx response is recorded as a durable DELIVERED_RESULT and counts as terminal for the A3 drain fence. The generation stays ACTIVE: the next action can be armed, and an I07 WRITE_BEGIN drain settles CLOSED, so policy writes may commit. The Kubernetes API conventions define 500 as 'an unexpected internal error occurred and the outcome of the call is unknown', and a request that timed out can still be persisted after its 5xx/504 response. The contract itself maps CREATE/DELETE 5xx to the I02 outcome AMBIGUOUS, but the gate does not treat the action as ambiguous.\nProbes:\n(a) BIND; ARM 1 CREATE; FORWARD; UPSTREAM_RESPONSE 500 -> DELIVERED_RESULT; ACTION_OUTCOME -> DELIVERED_RESULT, httpStatus 500, admittedBeforeInvalidation false; DRAIN_REQUEST -> {denied: [], drain: CLOSED}; GENERATION_STATUS state CLOSED. check_agreement(CREATE 500 outcome, AMBIGUOUS) -> None, so the outcomes agree and the transcript advances.\n(b) DRAIN_REQUEST while the CREATE is in flight, then UPSTREAM_RESPONSE 500 -> the A3 fence settles CLOSED (journal DRAIN_STARTED, TERMINAL 500, DRAINED CLOSED).\n(c) CREATE 504, then ARM 2 GET -> OK, and its request is forwarded while ACTIVE.\nA mediated policy write can therefore commit before the apiserver finishes persisting the mutation, which is the counterexample-18 shape. The gate holds no HELD state and writes no ADMITTED_BEFORE_INVALIDATION record. A3's guarantee ('if a mutation reached DELIVERED_RESULT, no mediated policy write was committed between its A1 event and its upstream response; the object was persisted under the policy A1 checked') does not hold for these responses. The README does not list this among its 'conservative outcomes'.",
+   "requiredChange": "For CREATE and DELETE, enumerate the response statuses whose outcome is final: for example 201 for CREATE; 200, 202 and 404 for DELETE; and the 4xx rejections. Treat every other status as an uncertain outcome at the gate, including every 5xx and every status without a mapping row. Do this in one of two ways: classify it IO_AMBIGUOUS, keeping the status and digest as reconciliation data; or keep DELIVERED_RESULT with an explicit unknown-outcome qualifier that the A3 fence, the drain settle and the normal close treat exactly like IO_AMBIGUOUS (generation HELD, no policy write). Update Decisions 1 and 8, the journal table and the mapping table to match. Add vectors: CREATE 500 then DRAIN_REQUEST -> HELD; a drain pending with a CREATE in flight, then 504 -> HELD; DELETE 503 -> HELD. GET 5xx can stay DELIVERED_RESULT."
+  },
+  {
+   "id": "N2",
+   "severity": "MINOR",
+   "location": "Gate._record failure path where it is not followed by Gate._urgent: Gate._upstream LATE_UPSTREAM and Gate._drain DRAIN_STARTED; Gate._op_close_generation early return in HELD; README Decision 8 (storage failure is an urgent reason that denies an armed action), the durable journal ('the in-memory decision that denies or closes still applies'), Channel item 5; channel.schema.json GENERATION_STATUS constraint (armedActionId null unless ACTIVE)",
+   "finding": "Only some record points route a failed write through the urgent STORAGE_FAILURE path. When the LATE_UPSTREAM or DRAIN_STARTED record fails, _record sets HELD, and nothing else happens: no armed action is denied, no INVALIDATED record is written, and an in-flight action is not marked admittedBeforeInvalidation.\nProbes:\n- L1: GET 1 delivered and sealed; ARM 2 GET OK; STORAGE_FAIL_NEXT; UPSTREAM_LOST on c1, a late event on the completed exchange -> lateUpstream NOT_RELAYED. The state is HELD and action 2 is still ARMED, and ACCEPT c2 -> stamp {E1, 2} is issued while HELD.\n- L2: GENERATION_STATUS next -> the model raises ValueError 'F00 frame outside the closed schema', because its own response (HELD with armedActionId 2) violates the schema.\n- L3: CLOSE_GENERATION(REVOCATION) next -> OK, state HELD, deniedActionIds [], and action 2 stays ARMED.\n- L4: REQUEST on c2 -> NOT_ACTIVE, so nothing is forwarded.\n- R3: CREATE in flight; STORAGE_FAIL_NEXT; DRAIN_REQUEST -> drain HELD; UPSTREAM 201; ACTION_OUTCOME -> admittedBeforeInvalidation false, and the journal has no INVALIDATED record. CLOSE_GENERATION(STORAGE_FAILURE) in the same position reports true (R3b).\nRandomized campaigns: 120 of 29,000 runs reached 'armed action outside ACTIVE', all through LATE_UPSTREAM. The bounded exhaustive search found the same crash, first at depth 3 (delivered, ARM_GET, SFAIL, UP_OK), and at depth 5 in 1,814 of 1,742,360 nodes. With a scratch monkeypatch that sends these two failures through _urgent, a 6,000-run campaign had zero violations. Forwarding stays safe because A1 checks the state. But the reference model contradicts its README, crashes on a reachable interleaving, and gives an implementer copying it the wrong rule.",
+   "requiredChange": "Send every failed journal write through the urgent STORAGE_FAILURE path:\n- close A1;\n- deny the armed action and close its stamped connections;\n- mark any in-flight action admittedBeforeInvalidation;\n- attempt the INVALIDATED record.\nAlso make CLOSE_GENERATION deny an armed action even when the state is already HELD. Add vectors for a storage failure at LATE_UPSTREAM while a later action is armed, and at DRAIN_STARTED while an action is in flight."
+  },
+  {
+   "id": "N3",
+   "severity": "MINOR",
+   "location": "Gate.handle GATE_RESTART and Gate._rebuild; README durable journal ('A restart starts denied and HELD') and Channel item 6; resolved section 5.5 M2/M3 and section 2.4 WRITE_END",
+   "finding": "A restart always yields HELD, even after a clean, fully sealed end.\n- R1: full lifecycle; CLOSE_GENERATION(NORMAL_DRAIN) -> CLOSED; CHANNEL_LOST -> ORDERLY; GATE_RESTART -> HELD.\n- R2: the same after an I07 drain (journal DRAIN_STARTED, DRAINED CLOSED) -> HELD.\nDecision D3 makes host maintenance reboot-only, after a WRITE_BEGIN or an urgent close. Resolved M2 calls only a reboot without that step an autonomous event that starts HELD. Under this contract every maintenance reboot leaves the old generation HELD and needs reconciliation. Round-1 F5 fixed the same problem for channel end. The orderly channel end is not journalled either.",
+   "requiredChange": "Define the rebuilt state from the journal: if the generation's last record is CLOSED, DRAINED CLOSED or INVALIDATED, every action is sealed and no consumed action lacks a TERMINAL record, restart denied in that state, still with no channel, stamps or connections. Otherwise restart HELD. Alternatively, justify unconditional HELD against M2. Add a vector."
+  },
+  {
+   "id": "N4",
+   "severity": "MINOR",
+   "location": "README per-field source table ('an executionId or run nonce binds once per generation (EXECUTION_REPLAY)') and Decision 10 ('a later generation re-observes a UID by GET before deleting it'); Gate._op_bind_execution (in-memory bound_ids/bound_nonces), Gate._op_arm_action (MANIFEST_OUTSIDE_CASE; C7 keys reset at BIND); base section 4 step 6 and section 5 (durable anti-replay); vectors.json configs",
+   "finding": "Probe R4:\n- Generation 1 binds run-one/E1, and CREATE M1 ends IO_AMBIGUOUS (HELD).\n- Generation 2 (a new Gate with the same signed run inputs) binds run-one/E1 again (OK), ARMs CREATE M1 (OK) and FORWARDs it.\nNothing says the gate durably refuses a run nonce or executionId that an earlier generation bound. Base section 4 step 6 forbids letting a new generation launder an action into an unconsumed slot, and base section 5 requires durable anti-replay.\nDecision 10 also has a later generation delete old UIDs. A later run can arm only manifests in its own resolved case set, so that is possible only by re-binding the old run, which would re-enable CREATE as well.\nWithin one generation, BIND resets the C7 keys, and the vector configs give run-one and run-two the same manifest digests, contrary to I02 ('a digest belongs to one case only'). Kubernetes name uniqueness (409) and the UID precondition bound the effect risk, hence MINOR.",
+   "requiredChange": "State, and model, that every bound runNonce and executionId is a durable gate record across generations and is refused for normal binding. Specify how a later generation is authorized to clean up: a separately authorized binding limited to GET and UID-preconditioned DELETE of recorded UIDs, never CREATE. Alternatively, drop the Decision 10 sentence and leave cleanup to external reconciliation. Refuse a manifest digest that resolves to more than one run, and make the vector configs respect it."
+  },
+  {
+   "id": "N5",
+   "severity": "MINOR",
+   "location": "README Decisions 4 and 6; render_request() and delete_options(); Gate._request comparison of the pre-parsed event['http']; base section 4 step 4; owner decision D4 (I04 bytes unchanged)",
+   "finding": "Round 2 replaced the lossy reduction with an exact comparison, but the comparison is over a parsed structure: method, path, query string, a lower-cased header map and a body digest. The contract leaves open:\n- whether A1 compares raw request bytes or a parse;\n- which bytes go upstream, the server's or the gate's own rendering;\n- how duplicate header fields, header-name case, obs-fold or whitespace, absolute-form or percent-encoded request targets, a bare '?', HTTP/1.0 and transfer-coding are handled.\nA dict cannot represent a duplicate Host or Content-Length, so a lenient parser that keeps the last value and forwards the client's bytes would pass A1 with bytes that differ from the rendering.\nThe canonical DeleteOptions bytes (key order, no whitespace, so Content-Length 105 in T01) are fixed only by Python json.dumps.\nThe exact header set (Host, Accept, Content-Type, Content-Length and nothing else) is also a new constraint on the existing I04 client: a stock HTTP stack that adds User-Agent, Accept-Encoding or Connection is refused REQUEST_MISMATCH. No cited I04 rule fixes these bytes. This fails closed, but every legitimate request is blocked unless CONF-LIVE-003 matches byte for byte.",
+   "requiredChange": "Specify either byte equality between the received request head and body and the rendered bytes, or that the gate forwards only its own rendering. Enumerate the parser refusals: duplicate fields, non-origin-form targets, percent-encoding, versions other than HTTP/1.1, transfer-coding. Pin the DeleteOptions bytes in prose. Record the header set as a cross-contract requirement on the I04 client through its owner (R01 if I04 changes), or cite the existing I04 rule that already fixes it."
+  },
+  {
+   "id": "N6",
+   "severity": "MINOR",
+   "location": "outcome-mapping.json DELETE 200/202 rows (IDENTITY_IF_PRESENT); README Outcome mapping; Gate._upstream observedUid/observedResourceVersion for DELETE (extraction unspecified)",
+   "finding": "Some kinds' registries do not return the deleted object. To reviewer knowledge, a ConfigMap DELETE returns a v1 Status with details.uid and no metadata.uid or resourceVersion. Probe: a Status body ({kind: Status, details: {uid}}) as objectBase64 for a ConfigMap DELETE 200 -> M06, so HELD; null objectBase64 -> agree. The contract does not say what the gate records as observedUid or observedResourceVersion from a Status body, or whether the server must send null for DELETED. A server that reports the body it received would hold every ConfigMap cleanup. This fails closed, so it is a liveness problem. The Kubernetes reference pages could not be read in this session (truncated fetch), so the per-kind response type rests on reviewer knowledge.",
+   "requiredChange": "Define, per kind, what the gate extracts from a DELETE 200/202 body (the object, or a Status and its details.uid) and what objectBase64 must contain for DELETED (null, a matching object, or a Status whose details.uid matches). Add vectors."
+  },
+  {
+   "id": "N7",
+   "severity": "NOTE",
+   "location": "README Outcome mapping ('the broker holds the generation HELD'); outcome-mapping.json rules; CLOSE_GENERATION reason enum",
+   "finding": "On disagreement, or a missing outcome, the broker holds its own generation HELD. No CLOSE_GENERATION reason carries that to the gate, which stays ACTIVE or CLOSED. The broker's only way to put the gate in HELD is to drop the channel, which counts as peer loss. The gate's own A3 view is correct, so safety is unaffected, but GENERATION_STATUS can disagree with the broker's state.",
+   "requiredChange": "State the intended mechanism (for example, channel drop) or add a closed reason that ends HELD."
+  },
+  {
+   "id": "N8",
+   "severity": "NOTE",
+   "location": "decode_frame(); README Channel item 4",
+   "finding": "Two malformed inputs are refused without an F code: a 4301-digit integer -> ValueError 'Exceeds the limit (4300 digits) for integer string conversion', and a '\\ud800' escape -> UnicodeEncodeError. Both are still refused. The canonical encoding is defined only as 'sorted keys, no whitespace', as Python json.dumps does it. Because every string is ASCII-patterned and every number an integer, this coincides with RFC 8785: escaped '/', \\u0047, -0, 2e0 and a BOM are correctly refused (F06).",
+   "requiredChange": "Map these errors to F06 and name the canonical form."
+  },
+  {
+   "id": "N9",
+   "severity": "NOTE",
+   "location": "vectors.json; README durable journal paragraph; channel.schema.json GENERATION_STATUS; Gate._op_arm_action",
+   "finding": "- BIND STORAGE_FAILURE and ARM EXECUTION_NOT_BOUND are reachable (probe R11) but no transcript covers them.\n- The README says the A4 qualifier comes back from the TERMINAL and INVALIDATED records (T25, T27). T25's journal has neither: the qualifier comes from an unstated rebuild rule (a consumed action without TERMINAL becomes IO_AMBIGUOUS with admittedBeforeInvalidation true).\n- After a drain settles, drainPending stays true in CLOSED or HELD, and ARM is refused DRAIN_PENDING rather than NOT_ACTIVE.\n- The GENERATION_STATUS schema still allows CLOSED with an in-flight action, a state the model cannot produce.",
+   "requiredChange": "Add the two vectors, state the rebuild qualifier rule, and consider the cosmetic items."
+  },
+  {
+   "id": "N10",
+   "severity": "NOTE",
+   "location": "Gate.handle CHANNEL_LOST / SECOND_CHANNEL, Gate._rebuild, Gate._upstream output",
+   "finding": "- CHANNEL_LOST before any frame leaves the channel UNOPENED, so a later connection can still open it (R5). This conflicts with the 'no reconnect' wording, though nothing is bound at that point.\n- An UPSTREAM event after GATE_RESTART raises ValueError, because rebuilt actions have no connection. This cannot happen on a real host.\n- The UPSTREAM output does not say whether the response was relayed. That matters at a TERMINAL storage failure (R8), where the action becomes IO_AMBIGUOUS and must not be relayed.",
+   "requiredChange": "Treat a zero-frame connection as having used the channel, or document that it does not. Make the relay decision explicit in the model output."
+  }
+ ],
+ "openItemStatus": {
+  "F1": {
+   "status": "CLOSED",
+   "evidence": "UID_NOT_OBSERVED: a DELETE UID must come from the gate's own DELIVERED_RESULT (CREATE 201 or GET 200) for the same manifest in this execution, recorded in TERMINAL (T12, T45, T47). The per-field source table replaces the blanket claim. WORKER_NOT_OBSERVED and run-nonce replay are covered (T13). The fuzz oracle never saw a DELETE armed with an unobserved UID."
+  },
+  "F2": {
+   "status": "CLOSED",
+   "evidence": "render_request gives an exact method, path, empty query, header set and body. A1 refuses any deviation as REQUEST_MISMATCH (T48-T56: dryRun, body bytes, gracePeriodSeconds, propagationPolicy, watch, resourceVersion, extra header, method, path). The remaining question of parse versus byte comparison and forwarding is the new N5."
+  },
+  "F3": {
+   "status": "CLOSED",
+   "evidence": "Records are enumerated with their durability points and written through _record. The A4 qualifier is in TERMINAL and SEALED. The restart rebuild reproduced the pre-restart classification and qualifier in every one of 2,656 fuzzed restarts. A storage failure at seal is REFUSED STORAGE_FAILURE (T57); at urgent close it is OK HELD (T58). Failures at LATE_UPSTREAM and DRAIN_STARTED still bypass the urgent path: see N2."
+  },
+  "F4": {
+   "status": "CLOSED",
+   "evidence": "The seal is immutable. The abort closes the consumed connection, and a late response gets lateUpstream NOT_RELAYED plus a LATE_UPSTREAM record, without an exception (T33). The fuzz never saw a seal answer change. A storage failure at that record is N2."
+  },
+  "F5": {
+   "status": "CLOSED",
+   "evidence": "Orderly end in CLOSED or INVALIDATED with every action sealed (T01, T59); otherwise HELD (T26, T60). An I07 drain followed by EOF stays CLOSED (R2 before the restart). The restart after a clean end is the separate N3."
+  },
+  "F6": {
+   "status": "CLOSED",
+   "evidence": "EXPIRE marks an in-flight action admittedBeforeInvalidation, records EXPIRED and denies an armed action (T61). A1 EXECUTION_EXPIRED is covered (T62)."
+  },
+  "F7": {
+   "status": "CLOSED",
+   "evidence": "Strict decoding: duplicate keys, NaN, depth (20,000-deep nesting -> M05) and oversized integers are refused, as are non-string or whitespace-padded base64. A refused outcome -> M00 (A27). Identity, UID and resourceVersion are matched (A28-A31) and the DELETE object rule is set (A30). DELETE Status bodies are the new N6."
+  },
+  "F8": {
+   "status": "CLOSED",
+   "evidence": "GENERATION_STATUS constraints (G21-G26) are added and the dead BIND DRAIN_PENDING is removed. Control characters are refused (F04: T65, G18, DEL). decode_frame (B01-B08) also refuses escaped '/', \\u escapes, -0, 2e0 and a BOM. Error-code gaps are the NOTE N8."
+  },
+  "F9": {
+   "status": "CLOSED",
+   "evidence": "T19 (a response-shaped broker frame) and T63 (even sequence) reach DIRECTION; T62 reaches A1 EXECUTION_EXPIRED; G13-G20 cover request bounds; T64 is counterexample 22; the row-22 wording is fixed. UNREACHABLE_REFUSALS is declared, and STAMP_MISMATCH and ALREADY_CONSUMED never occurred in about 1.5M fuzzed events. Two reachable reasons lack vectors (N9)."
+  },
+  "F10": {
+   "status": "CLOSED",
+   "evidence": "README Channel item 2 states per-frame SO_PEERCRED and SCM_CREDENTIALS, pidfd, PID/start, executable, label and cgroup custody, fatal on any deviation, with the BIND digest only as a cross-check."
+  },
+  "F11": {
+   "status": "CLOSED",
+   "evidence": "Decision 10: every I04 request, cleanup included, must be a broker-armed action, else STAMP_NONE. INVALIDATED or HELD forwards nothing (T46). The interplay with C7 is stated. The later-generation cleanup sentence raises the new N4."
+  },
+  "F12": {
+   "status": "CLOSED",
+   "evidence": "Decision 6 states the observed-policy-generation equivalence. Stamps are (executionId, actionId). Connections close after the relay. The flushClosures meaning and the conservative outcomes are documented."
+  }
+ },
+ "questionAnswers": {
+  "Q0": "All twelve round-1 findings are CLOSED in the round-2 bytes; the README dispositions are true. Several round-2 changes introduce or expose new items:\n- the durable journal and storage handling (N2, N3);\n- exact rendering (N5);\n- strict agreement decoding (N6);\n- Decision 10 cleanup (N4).",
+  "Q1": "Mostly faithful. The contract encodes:\n- the section 7 additions: BIND dispatchGeneration and peerQualificationDigest; the ARM C2 flush, C7 and DRAIN_PENDING; the ACTION_OUTCOME qualifier and its mapping; CLOSE deny-first, with normal close refused while an action is in flight; STATUS counters;\n- A1 ordering (consume, fsync and readback, first byte), A3 via both the I07 drain and normal close, and A4 urgent close in memory;\n- C1-C7, section 4.3 per-frame custody, and the base section 3 bounds (canonical JSON, exact builtins, depth 16, 16 KiB, 2 s, no selectors, no reconnect).\nThe disclosed decisions are justified: one channel per generation, sealing by ACTION_OUTCOME, strict lockstep, fatal versus refused, and the orderly channel end.\nWeakening or gaps:\n- N1: A3 treats a 5xx mutation response as terminal even though its outcome is unknown, against base section 4 step 6 and A3's own rationale.\n- N4: anti-replay is per generation, against base sections 4.6 and 5.\n- N3: restart is HELD even after a clean close, against resolved M2.",
+  "Q2": "Within the model's abstraction, no interleaving made the gate:\n- forward an unarmed request;\n- forward an armed action twice;\n- forward after a seal, deny, drain, urgent close, expiry, restart or peer loss;\n- leave a stale stamped connection open;\n- change a sealed answer;\n- report NOT_FORWARDED for a forwarded action or DELIVERED_RESULT without an upstream response;\n- lose an action across a restart rebuild.\nCoverage:\n- Targeted probes: counterexample 17 and its variants (T02, T03, a duplicate on A's connection, a connection stamped none), counterexample 22 (T08, T64), backlog and accept ordering, sealing races (T32, T33), a drain or urgent close with an action in flight, restarts with journal rebuild, storage failure at every record point, peer loss, orderly and unorderly end, replayed or reordered frames, multiple executions, and the UID and C7 interplay.\n- Randomized campaigns: 29,000 runs, 1,537,623 events and 33,674 forwards, with an independent shadow oracle.\n- A bounded exhaustive search after BIND.\nThe only invariant violation found was an armed action left in HELD after a LATE_UPSTREAM storage failure (N2). It crashes the model but does not forward.\nTerminal classifications that are false or under-qualified: a CREATE or DELETE 5xx reported as a settled DELIVERED_RESULT that lets the A3 fence close (N1); and the A4 qualifier missing when a DRAIN_STARTED or LATE_UPSTREAM storage failure holds the generation during flight (N2).",
+  "Q3": "The table covers all six I02 outcomes and overloads none; I02 is unchanged. Exact rows take precedence over class rows. Unmapped statuses fail closed (M02). A refused or missing outcome is M00.\nNOT_FORWARDED agreeing with both DENIED and AMBIGUOUS is justified, and IO_AMBIGUOUS maps only to AMBIGUOUS. Strict identity, UID and resourceVersion matching is enough to bind the reported object to the gate's observation where byte equality is not required: resourceVersion pins the persisted version, and content is left to A2.\nTwo gaps:\n- The 5xx rows are safe on the I02 side but unsafe for the gate's A3 fence (N1).\n- DELETE responses whose body is a v1 Status are unspecified and would fail closed (N6).",
+  "Q4": "All ten variants are closed: additionalProperties false at every level; consts for version, direction and operation; bounded patterned strings and integers; disjoint OK and REFUSED sub-variants. There are no selectors. The ACTION_OUTCOME variants forbid NOT_FORWARDED with a status, the qualifier or a digest, and DELIVERED_RESULT without a digest. GENERATION_STATUS now forbids armed-plus-in-flight, outstanding work without a bound execution, armed outside ACTIVE, a pending drain in ACTIVE, INSPECTING with a binding or drain, and DRAINING without a drain. Every vector frame fails only in its stated field. Booleans are not integers and floats are refused. decode_frame enforces canonical, duplicate-free UTF-8 bytes of at most 16 KiB. Remaining nits: CLOSED with an in-flight action is still allowed (N9), some decode errors carry no F code (N8), and the model can itself emit a status that violates the schema after N2's path.",
+  "Q5": "Yes. Two independent harnesses reproduced every expected result exactly:\n- the reference replay();\n- my own envelope and chain builder, which also re-decoded every gate response as canonical bytes.\nThey covered 65/65 transcripts (outputs and final snapshots including journals), 31/31 agreement cases, 26/26 frame checks and 8/8 byte checks. Each transcript reaches its stated reason: T19 and T63 reach DIRECTION, T62 reaches EXECUTION_EXPIRED at A1, and T48-T56 each change one request element. Frame vectors deviate only in the stated field, and every agreement outcome is a schema-valid gate payload. One wording inaccuracy: T25 is cited for the qualifier coming from TERMINAL and INVALIDATED records, but neither record is in its journal (N9). There is no vector for BIND STORAGE_FAILURE or ARM EXECUTION_NOT_BOUND.",
+  "Q6": "No overclaim of an installed gate, native stamping, a selected HTTP/TLS substrate (Envoy stays unselected), the I07 schema (W02c), the journal storage format, or any E01-E12 or T01-T08 proof. The README states DATA_CHECK_ONLY, and the model docstring says it opens no socket and grants no authority. Internal statements that do not fully hold:\n- 'Every state change the gate relies on after a restart is a durable journal record' does not cover cross-generation bindings (N4).\n- The README's storage-failure rule is not what the model does at LATE_UPSTREAM and DRAIN_STARTED (N2)."
+ },
+ "modelExecution": {
+  "environment": "From the repository root: 'uv run --offline --frozen --no-sync python', with the snapshot directory first on sys.path; the imported module was the snapshot's i05_gate_channel.py. Scratch scripts are under .../scratchpad/reviewer-w02b-r2/: replay_all.py, own_harness.py, coverage.py, show.py, lib.py, probes1-4.py, agree_schema.py, frame_reason.py, fuzz.py and fuzz2-5.py, step.py, dfs.py.",
+  "vectorReplay": "Through replay(): 65/65 transcripts exact (outputs and final snapshots including journals), 31/31 agreement cases, 26/26 frame checks, 8/8 byte frames. Through my own envelope builder, which computes sequence and previousDigest itself and re-decodes each gate response with decode_frame: 65/65 exact. All frame vectors also give the same result when passed through decode_frame as canonical bytes.",
+  "targetedProbes": "R1/R2: restart after a clean CLOSED end or an I07 drain -> HELD. R3/R3b: storage failure at DRAIN_STARTED with a CREATE in flight -> qualifier false and no INVALIDATED record (urgent close gives true). R4: a second generation re-binds run-one/E1 and forwards CREATE M1 again. R5: EOF before the first frame, then frames open the channel. R6: idle INSPECTING or ACTIVE plus EOF -> HELD. R7: upstream after restart -> model ValueError. R8: TERMINAL storage failure -> IO_AMBIGUOUS, qualifier true. R9/R10: EXPIRED/TERMINAL storage failures. R11: BIND STORAGE_FAILURE and ARM EXECUTION_NOT_BOUND. L1-L5: late upstream plus storage failure -> armed in HELD, GENERATION_STATUS ValueError, CLOSE denies nothing, A1 NOT_ACTIVE. N-5xx: CREATE 500/504 -> DELIVERED_RESULT, ACTIVE, drain settles CLOSED, agreement with AMBIGUOUS. Byte probes: 4301-digit integer, \\ud800, escaped '/', BOM, -0, 2.0, 2e0, \\u0047, DEL, U+2028, bytearray. Agreement probes: 20,000-deep nesting, a 5,000-digit integer, non-string or whitespace-padded objectBase64, a nested duplicate key, a Status body for a ConfigMap DELETE, DELETE 409, the qualifier, CREATE 200.",
+  "fuzz": "Six randomized campaigns driven directly against Gate.handle with a shadow oracle: 29,000 runs, 1,537,623 events, 33,674 forwards, 2,656 restarts. The oracle checks: no double forward; forward only for the armed action with an exact independently re-implemented rendering, correct stamp, certificate and state; durable CONSUMED, ARM, TERMINAL and SEALED before the effect; seal immutability; truthful classifications; C7; the DELETE UID observed by the oracle; no stale stamped connection; one outstanding action; HELD sticky; orderly-end preconditions; truthful status; restart rebuild equal to pre-restart terminal state and qualifier. Result: 120 violations, all 'armed action outside ACTIVE' through a LATE_UPSTREAM storage failure (N2); zero for every other invariant. STAMP_MISMATCH and ALREADY_CONSUMED never occurred. A scratch monkeypatch sending LATE_UPSTREAM and DRAIN_STARTED failures through _urgent gave 0 violations in 6,000 runs. Qualifier differences traced to N2 (true failures) or to oracle artifacts.",
+  "boundedExhaustive": "Depth-5 DFS over a 12-17 event alphabet (ARM GET/CREATE/DELETE-with-observed-UID, ACTION_OUTCOME, CLOSE REVOCATION/NORMAL, BACKLOG, ACCEPT, REQUEST on newest/oldest connection with the current or previous action's exact rendering, UPSTREAM ok/lost, DRAIN, EXPIRE, STORAGE_FAIL_NEXT, EOF) from four start states (bound; CREATE armed with a stamped connection; CREATE in flight; CREATE delivered and sealed): 1,742,360 nodes, a GENERATION_STATUS probe at every node. No double forward, forward in a wrong state, forward of a non-armed or sealed action, stale stamped connection or second outstanding action. The only violation: 1,814 nodes where GENERATION_STATUS raised the schema ValueError after a late upstream event with a storage failure while a later action was armed (N2), first example [inflight, UP_OK, OUTCOME, ARM_GET, SFAIL, UP_OK].",
+  "identity": "SHA256SUMS verified OK at start and again at the end. All seven snapshot files were byte-identical to the working tree (architecture/i05-gate-channel/* and scripts/i05_gate_channel.py) at start and end. Read-only git: HEAD fe50b57c0e6b6d5e5732b1b346bbad8727959a6f, tree db8c1a62e7e181dbf1f303b9a1e8f84dd0494ffd, equal to source-index baseMain and baseTree. All eight predecessor inputs match their source-index digests and have no diff against HEAD. The round1/ bytes match review-round1.json subjectSha256. The subject files are untracked additions."
+ },
+ "sourcesRead": [
+  "snapshot review-w02b-r2/README.md, REVIEW_BRIEF.md, channel.schema.json, outcome-mapping.json, vectors.json, source-index.json, i05_gate_channel.py, SHA256SUMS (all in full)",
+  "architecture/i05-gate-channel/review-round1.json (full)",
+  "architecture/i05-gate-channel/round1/i05_gate_channel.py (diffed against round 2); round1/* digests checked",
+  "architecture/host-interface-inputs/corrected/HOST_INTERFACE_SPEC.md (full)",
+  "architecture/host-interface-inputs/resolved/HOST_INTERFACE_SPEC.md (full)",
+  "architecture/host-interface-inputs/resolution-status.json (full) and resolution-review-round1.json (findings list)",
+  "architecture/broker-handoff-inputs/channel.schema.json (RESOURCE_ACTION, RESOURCE_RESULT, $defs keys)",
+  "docs/alpha-2/BROKER_HANDOFF_READINESS.md (lines 170-245: transcript, resource ownership, credential access and cleanup)",
+  "docs/alpha-2/PROXY_CONTRACT_READINESS.md (lines 195-265: KUBERNETES_API_PROXY exact rules, exact mutations)",
+  "Public documentation: kubernetes/community contributors/devel/sig-architecture/api-conventions.md (HTTP status codes: 500, 504, 409); kubernetes.io api-concepts page (no status-code content). Fetches of the ConfigMap, Pod and Service API reference pages were truncated before the delete sections, so N6's per-kind delete response bodies rest on reviewer knowledge."
+ ],
+ "actions": {
+  "filesEdited": false,
+  "githubMutated": false,
+  "nativeActions": false,
+  "referenceModelExecuted": true,
+  "repositoryValidatorsRun": false,
+  "runnerActivated": false,
+  "testsRun": false,
+  "warmSourcesAccessed": false
+ },
+ "reviewLimit": "Read-only, source-level review by an agent separate from the author. No existing repository file was modified and no state-changing git command was run. One disclosure: a fuzz harness first wrote a scratch failure dump (fail_armed.json, an untracked new file) into the repository root; it was moved to the reviewer scratchpad within seconds, and git status afterwards showed only the packet's own untracked paths. All other outputs are in the scratchpad.\nSoundness conclusions hold only within the reference model's abstraction: REQUEST events arrive pre-parsed, journals are in-memory lists with one-shot failures, the backlog is a list, and there is no real TLS, HTTP, fsync or clock.\nFuzzing is randomized, and the exhaustive search is bounded to a small alphabet and depth.\nKubernetes semantics: 500 and 504 were checked against the public API conventions; per-kind DELETE response bodies were not verified. resolution-review-round1.json was read only for its findings.\nThis verdict is not an installed gate, native qualification, a stamping or C2/C3 load result, or authorization for anything installed. All E01-E12 remain OPEN_UNPROVEN."
+}

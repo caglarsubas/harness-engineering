@@ -1,0 +1,138 @@
+{
+ "schemaVersion": "planeon.internal.effect-gate-outcome-mapping/v1",
+ "rows": [
+  {
+   "verb": "CREATE",
+   "classification": "DELIVERED_RESULT",
+   "httpStatus": 201,
+   "resourceResults": [
+    "CREATED"
+   ],
+   "object": "UID_MATCH"
+  },
+  {
+   "verb": "CREATE",
+   "classification": "DELIVERED_RESULT",
+   "httpStatus": "4xx",
+   "resourceResults": [
+    "DENIED"
+   ],
+   "object": "ANY"
+  },
+  {
+   "verb": "CREATE",
+   "classification": "DELIVERED_RESULT",
+   "httpStatus": "5xx",
+   "resourceResults": [
+    "AMBIGUOUS"
+   ],
+   "object": "ANY"
+  },
+  {
+   "verb": "GET",
+   "classification": "DELIVERED_RESULT",
+   "httpStatus": 200,
+   "resourceResults": [
+    "PRESENT"
+   ],
+   "object": "UID_MATCH"
+  },
+  {
+   "verb": "GET",
+   "classification": "DELIVERED_RESULT",
+   "httpStatus": 404,
+   "resourceResults": [
+    "ABSENT"
+   ],
+   "object": "ANY"
+  },
+  {
+   "verb": "GET",
+   "classification": "DELIVERED_RESULT",
+   "httpStatus": "4xx",
+   "resourceResults": [
+    "DENIED"
+   ],
+   "object": "ANY"
+  },
+  {
+   "verb": "GET",
+   "classification": "DELIVERED_RESULT",
+   "httpStatus": "5xx",
+   "resourceResults": [
+    "AMBIGUOUS"
+   ],
+   "object": "ANY"
+  },
+  {
+   "verb": "DELETE",
+   "classification": "DELIVERED_RESULT",
+   "httpStatus": 200,
+   "resourceResults": [
+    "DELETED"
+   ],
+   "object": "ANY"
+  },
+  {
+   "verb": "DELETE",
+   "classification": "DELIVERED_RESULT",
+   "httpStatus": 202,
+   "resourceResults": [
+    "DELETED"
+   ],
+   "object": "ANY"
+  },
+  {
+   "verb": "DELETE",
+   "classification": "DELIVERED_RESULT",
+   "httpStatus": 404,
+   "resourceResults": [
+    "ABSENT"
+   ],
+   "object": "ANY"
+  },
+  {
+   "verb": "DELETE",
+   "classification": "DELIVERED_RESULT",
+   "httpStatus": "4xx",
+   "resourceResults": [
+    "DENIED"
+   ],
+   "object": "ANY"
+  },
+  {
+   "verb": "DELETE",
+   "classification": "DELIVERED_RESULT",
+   "httpStatus": "5xx",
+   "resourceResults": [
+    "AMBIGUOUS"
+   ],
+   "object": "ANY"
+  },
+  {
+   "verb": "*",
+   "classification": "NOT_FORWARDED",
+   "httpStatus": null,
+   "resourceResults": [
+    "DENIED",
+    "AMBIGUOUS"
+   ],
+   "object": "NULL"
+  },
+  {
+   "verb": "*",
+   "classification": "IO_AMBIGUOUS",
+   "httpStatus": null,
+   "resourceResults": [
+    "AMBIGUOUS"
+   ],
+   "object": "NULL"
+  }
+ ],
+ "rules": [
+  "An exact httpStatus row takes precedence over a status-class row; any status without a row (1xx, 3xx, other 2xx) has no agreement.",
+  "Any disagreement, a missing ACTION_OUTCOME or a missing RESOURCE_RESULT is sticky failure: the broker holds the generation HELD and never advances the I02 transcript past the action.",
+  "admittedBeforeInvalidation does not change the mapped outcome; an execution with such an action never ends COMPLETED, and its resources stay owned for exact-UID cleanup.",
+  "resultDigest is the gate's digest of the exact relayed response body, kept for reconciliation; agreement does not ask the server to reproduce it, because RESOURCE_RESULT carries bounded observed-object data (I02 unchanged)."
+ ]
+}

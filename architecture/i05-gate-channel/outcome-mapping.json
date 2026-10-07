@@ -1,0 +1,138 @@
+{
+ "schemaVersion": "planeon.internal.effect-gate-outcome-mapping/v1",
+ "rows": [
+  {
+   "verb": "CREATE",
+   "classification": "DELIVERED_RESULT",
+   "httpStatus": 201,
+   "resourceResults": [
+    "CREATED"
+   ],
+   "object": "IDENTITY_MATCH"
+  },
+  {
+   "verb": "CREATE",
+   "classification": "DELIVERED_RESULT",
+   "httpStatus": "4xx",
+   "resourceResults": [
+    "DENIED"
+   ],
+   "object": "ANY"
+  },
+  {
+   "verb": "GET",
+   "classification": "DELIVERED_RESULT",
+   "httpStatus": 200,
+   "resourceResults": [
+    "PRESENT"
+   ],
+   "object": "IDENTITY_MATCH"
+  },
+  {
+   "verb": "GET",
+   "classification": "DELIVERED_RESULT",
+   "httpStatus": 404,
+   "resourceResults": [
+    "ABSENT"
+   ],
+   "object": "ANY"
+  },
+  {
+   "verb": "GET",
+   "classification": "DELIVERED_RESULT",
+   "httpStatus": "4xx",
+   "resourceResults": [
+    "DENIED"
+   ],
+   "object": "ANY"
+  },
+  {
+   "verb": "GET",
+   "classification": "DELIVERED_RESULT",
+   "httpStatus": "5xx",
+   "resourceResults": [
+    "AMBIGUOUS"
+   ],
+   "object": "ANY"
+  },
+  {
+   "verb": "DELETE",
+   "classification": "DELIVERED_RESULT",
+   "httpStatus": 200,
+   "resourceResults": [
+    "DELETED"
+   ],
+   "object": "DELETE_BODY_IF_PRESENT"
+  },
+  {
+   "verb": "DELETE",
+   "classification": "DELIVERED_RESULT",
+   "httpStatus": 202,
+   "resourceResults": [
+    "DELETED"
+   ],
+   "object": "DELETE_BODY_IF_PRESENT"
+  },
+  {
+   "verb": "DELETE",
+   "classification": "DELIVERED_RESULT",
+   "httpStatus": 404,
+   "resourceResults": [
+    "ABSENT"
+   ],
+   "object": "ANY"
+  },
+  {
+   "verb": "DELETE",
+   "classification": "DELIVERED_RESULT",
+   "httpStatus": "4xx",
+   "resourceResults": [
+    "DENIED"
+   ],
+   "object": "ANY"
+  },
+  {
+   "verb": "*",
+   "classification": "NOT_FORWARDED",
+   "httpStatus": null,
+   "resourceResults": [
+    "DENIED",
+    "AMBIGUOUS"
+   ],
+   "object": "NULL"
+  },
+  {
+   "verb": "*",
+   "classification": "IO_AMBIGUOUS",
+   "httpStatus": null,
+   "resourceResults": [
+    "AMBIGUOUS"
+   ],
+   "object": "NULL"
+  }
+ ],
+ "objectRules": {
+  "IDENTITY_MATCH": "objectBase64 required; strictly decoded (duplicate-free, no NaN, depth <= 16), its apiVersion, kind, metadata.namespace and metadata.name equal the armed template and its metadata.uid and metadata.resourceVersion equal the gate's observation",
+  "DELETE_BODY_IF_PRESENT": "objectBase64 optional; when present it is the kind's DELETE body (deleteResponseBody): an OBJECT under the IDENTITY_MATCH rule, or a v1 Status with status Success whose details.name, details.kind (the resource) and details.uid match, with no resourceVersion observed",
+  "ANY": "objectBase64 optional and not compared",
+  "NULL": "objectBase64 must be null"
+ },
+ "deleteResponseBody": {
+  "Pod": "OBJECT",
+  "Service": "OBJECT",
+  "ConfigMap": "STATUS"
+ },
+ "deleteResponseBodySources": {
+  "Pod": "pkg/registry/core/pod/storage/storage.go:89 ReturnDeletedObject true",
+  "Service": "pkg/registry/core/service/storage/storage.go:89 ReturnDeletedObject true",
+  "ConfigMap": "staging/src/k8s.io/apiserver/pkg/registry/generic/registry/store.go:1457-1480 finalizeDelete returns Status details (ReturnDeletedObject unset)"
+ },
+ "rules": [
+  "A CREATE or DELETE whose response does not settle the outcome (5xx, 408, 1xx, 3xx or another 2xx) is classified IO_AMBIGUOUS by the gate, never DELIVERED_RESULT; only GET maps 5xx to AMBIGUOUS.",
+  "An exact httpStatus row takes precedence over a status-class row; any status without a row has no agreement.",
+  "Only an OK ACTION_OUTCOME is usable; a refused or missing one is a missing outcome.",
+  "Any disagreement, a missing ACTION_OUTCOME or a missing RESOURCE_RESULT is sticky failure: the broker holds the generation HELD and never advances the I02 transcript past the action.",
+  "admittedBeforeInvalidation does not change the mapped outcome; an execution with such an action never ends COMPLETED, and its resources stay owned for exact-UID cleanup.",
+  "Object content beyond identity, UID and resourceVersion is not verified. resultDigest is the gate's digest of the exact relayed response body, kept for reconciliation; RESOURCE_RESULT carries bounded observed-object data (I02 unchanged)."
+ ]
+}

@@ -1,0 +1,145 @@
+{
+  "schemaVersion": "planeon.internal.i05-gate-channel-review/v1",
+  "round": 1,
+  "reviewDate": "2026-10-06",
+  "verdict": "CHANGES_REQUIRED",
+  "subjectSha256": {
+    "README.md": "99e1f7362ea51d903e84ba468af5ac825af163837d267bd07c2ef820143c63c2",
+    "REVIEW_BRIEF.md": "25404ca88259425a2678cac876b584be0f066ae15daa8c00336a8abe90949f95",
+    "channel.schema.json": "c6dd0c7988df47663bd9f5d038830039cc46528b819b0c47e129c390a330ad34",
+    "outcome-mapping.json": "231d96f0b628017b5c37353dd958d0c37b5c009d03f05d298dc709f8cc619186",
+    "vectors.json": "23e24504b1083f8037be4465a4ba09364b951ab70dd0504a669b586bfd44b626",
+    "i05_gate_channel.py": "fb737855292fc59cfb9e919806ae2dc461c27cc73a5c55d3f26efbb29bb6f0fa",
+    "source-index.json": "d12f355f46af347ac84c134967684d819fcfb93467676cec05bdbcc972813368"
+  },
+  "findings": [
+    {
+      "id": "F1",
+      "severity": "MAJOR",
+      "location": "scripts/i05_gate_channel.py Gate._op_arm_action (UID_RULE, template and C7 key, lines 429-450); README 'Operations' paragraph ('Every value in a request is a cross-check, never authority') and Decisions 4 and 7; base HOST_INTERFACE_SPEC.md section 3 I05 ARM_ACTION row ('independently resolved, never caller authority ... recorded UID when applicable')",
+      "finding": "The DELETE recordedUid is accepted from the broker as authority. The gate checks only that DELETE carries a UID and that requestTemplateDigest equals template_digest computed from that same broker-supplied UID, so the A1 template check (C4) cannot catch a wrong UID. Probe P3: BIND; ARM_ACTION(1, DELETE, recordedUid 'deadbeef-not-observed') -> OK; ACCEPT c1 -> stamp 1; REQUEST(c1, DELETE uid 'deadbeef-not-observed') -> FORWARD. Probe P3b: CREATE delivered with observedUid 11111111-aaaa-4bbb-8ccc-000000000001 and sealed; ARM_ACTION(2, DELETE, recordedUid 'other-uid-0001') -> OK; REQUEST -> FORWARD. The gate never compares the UID with anything it observed itself. The same blanket claim also covers executionId and reservationDigest: the broker assigns them, the gate has no independent source, and the model's config simply knows them in advance. It covers workerPid and workerStartTicks, which the gate can only check against kernel identity and cannot resolve from release inputs.",
+      "requiredChange": "Make the recorded UID a cross-check on the gate side. Refuse a DELETE ARM_ACTION (new closed reason, e.g. UID_NOT_OBSERVED) unless recordedUid equals a UID the gate itself durably recorded from a DELIVERED_RESULT (CREATE 201 or GET 200) for the same manifestDigest in this execution, or name and justify another independent source. Add P3 and P3b as vectors. Replace the blanket 'every value is a cross-check' sentence with a per-field table that marks each value as resolved from release or capacity inputs, verified through kernel peer identity, or a broker-assigned label that confers no authority."
+    },
+    {
+      "id": "F2",
+      "severity": "MAJOR",
+      "location": "README Decisions 4 and 6 ('at A1 the parsed I04 request must reduce to the same digest'); template_digest(); Gate._request lines 299-302; base section 4 step 4 (gate independently derives the permitted route/body)",
+      "finding": "The A1 correlation check covers only seven identity fields: verb, apiVersion, kind, namespace, name, uid and manifestDigest. The model's REQUEST event arrives already reduced to those fields, and the contract never says a request may carry nothing else. Request elements that change the effect or the evidence therefore escape the check:\n- CREATE ?dryRun=All: the apiserver answers 201 with a defaulted object but persists nothing, so the gate records DELIVERED_RESULT and the mapping agrees with CREATED, which is false evidence.\n- DELETE with gracePeriodSeconds=0, propagationPolicy=Orphan or a different DeleteOptions body.\n- GET ?watch=true or resourceVersion=0.\n- Extra query parameters or headers.\n- A CREATE body whose bytes differ from the signed manifest but which still 'reduces' to its digest.\nBase section 4 step 4 requires the gate to derive the permitted route and body independently. PROXY_CONTRACT_READINESS requires exact create, get and delete rules with no extra rule. Saying 'reduce to the same digest' invites a lossy parser at the most security-critical point of W02b.",
+      "requiredChange": "Define the canonical action as an exact rendering. From the template and the exact kubernetesApiRules, the gate derives the one permitted I04 request: method, path, full query string, required headers, and body bytes. The body is the signed manifest for CREATE, fixed DeleteOptions carrying only the UID precondition for DELETE, and empty for GET. A1 requires exact equality. Any other query parameter, option, header or body is refused as TEMPLATE_MISMATCH. Add REQUEST vectors for each deviation: dryRun, gracePeriodSeconds, propagationPolicy, watch, an extra query parameter, and a CREATE body with different bytes."
+    },
+    {
+      "id": "F3",
+      "severity": "MAJOR",
+      "location": "Gate._urgent, Gate._op_close_generation, Gate._deny_armed and the Gate._op_action_outcome seal branches (no record, or journal.append instead of _record); README Decisions 1 and 8 and 'Still open' ('this contract fixes only what each record must contain and when it is durable'); resolved section 3.2 A4 ('It is recorded ADMITTED_BEFORE_INVALIDATION')",
+      "finding": "The urgent close and the A4 qualifier are never written to the gate journal. The qualifier exists only in memory and in the ACTION_OUTCOME response. Observed: after REVOCATION and a late delivery, the T27 journal is [BIND, ARM, CONSUMED, (TERMINAL, 1, DELIVERED_RESULT)]. It has no invalidation record and no qualifier, so after a gate restart the gate's own evidence shows a plain DELIVERED_RESULT. Seal and deny records (NOT_FORWARDED, and IO_AMBIGUOUS at seal) bypass _record(), so a storage failure there is neither detected nor turned into HELD. Probe P5: STORAGE_FAIL_NEXT; ACTION_OUTCOME(1) -> OK NOT_FORWARDED with state still ACTIVE; the failure only surfaces at the next ARM_ACTION(2) -> REFUSED STORAGE_FAILURE. CLOSE_GENERATION and ACTION_OUTCOME have no storage-failure outcome at all. Forwarding stays safe, because a restart starts denied and HELD and rebuilds NOT_FORWARDED and IO_AMBIGUOUS from ARM and CONSUMED records. A4's 'explicitly weaker, recorded' property and the README's durability claim are still not met.",
+      "requiredChange": "Enumerate every gate journal record with its content and the point at which it must be durable, before the response or the first relayed byte:\n- BIND, ARM and CONSUMED.\n- TERMINAL, including the admittedBeforeInvalidation qualifier.\n- The urgent close or invalidation with its reason, written before the CLOSE_GENERATION response.\n- The drain start.\n- Seal and deny records.\nRoute all of them through the fsync and readback path. Define what a storage failure does during ACTION_OUTCOME and CLOSE_GENERATION: the generation is held, and the gate either responds with a closed reason or closes the channel. Add vectors for P5 and for T27 followed by GATE_RESTART."
+    },
+    {
+      "id": "F4",
+      "severity": "MINOR",
+      "location": "Gate._upstream (require at line 315) and the Gate._op_action_outcome CONSUMED branch; README Decision 1",
+      "finding": "Nothing defines what happens after a seal aborts an in-flight action. Probe P1: ARM CREATE, FORWARD on c1, ACTION_OUTCOME -> IO_AMBIGUOUS (HELD), then UPSTREAM_RESPONSE(c1, 201) -> the model raises ValueError 'upstream event without a forwarded action'. Probe P11 does the same after REVOCATION, with admittedBeforeInvalidation true. The aborted action's server connection stays OPEN (T33 final shows c1 OPEN). An implementer could relay the late response or overwrite the sealed IO_AMBIGUOUS with DELIVERED_RESULT.",
+      "requiredChange": "State that a seal is immutable. The abort closes both the upstream exchange and the consumed server connection, and a late upstream response is never relayed. The gate may journal it as a reconciliation note, but it never changes the sealed classification. Model this without an exception, with the connection closed, and add a vector."
+    },
+    {
+      "id": "F5",
+      "severity": "MINOR",
+      "location": "README Channel item 1 ('Channel loss (broker EOF, peer change or a fatal frame) is peer failure and holds the generation HELD'); Gate.handle CHANNEL_LOST -> _fatal; resolved section 2.4 WRITE_END ('The gate stays CLOSED')",
+      "finding": "A channel has no orderly end, so every generation ends HELD, including one that is cleanly CLOSED with all actions sealed. Probe P4: CREATE/GET lifecycle, sealed; CLOSE_GENERATION(NORMAL_DRAIN) -> CLOSED; CHANNEL_LOST -> fatal PEER_LOST; final state HELD. This conflicts with W01 section 2.4 ('WRITE_END ... The gate stays CLOSED') whenever the broker exits during or after policy maintenance. It also makes HELD, which should signal uncertainty, the normal end state, forcing reconciliation after every generation.",
+      "requiredChange": "Define how a channel ends. EOF after the generation is CLOSED, with every action sealed and no consumed action missing a terminal record, should leave it CLOSED. Alternatively, justify HELD explicitly and reconcile that with section 2.4. Add a vector."
+    },
+    {
+      "id": "F6",
+      "severity": "MINOR",
+      "location": "Gate.handle EXPIRE; README Decision 8; vector T36",
+      "finding": "The contract does not say what happens to an action in flight when the execution deadline passes. Probe P2: FORWARD CREATE; EXPIRE -> denied []; UPSTREAM_RESPONSE 201 -> DELIVERED_RESULT; ACTION_OUTCOME -> admittedBeforeInvalidation false, and the state stays ACTIVE. The same in-flight action under CLOSE_GENERATION(EXPIRY) is reported with admittedBeforeInvalidation true (T27 pattern). An effect that completes after the execution's signed lifetime is therefore reported with no qualifier.",
+      "requiredChange": "Specify the in-flight case at execution expiry, for example by marking the action admittedBeforeInvalidation or by aborting it to IO_AMBIGUOUS, so it matches the EXPIRY close reason. Add a vector."
+    },
+    {
+      "id": "F7",
+      "severity": "MINOR",
+      "location": "check_agreement(); outcome-mapping.json object rules UID_MATCH and ANY",
+      "finding": "(a) metadata.uid is extracted with lax json.loads. objectBase64 of {'metadata':{'uid':'attacker-uid','uid':'<observed>'}} -> None (agree, because the last key wins). A NaN token -> None (agree). A server ownership journal that keeps the first key would record a different UID. (b) objectBase64 nested 10,000 levels deep (13,336 base64 characters, inside I02's 21,848 maxLength) raises RecursionError instead of returning a refusal. (c) Passing a REFUSED ACTION_OUTCOME raises KeyError 'httpStatus'. (d) UID_MATCH checks only the UID. CREATED with the matching UID but kind Secret -> None. The gate's observedResourceVersion and the template identity (kind, namespace, name) are never compared. DELETE 200/202 accepts an object carrying a different UID (-> None). The mapping is fail-closed for unmapped statuses (CREATE 200 -> M02).",
+      "requiredChange": "Decode objectBase64 with duplicate-key, NaN and depth rejection, and return a closed refusal instead of raising. Treat a non-OK ACTION_OUTCOME as a missing outcome. Extend UID_MATCH to also require metadata.resourceVersion == observedResourceVersion and apiVersion/kind/namespace/name equal to the armed template. Decide whether a DELETE 200/202 object must be null or must match the UID. State that object content beyond identity is not verified. Add vectors."
+    },
+    {
+      "id": "F8",
+      "severity": "MINOR",
+      "location": "channel.schema.json GENERATION_STATUS response and BIND_EXECUTION refusal enum; check_frame()",
+      "finding": "(a) The GENERATION_STATUS response accepts impossible combinations. S1 (state INSPECTING, drainPending true, a bound execution, armedActionId == inFlightActionId, consumptions > stampsIssued) -> ACCEPTED. S2 (ACTIVE with drainPending true, armed and in-flight both set, no bound execution) -> ACCEPTED. (b) BIND REFUSED DRAIN_PENDING is valid in the schema but unreachable, because the state check fires first (P6: DRAIN_REQUEST then BIND -> NOT_ACTIVE). (c) check_frame uses jsonschema's Python re.search, where '$' also matches before a trailing newline: recordedUid 'abc'+LF -> ACCEPTED, observedResourceVersion '41'+LF -> ACCEPTED. ECMA-262 semantics, which are normative for draft 2020-12 patterns, reject both, so the reference model is more permissive than the schema it implements. (d) check_frame runs on parsed objects, so the README's 'canonical duplicate-free JSON' rule and the exact-canonical-bytes rule behind previousDigest cannot be executed in the reference model.",
+      "requiredChange": "Either constrain GENERATION_STATUS (at most one of armed and in flight; drainPending false when ACTIVE; no armed or in-flight action without a bound execution), or document it as observation-only and unconstrained. Remove or justify the dead BIND reason. Make pattern checks newline-safe in the model, for example with full-match validation. Add a bytes-level decode_frame that rejects duplicate keys and non-canonical bytes, with vectors."
+    },
+    {
+      "id": "F9",
+      "severity": "MINOR",
+      "location": "vectors.json T19, T36 and frame checks G01-G12; README Counterexamples table (row 22)",
+      "finding": "All vectors replay exactly, but some do not exercise their stated reason:\n- T19 ('claiming the gate's direction') fails with F00_INVALID_FRAME because its payload fits no variant. The DIRECTION fatal is reachable (P13: a broker frame with a response-shaped payload -> fatal DIRECTION; P13b: an even sequence -> DIRECTION) but no vector covers it.\n- T36 says expiry 'refuses later ... A1', but its A1 refusal is CONNECTION_CLOSED. EXECUTION_EXPIRED at A1 is reachable (P12: a new connection after EXPIRE -> EXECUTION_EXPIRED) and has no vector.\n- STAMP_MISMATCH, ALREADY_CONSUMED and BIND DRAIN_PENDING appear in no vector.\n- All 12 frame checks mutate a gate response. None tests request bounds: actionId 0 or 257, workerPid 1, an oversize runNonce or recordedUid, or a boolean in a request integer.\n- Row 22 of the counterexample table says 'or by the C2 flush'. In fact a connection stamped A is always closed by C5, by A's seal or by a deny before ARM(B).",
+      "requiredChange": "Make T19 a response-shaped broker frame so it reaches DIRECTION, and add an even-sequence case. Add an A1 EXECUTION_EXPIRED vector and request-bound frame checks. Mark the correlation reasons the model cannot reach as defence in depth, or give them vectors. Correct the row 22 wording and add a counterexample-22 vector in which A is sealed NOT_FORWARDED and B is armed before K sends."
+    },
+    {
+      "id": "F10",
+      "severity": "MINOR",
+      "location": "README Channel items 1-5 and the Spec mapping row 'Base section 3 I05 rules (custody, bounds, no selectors)'",
+      "finding": "The base section 3 custody rules are not restated: authenticating SO_PEERCRED and each SCM_CREDENTIALS frame, PID/start and pidfd. Neither is W01 section 4.3 ('EFFECT_GATE qualifies the broker the same way on every I05 frame'). The README only says that the broker qualifies the gate before connecting and that a changed peer is fatal. The model represents this only through the PEER_CHANGED event (T41).",
+      "requiredChange": "State that the gate verifies the broker's peer identity and SCM_CREDENTIALS on every received frame and treats any deviation as fatal, and that the BIND peerQualificationDigest check adds to this rather than replacing it."
+    },
+    {
+      "id": "F11",
+      "severity": "MINOR",
+      "location": "README Decisions 3 and 6; outcome mapping prose ('resources stay owned for exact-UID cleanup')",
+      "finding": "I02 has the server independently confirm the absence of its created UIDs and run UID-preconditioned cleanup over the API leg. Under this contract, any I04 request without an armed stamp is refused (STAMP_NONE, as in T04), and C7 allows only one DELETE per UID per execution. The contract never says how cleanup and absence-confirmation requests get admitted. CONF-LIVE-003 implementers could find cleanup blocked, or be tempted to add an unarmed bypass.",
+      "requiredChange": "State explicitly that every I04 request, cleanup and absence confirmation included, must be a broker-armed RESOURCE_ACTION in the bound execution or it is refused, and that an INVALIDATED or HELD gate forwards no cleanup (CLEANUP_PENDING until external reconciliation). Note how this interacts with C7."
+    },
+    {
+      "id": "F12",
+      "severity": "NOTE",
+      "location": "Gate._request, Gate._close_connections and Gate._accept; README Decision 6 and Outcome mapping",
+      "finding": "(a) A1's 'observed policy generation' check (resolved section 3.2) is encoded only implicitly, as ACTIVE with no pending drain and I07 as the sole writer; the README does not say so. (b) Stamps hold only actionId, which restarts at 1 in every execution. This is safe because every open, unconsumed, stamped connection has its action ARMED, an invariant that held across about 2.0M fuzzed events. An (executionId, actionId) stamp would still be more robust. (c) The flushClosures counter also counts C5, seal and deny closures (T08, T26). (d) Consumed connections stay OPEN after completion (T01 final); C1 still refuses reuse. (e) If the server's I04 timeout is shorter than the gate's upstream wait, the seal produces IO_AMBIGUOUS and HELD (T33). A DELIVERED_RESULT whose relay the server lost disagrees with AMBIGUOUS (M03) and also ends HELD. Both outcomes are conservative but undocumented.",
+      "requiredChange": "Document (a), (c) and (e). Consider (executionId, actionId) stamps and closing a connection once its response has been relayed. Nothing here blocks adoption."
+    }
+  ],
+  "questionAnswers": {
+    "Q1": "Partly. The contract encodes the section 7 additions:\n- BIND carries dispatchGeneration and peerQualificationDigest.\n- ARM runs the C2 flush, applies C7 and returns DRAIN_PENDING.\n- ACTION_OUTCOME carries admittedBeforeInvalidation without overloading I02.\n- CLOSE denies unconsumed actions, with the normal drain refused while an action is in flight.\n- STATUS carries the counters.\nIt also encodes A1 ordering (consume, fsync and readback before the first byte), the A3 fence for both I07 drain and broker normal close, A4 urgent close, C1-C7, and the base section 3 bounds (canonical JSON, exact builtins, depth 16, 16 KiB, 2 s, no selectors, no reconnect). The README decisions are disclosed and justified: one channel per generation, seal by ACTION_OUTCOME after RESOURCE_RESULT, strict lockstep, and fatal versus refused. Refusing a normal drain while an action is in flight, instead of waiting, does not weaken A3.\nGaps that weaken the reviewed design:\n- The recorded UID is not independently resolved (F1).\n- The C4 canonical action is lossy and unspecified (F2).\n- A4 is not durably recorded (F3).\n- Per-frame custody is not restated (F10).\n- The channel lifetime conflicts with section 2.4 WRITE_END (F5).\n- A1's observed-policy-generation check is only implicit (F12a).",
+    "Q2": "Within the model's abstraction, no interleaving was found that forwards an unarmed request, forwards an armed action twice, forwards after invalidation, drain, expiry, restart, peer loss or seal, misclassifies a forwarded action as NOT_FORWARDED or an unforwarded one as DELIVERED_RESULT, or leaves a stale stamped connection open. Coverage:\n- Targeted probes: counterexample-17 variants (P10: duplicate pipelined on A's connection after ARM(B) -> PROTOCOL_VIOLATION; P14: connection stamped 1 that survives a seal and the next execution's ARM(1) -> CONNECTION_CLOSED); sealing races (T32, T33, P1, P11); drain and urgent close with an action in flight (P15 -> INVALIDATED with drainPending, P18 -> normal close refused, then CLOSED); restart (P17); storage failures (P5, P16); replay and reorder (T16-T18).\n- Randomized fuzz: 50,000 runs, 2,008,078 events, 8,208 forwards, checked against 10 invariants (no double forward, forward only on a stamp equal to an ARMED action in an ACTIVE, undrained, unexpired, open-channel state, no forward after seal, immutable seal answers, no false NOT_FORWARDED or DELIVERED_RESULT, open unconsumed stamped connection implies its action is ARMED, HELD is sticky, at most one outstanding action, no armed action outside ACTIVE). Zero violations, zero exceptions.\nThe model's HELD stickiness, deny-first restart and journal tombstones mean an admitted action cannot lose its ownership at the gate. Soundness outside the abstraction still depends on F2 (what A1 actually binds), F1 (DELETE UID authority), F3 (durability of seal and A4 records), F4 (a late upstream response after a seal is undefined) and F6 (an in-flight action at execution expiry).",
+    "Q3": "The table covers all six I02 outcomes (ABSENT, CREATED, PRESENT, DELETED, DENIED, AMBIGUOUS) and overloads none of them; I02 bytes are unchanged. Exact rows take precedence over class rows (DELETE 404 -> ABSENT). Unmapped 1xx, 3xx and other 2xx statuses fail closed (A18, A19). NOT_FORWARDED agreeing with both DENIED and AMBIGUOUS is justified, because a closed connection is indistinguishable from a lost send. IO_AMBIGUOUS maps only to AMBIGUOUS. A DELIVERED_RESULT whose relay the server lost gives M03 and HELD, which is conservative. The UID match is sufficient to bind object identity for CREATE 201 and GET 200, given UID uniqueness, but it is weaker than it should be: decoding is lax (duplicate keys, NaN, recursion crash), resourceVersion and kind/namespace/name are not compared even though the gate holds them, and DELETE 200/202 objects are unchecked (F7).",
+    "Q4": "Every one of the ten variants is closed: additionalProperties false at the envelope, payload and counters levels; consts for schemaVersion, direction and operation; bounded strings, integers and arrays; nested oneOf variants that are disjoint; and no command, URL, path or program selector. The largest achievable canonical frame is about 1.4 KiB (BIND 1,217 bytes, CLOSE response with 256 denied IDs 1,373 bytes), far under 16 KiB, and depth is at most 4. Floats are rejected (F03, G07) and booleans are not integers (G06). The ACTION_OUTCOME response variants correctly forbid NOT_FORWARDED with a status, admittedBeforeInvalidation true or a digest (G02, G04), and DELIVERED_RESULT without a digest (G03). The GENERATION_STATUS response does not forbid impossible combinations. BIND DRAIN_PENDING is dead. The reference model's Python regex accepts a trailing newline. Duplicate-key and canonical-byte rules are not executable in the model (F8).",
+    "Q5": "Yes for every exact result. Independent replay from the snapshot reproduced all 44 transcripts (outputs and final snapshots), all 23 agreement cases and all 12 frame checks exactly. Most also fail or pass for their stated reason. The exceptions: T19 reaches F00 rather than the direction rule; T36 does not exercise the A1 EXECUTION_EXPIRED refusal; STAMP_MISMATCH, ALREADY_CONSUMED and BIND DRAIN_PENDING are never exercised; no frame check tests request bounds; and the row-22 'C2 flush' wording is inaccurate (F9).",
+    "Q6": "No claim of an installed gate, native stamping, a selected HTTP/TLS substrate (the Envoy candidate stays unselected), the I07 schema (deferred to W02c), or any E01-E12 or T01-T08 proof. The README states DATA_CHECK_ONLY, and the model's docstring says it opens no socket and grants no authority. Two internal statements overclaim: 'Every value in a request is a cross-check, never authority' does not hold for recordedUid and the broker-assigned identifiers (F1), and 'this contract fixes ... when it is durable' does not hold for seal, deny, close and A4 records (F3)."
+  },
+  "modelExecution": {
+    "environment": "From the repository root, 'uv run --offline --frozen --no-sync python' with the snapshot directory first on sys.path; the imported module file was the snapshot's i05_gate_channel.py. Scratch scripts only in .../scratchpad/reviewer-w02b-r1/ (replay_all.py, probes.py, probes2.py, probes3.py, fuzz.py, fuzz2.py, fuzz3.py).",
+    "vectorReplay": "transcripts 44/44 exact (outputs and final snapshot); agreement 23/23 exact; frame checks 12/12 exact.",
+    "targetedProbes": "P1 and P11: a late UPSTREAM_RESPONSE after a seal raises ValueError. P2: EXPIRE with an action in flight gives DELIVERED_RESULT with admittedBeforeInvalidation false while the state stays ACTIVE. P3 and P3b: a DELETE with an unobserved UID is ARMed and forwarded. P4: CLOSED followed by CHANNEL_LOST ends HELD. P5: a storage failure at seal goes undetected until the next ARM. P6: BIND after a drain returns NOT_ACTIVE, never DRAIN_PENDING. P10: a duplicate on A's connection after ARM(B) gets PROTOCOL_VIOLATION. P12: A1 EXECUTION_EXPIRED is reachable. P13 and P13b: the DIRECTION fatal is reachable. P14: no stamp survives into the next execution. P15-P24: drain, urgent, restart, storage, double-query, re-arm and cross-execution CREATE behaviour as reported in the findings. Agreement probes: duplicate uid keys and NaN agree; RecursionError; KeyError on REFUSED; identity-only UID_MATCH. Schema probes S1-S7 as in F8. The T27 and T44 journals were inspected.",
+    "fuzz": "Three randomized interleaving campaigns over ARM, ACCEPT, BACKLOG, REQUEST, UPSTREAM, ACTION_OUTCOME, CLOSE, BIND, drain, expiry, restart, storage failure, channel loss and peer change: 50,000 runs, 2,008,078 events, 8,208 forwards, 10 invariants, 0 violations, 0 exceptions.",
+    "identity": "SHA256SUMS verified OK at start and again at end. All seven snapshot files were byte-identical to the working tree (architecture/i05-gate-channel/* and scripts/i05_gate_channel.py) at start and at end. Read-only git: HEAD equals baseMain fe50b57c0e6b6d5e5732b1b346bbad8727959a6f with tree db8c1a62e7e181dbf1f303b9a1e8f84dd0494ffd. All six predecessor inputs match the source-index digests and have no working-tree diff against HEAD. The subject files are untracked additions."
+  },
+  "sourcesRead": [
+    "snapshot review-w02b-r1/README.md",
+    "snapshot review-w02b-r1/REVIEW_BRIEF.md",
+    "snapshot review-w02b-r1/channel.schema.json",
+    "snapshot review-w02b-r1/outcome-mapping.json",
+    "snapshot review-w02b-r1/vectors.json",
+    "snapshot review-w02b-r1/source-index.json",
+    "snapshot review-w02b-r1/i05_gate_channel.py",
+    "snapshot review-w02b-r1/SHA256SUMS",
+    "architecture/host-interface-inputs/corrected/HOST_INTERFACE_SPEC.md (sections 2-5, read in full)",
+    "architecture/host-interface-inputs/resolved/HOST_INTERFACE_SPEC.md (sections 0-1, 2.4, 3, 4, 6-10)",
+    "architecture/host-interface-inputs/resolution-review-round1.json (actions, counterexample dispositions, findings, gate dispositions)",
+    "architecture/host-interface-inputs/resolution-status.json (digest checked only)",
+    "architecture/broker-handoff-inputs/channel.schema.json (frame envelope, RESOURCE_ACTION, RESOURCE_RESULT)",
+    "docs/alpha-2/BROKER_HANDOFF_READINESS.md (full)",
+    "docs/alpha-2/PROXY_CONTRACT_READINESS.md (lines 200-260: I04 KUBERNETES_API_PROXY exact API rules and mutation profile)",
+    "No public documentation was fetched. Kubernetes API behaviour cited in F2 and F7 (dryRun, DeleteOptions, watch, UID precondition 409) comes from reviewer knowledge."
+  ],
+  "actions": {
+    "filesEdited": false,
+    "githubMutated": false,
+    "nativeActions": false,
+    "referenceModelExecuted": true,
+    "repositoryValidatorsRun": false,
+    "runnerActivated": false,
+    "testsRun": false,
+    "warmSourcesAccessed": false
+  },
+  "reviewLimit": "Read-only, source-level review by an agent separate from the author. The only files created were scratch scripts and this verdict in the reviewer scratchpad; no repository file was modified and no state-changing git command was run. Soundness conclusions hold only within the reference model's abstraction: REQUEST events arrive pre-reduced, journals are in memory, the kernel backlog is a list, and there is no real TLS, HTTP or fsync. Fuzzing is randomized and not exhaustive. Kubernetes semantics were not re-verified against public documentation in this session. resolution-status.json was digest-checked but not reviewed in depth. This verdict is not an installed gate, not native qualification, not a stamping or C2/C3 load result, and not authorization for anything installed. All E01-E12 remain OPEN_UNPROVEN."
+}

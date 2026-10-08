@@ -16356,6 +16356,16 @@
       "path"
      ],
      "value": "/opt/planeon/bin/harness-capacity-broker"
+    },
+    {
+     "op": "set",
+     "path": [
+      "cgroupMembers",
+      0,
+      "exe",
+      "path"
+     ],
+     "value": "/opt/planeon/bin/harness-capacity-broker"
     }
    ],
    "refusal": "running image is not the role's executable or interpreter"
@@ -16375,6 +16385,16 @@
       "inode"
      ],
      "value": 999999
+    },
+    {
+     "op": "set",
+     "path": [
+      "cgroupMembers",
+      0,
+      "exe",
+      "inode"
+     ],
+     "value": 999999
     }
    ],
    "refusal": "running image is not the role's executable or interpreter"
@@ -16390,6 +16410,16 @@
      "op": "set",
      "path": [
       "process",
+      "exe",
+      "path"
+     ],
+     "value": "/opt/planeon/bin/harness-live-proxy-serve"
+    },
+    {
+     "op": "set",
+     "path": [
+      "cgroupMembers",
+      0,
       "exe",
       "path"
      ],

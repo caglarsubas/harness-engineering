@@ -18,7 +18,7 @@
   },
   {
    "path": "architecture/native-profile-v3/vectors.json",
-   "sha256": "926eb5bebefe1d144187a3b397a81c3a93f3525b2372e7c0cafb94ffe769c391"
+   "sha256": "faf3bf9e97ae7e7e5d3374a019fcc2236df37e98421b0d8a381854ca1ef81bb8"
   },
   {
    "path": "scripts/native_qualification_v3.py",

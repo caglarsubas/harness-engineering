@@ -1,0 +1,150 @@
+{
+  "schemaVersion": "planeon.internal.i06-backend-profile-v2-review/v1",
+  "round": 1,
+  "reviewDate": "2026-10-08",
+  "verdict": "CHANGES_REQUIRED",
+  "subjectSha256": {
+    "README.md": "e8f64f90a58584200ead369fe402e738e2ec6c6cbb326bfb3674d75e45780ae7",
+    "REVIEW_BRIEF.md": "fa9e538c961b432bbde0889416739dd3aa142f383403c2885c345800d2078cf5",
+    "criteria.json": "fbb42e2c30f44ba8c6da19527830eedf9c80bb53b3e80697c5093b72091a44d9",
+    "vectors.json": "32d4ea806d4f3a721ee8f62e028139c2d7835a856d5d59288e7e46bb04c743bc",
+    "i06_backend_profile_v2.py": "53e978b1c09e9c78c2c7b189d0f02a52c4cac94866b41cbb5fbcafa308603592"
+  },
+  "findings": [
+    {
+      "id": "R1-1",
+      "severity": "MINOR",
+      "location": "vectors.json evidenceNegative E38 and E56; README 'Replayed v1 cases' rows E38 and E56 ('changing a backend executable or digest breaks W02a's custody listing'); criteria.json SC08 ('content distinct from every other component's'); scripts/i06_backend_profile_v2.py step 6 (v1 SC08 distinctness reached through the projection)",
+      "finding": "W02a v3's check_record does not refuse backend components that share code. _Owners.own puts every backend component in one owner class, 'backend', so one executable path or one content digest may serve several components. I built two records that check_record accepts (result None), one for each v1 intent. (a) All eight components run /opt/qualification-k8s/bin/kubelet: each lists that file in filePaths and carries the kubelet's artifactDigest. This is E38's 'one multi-call binary for every component'. (b) The scheduler's backend file carries the kubelet's sha256. This is E56's 'same executable content'. v2 refuses both only through v1's rule 'SC08 components must use distinct executables with distinct content (one entry type per confined domain)'. The rule is therefore reachable, and it still holds. No v2 vector reaches it, however. E38 and E56 now stop at 'artifact custody' only because their v1 operations name an unlisted path (/opt/qualification-k8s/bin/k8s) or set a digest that differs from the listed file's. The README's reason reads as if W02a v3 covers the property, and it does not. SC08 distinctness, the 'one entry type per confined domain' guard, is an I06-only rule in v2, and nothing in v2 pins it. E55's change is correct: W02a's path pattern and canonical-path rule subsume v1's canonical-executable rule.",
+      "requiredChange": "Add negatives with backends that W02a v3 accepts. One example: G19, a multi-call executable listed in every component's filePaths. Another: G20, two backend files with one content digest. Pin each to 'SC08 components must use distinct executables with distinct content (one entry type per confined domain)'. In the README replay table, restate the reason for E38 and E56. Their v1 operations build a backend that W02a refuses for custody, but W02a v3 allows shared backend code within the 'backend' owner class. SC08 distinctness therefore stays an I06 rule, pinned by the new negatives."
+    },
+    {
+      "id": "R1-2",
+      "severity": "NOTE",
+      "location": "vectors.json evidenceNegative G18 (intent 'two backend components sharing an API identity (round-2 type sweep)')",
+      "finding": "G18 is refused by 'schema $.backendComponents.SERVICE_PROXY.apiIdentities[1] enum'. This is the same closure-binding rule that G14 pins. Under the v3 schema, check_record's 'backend components share an API identity' rule cannot be reached, because each closure name has one holder (W02a v3 README, R70). The pinned result is exact. The stated reason, sharing, is not what refuses the case.",
+      "requiredChange": "Reword G18's intent: a name borrowed from another component's closure entry is refused by the per-component closure enum, and the share rule is subsumed (W02a R70). Alternatively, drop G18 as a duplicate of G14."
+    },
+    {
+      "id": "R1-3",
+      "severity": "NOTE",
+      "location": "README 'N1', second bullet of 'The rules it brings in' ('API identities are within the W02g closure for that component'); criteria.json SC08 ('API identities within the W02g closure')",
+      "finding": "W02a v3 also admits, for KUBELET, at most one user 'system:node:<node name>' that is not a closure identity. The closure holds only Group system:nodes. The positive's own kubelet identity, system:node:unit-node, is of this kind. W02a also lets APISERVER list no identity: my sweep accepted APISERVER apiIdentities []. The bullet and SC08 state the rule more narrowly than the check applies it.",
+      "requiredChange": "Add the W02a v3 exception to the README bullet and to SC08: KUBELET may also hold one system:node:<node name> identity, at most one."
+    },
+    {
+      "id": "R1-4",
+      "severity": "NOTE",
+      "location": "README 'No production evidence yet' ('refused, at step 5 or by v1's production rules'; 'The production rules in step 6 stay in place for that revision') and 'Still open'; scripts/i06_backend_profile_v2.py W02A_VERSION and the import of native_qualification_v3",
+      "finding": "Under W02a v3, no production call reaches v1's production rules. A non-fixture backend is refused at step 2 (schema const) and the fixture backend at step 5. v2 is also hard-bound to W02a v3. W02A_VERSION is fixed, and check_record's _shape pins SCHEMA_SHA256: a widened schema that admits a production profile is refused with 'unreviewed v3 qualification schema' (probe). A reviewed W02a revision that adds a production profile therefore also needs an I06 successor before any production evidence can be accepted. The same holds for any W02a successor, including the W02a-F2 already scheduled by v3's carried R6-1 to R6-3. Without that successor, v2's step-6 production rules stay unreachable.",
+      "requiredChange": "Write 'refused at step 2 or step 5'. State that production evidence needs both the reviewed W02a revision and an I06 successor bound to it. Carry that pairing to W03 in 'Still open' and in the status record written at adoption."
+    },
+    {
+      "id": "R1-5",
+      "severity": "NOTE",
+      "location": "README N1 ('The record thereby names its backend') and the N1 disposition ('Applied inside check_evidence (steps 1-5), not as a caller obligation'); check_evidence docstring",
+      "finding": "The digest names one whole W02a v3 record: one boot, one run nonce, capacity nonce and tenant scope, and one validity window of at most 900 s. check_evidence must also be given that record's proxy profile and signed endpoints. Evidence is therefore per qualification record, not per distribution or backend profile. check_record is not an acceptance decision (in W02a, only check_qualification is), and it checks no validity window. Two W02a caller obligations pass through check_evidence to its own callers without being stated: obligation 1 (the profile passed the pinned proxy profile contract) and obligation 4 (test_fixture=True only for fixtures). Neither weakens the backend binding, because the backend rows do not depend on the profile. The README, however, presents the binding as free of caller obligations.",
+      "requiredChange": "State in the README and the check_evidence docstring that the evidence binds to one W02a record and is re-issued for each record. State that combining it with check_qualification's acceptance of that record is the caller's composition (W03). State that check_evidence's callers inherit W02a caller obligations 1 and 4."
+    },
+    {
+      "id": "R1-6",
+      "severity": "NOTE",
+      "location": "README N1 (w02aRecord 'sha256': <hex>); criteria.json SC00; scripts/i06_backend_profile_v2.py record_sha256; vectors.json G06",
+      "finding": "The digest is well defined. It uses W02a's canonical form over bounded data (ASCII strings, integers, booleans and null only), and key order does not matter (probe). W02a itself names the same record as 'sha256:<hex>', in the qualificationDigest of captures, lifecycle captures and backend captures. The I06 reference is bare hex, and G06 refuses the prefixed form. SC00 does not state the encoding, so the project has two spellings for one record name.",
+      "requiredChange": "Either adopt W02a's 'sha256:<64 lowercase hex>' form, or state the bare 64-character lowercase-hex encoding in SC00 and note how it differs from W02a's qualificationDigest."
+    },
+    {
+      "id": "R1-7",
+      "severity": "NOTE",
+      "location": "criteria.json IC03 ('holds no RBAC rule of any kind'); README N2; the unchanged v1 snapshot rule shape (v1 _rule)",
+      "finding": "The v1 snapshot rule is closed over apiGroups, resources, verbs, resourceNames and scope. A non-resource-URL rule bound to User system:apiserver cannot be carried. With a nonResourceURLs key, the snapshot fails 'IC00 closed rule' (probe). If the observer drops such rules, as v1's bootstrap derivation does, IC03 never sees them. The impact is nil, because the loopback user is in system:masters. Still, 'of any kind' claims more than the snapshot can express.",
+      "requiredChange": "Keep the v1 format. Either add an observer obligation that a non-resource-URL binding on User system:apiserver is reported and refused, or qualify IC03 as 'no resource rule of any kind'."
+    },
+    {
+      "id": "R1-8",
+      "severity": "NOTE",
+      "location": "README N3 ('W02g carried P7(b) and P7(c) to W02a-F')",
+      "finding": "The statement matches the I06 v1 status record (N3, and w02aP7 'I06_PART_CLOSED_REMAINDER_CARRIED'). It is incomplete against two other records. The round-2 review (Q7) and the v1 README ('Still open') carried to W02a-F the W02a side of P7(a) (also W03), P7(b), P7(c) and the network-policy agent identity mismatch. The W02a v3 README says it closes 'W02g: P7(a)-(c) and the network-policy agent identity'. The other two links are exact: the W02a v2 status assigns P7 to 'W02g and W03', and the v3 status's closedFindings.P7 closes (a) to (c).",
+      "requiredChange": "Restate the chain: W02g closed the I06 part of P7(a) and carried the W02a side of P7(a), P7(b), P7(c) and the network-policy agent identity to W02a-F, which closed them. Write it that way in the v2 status record at adoption."
+    }
+  ],
+  "openItemStatus": {
+    "N1": {
+      "status": "CLOSED",
+      "note": "check_evidence now applies W02a v3's check_record inside the check. The schema is digest-pinned by W02a's _shape. The evidence names the record through a closed reference: version v3 and SHA-256 of W02a's canonical form, with no prefix. The evidence's testOnly must equal the backend's, a test-only backend is accepted only with test_fixture=True, and v1's checks run on the record's own backend. G01-G18 replay exactly. A type sweep of 1107 substitutions over every backendProfile and backendComponents leaf left 9 accepted, all of them backends W02a accepts (round 2: 606 of 1341 accepted). A02 and A05 are refused (G09, G10, X03, X04), and the six-key unit-distribution backend is refused (G10). Because the schema is pinned, no non-fixture accepted variant can exist, which is an acceptable answer for W02g-F. The production remainder belongs to W03 together with an I06 successor (R1-4). Wording residuals: R1-3, R1-5, R1-6."
+    },
+    "N2": {
+      "status": "CLOSED",
+      "note": "Any non-empty effectiveRules on User system:apiserver is refused after v1's check: H01-H03, X05, X06, and my probes with an empty rule, non-policy rules in four scopes and an unknown verb. v1 accepted all of these. B05 (listed with no rule) is accepted. Different subjects stay outside the rule, as intended: Group system:apiserver and 'System:apiserver'. The non-resource-URL residual is R1-7 (NOTE)."
+    },
+    "N3": {
+      "status": "CLOSED",
+      "note": "Shared cgroups (G08, plus an apiserver-equal probe) and nested cgroups (G07, plus reverse and parent probes) are refused through check_record. The prefix-sharing sibling A09 is accepted. The W02a v2 and v3 status links are exact. The carry wording is incomplete (R1-8, NOTE)."
+    },
+    "N4": {
+      "status": "OPEN",
+      "note": "Carried unchanged to W02e and W03, as in the I06 v1 status record. Outside the W02g-F scope and not reopened."
+    },
+    "N5": {
+      "status": "OPEN",
+      "note": "Carried unchanged to W03, as in the I06 v1 status record. Outside the W02g-F scope and not reopened."
+    },
+    "N6": {
+      "status": "OPEN",
+      "note": "Carried unchanged to W02f and W02e. v2 does not take the optional WORKLOAD reclassification. Not reopened."
+    }
+  },
+  "questionAnswers": {
+    "Q1": "Yes, and applying check_record inside the check is sound. Step 2 rejects every backend that W02a v3 refuses, and acceptance by v2 implies acceptance by check_record:\n- the 1107-substitution sweep and 20 targeted backend probes agree with W02a in every case;\n- a widened or empty schema is refused ('unreviewed v3 qualification schema');\n- another positive's profile or endpoints are refused (substitution rules);\n- a W02a v2 record, a list, None or a bare backend projection is refused ('not a v3 record').\nThe check examines cgroupPath (outside cgroupfs, inside or equal to the planeon slice, shared, nested either way, trailing '/' and '..') and refuses each case. It examines apiIdentities (closure enum, a second node name, a missing kubelet identity) and filePaths (unlisted file, planeon file, digest that differs from the file). The digest is well defined: W02a canonical form over bounded data, key order irrelevant, bare lowercase hex. Uppercase, prefixed, integer, null, backend-only and non-canonical digests are refused. The encoding convention differs from W02a's (R1-6). The statement that no production evidence can be accepted is correct: the pinned schema admits only the test-only fixture, so every production call is refused at step 2 or step 5. A widened schema is refused by the digest pin. It is an acceptable answer to round 2's request, provided the README says that an I06 successor is also needed (R1-4) and states the per-record scope and the inherited W02a caller obligations (R1-5). N1 is CLOSED.",
+    "Q2": "Yes. v2 runs v1's check, then refuses any non-empty effectiveRules on (User, system:apiserver). Every rule shape I tried is refused: empty lists, non-policy reads in the qualification namespace, kube-public and kube-system, an unknown verb. A rule that is also policy-relevant hits v1's IC03 first. An absent entry and a duplicate entry hit IC00. The snapshot format is rightly left at v1: the check is stricter, the shape is unchanged, and the accepted set is a subset of v1's. The only gap is that the closed rule shape cannot carry non-resource-URL rules (R1-7, NOTE).",
+    "Q3": "Yes for G07 and G08: shared and nested cgroups are refused in both orders and for parent paths. A09's sibling (kubelet unit name plus '-scheduler.scope') is accepted because the nesting test compares path components. Against the status records, the P7 chain is correct: the W02a v2 status assigns P7 to 'W02g and W03', and the v3 status's closedFindings.P7 closes (a) to (c). The middle link omits the W02a side of P7(a) and the network-policy agent identity that W02g also carried (R1-8, NOTE).",
+    "Q4": "Every v1 rule still runs: v2 calls v1's check_evidence and check_rbac_snapshot unchanged, on the projection and on the snapshot. The 61 unchanged evidence negatives and 35 snapshot negatives replay with v1's operations, with production mapped to testFixture = not production, and give the v1 refusals. A01, A03, A04, A06, A07 and B01-B04 are accepted. The v1 model still gives every v1 refusal on the v1 vectors. The ten changed refusals are exactly E06, E35, E36, E38, E55, E56, E60, E61, E70 and E71, each pinned exactly, with v1Refusal equal to the v1 file. E06, E35, E36, E55, E60, E61, E70 and E71 change for their stated reasons. For E38 and E56 the stated reason is incomplete, because W02a v3 allows shared backend code. The v1 distinctness rule they used to pin is still reachable, and v2 has no vector for it (R1-1, MINOR). Several v1 rules cannot be reached through v2 because the pinned W02a schema subsumes them: confined label, canonical path, digest pattern, implementation pattern, component set, the client of an absent component, and the production rules. Not replaying the closure and inventory vectors is right. v2's check_inventory and check_closure are v1's functions, run on byte-identical inputs, and both pass on the shipped data.",
+    "Q5": "Evidence whose backend W02a v3 refuses: none accepted. The sweep, the targeted probes, a widened schema, an empty schema, a v2 record and wrong profile or endpoints are all refused at SC00. Evidence naming another record: refused. This covers naming positive 1 while passing positive 0, naming positive 0 while passing positives 1-3 (same backend, different record), and wrong digest encodings. A reversed key order is accepted, which is correct because the canonical form is the same. Test-only backend outside a fixture call: refused at step 5. A test_fixture of 0, 1, None or 'True' is refused as non-boolean. A testOnly mismatch in either direction is refused at step 4, and a backend with testOnly false is refused by the schema const. Any rule on the loopback user: refused (see Q2). Beyond the vectors, W02a-valid shared executables are refused only by v1's SC08 rule, which no v2 vector pins (R1-1).",
+    "Q6": "Yes, with my own applier (set, delete and append; a dict path element selects the unique matching list element; backend operations go to the W02a v3 positive; the evidence is then rebound to the mutated record before its own operations run):\n- the evidence positive is accepted in a fixture call and refused in production at step 5;\n- the snapshot positive, A01-A09 and B01-B05 are accepted;\n- all 89 evidence negatives and 38 snapshot negatives give their exact refusals;\n- all 12 cross-version expectations hold (X01-X06, both models).\nThe positive's digest equals record_sha256 of W02a v3 positive 0. G04's digest is positive 1's. G05's digest is the SHA-256 of json.dumps(record, indent=1). X03 and X04 use exactly v1 A02's and A05's operations and flags. X05 and X06 equal H01 and H02. The README counts (7, 5, 89, 38, 6; 61 plus 10) are correct. Reason mismatches: G18 (R1-2) and the E38/E56 rationale (R1-1).",
+    "Q7": "No overclaim found. The README, criteria and model keep DATA_CHECK_ONLY and claim no cluster, distribution, host or kernel observation, no selected distribution and no production backend profile. E01-E12 stay OPEN_UNPROVEN. git diff a29c93c..85ed160 adds only the six new files, so the v1 profile, W02a v2 and v3, W02e and W01 bytes are unchanged. Three statements are slightly imprecise: KUBELET's node identity (R1-3), the production path and its version coupling (R1-4), and the P7 chain wording (R1-8)."
+  },
+  "modelExecution": {
+    "environment": "Command: UV_PROJECT_ENVIRONMENT=/Users/caglarsubasi/Desktop/prometa/pocs/harness-engineering/harness-onion/.venv uv run --offline --frozen --no-sync python, from the worktree root. Python 3.12.14, jsonschema 4.24.0. PYTHONDONTWRITEBYTECODE=1 was set, and no .venv or __pycache__ was created in the worktree (git status --short --ignored stayed empty). Scripts: replay.py, probes.py and probes2.py, with a shared helper common.py, all in /private/tmp/claude-501/w02gf-review-r1/. They import i06_backend_profile_v2, i06_backend_profile and native_qualification_v3 from the worktree's scripts/ (module paths asserted). The inputs are the vectors, schema, inventory, closure and bootstrap files at HEAD.",
+    "identity": "HEAD is 85ed160bf5c1abd601852c057b9000eeb6018bef on branch codex/w02g-f-i06-profile-v2, with a clean status, at both start and end. All 5 subject and 17 predecessor SHA-256 digests match source-index.json at both start and end. The baseTree equals the tree of a29c93c.",
+    "vectorReplay": "Every case listed under Q6 gave its exact pinned result, with 0 mismatches. The v1 model on the v1 vectors gave every v1 refusal (71 evidence cases).",
+    "probes": "Evidence binding: 24 probes covering references, digests, records, profile, endpoints and schema. Fixture flag: 11 probes. Targeted backend rows: 20 probes. Type sweep: 1107 substitutions (15 values over every backendProfile and backendComponents leaf, with v2 accepting a case only if check_record accepts it); 9 accepted, all valid in W02a. Loopback snapshots: 13 probes. W02a-valid shared executables: 2 probes, both refused only by v1's SC08 distinctness rule.",
+    "cpuSeconds": 6.6,
+    "parallelism": "One process at a time; no workers."
+  },
+  "sourcesRead": [
+    "architecture/i06-backend-profile-v2/README.md",
+    "architecture/i06-backend-profile-v2/REVIEW_BRIEF.md",
+    "architecture/i06-backend-profile-v2/criteria.json",
+    "architecture/i06-backend-profile-v2/vectors.json",
+    "architecture/i06-backend-profile-v2/source-index.json",
+    "scripts/i06_backend_profile_v2.py",
+    "scripts/i06_backend_profile.py",
+    "architecture/i06-backend-profile/README.md (relevant sections)",
+    "architecture/i06-backend-profile/criteria.json",
+    "architecture/i06-backend-profile/vectors.json",
+    "architecture/i06-backend-profile/status.json",
+    "architecture/i06-backend-profile/review-round2.json",
+    "architecture/i06-backend-profile/identity-closure.json (holders, via script)",
+    "architecture/i06-backend-profile/writer-inventory.json, upstream-bootstrap-rbac-v1.37.1.json and upstream-facts-v1.37.1.json (loaded as model inputs)",
+    "architecture/native-profile-v3/README.md",
+    "architecture/native-profile-v3/qualification.schema.json (backendProfile, backendComponents, backendFile, path, digest, internalEndpoints)",
+    "architecture/native-profile-v3/vectors.json (positives)",
+    "architecture/native-profile-v3/status.json",
+    "scripts/native_qualification_v3.py",
+    "architecture/native-profile-v2/status.json",
+    "architecture/native-profile-v2/vectors.json (positive 0 backend, used for the v1 cross-version cases)",
+    "git: rev-parse, status, log, ls-tree, merge-base and diff --stat a29c93c..85ed160 (read-only); grep for importers of the v1 model and identity-closure.json",
+    "No public Kubernetes documentation or source was fetched in this round."
+  ],
+  "actions": {
+    "filesEdited": false,
+    "githubMutated": false,
+    "nativeActions": false,
+    "referenceModelExecuted": true,
+    "repositoryValidatorsRun": false,
+    "runnerActivated": false,
+    "testsRun": false,
+    "warmSourcesAccessed": false
+  },
+  "reviewLimit": "This review is a static reading of the subject and its predecessor inputs at 85ed160, plus runs of the three reference models through my own replay and probe scripts. It probes the data checks only. It does not cover a real observer, distribution, cluster, kernel or SELinux policy, and no upstream Kubernetes source was re-read in this round. Repository tests and validators were not run, and the out-of-subject validators and tests for v2, if any, were not reviewed. Git use was read-only. No repository file was created, edited or deleted; scratch files exist only in /private/tmp/claude-501/w02gf-review-r1/. This verdict is not a distribution selection, a production backend profile or authorization for any installation. The NOTE findings are advisory and may be carried forward. The MINOR finding R1-1 must be resolved before PASS_FOR_SOURCE_PUBLICATION."
+}

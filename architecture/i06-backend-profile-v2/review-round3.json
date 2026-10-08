@@ -1,0 +1,99 @@
+{
+  "schemaVersion": "planeon.internal.i06-backend-profile-v2-review/v1",
+  "round": 3,
+  "reviewDate": "2026-10-08",
+  "verdict": "PASS_FOR_SOURCE_PUBLICATION",
+  "subjectSha256": {
+    "README.md": "553880b957586dbfa50eabc4a99d51735eef2a1b0a82641ea51d8e3ea8cf72eb",
+    "REVIEW_BRIEF.md": "f65c1ef1fbe43013c06f962a2ffde8d231a70392603ecc44850481c5ae8ec739",
+    "criteria.json": "026206c57d3025c0f0129b6615e46c83d5a8000ddc3288f000a1fe4570050cda",
+    "vectors.json": "1a5e168f0d8fff233f5072b1440e75a633b38e428f87b2893a96e579122a430e",
+    "i06_backend_profile_v2.py": "58ceb7a6817aab512a56f9f2a614868ce27660d174be353c5629cc8de335e426"
+  },
+  "findings": [
+    {
+      "id": "R3-1",
+      "severity": "NOTE",
+      "location": "README.md headings at lines 150 and 174 (both '## Round-2 findings and dispositions'); README line 8 and REVIEW_BRIEF.md lines 9-10 (pointers to that heading)",
+      "finding": "The README has two sections with the same heading but different content. The first (line 150) holds the dispositions of the predecessor W02g review's round-2 findings, N1-N6. The second (line 174) holds this contract's R2-1 to R2-5 and the round-3 import change. README line 8 and the brief both say that '\"Round-2 findings and dispositions\" lists the round-3 changes'. A reader who follows that pointer reaches the N1-N6 table first. No rule or result is affected.",
+      "requiredChange": "Give the two sections distinct names, for example 'W02g round-2 findings (N1-N6) and dispositions' and 'W02g-F round-2 findings (R2-1 to R2-5) and round-3 changes', and update the pointers in README line 8 and the brief."
+    },
+    {
+      "id": "R3-2",
+      "severity": "NOTE",
+      "location": "README.md 'Files' table (line 37) and 'Still open'",
+      "finding": "The Files table still lists only 'review-round1.json, round1/'. review-round2.json and round2/ are present, are named in the status paragraph and are indexed in source-index.json earlierRounds, but they are missing from the table. 'Still open' lists the R1-4, R1-5 and R1-7 carries, while the R2-4 carry (to W02g-F2 or W03) appears only in the disposition table.",
+      "requiredChange": "Add a 'review-round2.json, round2/' row to the Files table. Optionally list the R2-4 carry under 'Still open' so that the status record written at adoption picks it up."
+    },
+    {
+      "id": "R3-3",
+      "severity": "NOTE",
+      "location": "scripts/i06_backend_profile_v2.py lines 29-34 (try/except ImportError import fallback)",
+      "finding": "Two edge cases, neither of which changes a result. (1) The fallback catches any ImportError raised while the predecessors are imported, not only a missing bare name. For example, a missing jsonschema inside native_qualification_v3 also triggers it. The fallback then fails too, and the traceback chain keeps the original cause, so the model never binds to the wrong modules silently. (2) When both scripts/ and the repository root are on sys.path, 'scripts.i06_backend_profile_v2' binds to the bare-named predecessors, so one process can hold two copies of v1 and W02a. All refusals are builtin exceptions, or jsonschema errors caught inside w02a.explain, and neither predecessor keeps mutable module state. My mixed-path replay (mode c) therefore gave identical results. The pattern matches validate_i06_backend_profile.py, validate_native_profile_v3.py and i07_policy_write.py, as the README says.",
+      "requiredChange": "None. Optionally narrow the fallback to ModuleNotFoundError for the two bare names only."
+    }
+  ],
+  "openItemStatus": {
+    "N1": {"status": "CLOSED", "note": "Stays closed. No rule changed. Outside the imports and the module docstring, the round-3 model's AST equals the round-2 model's, function docstrings included. My replay of the round-2 bytes gives the same 271 results and 93 probe outcomes as round 3. Steps 1-5, record_digest and the step-6 projection are unchanged."},
+    "N2": {"status": "CLOSED", "note": "Stays closed. H01-H03, B05, X05 and X06 replay exactly in both import modes. Loopback probes: v1 accepts four non-policy rules (events create, configmaps get in kube-public, pods list at cluster scope, leases update in kube-node-lease) and an unknown verb; v2 refuses all five under IC03. A policy write hits v1's IC03 first. A non-resource-URL rule and an empty rule fail 'IC00 closed rule'. Group system:apiserver, 'System:apiserver' and 'system:apiserver:x' stay outside the rule."},
+    "N3": {"status": "CLOSED", "note": "Stays closed. G07 and G08 refuse, and A09 is accepted. Probes: reverse nesting and the parent system.slice give 'nested'; an equal apiserver cgroup gives 'share'; '..' gives 'canonical installed path'; the cgroupfs root gives 'outside cgroupfs'; the planeon slice is refused. A planeon-slice prefix sibling is accepted. The P7 chain matches the W02a v2 status (carriedFindings.P7 'W02g and W03'), the W02g round-2 review Q7, the v1 README 'Still open' and the W02a v3 status (closedFindings P7 and NETWORK_POLICY_AGENT_IDENTITY)."},
+    "N4": {"status": "OPEN", "note": "Carried unchanged to W02e and W03. Outside W02g-F scope."},
+    "N5": {"status": "OPEN", "note": "Carried unchanged to W03. Outside W02g-F scope."},
+    "N6": {"status": "OPEN", "note": "Carried unchanged to W02f and W02e."},
+    "R1-1": {"status": "CLOSED", "note": "G19 and G20 replay exactly: W02a v3 accepts both backends, and v2 refuses both with the SC08 distinctness message. Vectors and criteria are unchanged since round 2."},
+    "R1-2": {"status": "CLOSED", "note": "G18's intent and refusal are unchanged and replay exactly."},
+    "R1-3": {"status": "CLOSED", "note": "README N1 bullet and SC08 are unchanged. Two node identities on KUBELET are refused ('more than one node identity'), and identities on DATASTORE fail its maxItems 0."},
+    "R1-4": {"status": "CLOSED", "note": "The 'No production evidence yet' step list now names steps 2, 4 and 5, and the R1-4 row says '2, 4 and 5 since round 3'. Probes confirm each: a production-profile backend is refused at step 2 (implementationId const), a backend with testOnly false at step 2 (testOnly const), fixture evidence with testOnly false at step 4, and fixture evidence with testOnly true at step 5. A widened schema is refused as 'unreviewed v3 qualification schema'."},
+    "R1-5": {"status": "CLOSED", "note": "README N1, SC00, the check_evidence docstring and 'Still open' are unchanged and still state the per-record scope, the composition with check_qualification and caller obligations 1 and 4."},
+    "R1-6": {"status": "CLOSED", "note": "record_digest equals my own independent spelling, 'sha256:' + SHA-256 of sorted-key, separator-free UTF-8 JSON, and equals the digest in the evidence positive. G04-G06 and 11 malformed spellings are refused, and a record with reordered keys is accepted."},
+    "R1-7": {"status": "CLOSED", "note": "IC03 says 'resource rule', and the module docstring now does too (R2-3). The observer obligation is stated in IC03, the README, both docstrings and 'Still open'."},
+    "R1-8": {"status": "CLOSED", "note": "The P7 chain text is unchanged and matches the three records (see N3)."},
+    "R2-1": {"status": "CLOSED", "note": "README lines 83-86 name step 2 (non-fixture backend), step 4 (evidence claims testOnly false) and step 5 (evidence claims testOnly true), and the R1-4 row matches. Each step was confirmed by probe in both import modes."},
+    "R2-2": {"status": "CLOSED", "note": "Brief question 1 now reads '(canonical form, W02a's `sha256:` prefix)'."},
+    "R2-3": {"status": "CLOSED", "note": "Module docstring lines 14-15 now say 'no resource rule at all' and name the W03 observer obligation, matching IC03. The pinned refusal text is unchanged, as round 2 allowed."},
+    "R2-4": {"status": "OPEN", "note": "Carried, as round 2 permitted ('None for publication'). The disposition row carries it to W02g-F2 or W03 accurately. It is not listed under 'Still open' (R3-2)."},
+    "R2-5": {"status": "PARTIAL", "note": "This is an adoption-time action. The README now commits the status record to carry R1-4, R1-5 and R1-7 next to the P7 chain and N4-N6. The status record is rightly absent from the round-3 subject: the a091b00 status.json was withdrawn at 86199d7, and nothing outside the directory references it. Check the record when it is written from the final verdict."}
+  },
+  "questionAnswers": {
+    "Q0": "Identity check: HEAD is 86199d79af42c1f5e5f312357d56210c7c8b94c1 on codex/w02g-f-i06-profile-v2, the status is clean, and all 24 indexed digests (5 subject, 17 predecessor, 2 earlier-round) match source-index.json at start and end. criteria.json and vectors.json are byte-identical to b2acad8 and to round2/. The round2/ bytes equal review-round2.json's subjectSha256. review-round2.json at HEAD is byte-identical to a091b00's. git diff b2acad8 86199d7 touches only the README, the brief, source-index (round 3, new digests, review-round2 added to earlierRounds), review-round2.json, round2/ and the model. The model diff is the docstring alignment (R2-3) and the import try/except.\n\nImports: (a) with scripts/ on sys.path, the model loads as top-level 'i06_backend_profile_v2' and binds the bare 'i06_backend_profile' and 'native_qualification_v3'. (b) With only the repository root on sys.path, it loads as 'scripts.i06_backend_profile_v2'; the bare imports fail, the fallback binds 'scripts.i06_backend_profile' and 'scripts.native_qualification_v3' (asserted: no bare module in sys.modules), and every file path is the worktree's. The 'scripts' namespace resolves only to the worktree, and the shared venv has no .pth path injection. Modes (a), (b), (c, both paths) and the round-2 bytes all give identical results: 271 vector results and 93 probe outcomes, 0 mismatches. Confirmed motivation: the round-2 model loaded under the scripts package with only the root on sys.path fails with ModuleNotFoundError('i06_backend_profile'). The repository conftest adds no sys.path entry, so tests use mode (b). The aliases require, check_inventory, check_closure, explain and ERRORS are the v1 objects in every mode.\n\nNo rule changed: the AST outside the imports and the module docstring is equal. R2-1, R2-2 and R2-3 are CLOSED, R2-4 is carried (OPEN), and R2-5 awaits adoption (PARTIAL). N1-N3 and R1-1 to R1-8 stay CLOSED. Residual documentation and import notes: R3-1, R3-2, R3-3.",
+    "Q1": "Yes, unchanged since round 2. check_evidence accepts only a closed v2 record whose reference names v3 and exactly record_digest(w02a_record). This happens only after W02a v3's check_record accepts that record with its profile, endpoints and digest-pinned schema, with testOnly equal to the backend's and a test-only backend only when test_fixture is True. Applying check_record inside the check is sound: profile and endpoint substitutions are refused at step 2. It examines cgroupPath, apiIdentities and filePaths (G14-G16 and the probes). The digest is well defined: W02a's canonical JSON with the 'sha256:' prefix, and key order does not matter. The statement that no production evidence exists yet is correct. W02a v3's schema admits only the test-only fixture, and every production call is refused at step 2, 4 or 5. Pairing the production profile with a reviewed W02a revision and an I06 successor is an acceptable answer to the request for non-fixture variants.",
+    "Q2": "Yes. Any non-empty effectiveRules on (User, system:apiserver) is refused after v1's check, including non-policy reads and writes in four scopes and an unknown verb (v1 accepts these). Policy writes stop at v1's IC03 first, and rules outside the closed shape fail IC00. Leaving the snapshot format at v1 is right: the accepted set is a subset of v1's, and non-resource-URL rules are covered by the stated observer obligation.",
+    "Q3": "Yes. G07 (nested) and G08 (shared) are refused through check_record, and A09 (a prefix-sharing sibling) is accepted. Additional nesting and sharing probes behave as expected (see N3). The P7 carry chain is stated correctly against the W02a v2 status, the W02g round-2 review and v1 README, and the W02a v3 status.",
+    "Q4": "Yes. The v1 model still gives every v1 result on the 7 accepted variants, 71 evidence negatives and 35 snapshot negatives (W02a v2 backend). Inventory and closure checks accept the shipped inputs, and they are the v1 function objects. Replay parity holds: every v1 evidence and snapshot negative is present with identical ops, backendOps and namespace, and testFixture = not production. 61 evidence negatives keep their refusal. Exactly E06, E35, E36, E38, E55, E56, E60, E61, E70 and E71 changed, each with v1Refusal equal to the v1 text and each for the stated reason. E38 and E55 name unlisted paths ('/opt/qualification-k8s/bin/k8s' and '/opt/qualification-k8s/bin/./kubelet'). E56's digest b002 differs from the listed kube-scheduler file's b006. A01, A03, A04, A06 and A07 carry identical ops, and A02 and A05 equal X03 and X04. Not replaying the closure and inventory vectors is right: same functions, byte-identical inputs, replayed by the v1 layer.",
+    "Q5": "Evidence whose backend W02a v3 refuses was never accepted: 12 backend probes plus profile, endpoint, schema and version substitutions. Evidence naming another record was refused for all 12 ordered pairs of the four W02a v3 positives and for 11 malformed digest spellings. A test-only backend outside a fixture call was refused at step 5, or at step 4 when the evidence claims testOnly false. Non-boolean flags (0, 1, None, 'True') and a non-boolean testOnly were refused. Every rule on the loopback user was refused (Q2). Results are identical in both import modes.",
+    "Q6": "Yes. My own applier (set, delete, append; a dict path element selects the unique matching list element) applies backendOps to W02a v3 positive 0 (or w02aPositive). It then rebinds the evidence to the mutated record's digest, computed independently of the model, before applying the evidence's own ops. With it, every case gives exactly its stated result in import modes (a) and (b), with 0 mismatches: the evidence positive (accepted as a fixture, refused in production at step 5), the snapshot positive, A01-A09, B01-B05, all 91 evidence and 38 snapshot negatives, and X01-X06 under both models. The cross-version cases are accurate: the v1 side uses the W02a v2 positive-0 backend, and the v2 side uses test_fixture = not production.",
+    "Q7": "No overclaim. README, brief, criteria and model state DATA_CHECK_ONLY: no cluster, distribution, host or kernel observation, no selected distribution, no production backend profile, and E01-E12 OPEN_UNPROVEN. 'selected-distribution' appears only as a refused test identity (G09, E60, X03). The round-3 changes add no claim."
+  },
+  "modelExecution": {
+    "environment": "From the worktree root: PYTHONDONTWRITEBYTECODE=1 UV_PROJECT_ENVIRONMENT=/Users/caglarsubasi/Desktop/prometa/pocs/harness-engineering/harness-onion/.venv uv run --offline --frozen --no-sync python <script>. Scripts: /private/tmp/claude-501/w02gf-review-r3/replay.py (modes a, b, c, r2) and r2fail.py; outputs out_a.json, out_b.json, out_c.json, out_r2.json. sys.path was rebuilt explicitly per mode, and module names and file paths were asserted. git status --short --ignored was empty afterwards: no .venv and no __pycache__.",
+    "importModes": "a: scripts/ on sys.path, top-level import, bare predecessors. b: root only, scripts.i06_backend_profile_v2, fallback to scripts.* predecessors (no bare modules loaded). c: both paths, package import takes the bare branch. r2: round-2 model bytes loaded from round2/ for rule-equivalence. All four outputs are identical. Round-2 bytes under the package with only the root on the path: ModuleNotFoundError('i06_backend_profile').",
+    "vectorReplay": "271 results per mode, 0 mismatches: inventory and closure acceptance; evidence positive (fixture and production) and snapshot positive; 7 and 5 accepted variants; 91 evidence and 38 snapshot negatives; 6 cross-version cases under both models (12 results); the v1 model on all 7 v1 accepted variants, 71 evidence negatives and 35 snapshot negatives. Static parity checks: ops, flags, v1Refusal, changed set, counts and unique ids.",
+    "probes": "93 outcomes per mode: record pairs 16, digest spellings 12, reference shape 4, flags and testOnly 9, backend W02a rules 12 (plus W02a's own verdicts), production profile, schema widening, profile and endpoint substitution, loopback snapshots 8 (v1 and v2), non-loopback names 3 (v1 and v2).",
+    "sweeps": "Not repeated; rules unchanged (AST- and result-equivalent to round 2), as the instructions allowed.",
+    "cpuSeconds": 6,
+    "parallelism": "One process at a time; no workers."
+  },
+  "sourcesRead": [
+    "architecture/i06-backend-profile-v2/REVIEW_BRIEF.md, README.md, criteria.json (SC00, SC08, IC03 compared with v1), vectors.json, source-index.json, review-round1.json (subjectSha256), review-round2.json (all), round1/ and round2/ (digests; round2 model diffed)",
+    "scripts/i06_backend_profile_v2.py (whole file)",
+    "scripts/i06_backend_profile.py (helpers, ERRORS, explain, signatures) and scripts/native_qualification_v3.py (require, canonical, digest, parse, _shape, check_record header, ERRORS, explain)",
+    "architecture/i06-backend-profile/ vectors.json, criteria.json, README.md (P7 lines), review-round2.json (Q7); writer-inventory, identity-closure, upstream facts and bootstrap RBAC loaded as model inputs",
+    "architecture/native-profile-v3/vectors.json (positives), qualification.schema.json (backend apiIdentities enums), status.json (closedFindings P7, NETWORK_POLICY_AGENT_IDENTITY)",
+    "architecture/native-profile-v2/vectors.json (positive 0 backend), status.json (carriedFindings.P7)",
+    "scripts/validate_i06_backend_profile.py (import pattern, _apply, validate_vectors), import headers of validate_native_profile_v3.py, i07_policy_write.py and other validators, tests/*.py import lines, conftest.py, pyproject.toml pytest options",
+    "git (read-only): rev-parse, status, log, branch, show --stat a091b00, show a091b00:status.json, diff b2acad8 86199d7, diff a091b00 86199d7, diff --name-status a29c93c 86199d7, merge-base, grep for v2 references",
+    "Shared venv site-packages listing and .pth files (path-injection check)",
+    "No public Kubernetes documentation or source was fetched in this round."
+  ],
+  "actions": {
+    "filesEdited": false,
+    "githubMutated": false,
+    "nativeActions": false,
+    "referenceModelExecuted": true,
+    "repositoryValidatorsRun": false,
+    "runnerActivated": false,
+    "testsRun": false,
+    "warmSourcesAccessed": false
+  },
+  "reviewLimit": "This review covers the subject at 86199d7 and its predecessor inputs. It consists of a static reading plus runs of the three reference models through my own replay and probe scripts in four import modes. It covers the data checks only, not a real observer, inspector, distribution, cluster, kernel or SELinux policy. Earlier rounds' large type sweeps were not repeated, because the rules are AST- and result-equivalent to round 2. The status record is absent by design and must be checked at adoption (R2-5). Repository tests and validators were not run, and no out-of-subject test or validator for v2 exists or was reviewed. Git use was read-only; no repository file was created, edited or deleted. Scratch files exist only under /private/tmp/claude-501/w02gf-review-r3/. This verdict is not a distribution selection, a production backend profile or authorization for anything installed. The three NOTE findings are advisory and may be carried forward."
+}

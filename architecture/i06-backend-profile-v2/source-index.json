@@ -1,0 +1,108 @@
+{
+ "schemaVersion": "planeon.internal.i06-backend-profile-v2-index/v1",
+ "round": 3,
+ "baseMain": "a29c93c7813ff71eb8179c4e8611032d972e3a36",
+ "baseTree": "2fb828b794a408b67d4fcf419526ff45d287c8df",
+ "subject": [
+  {
+   "path": "architecture/i06-backend-profile-v2/README.md",
+   "sha256": "553880b957586dbfa50eabc4a99d51735eef2a1b0a82641ea51d8e3ea8cf72eb"
+  },
+  {
+   "path": "architecture/i06-backend-profile-v2/REVIEW_BRIEF.md",
+   "sha256": "f65c1ef1fbe43013c06f962a2ffde8d231a70392603ecc44850481c5ae8ec739"
+  },
+  {
+   "path": "architecture/i06-backend-profile-v2/criteria.json",
+   "sha256": "026206c57d3025c0f0129b6615e46c83d5a8000ddc3288f000a1fe4570050cda"
+  },
+  {
+   "path": "architecture/i06-backend-profile-v2/vectors.json",
+   "sha256": "1a5e168f0d8fff233f5072b1440e75a633b38e428f87b2893a96e579122a430e"
+  },
+  {
+   "path": "scripts/i06_backend_profile_v2.py",
+   "sha256": "58ceb7a6817aab512a56f9f2a614868ce27660d174be353c5629cc8de335e426"
+  }
+ ],
+ "predecessorInputs": [
+  {
+   "path": "architecture/i06-backend-profile/README.md",
+   "sha256": "ccf952d40b4f6229c0cdea79f976253cd4abb19438c1eebc5794e748a708e4b7"
+  },
+  {
+   "path": "architecture/i06-backend-profile/criteria.json",
+   "sha256": "95f893a9988b81042598d9c469c669e7401975f1367043a55540471e70fc5d1b"
+  },
+  {
+   "path": "architecture/i06-backend-profile/vectors.json",
+   "sha256": "b9c57d64eab03f307e10b02152426a10ebac2fd27102e27ef5873b5865be4cee"
+  },
+  {
+   "path": "architecture/i06-backend-profile/status.json",
+   "sha256": "73d8df607e90568e06f14b3548f8c727805f68072d9753134a32a2eb049f60c3"
+  },
+  {
+   "path": "architecture/i06-backend-profile/review-round2.json",
+   "sha256": "c46c825e59efa8ba7a79e1db5efff5b981e10147e826542b6967b24921b90235"
+  },
+  {
+   "path": "architecture/i06-backend-profile/identity-closure.json",
+   "sha256": "0a9b82ffa2d63bf48a8850574cdf3ece02bf1913f33a72cbb96ed30a40f1f3bb"
+  },
+  {
+   "path": "architecture/i06-backend-profile/writer-inventory.json",
+   "sha256": "8e6b3b7565cfc93a61162b84d740cffb2871eb66ab85e8c4e80ac813f1af3077"
+  },
+  {
+   "path": "architecture/i06-backend-profile/upstream-facts-v1.37.1.json",
+   "sha256": "354f048c06cbfd9e88f9e1042abf9322f759bb9d9082209a2188af091c89c7af"
+  },
+  {
+   "path": "architecture/i06-backend-profile/upstream-bootstrap-rbac-v1.37.1.json",
+   "sha256": "7529c2a713af2fb90163175924c264d95f4242d7e0c26b1452c77febb13ed50e"
+  },
+  {
+   "path": "scripts/i06_backend_profile.py",
+   "sha256": "bea3c953573478be5b03ab81b4ebd859da62d1eaa2a1be8f361b9dd39a98555e"
+  },
+  {
+   "path": "architecture/native-profile-v3/README.md",
+   "sha256": "93b6f3897f4011ab85832b4319db44e4e1e94566adf61062a6170d1437dfcf50"
+  },
+  {
+   "path": "architecture/native-profile-v3/qualification.schema.json",
+   "sha256": "ae5cbb6aa39f4edfa2d9919f25e55bad9ab214a99ca927c5afe7e2d943946ac5"
+  },
+  {
+   "path": "architecture/native-profile-v3/vectors.json",
+   "sha256": "14af47a69c972039294be8659c31332acd5326bfb0a3a38384a2c6bf9d11fe6d"
+  },
+  {
+   "path": "architecture/native-profile-v3/status.json",
+   "sha256": "f242944dd7a03eb64fd4f14d811711f7ed4ccf9bdb00bca82ea8abbaa5cb0538"
+  },
+  {
+   "path": "scripts/native_qualification_v3.py",
+   "sha256": "2ef5c14ad5d8c962cf3703ccd076059685ed8dcc852059e4f863e8d9dc8965ad"
+  },
+  {
+   "path": "architecture/native-profile-v2/vectors.json",
+   "sha256": "6d58d1f36b7bce5739b94dd89512d358b96878c70e1de7cf8f399050b881b396"
+  },
+  {
+   "path": "architecture/native-profile-v2/status.json",
+   "sha256": "ccd7bc05c1cd36ea29511cbb058f55d90d46128bdc8188d8135220479ebd5212"
+  }
+ ],
+ "earlierRounds": [
+  {
+   "path": "architecture/i06-backend-profile-v2/review-round1.json",
+   "sha256": "b1f6501655c1860d5b3c79e8de2b9080e4b373ad81d057904e2f0af5b7f35332"
+  },
+  {
+   "path": "architecture/i06-backend-profile-v2/review-round2.json",
+   "sha256": "a5eefd7c6fb0f53f2a14880a079a69bd786c95be1ca8b3a3c5ab7c6de04cc0df"
+  }
+ ]
+}

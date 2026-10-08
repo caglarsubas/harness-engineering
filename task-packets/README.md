@@ -1,6 +1,14 @@
 # Sol-High Task Packet Catalog
 
-## Current source preparation — MET-ENFORCE-011
+## Current source preparation — MET-ENFORCE-012
+
+W02g-F: the I06 backend profile v2 (successor of the adopted W02g profile) binds a distribution evidence
+record by digest to one W02a v3 record that W02a's check accepts, refuses any resource rule on the loopback
+user system:apiserver, and refuses shared or nested backend cgroups through W02a's rules. It passed its
+independent review in round 3. Nothing is observed or selected, and every E01-E12 obligation stays open.
+Alpha2 OPEN; 210 accepted plus ENFORCE-012 only. Native Linux, exact-main and tenant acceptance remain separate.
+
+## Historical W02b-F source preparation — MET-ENFORCE-011
 
 W02b-F: the I05 broker-gate channel v2 (successor of the adopted v1 channel) closes every finding the
 v1 round-3 review carried to W02b-F: the I07 drain answered from the A3 fence in every state, DELETE only
@@ -1186,3 +1194,4 @@ acceptance is claimed. Alpha2 ONGOING; model-effort transition NOT_DUE.
 | 208 | `MET-PERF-032` | `Harness-Engineering` | Verify-time headroom: route-local test inputs, stubbed status replay, shared inventory projection, grouped uniqueItems |
 | 209 | `MET-ENFORCE-010` | `Harness-Engineering` | W02a-F native qualification record v3: carried W02a, W02g and W02e findings closed, independently reviewed |
 | 210 | `MET-ENFORCE-011` | `Harness-Engineering` | W02b-F I05 broker-gate channel v2: carried W02b findings P1-P8 closed, independently reviewed |
+| 211 | `MET-ENFORCE-012` | `Harness-Engineering` | W02g-F I06 backend profile v2: carried W02g findings N1-N3 closed, independently reviewed |

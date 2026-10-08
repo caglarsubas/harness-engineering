@@ -24,7 +24,6 @@
   "MC38": "RECHECKED_BY_A2 A2-POD-IMAGE-VOLUME",
   "MC39": "SIGNER_GUARANTEED (A2 has no pod-level resources check)",
   "MC40": "SIGNER_GUARANTEED (A2 has no affinity or topology spread check)",
-  "MC41": "SIGNER_GUARANTEED (A2 checks volume names through A2-POD-ECHO and image volumes, not the volume source)",
   "DISABLED_GATE_FIELDS": "SIGNER_GUARANTEED, not by check_manifest: the claim evidence disabledGateFieldsAbsentAtSigning (C27) says the signer refused fields of feature gates the W02g profile pins off (SC15); the apiserver drops them before A2"
  },
  "publisherIdentity": "system:serviceaccount:kube-system:root-ca-cert-publisher",
@@ -731,13 +730,11 @@
     "containers[*].terminationMessagePath",
     "containers[*].terminationMessagePolicy",
     "containers[*].ports[*].protocol",
-    "probe defaults (not modelled by final_object; native T03)",
+    "probe and volume defaults",
     "resource quantities in canonical form",
     "status (phase Pending, qosClass)",
-    "containers[*] and initContainers[*]: env[*].valueFrom.fieldRef.apiVersion v1 (when omitted)",
-    "containers[*] and initContainers[*]: env[*].valueFrom.fileKeyRef.optional false (when omitted)",
-    "volumes[*].configMap, .secret, .downwardAPI and .projected defaultMode 420 (when omitted)",
-    "volumes[*].downwardAPI.items[*] and volumes[*].projected.sources[*].downwardAPI.items[*]: fieldRef.apiVersion v1 (when omitted)"
+    "containers[*].env[*].valueFrom.fieldRef.apiVersion v1 (when omitted)",
+    "containers[*].env[*].valueFrom.fileKeyRef.optional false (when omitted)"
    ],
    "ALLOWED_SERVER_CHOSEN": [
     "metadata.uid",
@@ -758,7 +755,6 @@
     "requests copied from limits": "MC34",
     "pod-level resource defaulting (DefaultPodLevelResources)": "MC39",
     "matchLabelKeys and mismatchLabelKeys merged into affinity and topology spread selectors": "MC40",
-    "defaults of other volume sources (hostPath type, RBD, AzureDisk, ScaleIO, ephemeral claims, projected token expiry, ...)": "MC41",
     "fields of disabled feature gates": "signer evidence disabledGateFieldsAbsentAtSigning (C27)"
    },
    "CHECKED_BY_A2": [

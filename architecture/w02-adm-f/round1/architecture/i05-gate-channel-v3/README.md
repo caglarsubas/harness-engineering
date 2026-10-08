@@ -1,6 +1,6 @@
 # I05 broker-gate channel v3 — W02-ADM-F contract (DATA_CHECK_ONLY)
 
-Alpha 2A; 2026-10-09. Status: **CONTRACT_CANDIDATE_ROUND2_AWAITING_INDEPENDENT_REVIEW** (one combined W02-ADM-F review
+Alpha 2A; 2026-10-09. Status: **CONTRACT_CANDIDATE_ROUND1_AWAITING_INDEPENDENT_REVIEW** (one combined W02-ADM-F review
 with `../admission-semantics-v3/` and `../i07-policy-write-v3/`; brief and source index in `../w02-adm-f/`).
 
 v3 is the W02-ADM-F successor of the adopted I05 v2 contract `../i05-gate-channel-v2/`
@@ -19,7 +19,7 @@ MET-PERF-035 merges (owner decision, 2026-10-08).
 |---|---|
 | `channel.schema.json` | Draft 2020-12 schema `planeon.internal.effect-gate-frame/v3`: the v2 frame variants under the v3 version (no other schema change) |
 | `outcome-mapping.json` | `planeon.internal.effect-gate-outcome-mapping/v2`, unchanged from v2 |
-| `vectors.json` | 120 transcripts (T01-T106 carried from v2 under their IDs, T107-T120 new), 42 agreement cases, 34 frame checks (G34 new), 14 byte-level checks (listed B01-B14 in order), 5 configuration refusals (K04, K05 new), each with its exact expected output |
+| `vectors.json` | 118 transcripts (T01-T106 carried from v2 under their IDs, T107-T118 new), 42 agreement cases, 34 frame checks (G34 new), 14 byte-level checks (listed B01-B14 in order), 5 configuration refusals (K04, K05 new), each with its exact expected output |
 | `../../scripts/i05_gate_channel_v3.py` | Reference model: `decode_frame`, `check_frame`, `render_request`, `template_digest`, `identity_of`, `Gate` (with `fence`), `replay`, `check_agreement` |
 
 The v3 model is a copy of the v2 model with the changes below, so the v2-to-v3 diff of `scripts/i05_gate_channel_v2.py`
@@ -31,11 +31,11 @@ the K02 refusal text (V6). G10's intent now says "not a v3 frame".
 
 | Finding | v3 rule | Vectors |
 |---|---|---|
-| V1 unpinned rules | Three v2 rules get vectors: a restart drops a pending drain without an answer; a second drain request while one is pending records DRAIN_STARTED once (each request is answered PENDING); a DELETE armed with a UID this execution created for another manifest is refused UID_NOT_CREATED. The model gains a finer test injection, `STORAGE_FAIL_AFTER {after: k}`: the (k+1)-th record attempted from then on fails (STORAGE_FAIL_NEXT always fails the next record). It counts attempts, failed ones and those inside the storage-failure path included, and one such injection is pending at a time (a second replaces the first). With it the DRAINED-failure and DENIED-after-record cases are pinned. It is a model event only, never a channel frame. | T107-T113, T120 |
+| V1 unpinned rules | Three v2 rules get vectors: a restart drops a pending drain without an answer; a second drain request while one is pending records DRAIN_STARTED once (each request is answered PENDING); a DELETE armed with a UID this execution created for another manifest is refused UID_NOT_CREATED. The model gains a finer test injection, `STORAGE_FAIL_AFTER {after: k}`: the record after k successful records fails (STORAGE_FAIL_NEXT always fails the next record). With it the DRAINED-failure and DENIED-after-record cases are pinned. It is a model event only, never a channel frame. | T107-T113 |
 | V2 Decision 8 wording | A HELD generation answers a drain HELD at once, even while a consumed action has no terminal record (fails safe). OPEN is a point-in-time answer: the generation can become HELD afterwards (RECONCILIATION_REQUIRED, a non-orderly channel loss with an unsealed action, a storage failure), and the I07 writer keeps evaluating the fence after OPEN (I07 v2 and v3: MAINT_HELD). | T66, T71 (carried); I07 T57 |
 | V3 residual precondition | Stated exactly under Durable journal and failure marker: two consecutive failed journal writes, one failed marker write, no torn record, and no later state record before the restart. It covers the gate's own storage-failure HELD as well as RECONCILIATION_REQUIRED, and a drain after such a restart is answered OPEN. | T103 (carried); T116-T118 |
-| V4 upstream bound | The gate bounds a forwarded exchange by the 900-second limit, counted from its consumption. The end of the signed lifetime does not abort it: as Decision 9 says, an action in flight at expiry completes and is reported admitted before invalidation. On expiry of the bound (model event UPSTREAM_TIMEOUT) it aborts the exchange and closes the server connection: the action is TERMINAL IO_AMBIGUOUS with `{aborted: UPSTREAM_TIMEOUT}`, nothing is relayed, the generation is HELD, a pending drain settles HELD, and a later upstream response is a late response. | T114, T115, T119 |
-| V5 dropped v1 clauses | Restored: Decision 1's durability-before-relay sentence, Decision 4's fail-closed stock client, the conservative outcomes paragraph with the `flushClosures` definition, why NOT_FORWARDED agrees with both DENIED and AMBIGUOUS, that object content beyond the identity match is not verified, and that an execution with an action admitted before invalidation never ends COMPLETED. | — |
+| V4 upstream bound | The gate bounds a forwarded exchange by the bound execution's signed lifetime and the 900-second limit. On expiry (model event UPSTREAM_TIMEOUT) it aborts the exchange and closes the server connection: the action is TERMINAL IO_AMBIGUOUS with `{aborted: UPSTREAM_TIMEOUT}`, nothing is relayed, the generation is HELD, a pending drain settles HELD, and a later upstream response is a late response. | T114, T115 |
+| V5 dropped v1 clauses | Restored: Decision 1's durability-before-relay sentence, Decision 4's fail-closed stock client, the conservative outcomes paragraph with the `flushClosures` definition, and why NOT_FORWARDED agrees with both DENIED and AMBIGUOUS. | — |
 | V6 hygiene | The identity refusal reads "a manifest identity resolves to more than one manifest", and it also applies within one run (K05). A `priorBindings` record without all four lists (the v1 shape) is refused "an incomplete priorBindings record" (K04) instead of raising KeyError. The byte checks are listed B11, B12, B13, B14. G34 refuses a v2 frame. | K02, K04, K05, G34, B11-B14 |
 
 The v2 changes (P1-P8 of the v1 round-3 review) stay as stated in `../i05-gate-channel-v2/README.md` ("What v2
@@ -171,9 +171,8 @@ and (v2) a pending drain only in DRAINING or INVALIDATED and only while an actio
     cleanup of an earlier run's resources is not done through I05; it stays with the external reconciliation path.
 11. **States.** INSPECTING, ACTIVE, DRAINING, CLOSED, INVALIDATED and HELD are the base conceptual states, carried only on
     this private channel.
-12. **Upstream bound (v3, V4).** A forwarded exchange is bounded by the 900-second limit, counted from its consumption
-    (A1). The end of the bound execution's signed lifetime does not abort it (Decision 9: it completes and is reported
-    `admittedBeforeInvalidation`). On expiry of the bound the gate aborts the exchange and closes the consumed server
+12. **Upstream bound (v3, V4).** A forwarded exchange is bounded by the bound execution's signed lifetime and the
+    900-second limit, whichever ends first. On expiry the gate aborts the exchange and closes the consumed server
     connection, records TERMINAL IO_AMBIGUOUS `{aborted: UPSTREAM_TIMEOUT}` and holds the generation. Nothing is relayed;
     a later upstream response is journalled LATE_UPSTREAM and never relayed. A pending drain settles HELD. So a hanging
     upstream cannot keep a WRITE_BEGIN PENDING forever. The broker's ACTION_OUTCOME then reports IO_AMBIGUOUS, which agrees
@@ -224,10 +223,8 @@ opens a maintenance in a rebuilt generation (I07 R1), so no policy write follows
 failure domains failing at once.
 
 **Model test injections.** `STORAGE_FAIL_NEXT` (optionally torn) fails the next journal record, `STORAGE_FAIL_AFTER
-{after: k}` fails the (k+1)-th record attempted from then on (v3, V1), and `MARKER_FAIL_NEXT` fails the next marker
-write. STORAGE_FAIL_AFTER counts record attempts, including failed ones and the records written inside the
-storage-failure path, and only one is pending at a time: a second replaces the first (T120). They are model events for
-the vectors, never channel frames.
+{after: k}` fails the record after k successful ones (v3, V1), and `MARKER_FAIL_NEXT` fails the next marker write. They
+are model events for the vectors, never channel frames.
 
 ## Outcome mapping
 
@@ -252,9 +249,8 @@ observes details.uid and no resourceVersion. A deletion that is not immediate re
 (`deleteNotImmediate`); for a ConfigMap that is refused (M05) and the broker holds. The identity match decodes objectBase64
 strictly (valid base64, duplicate-free JSON, no NaN, depth at most 16) and requires apiVersion, kind, metadata.namespace
 and metadata.name equal to the armed template and metadata.uid and metadata.resourceVersion equal to the gate's
-observation. Object content beyond that is not verified (restored from v1, round-1 AF-I05-3). Disagreement, a missing or refused ACTION_OUTCOME or a missing RESOURCE_RESULT is sticky failure: the broker
-holds the generation HELD and never advances its I02 transcript past the action. `admittedBeforeInvalidation` keeps the mapped outcome, but such an execution
-never ends COMPLETED (restored from v1, round-1 AF-I05-3). NOT_FORWARDED agrees with both DENIED and
+observation. Disagreement, a missing or refused ACTION_OUTCOME or a missing RESOURCE_RESULT is sticky failure: the broker
+holds the generation HELD and never advances its I02 transcript past the action. NOT_FORWARDED agrees with both DENIED and
 AMBIGUOUS, because a server that saw its connection closed cannot tell a refusal from a lost send (restored from v1, V5).
 I02 is unchanged and no outcome enum is overloaded.
 
@@ -280,16 +276,12 @@ gets B forwarded once; misattribution shows as disagreement (HELD), not as an un
 
 | Finding | Disposition in v3 |
 |---|---|
-| V1 NOTE, four unpinned rules | Three vectors (T107-T109); `STORAGE_FAIL_AFTER` pins the DRAINED and DENIED-after-record failures (T110-T113); its counting is stated (T120) |
+| V1 NOTE, four unpinned rules | Three vectors (T107-T109); `STORAGE_FAIL_AFTER` pins the DRAINED and DENIED-after-record failures (T110-T113) |
 | V2 NOTE, drain-answer wording | Decision 8 reworded: HELD answers at once; OPEN is point-in-time and the writer keeps evaluating the fence |
 | V3 NOTE, residual precision | Exact precondition, the gate's own storage-failure HELD, and a drain OPEN after the restart (T116-T118) |
-| V4 NOTE, unbounded upstream exchange | Decision 12: 900 seconds from consumption (expiry does not abort, Decision 9), then abort IO_AMBIGUOUS `{aborted: UPSTREAM_TIMEOUT}`, HELD (T114, T115, T119) |
-| V5 NOTE, dropped v1 clauses | Restored in Decisions 1 and 4 and under Outcome mapping, including the two further sentences the W02-ADM-F round-1 review named |
+| V4 NOTE, unbounded upstream exchange | Decision 12: signed lifetime and 900 seconds, then abort IO_AMBIGUOUS `{aborted: UPSTREAM_TIMEOUT}`, HELD (T114, T115) |
+| V5 NOTE, dropped v1 clauses | Restored in Decisions 1 and 4 and under Outcome mapping |
 | V6 NOTE, hygiene | Refusal wording (K02, K05), incomplete priorBindings refused (K04), B11-B14 in order, G34 |
-
-W02-ADM-F review round 1 (`../w02-adm-f/review-round1.json`, PASS_FOR_SOURCE_PUBLICATION) found AF-I05-1 (Decisions 9
-and 12 disagreed on the signed lifetime: the bound is now the 900-second limit, T119), AF-I05-2 (injection counting
-stated, T120) and AF-I05-3 (two more v1 sentences restored); round 2 answers all three.
 
 ## v1 round-3 findings and dispositions (in v2, unchanged)
 
@@ -322,7 +314,7 @@ The v1 round-1 and round-2 dispositions stay in `../i05-gate-channel/README.md`.
 ## Still open
 
 - All E01-E12 and T01-T08; C2/C3 behaviour under load and restart is native T02/T03 work.
-- How the gate's substrate enforces the 900-second upstream bound (W03).
+- The upstream bound's exact value inside the 900-second limit, and how the gate's substrate enforces it (W03).
 - The exact I04 request head as a requirement on the I04 client (R01, CONF-LIVE-003), and the external reconciliation path
   for resources of earlier runs.
 - The re-check of the mapping rows and DELETE bodies against the selected Kubernetes distribution (W02/W03).

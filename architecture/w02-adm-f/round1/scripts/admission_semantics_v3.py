@@ -86,8 +86,6 @@ def sha(raw: bytes) -> str:
 
 # ---------------------------------------------------------------- manifest constraints
 
-VOLUME_SOURCES = ("emptyDir", "configMap", "secret", "downwardAPI", "projected")   # MC41: their defaults are modelled
-PROJECTED_SOURCES = ("configMap", "secret", "downwardAPI")
 POD_SPEC_FORBIDDEN = ("nodeName", "nodeSelector", "runtimeClassName", "overhead", "priority", "priorityClassName",
                       "preemptionPolicy", "tolerations", "imagePullSecrets", "ephemeralContainers", "schedulingGates",
                       "resourceClaims", "hostNetwork", "hostPID", "hostIPC", "hostUsers", "serviceAccount")
@@ -158,15 +156,9 @@ def check_manifest(kind: str, manifest: Any, namespace: str) -> str | None:
     if any("image" in v for v in spec.get("volumes") or []):
         return "MC38 an image volume (AlwaysPullImages rewrites its pull policy)"
     if "resources" in spec:
-        return "MC39 pod-level resources (DefaultPodLevelResources fills pod-level requests, limits and hugepage limits)"
+        return "MC39 pod-level resources (DefaultPodLevelResources fills requests and hugepage limits)"
     if "affinity" in spec or "topologySpreadConstraints" in spec:
         return "MC40 affinity or topology spread constraints (matchLabelKeys merge into their selectors)"
-    for v in spec.get("volumes") or []:
-        sources = set(v) - {"name"}
-        if len(sources) != 1 or not sources <= set(VOLUME_SOURCES) or (
-                "projected" in v and any(len(src) != 1 or not set(src) <= set(PROJECTED_SOURCES)
-                                         for src in (v["projected"].get("sources") or []))):
-            return "MC41 a volume source outside emptyDir, configMap, secret, downwardAPI and projected (configMap, secret, downwardAPI)"
     annotations = meta.get("annotations") or {}
     for field, key in ECHO.items():
         if annotations.get(key) != echo_value(spec.get(field), field):
@@ -229,9 +221,9 @@ def final_object(kind: str, manifest: dict, server: dict) -> dict:
         for env in c.get("env", []):
             source = env.get("valueFrom") or {}
             if "fieldRef" in source:
-                source["fieldRef"].setdefault("apiVersion", "v1")       # core/v1/defaults.go:397-401 SetDefaults_ObjectFieldSelector
+                source["fieldRef"].setdefault("apiVersion", "v1")       # core/v1/defaults.go SetDefaults_ObjectFieldSelector
             if "fileKeyRef" in source:
-                source["fileKeyRef"].setdefault("optional", False)      # generated inline: core/v1/zz_generated.defaults.go:312-316, 386-390
+                source["fileKeyRef"].setdefault("optional", False)      # core/v1/defaults.go SetDefaults_FileKeySelector
         resources = c.get("resources")
         if resources:
             for section in ("limits", "requests"):
@@ -239,17 +231,6 @@ def final_object(kind: str, manifest: dict, server: dict) -> dict:
                     resources[section] = {k: _quantity(v) for k, v in resources[section].items()}
             for key, value in resources.get("limits", {}).items():
                 resources.setdefault("requests", {}).setdefault(key, value)
-    # Volume scheme defaulting (core/v1/defaults.go:289-317, 397-401; zz_generated.defaults.go:234-275) for the MC41 sources.
-    for v in spec.get("volumes", []):
-        for kind in ("configMap", "secret", "downwardAPI", "projected"):
-            if kind in v:
-                v[kind].setdefault("defaultMode", 420)
-        items = list((v.get("downwardAPI") or {}).get("items", []))
-        for src in (v.get("projected") or {}).get("sources", []):
-            items += (src.get("downwardAPI") or {}).get("items", [])
-        for item in items:
-            if "fieldRef" in item:
-                item["fieldRef"].setdefault("apiVersion", "v1")
     # ServiceAccount plugin.
     if not spec.get("serviceAccountName"):
         spec["serviceAccountName"] = "default"
@@ -526,7 +507,7 @@ CHECKS = ("A1", "A2", "A3", "A4")
 
 
 def check_claim(claim: Any, pinned: dict) -> str | None:
-    """None when POLICY-ADMISSION-SEMANTICS/v3 supports the consumer's claim; otherwise why not.
+    """None when POLICY-ADMISSION-SEMANTICS/v2 supports the consumer's claim; otherwise why not.
     `pinned` carries the sealed manifest-directory hash and the qualification namespace the A2 policies match."""
     if type(claim) is not dict:
         return "C00 not a claim"

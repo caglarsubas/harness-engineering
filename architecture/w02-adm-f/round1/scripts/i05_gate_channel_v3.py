@@ -307,7 +307,7 @@ class Gate:
         self.backlog: list[str] = []
         self.connections: dict[str, dict] = {}
         self.storage_fails: list[bool] = []   # pending journal write failures; True leaves a torn record
-        self._fail_after: int | None = None    # test injection: the record attempt after this many attempts fails
+        self._fail_after: int | None = None    # test injection: the record after this many successful records fails
         self.marker_fails = 0
         self.counters = {"stampsIssued": 0, "consumptions": 0, "correlationRefusals": 0, "flushClosures": 0}
         self.journal: list[list] = []
@@ -518,8 +518,7 @@ class Gate:
             self.marker_fails += 1
             return {}
         if kind == "STORAGE_FAIL_AFTER":
-            # Test injection only (v2 review V1): the (after+1)-th record attempted from now fails. Attempts are counted,
-            # failed ones and those inside the storage-failure path included; one injection is pending at a time.
+            # Test injection only: the record after `after` successful records fails (v2 review V1).
             self._fail_after = event["after"]
             return {}
         if kind == "DRAIN_REQUEST":
@@ -660,9 +659,8 @@ class Gate:
         return {"classification": classification, "relayed": recorded and not lost}
 
     def _timeout(self, event: dict) -> dict:
-        """The gate bounds a forwarded exchange by the 900-second limit, counted from its consumption (v2 review V4);
-        the end of the signed lifetime does not abort it (EXPIRE, Decision 9). On expiry the gate aborts the
-        exchange and closes the server connection: the action is
+        """The gate bounds a forwarded exchange by the bound execution's signed lifetime and the 900-second limit
+        (v2 review V4). On expiry it aborts the exchange and closes the server connection: the action is
         TERMINAL IO_AMBIGUOUS {aborted: UPSTREAM_TIMEOUT} and the generation is HELD; nothing is relayed, and a
         later upstream response is a late response. A pending drain then settles HELD."""
         action = next((a for a in self.actions.values() if a.get("conn") == event["conn"] and a["status"] == "CONSUMED"), None)

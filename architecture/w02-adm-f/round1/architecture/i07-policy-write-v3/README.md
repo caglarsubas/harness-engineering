@@ -1,6 +1,6 @@
 # I07 policy writer channel v3 — W02-ADM-F contract (DATA_CHECK_ONLY)
 
-Alpha 2A; 2026-10-09. Status: **CONTRACT_CANDIDATE_ROUND2_AWAITING_INDEPENDENT_REVIEW** (one combined W02-ADM-F review
+Alpha 2A; 2026-10-09. Status: **CONTRACT_CANDIDATE_ROUND1_AWAITING_INDEPENDENT_REVIEW** (one combined W02-ADM-F review
 with `../i05-gate-channel-v3/` and `../admission-semantics-v3/`; brief and source index in `../w02-adm-f/`).
 
 v3 is the W02-ADM-F successor of the adopted I07 v2 contract `../i07-policy-write-v2/`
@@ -40,7 +40,7 @@ The v2 changes (R1-R8 of the v1 review, the I05 v2 base, the W02f sealing) stay 
 
 ## Channel
 
-As v1 (`../i07-policy-write/README.md`, "Channel"), with the v3 frame version (round-1 AF-I07-1): one writer session at a time on
+As v1 (`../i07-policy-write/README.md`, "Channel"), with the v2 frame version: one writer session at a time on
 `/run/planeon/maintenance/policy-write.sock`; custody on every frame (a deviation is fatal and an urgent invalidation,
 WRITER_PEER_DEVIATION); MAINTENANCE_STATUS opens each session; strict lockstep (a writer frame before the response to its
 previous request is fatal, LOCKSTEP); the I05 byte rules with printable-ASCII strings and member names of at most 317
@@ -113,8 +113,8 @@ every write forwarded without a terminal record becomes IO_AMBIGUOUS (HELD), no 
 maintenance is ENDED with the recorded MAINT_ENDED reason if the maintenance had ended, GATE_RESTART if it had begun and
 not ended, and GENERATION_REBUILT otherwise (v3, W2).
 
-`STORAGE_FAIL_AFTER` is a test injection of the I05 v3 model (the (k+1)-th record attempted from then on fails; failed
-attempts count, and one injection is pending at a time), used by T56; it is not a gate event.
+`STORAGE_FAIL_AFTER` is a test injection of the I05 v3 model (the record after the given number of successful records
+fails), used by T56; it is not a gate event.
 
 ## v2 review findings and dispositions in v3
 

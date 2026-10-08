@@ -1,16 +1,16 @@
 {
  "schemaVersion": "planeon.internal.w02-adm-f-index/v1",
- "round": 1,
+ "round": 2,
  "baseMain": "f88e7f7884de9c96a09ed8aa65d468966038bffd",
  "baseTree": "bfa6284a9c7457d1aea0fb0922b8899d2e60dbde",
  "subject": [
   {
    "path": "architecture/w02-adm-f/REVIEW_BRIEF.md",
-   "sha256": "6c6987576dcb736476d24f12e29a171eead88b05029d129651948fa5d02cef2a"
+   "sha256": "54a33f2522be5f777f34eb00551fa562fc24fb7ed84c9037c6ba1e9906cf5edd"
   },
   {
    "path": "architecture/i05-gate-channel-v3/README.md",
-   "sha256": "9fb0e0029f5c1ade4891009dbb2232bebac46374e6f8998bf21efa68925454f6"
+   "sha256": "f82f43330125640d3ac946d2afc9a1804a21e5e60a7ac4b94e5d6cb6ed2ea3aa"
   },
   {
    "path": "architecture/i05-gate-channel-v3/channel.schema.json",
@@ -22,19 +22,19 @@
   },
   {
    "path": "architecture/i05-gate-channel-v3/vectors.json",
-   "sha256": "c68679a9f7bed1fd60c17b989f57f8871c71cd97fab60560fbfe6085c8bf254e"
+   "sha256": "ab75d86fe54ade7ee2695ef84b200d0473e14e4112e64e7702032593658763ed"
   },
   {
    "path": "scripts/i05_gate_channel_v3.py",
-   "sha256": "6f47ffd4dd3a84e08e652ebe29f385094090a5390a19c70b0747354c7fdd1f35"
+   "sha256": "2c7985b539c0ce8eb79eaabfa1f1ab7d43bdca7515defc590a76ecb1697ca959"
   },
   {
    "path": "architecture/admission-semantics-v3/README.md",
-   "sha256": "87535ddfe536d687c1d9c96c2baeb1138385252d7f0a80ad8b041d930e743275"
+   "sha256": "c3106482b4ff79649cbef7c65797c6fcd6b64f8419e871ae7d89eecad3ff98ab"
   },
   {
    "path": "architecture/admission-semantics-v3/allowlists.json",
-   "sha256": "a30c499f58444284c0c0d98174e2387750d4a31832331a9994a34070048f585b"
+   "sha256": "9314cd0732880a8e6af91df562af0a392183f6ef078c12fa9b479f6953fad5d4"
   },
   {
    "path": "architecture/admission-semantics-v3/admission-manifests/planeon-a2.json",
@@ -42,15 +42,15 @@
   },
   {
    "path": "architecture/admission-semantics-v3/vectors.json",
-   "sha256": "cc179d600e18c6915266d83cddfdcda5d54c8f9f3e4316607c0ec6335ce44328"
+   "sha256": "a3e2dc9818742ae2188e0e83cf91bb833be836115975b3fb23d5f280f6928cc1"
   },
   {
    "path": "scripts/admission_semantics_v3.py",
-   "sha256": "1249efc38e6452a5ef6bbc8a59fc2062c019a689042f3a84e5f48b732c187464"
+   "sha256": "3db8f51ab55f49dc33cf6f028306bfb6d7aa1c5d7d96f264cfe709dae925ad22"
   },
   {
    "path": "architecture/i07-policy-write-v3/README.md",
-   "sha256": "0c2f4410b36d5e860f8ddd2747b0e795d82ca80ad5d7adeb7f9f76ee37524fa1"
+   "sha256": "a8c51a725b99d84351aba7a326196e7078c239ba4e28d3eaec1cf09fb3dca43d"
   },
   {
    "path": "architecture/i07-policy-write-v3/channel.schema.json",
@@ -179,5 +179,10 @@
    "sha256": "8a3a09bb5dbc08804dbea06dd0700a14648a9cdbc8efd62112dc64ba0b6ba1b4"
   }
  ],
- "earlierRounds": []
+ "earlierRounds": [
+  {
+   "path": "architecture/w02-adm-f/review-round1.json",
+   "sha256": "acd1e7f0ce7b85eb44c4278355db88102cd3c2ca88a78e1f137376950755935c"
+  }
+ ]
 }

@@ -1,6 +1,6 @@
 # POLICY-ADMISSION-SEMANTICS/v3 and A2 admission field allowlists — W02-ADM-F contract (DATA_CHECK_ONLY)
 
-Alpha 2A; 2026-10-09. Status: **CONTRACT_CANDIDATE_ROUND2_AWAITING_INDEPENDENT_REVIEW** (one combined W02-ADM-F review
+Alpha 2A; 2026-10-09. Status: **CONTRACT_CANDIDATE_ROUND1_AWAITING_INDEPENDENT_REVIEW** (one combined W02-ADM-F review
 with `../i05-gate-channel-v3/` and `../i07-policy-write-v3/`; brief and source index in `../w02-adm-f/`).
 
 v3 is the W02-ADM-F successor of the adopted W02f contract `../admission-semantics-v2/` (POLICY-ADMISSION-SEMANTICS/v2,
@@ -18,7 +18,7 @@ MET-PERF-035 merges (owner decision, 2026-10-08).
 
 | Finding | v3 rule | Vectors |
 |---|---|---|
-| R2-F1 create-path deltas without a disposition | Pod-level `spec.resources` is refused in manifests (MC39), so DefaultPodLevelResources (pod-level requests, limits and hugepage limits) never acts. `spec.affinity` and `spec.topologySpreadConstraints` are refused outright (MC40), so no matchLabelKeys or mismatchLabelKeys merge into their selectors. The env reference defaults (`fieldRef.apiVersion` v1 and `fileKeyRef.optional` false, when omitted) are ALLOWED_FIXED and modelled in `final_object`; EnvFiles is Beta and on by default in v1.37, and W02g SC15 keeps the defaults. MC39 and MC40 are SIGNER_GUARANTEED: the sealed A2 has no check for these fields. | N31-N33, E13 |
+| R2-F1 create-path deltas without a disposition | Pod-level `spec.resources` is refused in manifests (MC39), so DefaultPodLevelResources never acts. `spec.affinity` and `spec.topologySpreadConstraints` are refused outright (MC40), so no matchLabelKeys or mismatchLabelKeys merge into their selectors. The env reference defaults (`fieldRef.apiVersion` v1 and `fileKeyRef.optional` false, when omitted) are ALLOWED_FIXED and modelled in `final_object`; EnvFiles is Beta and on by default in v1.37, and W02g SC15 keeps the defaults. MC39 and MC40 are SIGNER_GUARANTEED: the sealed A2 has no check for these fields. | N31-N33, E13 |
 | R2-F2 disabled-gate fields | The A2 claim needs a separate evidence key, `disabledGateFieldsAbsentAtSigning` (C27): the signer refused fields of feature gates the W02g profile pins off. C25's evidence (`manifestConstraintsMetAtSigning`, `check_manifest` at signing) alone does not cover the rule. | Q22 |
 | R2-F3 coverage labels and docstring | MC00 and MC02 are SIGNER_GUARANTEED: A2 is scoped by its match rules and C26, so it never sees another kind or namespace, and a namespace defaulted from the URL is invisible to it. MC03's reason is "A1 bytes; some fields are wiped by the server". The model docstring matches A2 item 1. | — |
 | R2-F4 A1 evidence | A1 claims also need `executionBoundAndUnexpired`, `runCertificateMatched` (scope and deadline) and `stampEqualsArmedAction` (C12). A claim citing v2 is refused (C03), because v2 evidence lacks these keys and C27. | Q19-Q21 |
@@ -44,7 +44,7 @@ no activation barrier, and they cannot guard the admission objects themselves.
 | `README.md` | This text, including POLICY-ADMISSION-SEMANTICS/v3 |
 | `allowlists.json` | Per kind (Pod, immutable ConfigMap, ClusterIP Service): every field the create path or an enabled mutator can set, with source, value, presence at the policy and citation (Kubernetes v1.37.1, commit `f78e722310e50bcaca9276be22276d9e91d91308`, 95 cited files with digests); its disposition (allowed fixed value, allowed server-chosen value, or ruled out by a manifest constraint); the A2 validations that check it; the create-path order; the unverified points (`planeon.internal.admission-allowlists/v2`) |
 | `admission-manifests/planeon-a2.json` | The one file of the sealed directory, byte-identical to v2's: a v1 List of four static ValidatingAdmissionPolicy objects and their four bindings, canonical JSON, rendered for the vector's sealed values |
-| `vectors.json` | 36 manifest-constraint cases, 19 end-to-end cases (manifest and cluster facts to the final object to A2), 24 final-object cases (19 mutations, 5 root-CA publisher cases), 9 policy-object refusals, 4 directory-hash cases, 22 semantics claims |
+| `vectors.json` | 33 manifest-constraint cases, 18 end-to-end cases (manifest and cluster facts to the final object to A2), 24 final-object cases (19 mutations, 5 root-CA publisher cases), 9 policy-object refusals, 4 directory-hash cases, 22 semantics claims |
 | `../../scripts/admission_semantics_v3.py` | Reference model: `check_manifest`, `final_object`, `check_final`, `a2_objects`, `check_a2_objects`, `manifest_file_bytes`, `manifest_directory_hash`, `check_claim` |
 
 ## POLICY-ADMISSION-SEMANTICS/v1 (pinned, not met)
@@ -119,7 +119,7 @@ IO_AMBIGUOUS), ordering for controller side effects outside W01 §2.5, or byte e
 ## Manifest constraints (signed qualification manifests)
 
 `check_manifest`. Each constraint removes a mutation, or a server-chosen value, that A2 could not tell apart from the
-signed content (codes MC00-MC41):
+signed content (codes MC00-MC40):
 
 | Kind | Constraint | Rules out |
 |---|---|---|
@@ -133,7 +133,6 @@ signed content (codes MC00-MC41):
 | Pod | no image volume (MC38) | AlwaysPullImages rewriting an image volume's pull policy (alwayspullimages/admission.go:76-81) |
 | Pod | no pod-level `spec.resources` (MC39, v3) | DefaultPodLevelResources filling pod-level requests and hugepage limits |
 | Pod | no `spec.affinity` and no `spec.topologySpreadConstraints` (MC40, v3) | matchLabelKeys and mismatchLabelKeys merged into affinity terms and spread-constraint selectors |
-| Pod | every volume is emptyDir, configMap, secret, downwardAPI or projected, and a projected volume's sources are configMap, secret or downwardAPI (MC41, v3 round 2) | the scheme defaults of every other volume source (hostPath type, RBD, AzureDisk, ScaleIO, ephemeral claims, the projected token's expirationSeconds); the defaults of the allowed sources are modelled |
 | ConfigMap | not named `kube-root-ca.crt` (MC11) | a gate-created object with the publisher's reserved name |
 | Pod | the shape echo annotations `planeon.ai/a2-containers`, `planeon.ai/a2-init-containers`, `planeon.ai/a2-volumes` equal the spec (`name=image` and volume names, comma-joined, in order; empty when none) | — (input to A2) |
 
@@ -170,12 +169,9 @@ qualification namespace is admitted.
 - **Pod.** Fixed: generation 1; scheme defaults (dnsPolicy, restartPolicy, securityContext `{}`, terminationGracePeriodSeconds 30,
   schedulerName, enableServiceLinks, terminationMessagePath/Policy, port protocol, probe and volume defaults); quantities
   re-emitted in canonical form; serviceAccountName `default` when omitted and its alias; the two default NoExecute
-  tolerations with the sealed seconds; priority 0 and PreemptLowerPriority; status phase Pending and qosClass; (v3) in
-  containers and init containers, an env `fieldRef.apiVersion` of v1 and an env `fileKeyRef.optional` of false when
-  omitted; (v3 round 2) `defaultMode` 420 on configMap, secret, downwardAPI and projected volumes and a `fieldRef.apiVersion`
-  of v1 on downwardAPI items (also inside projected volumes) when omitted. Server-chosen: uid, creationTimestamp,
-  managedFields. Probe defaults (timeouts, periods, thresholds) are allowed fixed values that `final_object` does not
-  model; the native comparison covers them (W03, T03).
+  tolerations with the sealed seconds; priority 0 and PreemptLowerPriority; status phase Pending and qosClass; (v3) an
+  env `fieldRef.apiVersion` of v1 and an env `fileKeyRef.optional` of false when omitted. Server-chosen: uid,
+  creationTimestamp, managedFields.
 - **ConfigMap.** Server-chosen uid, creationTimestamp, managedFields; `data: {}` when nil (invisible to the policy).
 - **Service.** Fixed: sessionAffinity None, internalTrafficPolicy Cluster, port protocol TCP, targetPort = port,
   ipFamilyPolicy SingleStack, ipFamilies = the sealed family, `status.loadBalancer {}`. Server-chosen: uid,
@@ -223,11 +219,10 @@ refusal (F19).
 
 ## Vectors
 
-- **manifest** (N01-N36): each constraint, refused with its MC code (N31-N36 new in v3).
+- **manifest** (N01-N33): each constraint, refused with its MC code (N31-N33 new in v3).
 - **endToEnd**:
   - E01-E04: each positive manifest under the plain sealed cluster; A2 admits. E13 (v3): a Pod with env references; the
-    final object carries the two env defaults, and A2 admits. E14 (v3 round 2): a Pod with configMap, secret,
-    downwardAPI and projected volumes; the final object carries the volume defaults, and A2 admits.
+    final object carries the two env defaults, and A2 admits.
   - E05-E12: cluster facts that make a mutator act:
     - outside the allowlist, A2 refuses: pull secrets copied from the ServiceAccount, a global default PriorityClass, a
       LimitRange default (its annotation), different toleration seconds, an address outside the CIDR, another family;
@@ -257,8 +252,7 @@ volume shape is abridged. The native tests (W03, T03) compare it against a real 
   configuration's `staticManifestsDir` (W03).
 - The observer's check of the loaded manifest hash before ACTIVE (W03, R12).
 - I07 writes no admission objects (I07 v2 and v3); the guard policy denies them.
-- The native comparison of the env, volume and probe defaults and of MC39-MC41's ruled-out deltas against a real
-  apiserver (W03, T03).
+- The native comparison of the env defaults and of MC39/MC40's ruled-out deltas against a real apiserver (W03, T03).
 - The signer and enrollment of manifests under these constraints (W03, R12).
 
 ## v2 round-2 findings and dispositions in v3
@@ -270,8 +264,3 @@ volume shape is abridged. The native tests (W03, T03) compare it against a real 
 | R2-F3 MINOR, coverage labels and docstring | MC00 and MC02 SIGNER_GUARANTEED; MC03 reason corrected; docstring matches A2 item 1 |
 | R2-F4 MINOR, A1 evidence | C12 with three evidence keys (Q20, Q21); v2 claims refused (C03, Q19) |
 | R2-F5 NOTE, stale wording | Ranges, ConfigMap order and the publisher exemption's breadth corrected; sealed bytes unchanged |
-
-W02-ADM-F review round 1 (`../w02-adm-f/review-round1.json`, PASS_FOR_SOURCE_PUBLICATION) found AF-ADM-1 (the
-downwardAPI fieldRef default and the volume defaults had no named disposition: MC41 closes the volume sources, and the
-defaults of the allowed ones are ALLOWED_FIXED and modelled, N34-N36, E14) and AF-ADM-2 (the `check_claim` docstring, the
-fileKeyRef citation, the MC39 reason and the containers-and-init-containers rows); round 2 answers both.

@@ -1,21 +1,7 @@
-# Independent review brief — W02-ADM-F combined successor revisions, round 2
+# Independent review brief — W02-ADM-F combined successor revisions, round 1
 
-Status: **CONTRACT_CANDIDATE_ROUND2_AWAITING_INDEPENDENT_REVIEW**. The authoring agent wrote this brief. It is not a
+Status: **CONTRACT_CANDIDATE_ROUND1_AWAITING_INDEPENDENT_REVIEW**. The authoring agent wrote this brief. It is not a
 verdict.
-
-Round 1 (`review-round1.json`, reviewed bytes of the files changed since then in `round1/`) returned
-PASS_FOR_SOURCE_PUBLICATION with 2 MINOR and 4 NOTE findings (AF-I05-1..3, AF-I07-1, AF-ADM-1, AF-ADM-2). Round 2
-answers all six instead of carrying them; each README names its round-1 dispositions:
-- AF-I05-1: the upstream bound is the 900-second limit counted from consumption; the end of the signed lifetime does not
-  abort an exchange (Decision 9 unchanged). T119 pins it.
-- AF-I05-2: STORAGE_FAIL_AFTER counts record attempts, failed ones included, and one injection is pending at a time;
-  stated in both READMEs and the model, pinned by T120.
-- AF-I05-3: the two v1 outcome-mapping sentences are restored.
-- AF-I07-1: "v3 frame version".
-- AF-ADM-1: MC41 closes the volume sources (emptyDir, configMap, secret, downwardAPI, projected with configMap, secret
-  or downwardAPI sources); their defaultMode 420 and downwardAPI fieldRef apiVersion defaults are ALLOWED_FIXED and
-  modelled in `final_object` (N34-N36, E14); probe defaults are stated as not modelled.
-- AF-ADM-2: the four wording slips.
 
 W02-ADM-F folds three follow-ups into one packet under one review (owner decision, 2026-10-08):
 - **I05 v3** (`../i05-gate-channel-v3/`, `planeon.internal.effect-gate-frame/v3`) answers V1 and V3-V6, and the Decision 8
@@ -42,10 +28,8 @@ Nothing else in the working tree is part of the subject.
 
 ## Questions to answer
 
-0. **Carried findings.** For each of V1-V6, R2-F1..R2-F5, W1-W4 and the round-1 findings AF-I05-1..3, AF-I07-1,
-   AF-ADM-1 and AF-ADM-2, is the README disposition true in the v3 bytes? Give CLOSED, PARTIAL or OPEN under
-   `openItemStatus`. Is anything the round-1 changes touched now inconsistent (for example MC41 against the positives,
-   the echo annotations or U01's token volume)? The original reviewers' probes (V1 four mutants and the reviewer
+0. **Carried findings.** For each of V1-V6, R2-F1..R2-F5 and W1-W4, is the README disposition true in the v3 bytes? Give
+   CLOSED, PARTIAL or OPEN under `openItemStatus`. The original reviewers' probes (V1 four mutants and the reviewer
    injection; V3 PC-*; V6 identity and priorBindings; R2 probes PG, PH, PN, PI, PJ, PB2, PB3; W1 combinations; W2 restart
    reason; W3 probe) should now behave as the READMEs say.
 1. **Successor fidelity.** Does each v3 keep every v2 property its review confirmed, changing only what its README
@@ -81,10 +65,10 @@ when told to resume.
 
 ## Result
 
-Return one JSON object: `schemaVersion` `"planeon.internal.w02-adm-f-review/v1"`, `round` 2, `reviewDate`, `verdict`
+Return one JSON object: `schemaVersion` `"planeon.internal.w02-adm-f-review/v1"`, `round` 1, `reviewDate`, `verdict`
 (PASS_FOR_SOURCE_PUBLICATION, CHANGES_REQUIRED or BLOCKED), `subjectSha256` (subject file name to digest), `findings`
 (each with `id`, `contract` I05 / ADMISSION / I07, `severity` BLOCKING / MAJOR / MINOR / NOTE, `location`, `finding`,
-`requiredChange`), `openItemStatus` (V1-V6, R2-F1..R2-F5, W1-W4, AF-I05-1..3, AF-I07-1, AF-ADM-1, AF-ADM-2), `questionAnswers` (Q0-Q8), `modelExecution`,
+`requiredChange`), `openItemStatus` (V1-V6, R2-F1..R2-F5, W1-W4), `questionAnswers` (Q0-Q8), `modelExecution`,
 `sourcesRead`, `actions` (booleans `filesEdited`, `githubMutated`, `nativeActions`, `referenceModelExecuted`,
 `repositoryValidatorsRun`, `runnerActivated`, `testsRun`, `warmSourcesAccessed`) and `reviewLimit`. A PASS is not an
 installed component, native qualification or authorization for anything installed.

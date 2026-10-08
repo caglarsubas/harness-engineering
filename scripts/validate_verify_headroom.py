@@ -677,12 +677,12 @@ def validate() -> None:
             == record["validatorNormalizedSha256"], "verify headroom validator drift")
     paths = sorted((ROOT / "task-packets").glob("*.yaml"))
     old = set(record["baselinePackets"])
-    require(len(paths) == 211
-            and {path.stem for path in paths} == old | {NEW_PACKET, successor.NEW_PACKET, successor.successor.NEW_PACKET, successor.successor.successor.NEW_PACKET},
-            "closed 211-packet catalog retaining the 208-packet checkpoint")
+    require(len(paths) == 212
+            and {path.stem for path in paths} == old | {NEW_PACKET, successor.NEW_PACKET, successor.successor.NEW_PACKET, successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.NEW_PACKET},
+            "closed 212-packet catalog retaining the 208-packet checkpoint")
     packets = {}
     for path in paths:
-        if path.stem in (successor.NEW_PACKET, successor.successor.NEW_PACKET, successor.successor.successor.NEW_PACKET):
+        if path.stem in (successor.NEW_PACKET, successor.successor.NEW_PACKET, successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.NEW_PACKET):
             continue
         raw = regular_bytes("task-packets/" + path.name)
         expected = record["packetSha256"] if path.stem == NEW_PACKET else record["baselinePackets"][path.stem]
@@ -720,4 +720,4 @@ def validate() -> None:
 
 if __name__ == "__main__":
     validate()
-    print("Verify headroom valid: 211 current specifications; 208-packet checkpoint and exact 207-packet predecessor; route-local setup, stubbed status replay, shared inventory projection and grouped uniqueItems checked.")
+    print("Verify headroom valid: 212 current specifications; 208-packet checkpoint and exact 207-packet predecessor; route-local setup, stubbed status replay, shared inventory projection and grouped uniqueItems checked.")

@@ -1,0 +1,100 @@
+{
+ "schemaVersion": "planeon.internal.admission-semantics-v2-index/v1",
+ "round": 2,
+ "baseMain": "487eca6809eca9fd5b2647f79522d107dee8d814",
+ "baseTree": "b047a6ba11fabe0a0d58586268bd0608a7b841a7",
+ "subject": [
+  {
+   "path": "architecture/admission-semantics-v2/README.md",
+   "sha256": "48e44b8d6a1c2fca5fffbad9c2fb97daf79ff5efeab221a781ec50e17ba1b9bf"
+  },
+  {
+   "path": "architecture/admission-semantics-v2/REVIEW_BRIEF.md",
+   "sha256": "06d3700c8f944d965d5c5c866f3a33e713565a9f67c1ab43167dd77da45ac189"
+  },
+  {
+   "path": "architecture/admission-semantics-v2/allowlists.json",
+   "sha256": "2ab837aa50b7ee7fe58a19c9bc0aae67edb49ad4a143e19f928bc42def9bb863"
+  },
+  {
+   "path": "architecture/admission-semantics-v2/admission-manifests/planeon-a2.json",
+   "sha256": "1096b3cc71c4fe6b5a17ed61e8bf8c17ee17fcf52b192503534d60aed9ce4741"
+  },
+  {
+   "path": "architecture/admission-semantics-v2/vectors.json",
+   "sha256": "4b79b1ae23993d923d24a26a9e05ae2ea7a013bd722af5e8901176e08b98b2de"
+  },
+  {
+   "path": "scripts/admission_semantics_v2.py",
+   "sha256": "b62a8c43a82f3e280da38b1dab5241f9b50fc0ef7ba6cf83c7a5f9b147d18d39"
+  }
+ ],
+ "predecessorInputs": [
+  {
+   "path": "architecture/host-interface-inputs/resolved/HOST_INTERFACE_SPEC.md",
+   "sha256": "8a3a09bb5dbc08804dbea06dd0700a14648a9cdbc8efd62112dc64ba0b6ba1b4"
+  },
+  {
+   "path": "architecture/host-interface-inputs/resolution-review-round1.json",
+   "sha256": "619b7ac456097e1312fc0e42c2bf67911b7a1cc044119862724606b189b4861f"
+  },
+  {
+   "path": "docs/alpha-2/POLICY_OBSERVATION_READINESS.md",
+   "sha256": "65778040919c5eb7335f2c104d983ca920b877b1b123f961556a6bcae36d232c"
+  },
+  {
+   "path": "architecture/i06-backend-profile/README.md",
+   "sha256": "ccf952d40b4f6229c0cdea79f976253cd4abb19438c1eebc5794e748a708e4b7"
+  },
+  {
+   "path": "architecture/i06-backend-profile/criteria.json",
+   "sha256": "95f893a9988b81042598d9c469c669e7401975f1367043a55540471e70fc5d1b"
+  },
+  {
+   "path": "architecture/i06-backend-profile/upstream-facts-v1.37.1.json",
+   "sha256": "354f048c06cbfd9e88f9e1042abf9322f759bb9d9082209a2188af091c89c7af"
+  },
+  {
+   "path": "architecture/i06-backend-profile/identity-closure.json",
+   "sha256": "0a9b82ffa2d63bf48a8850574cdf3ece02bf1913f33a72cbb96ed30a40f1f3bb"
+  },
+  {
+   "path": "architecture/i06-backend-profile/status.json",
+   "sha256": "73d8df607e90568e06f14b3548f8c727805f68072d9753134a32a2eb049f60c3"
+  },
+  {
+   "path": "architecture/i05-gate-channel-v2/README.md",
+   "sha256": "1cb07cef90b0881c42370d8bbaeea08c6abc48478bed3939286b651601d2cca3"
+  },
+  {
+   "path": "architecture/i05-gate-channel-v2/status.json",
+   "sha256": "77acc0ecb57dd6c4fefb5125012989cc607128d3067acb5499a05b2d7318adf0"
+  },
+  {
+   "path": "architecture/i07-policy-write/README.md",
+   "sha256": "9e5cb3d1023bc12b9e2643ae42dde5a87640cf04fc8ac1aa88350c65b12ba2dc"
+  },
+  {
+   "path": "architecture/i07-policy-write/status.json",
+   "sha256": "d26528a7ab328922d5ddcf3a19d17e413111626eead73a1dd313463835b0ce82"
+  },
+  {
+   "path": "architecture/i07-policy-write/review-round1.json",
+   "sha256": "837333a076eb794c501d1d2cf754a360eda13d52179423d1199f6cdd60ed4a5a"
+  },
+  {
+   "path": "architecture/i06-backend-profile/writer-inventory.json",
+   "sha256": "8e6b3b7565cfc93a61162b84d740cffb2871eb66ab85e8c4e80ac813f1af3077"
+  },
+  {
+   "path": "scripts/i06_backend_profile.py",
+   "sha256": "bea3c953573478be5b03ab81b4ebd859da62d1eaa2a1be8f361b9dd39a98555e"
+  }
+ ],
+ "earlierRounds": [
+  {
+   "path": "architecture/admission-semantics-v2/review-round1.json",
+   "sha256": "d14b2a293dcb4121fe177cf4ff2906bacfb210ca8df2fdbffb18b86d86194296"
+  }
+ ]
+}

@@ -1,6 +1,15 @@
 # Sol-High Task Packet Catalog
 
-## Current source preparation — MET-ENFORCE-012
+## Current source preparation — MET-ENFORCE-013
+
+W02f: POLICY-ADMISSION-SEMANTICS/v2 states A1-A4 at named positions and refuses the v1 pre-commit sentence;
+the A2 per-kind allowlists for Pod, immutable ConfigMap and ClusterIP Service come from Kubernetes v1.37.1 with
+manifest constraints, and the A2 policies live in a sealed static admission manifest directory (owner
+decision), with a guard that denies API writes of admission objects. It passed its independent review in
+round 2. Nothing is installed or compiled, and every E01-E12 obligation stays open. Alpha2 OPEN; 211
+accepted plus ENFORCE-013 only. Native Linux, exact-main and tenant acceptance remain separate.
+
+## Historical W02g-F source preparation — MET-ENFORCE-012
 
 W02g-F: the I06 backend profile v2 (successor of the adopted W02g profile) binds a distribution evidence
 record by digest to one W02a v3 record that W02a's check accepts, refuses any resource rule on the loopback
@@ -1195,3 +1204,4 @@ acceptance is claimed. Alpha2 ONGOING; model-effort transition NOT_DUE.
 | 209 | `MET-ENFORCE-010` | `Harness-Engineering` | W02a-F native qualification record v3: carried W02a, W02g and W02e findings closed, independently reviewed |
 | 210 | `MET-ENFORCE-011` | `Harness-Engineering` | W02b-F I05 broker-gate channel v2: carried W02b findings P1-P8 closed, independently reviewed |
 | 211 | `MET-ENFORCE-012` | `Harness-Engineering` | W02g-F I06 backend profile v2: carried W02g findings N1-N3 closed, independently reviewed |
+| 212 | `MET-ENFORCE-013` | `Harness-Engineering` | W02f POLICY-ADMISSION-SEMANTICS/v2 and A2 admission allowlists in a sealed static directory, independently reviewed |

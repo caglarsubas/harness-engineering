@@ -1,0 +1,70 @@
+{
+  "schemaVersion": "planeon.internal.admission-semantics-v2-status/v1",
+  "semantics": "POLICY-ADMISSION-SEMANTICS/v2",
+  "supersedes": "POLICY-ADMISSION-SEMANTICS/v1",
+  "ownerDecisions": [
+    {
+      "id": "A2-PLACEMENT",
+      "date": "2026-10-08",
+      "decision": "A2 ValidatingAdmissionPolicy objects live in a sealed static admission manifest directory, run-independent; not written through I07"
+    }
+  ],
+  "reviewRounds": [
+    {
+      "round": 1,
+      "record": "architecture/admission-semantics-v2/review-round1.json",
+      "recordSha256": "d14b2a293dcb4121fe177cf4ff2906bacfb210ca8df2fdbffb18b86d86194296",
+      "verdict": "CHANGES_REQUIRED",
+      "subjectDirectory": "architecture/admission-semantics-v2/round1/"
+    },
+    {
+      "round": 2,
+      "record": "architecture/admission-semantics-v2/review-round2.json",
+      "recordSha256": "db699de93ca7103501409e5bbad2614927551cd5905d8f371aff78dd0076629b",
+      "verdict": "PASS_FOR_SOURCE_PUBLICATION",
+      "subjectDirectory": "CURRENT"
+    }
+  ],
+  "closedFindings": {
+    "F1": "review-round1.json F1: CLOSED in round 2",
+    "F2": "review-round1.json F2: CLOSED in round 2",
+    "F3": "review-round1.json F3: PARTIAL, remainder carried as R2-F2 and R2-F3 in round 2",
+    "F4": "review-round1.json F4: CLOSED in round 2",
+    "F5": "review-round1.json F5: CLOSED in round 2",
+    "F6": "review-round1.json F6: CLOSED in round 2",
+    "F7": "review-round1.json F7: CLOSED in round 2"
+  },
+  "carriedFindings": {
+    "R2-F1": "W02f-F and W03 (T03): give pod-level resource defaulting, the matchLabelKeys/mismatchLabelKeys selector merges and the env fieldRef/fileKeyRef defaults a disposition (ALLOWED_FIXED and modelled in final_object, or a new MC code); deterministic deltas of the A1 bytes, not a cluster-state lever",
+    "R2-F2": "W02f-F and W03 (signer): encode the disabled-gate rule (fields of gates the W02g profile pins off) as an MC code or a separate A2 claim evidence key with a vector",
+    "R2-F3": "W02f-F: mark MC00 and MC02 SIGNER_GUARANTEED (A2 scoped by its match rules and C26), correct the MC03 reason, and reword the model docstring to match README A2 item 1",
+    "R2-F4": "W02f-F: add A1 claim evidence for the bound, unexpired execution, run certificate and the stamp equal to the armed action, or state that the existing keys imply them, with a refusal vector",
+    "R2-F5": "W02f-F: README code range MC00-MC38, vector range F01-F19, the ConfigMap rendered order, and 'admits, from exactly that identity and only under that name, an object of the publisher's shape' (or pin !has(object.immutable))"
+  },
+  "contractState": "ADOPTED_DATA_CONTRACT",
+  "obligations": {
+    "E01": "OPEN_UNPROVEN",
+    "E02": "OPEN_UNPROVEN",
+    "E03": "OPEN_UNPROVEN",
+    "E04": "OPEN_UNPROVEN",
+    "E05": "OPEN_UNPROVEN",
+    "E06": "OPEN_UNPROVEN",
+    "E07": "OPEN_UNPROVEN",
+    "E08": "OPEN_UNPROVEN",
+    "E09": "OPEN_UNPROVEN",
+    "E10": "OPEN_UNPROVEN",
+    "E11": "OPEN_UNPROVEN",
+    "E12": "OPEN_UNPROVEN"
+  },
+  "independentReviewer": "SEPARATE_AGENT_NOT_AUTHOR",
+  "nativeAcceptance": false,
+  "tenantAcceptance": false,
+  "admissionConfigurationInstalled": false,
+  "celCompiled": false,
+  "distributionSelected": false,
+  "signerImplemented": false,
+  "i07AdmissionWritesRemoved": false,
+  "productExecution": false,
+  "runnerActivated": false,
+  "phaseComplete": false
+}

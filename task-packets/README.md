@@ -1,6 +1,16 @@
 # Sol-High Task Packet Catalog
 
-## Current source preparation — MET-ENFORCE-010
+## Current source preparation — MET-ENFORCE-011
+
+W02b-F: the I05 broker-gate channel v2 (successor of the adopted v1 channel) closes every finding the
+v1 round-3 review carried to W02b-F: the I07 drain answered from the A3 fence in every state, DELETE only
+for this execution's own created UID and one run per manifest digest and identity, reported denies after
+storage failures, a failure marker and torn-record detection at restart, the 408 agreement rows, pinned
+Kubernetes sources and decode codes. It passed its independent review in round 1. Nothing is opened or
+installed, and every E01-E12 obligation stays open. Alpha2 OPEN; 209 accepted plus ENFORCE-011 only.
+Native Linux, exact-main and tenant acceptance remain separate.
+
+## Historical W02a-F source preparation — MET-ENFORCE-010
 
 W02a-F: the native qualification record v3 (successor of the adopted v2 record) closes every finding
 carried to W02a-F: code identity and running images, the slice census, tasks against pids.max, the
@@ -1175,3 +1185,4 @@ acceptance is claimed. Alpha2 ONGOING; model-effort transition NOT_DUE.
 | 207 | `MET-SECTOR-001` | `Harness-Engineering` | Owner decision SECTOR-D1: banking replaces white goods through the first enterprise release |
 | 208 | `MET-PERF-032` | `Harness-Engineering` | Verify-time headroom: route-local test inputs, stubbed status replay, shared inventory projection, grouped uniqueItems |
 | 209 | `MET-ENFORCE-010` | `Harness-Engineering` | W02a-F native qualification record v3: carried W02a, W02g and W02e findings closed, independently reviewed |
+| 210 | `MET-ENFORCE-011` | `Harness-Engineering` | W02b-F I05 broker-gate channel v2: carried W02b findings P1-P8 closed, independently reviewed |

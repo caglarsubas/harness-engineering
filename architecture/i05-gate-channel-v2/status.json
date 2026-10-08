@@ -1,0 +1,60 @@
+{
+  "schemaVersion": "planeon.internal.i05-gate-channel-v2-status/v1",
+  "contract": "planeon.internal.effect-gate-frame/v2",
+  "predecessorContract": "planeon.internal.effect-gate-frame/v1",
+  "reviewRounds": [
+    {
+      "round": 1,
+      "record": "architecture/i05-gate-channel-v2/review-round1.json",
+      "recordSha256": "3c6eee315794439cb8b6759583796250d674f1a7cb6952f1111e7056dc60223f",
+      "verdict": "PASS_FOR_SOURCE_PUBLICATION",
+      "subjectDirectory": "CURRENT"
+    }
+  ],
+  "closedFindings": {
+    "P1": "architecture/i05-gate-channel/review-round3.json P1: CLOSED in v2 review round 1",
+    "P2": "architecture/i05-gate-channel/review-round3.json P2: CLOSED in v2 review round 1",
+    "P3": "architecture/i05-gate-channel/review-round3.json P3: CLOSED in v2 review round 1",
+    "P4": "architecture/i05-gate-channel/review-round3.json P4: CLOSED in v2 review round 1",
+    "P5": "architecture/i05-gate-channel/review-round3.json P5: CLOSED in v2 review round 1",
+    "P6": "architecture/i05-gate-channel/review-round3.json P6: CLOSED in v2 review round 1",
+    "P7": "architecture/i05-gate-channel/review-round3.json P7: CLOSED in v2 review round 1",
+    "P8": "architecture/i05-gate-channel/review-round3.json P8: CLOSED in v2 review round 1"
+  },
+  "carriedFindings": {
+    "V1": "W02b-F2: add vectors for a drain pending across GATE_RESTART, a repeated WRITE_BEGIN while pending (one DRAIN_STARTED) and a DELETE armed with a UID created for another manifest; give STORAGE_FAIL_NEXT a skip count and pin DRAINED-failure and DENIED-after-record failures, or state the injection limit",
+    "V2": "W02c-F and W02b-F2: a HELD generation answers a drain HELD at once (Decision 8 wording); OPEN is a point-in-time answer, the generation can become HELD afterwards, and the I07 writer keeps evaluating the fence after OPEN",
+    "V3": "W02b-F2 and W02c-F (R1): state the P4 residual's exact precondition (two consecutive journal failures, one marker failure, no torn record, no later state record), that it covers the gate's own storage-failure HELD, and that a WRITE_BEGIN after such a restart is answered OPEN",
+    "V4": "W02b-F2 and W03: bound the forwarded upstream exchange (signed lifetime, 900-second limit) after which it is lost (IO_AMBIGUOUS, HELD), or require the broker to seal by its own deadline; liveness only",
+    "V5": "W02b-F2: restore or name as carried the v1 README clauses v2 dropped (conservative outcomes, flushClosures definition, stock client refused fail-closed, durability before relay, NOT_FORWARDED agreeing with DENIED and AMBIGUOUS)",
+    "V6": "W02b-F2: word the identity refusal as more than one manifest (also within one run), refuse a priorBindings object without manifestDigests or manifestIdentities explicitly, order byteFrames B12-B14"
+  },
+  "ownerDecisions": [],
+  "contractState": "ADOPTED_DATA_CONTRACT",
+  "obligations": {
+    "E01": "OPEN_UNPROVEN",
+    "E02": "OPEN_UNPROVEN",
+    "E03": "OPEN_UNPROVEN",
+    "E04": "OPEN_UNPROVEN",
+    "E05": "OPEN_UNPROVEN",
+    "E06": "OPEN_UNPROVEN",
+    "E07": "OPEN_UNPROVEN",
+    "E08": "OPEN_UNPROVEN",
+    "E09": "OPEN_UNPROVEN",
+    "E10": "OPEN_UNPROVEN",
+    "E11": "OPEN_UNPROVEN",
+    "E12": "OPEN_UNPROVEN"
+  },
+  "independentReviewer": "SEPARATE_AGENT_NOT_AUTHOR",
+  "nativeAcceptance": false,
+  "tenantAcceptance": false,
+  "gateInstalled": false,
+  "journalImplemented": false,
+  "failureMarkerImplemented": false,
+  "substrateSelected": false,
+  "distributionSelected": false,
+  "i07MovedToV2": false,
+  "productExecution": false,
+  "runnerActivated": false,
+  "phaseComplete": false
+}

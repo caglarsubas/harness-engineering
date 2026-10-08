@@ -1,0 +1,134 @@
+{
+ "schemaVersion": "planeon.internal.i05-gate-channel-v2-review/v1",
+ "round": 1,
+ "reviewDate": "2026-10-08",
+ "verdict": "PASS_FOR_SOURCE_PUBLICATION",
+ "subjectSha256": {
+  "README.md": "1cb07cef90b0881c42370d8bbaeea08c6abc48478bed3939286b651601d2cca3",
+  "REVIEW_BRIEF.md": "3cdeb517cb0b33de67bab203ea3b186bcae1e4f72e55ecbbd06359a0e6207d1c",
+  "channel.schema.json": "6c33f344351b7df21472e46816616fa45899e5f81c82837f6aab3ad16241ac93",
+  "outcome-mapping.json": "4466f379f1cc669e047cffd8afa5fa88b2cc7648a51e2d38b17f0bd5e2252a3a",
+  "vectors.json": "6de80fad76418f104b2f20b90a0efb569a0c5e5bba2aa3da04ce2dff9eae53d9",
+  "i05_gate_channel_v2.py": "2a1e0cfc5947c19c981cbe21f02fc15796bbf62d53c0a7656f889383e2b4759e"
+ },
+ "findings": [
+  {
+   "id": "V1",
+   "severity": "NOTE",
+   "location": "vectors.json (transcripts); scripts/i05_gate_channel_v2.py Gate._record / STORAGE_FAIL_NEXT; README P1 and P2 rows, Decision 10",
+   "finding": "Four stated v2 rules are not pinned by any vector. I replayed 34 single-rule source mutants against all 198 pinned checks; 26 were caught. These four survived:\n- 'restart keeps a pending drain'. No vector issues a DRAIN_REQUEST and then a GATE_RESTART while the drain is pending. The README says a restart drops a pending drain without an answer.\n- 'DRAIN_STARTED on every request'. No vector sends two WRITE_BEGINs while one is pending. The README says it is recorded once.\n- 'DELETE UID from this execution's CREATE of any manifest'. No vector arms a DELETE of manifest M2 with the UID created for M1. The README says the UID must be for the same manifest.\n- 'drain answer computed before the DRAINED record'. This case cannot be reached with the model's failure injection: STORAGE_FAIL_NEXT always fails the next record, so after a first record succeeds it can only fail the first record of an event or the INVALIDATED record inside _storage_failure. It can never fail DRAINED alone, or a DENIED record after a CLOSED, INVALIDATED, EXPIRED or DRAIN_STARTED record that succeeded.\nI added a finer injection in a reviewer subclass that fails the k-th upcoming record. With it the model behaves as stated:\n- DRAINED fails after a durable TERMINAL: the drain is answered HELD and the marker is written.\n- CLOSED or INVALIDATED succeeds and then DENIED fails: the response is HELD with deniedActionIds [1], and the restart is HELD.\n- EXPIRED succeeds and then DENIED fails: denied [1].\n- DRAIN_STARTED succeeds and then DENIED fails: denied [1], answer HELD.\nThe other four surviving mutants were not missing vectors: a redundant MANIFEST_REUSED digest check (a digest fixes the identity), RESTARTED read as a state record (not observable), the created-UID reset at BIND (redundant because the map is keyed by digest), and an unreachable 'ambiguous' branch in _settle_drain.",
+   "requiredChange": "Add three vectors:\n- a drain pending, then GATE_RESTART (no answer; drainPending false);\n- two DRAIN_REQUESTs while pending (one DRAIN_STARTED);\n- ARM DELETE of another manifest with this execution's created UID (UID_NOT_CREATED).\nEither give STORAGE_FAIL_NEXT a skip count (fail the k-th next record) and pin the DRAINED-failure and DENIED-failure cases, or state the injection limit in the README."
+  },
+  {
+   "id": "V2",
+   "severity": "NOTE",
+   "location": "README Decision 8 ('PENDING until no consumed action lacks a terminal record, then OPEN ... or HELD'); README P1 row ('W02c treats PENDING as wait, OPEN as the fence and HELD as no write'); Gate.fence, Gate._settle_drain",
+   "finding": "Two wording issues in the drain-answer semantics:\n(a) In HELD the drain is answered HELD at once, even while a consumed action has no terminal record. Probe PA-RR: CREATE in flight, DRAIN_REQUEST -> PENDING, CLOSE(RECONCILIATION_REQUIRED) -> drain HELD with the CREATE still CONSUMED. T93 shows the same after PEER_CHANGED. The P1 row states this correctly (fence HELD first); Decision 8's wording does not. This fails safe.\n(b) OPEN is answered once, on the settling event, and can come before the broker's seal and agreement check. T30, T87, T88 and T90 answer OPEN with the action TERMINAL but not yet sealed. After OPEN the generation can still become HELD, and nothing is signalled again:\n- probe open-then-RR: OPEN, then CLOSE(RECONCILIATION_REQUIRED) -> HELD;\n- probe open-then-EOF-unsealed: OPEN, then CHANNEL_LOST -> fatal PEER_LOST HELD.\nA3 is not violated: every consumed action has a durable TERMINAL record and A1 is closed. But an I07 implementer who reads the README as 'OPEN is the grant' would keep writing after the generation went HELD. The current I07 model already re-evaluates the fence and moves maintenance OPEN -> HELD (MAINT_HELD).",
+   "requiredChange": "Reword Decision 8 so that a HELD generation answers HELD at once. In the P1 row or under Still open (W02c-F), state that OPEN is a point-in-time answer: the gate can become HELD afterwards (RECONCILIATION_REQUIRED, non-orderly channel loss with an unsealed action, storage failure), and the I07 writer must keep evaluating the fence after OPEN."
+  },
+  {
+   "id": "V3",
+   "severity": "NOTE",
+   "location": "README P4 row residual; T103",
+   "finding": "The residual is disclosed correctly in substance; three points need precision.\n(1) It needs two failed journal writes, not one: the failing record and the INVALIDATED STORAGE_FAILURE record written after the marker attempt. It also needs one failed marker write and no later state record before the restart.\n- Probe PC-one-journal-fail-marker-fail: one journal failure plus one marker failure -> the INVALIDATED HELD record is durable -> restart HELD.\n- Probe PC-residual-then-drain: a DRAIN_REQUEST after the double fault writes DRAINED HELD -> restart HELD.\n(2) The argument 'the broker's own journal keeps that HELD' covers RECONCILIATION_REQUIRED only. In probe PC-residual-EOF (orderly CHANNEL_LOST whose CHANNEL_ENDED write fails twice, marker failed) the gate is HELD in memory for its own storage failure, no broker holds anything, and the restart comes back CLOSED.\n(3) After such a restart, a fresh WRITE_BEGIN is answered OPEN (probe PC-residual-restart-then-drain). This is the I07 consequence carried as W02c R1. A3 is still met: in every divergence I found, all actions were sealed, terminal and non-ambiguous.",
+   "requiredChange": "State the residual's exact precondition: two consecutive journal write failures (the failing record and the INVALIDATED record), one failed marker write, no torn record, and no state record written before the restart. Say that it also covers the gate's own storage-failure HELD, not only RECONCILIATION_REQUIRED. Say that a WRITE_BEGIN after such a restart is answered OPEN, and link it to W02c R1."
+  },
+  {
+   "id": "V4",
+   "severity": "NOTE",
+   "location": "README Decisions 6 and 9; Gate._expire; Gate._settle_drain; base section 5 ('DRAINING: ... original authority bounds any already admitted work')",
+   "finding": "Liveness only, carried from v1. A pending drain (DRAINING or INVALIDATED with an action in flight) settles only on one of these:\n- an upstream response or loss;\n- the broker's seal;\n- a fatal channel failure;\n- a storage failure;\n- RECONCILIATION_REQUIRED.\nEXPIRE does not settle it (probe drain-expire stays PENDING until the upstream answers). Neither v1 nor v2 states a bound on the upstream exchange, so if the upstream hangs and the broker never seals, WRITE_BEGIN stays PENDING indefinitely. In every state I explored, a pending drain had the channel OPEN and an action in flight, so some event could always settle it. There is no safety impact.",
+   "requiredChange": "State a bound on the forwarded upstream exchange, for example the execution's signed lifetime and the 900-second limit, after which the exchange is treated as lost (IO_AMBIGUOUS, HELD). Alternatively state that the broker must seal by its own deadline."
+  },
+  {
+   "id": "V5",
+   "severity": "NOTE",
+   "location": "README (v2) compared with ../i05-gate-channel/README.md",
+   "finding": "v2 changes no semantics, but the README drops several v1 explanatory clauses without saying so, although line 8 says only P1-P8 change. Dropped:\n- the 'Conservative outcomes' paragraph: an I04 timeout shorter than the gate's upstream wait leads to AMBIGUOUS, then HELD; a lost relay leads to disagreement, then HELD;\n- the definition of the flushClosures counter (C2, C5, seals and denies);\n- Decision 4's 'a stock client that adds fields is refused (fail-closed)';\n- Decision 1's durability-before-relay sentence;\n- the rationale for NOT_FORWARDED agreeing with both DENIED and AMBIGUOUS.\nAn implementer reading only v2 loses the counter semantics and the conservative-outcome disclosure.",
+   "requiredChange": "Restore these clauses, or name them explicitly as carried unchanged from the v1 README."
+  },
+  {
+   "id": "V6",
+   "severity": "NOTE",
+   "location": "scripts/i05_gate_channel_v2.py Gate.__init__; vectors.json byteFrames order",
+   "finding": "Three hygiene items:\n- Two manifests of one run with the same identity are refused with 'a manifest identity resolves to more than one run' (probe: run-one plus a second Pod digest named probe-pod). This is stricter than the README text, and the message is misleading.\n- A priorBindings object without manifestDigests or manifestIdentities (v1 shape) raises KeyError instead of a refusal.\n- byteFrames are listed B11, B14, B12, B13.",
+   "requiredChange": "Word the refusal as 'more than one manifest' (or document the within-run rule). Refuse an incomplete priorBindings explicitly. Order B12-B14."
+  }
+ ],
+ "openItemStatus": {
+  "P1": {
+   "status": "CLOSED",
+   "evidence": "Each v1 probe now behaves as the README says:\n- PA with REVOCATION, EXPIRY, PEER_FAILURE, OBSERVATION_FAILURE and STORAGE_FAILURE: DRAIN -> PENDING; close -> INVALIDATED; UPSTREAM 201 -> drain OPEN with DRAINED INVALIDATED; STATUS drainPending false; ARM -> NOT_ACTIVE (T87-T89).\n- PA with RECONCILIATION_REQUIRED: drain HELD on the close.\n- PA3: close, then DRAIN -> PENDING, STATUS INVALIDATED drainPending true inFlight 1, upstream -> OPEN (T90). With UPSTREAM_LOST or an aborting seal -> HELD.\n- Q3: seal refused STORAGE_FAILURE -> drain HELD at once, drainPending false (T91).\n- CLOSED -> OPEN at once and HELD -> HELD at once (T92); fatal -> HELD (T93); ARM NOT_ACTIVE in INVALIDATED (T94).\nThe fence equals the I07 model's _fence. The remaining items are wording and W02c guidance: V2 and V4."
+  },
+  "P2": {
+   "status": "CLOSED",
+   "evidence": "- created_uids is fed only by a CREATE 201 with a durable TERMINAL record. GET 200 no longer authorizes a DELETE (T47, T96, UID_NOT_CREATED).\n- Probe PD is now config refusal K02. K03 refuses a run digest that is not in the profile.\n- Probe PE is now MANIFEST_REUSED (T95: digest reuse and identity-only reuse). The BIND record carries the digests and identities.\n- My campaign derived each later generation's priorBindings only from earlier journals' BIND records, over three generations including colliding runs and a re-used nonce. A shadow API-server world checked that no CREATE, GET or DELETE was forwarded for an identity created by another run, and that every armed DELETE UID came from this execution's own durable CREATE 201. 0 violations.\n- Missing 'same manifest' vector: V1."
+  },
+  "P3": {
+   "status": "CLOSED",
+   "evidence": "- PB -> [1] (T58); PB2 -> [1] (T99); PB3 EXPIRE -> [1] (T97); DRAIN -> [1] HELD (T98).\n- With my finer injection (operation record succeeds, DENIED fails), CLOSE, EXPIRE and DRAIN still report [1].\n- The oracle compared every CLOSE, EXPIRE and DRAIN report against an independent shadow armed set: 0 mismatches."
+  },
+  "P4": {
+   "status": "CLOSED",
+   "evidence": "- PC with RECONCILIATION_REQUIRED, with EOF, and revocation followed by a malformed frame -> restart HELD through the marker (T100, T101).\n- A torn record forces HELD even when the marker write failed (T102). A failing RESTARTED write -> HELD (T104).\n- The residual is reproduced and disclosed (T103).\n- Residual search from the closed-clean state (depth 5, 51,170 nodes): 4 divergences, each with at least two journal failures and one marker failure, and none with a marker, a torn record or a durable HELD record.\n- Precision of the residual statement: V3."
+  },
+  "P5": {
+   "status": "CLOSED",
+   "evidence": "Every row has excludeStatus, and the CREATE and DELETE 4xx rows exclude 408. A40 and A41 give M02; A42 (CREATE 422) still agrees. The 'excludeStatus ignored' mutant is caught by A40 and A41. deleteStatus202 cites delete.go:188, the OrphanDependents-false condition, which I verified."
+  },
+  "P6": {
+   "status": "CLOSED",
+   "evidence": "- Tag v1.37.1 resolves to commit f78e722310e50bcaca9276be22276d9e91d91308 (GitHub API, tag object d2b770f).\n- All five files fetched from raw.githubusercontent.com at that commit match the pinned SHA-256 values.\n- Cited lines checked: pod and service storage.go:89 ReturnDeletedObject true; configmap storage.go:38-50 unset; store.go 1233-1261 'return out, false, err' when not immediate; finalizeDelete 1458-1483 Status details with name, group, kind as resource and uid; delete.go:188 condition for 202.\n- distributionCheck is stated. A39 (PH) gives M05."
+  },
+  "P7": {
+   "status": "CLOSED",
+   "evidence": "- 1,000-deep and 8,192-deep arrays (16,384 bytes) give F01 (B11, B14). v1 raised RecursionError at depth 1,000 or more.\n- bytearray and str give F07 (B12, B13).\n- Depth is checked first (G33). Iterative _depth and _walk.\n- Under CPython 3.12.14 the C decoder and encoder handle 8,192 levels without RecursionError, so the RecursionError -> F01 clause is defence in depth, as stated."
+  },
+  "P8": {
+   "status": "CLOSED",
+   "evidence": "T74 intent narrowed to the sealed case; T105 gives the unsealed GET -> restart HELD. T81 narrowed to Transfer-Encoding; T106's head differs from the rendering only by 'User-Agent: kubectl/v1.37.1' -> REQUEST_MISMATCH."
+  }
+ },
+ "questionAnswers": {
+  "Q0": "P1-P8 are all CLOSED. Every probe named in the brief (PA, PA3, Q3, PD, PE, PB, PB2, PB3, PC, PH) behaves as the README states. Residual items are NOTEs: V1 missing vectors and injection granularity, V2 drain-answer wording and the post-OPEN HELD, V3 residual precision, V4 upstream liveness.",
+  "Q1": "Faithful.\n- The v1 files are byte-identical to main 51440c8: git show digests equal source-index for all 15 predecessor inputs. The worktree has only commit 96f340e on top, adding 7 files.\n- The v1-to-v2 model diff contains only the P1-P8 changes and the version strings.\n- render_request equals v1 and an independent renderer for 69 manifest, verb and UID combinations.\n- Carried transcripts differ from v1 exactly as the README lists: T12, T30, T31, T45, T47, T58, T66, T67, T71, T73, T82, plus narrowed intents for T74 and T81. All other differences are the added BIND fields, RESTARTED, failureMarker and the journal digest.\n- Only T47 and T82 changed events.\n- No v1 safety property weakened. The fuzz and search oracles confirm no unarmed, double or post-invalidation forward, C2/C5 stamps, C7, A4 qualifiers, immutable seals and HELD stickiness.\n- Behaviour narrowed on purpose: DRAIN_PENDING only in DRAINING; F01 rather than F00 for depth 17-990; F07 for non-bytes.\n- README rationale dropped silently: V5.",
+  "Q2": "Not found in what I explored. The oracle checked after every event:\n- no OPEN while HELD, while a consumed action lacks a TERMINAL record, with an IO_AMBIGUOUS action, or without a durable DRAINED record as the last record;\n- no drain left pending once its fence is decided;\n- drainPending implies DRAINING or INVALIDATED, an action in flight and the channel OPEN;\n- no drain settled without an OPEN or HELD answer except at GATE_RESTART;\n- no answer without a pending drain.\nIt also checked a schema-valid GENERATION_STATUS at every node.\nEvidence:\n- every pinned vector;\n- the probes;\n- the finer second-record failure probes;\n- an exhaustive search of all 8 start states to depth 4 (277,405 nodes);\n- 15 complete depth-6 sub-searches (681,529 nodes);\n- randomized campaigns (about 68,000 events, 360+ generations);\nall with 0 violations after two of my own oracle bugs were fixed.\nA PENDING drain always has an event that can settle it, but no upstream deadline is stated (V4).\nThe answer is usable by W02c-F: it matches the I07 model's own _fence. W02c-F must keep watching the fence after OPEN (V2).",
+  "Q3": "No.\n- A DELETE needs a UID from this execution's own durable CREATE 201 for that manifest digest.\n- Digests and identities are unique across the runs of a configuration, and a run must stay inside the profile.\n- MANIFEST_REUSED refuses digests or identities bound in earlier generations.\nThe shadow-world campaign over three generations, with priorBindings derived only from earlier BIND records, found no create, GET or delete of another run's object. MANIFEST_REUSED is derivable from durable BIND records as stated. The digest half of the check is implied by the identity half.",
+  "Q4": "Only through the disclosed double fault. Every divergence found had at least 2 journal failures and at least 1 marker failure, with no torn record and no durable HELD state record.\n- A single journal failure with a failed marker still restarts HELD, through the INVALIDATED record.\n- Ambiguous, in-flight or unsealed actions always rebuild HELD.\nThe residual is accurate against base section 5 in substance. Its wording should name the two journal failures and the 'no later state record' condition, and cover gate-side failures as well as RECONCILIATION_REQUIRED (V3).",
+  "Q5": "Correct.\n- Mapping rows, excludeStatus and the 202 note were checked against the pinned Kubernetes source.\n- The status rule 'drainPending implies DRAINING or INVALIDATED with an action in flight' is correct. The schema mutant without it is caught by G27, G28 and G30. The rule is never violated by a reachable status, and G29 is accepted.\n- MANIFEST_REUSED and UID_NOT_CREATED are in the enums; UID_NOT_OBSERVED is refused (G32).\n- Decode codes as stated: F07 for non-bytes, F02 for oversize, F01 for depth including RecursionError, F06 for other decode failures.\n- The six I02 outcomes are covered without overloading.",
+  "Q6": "Yes. replay() gives exact results for:\n- 106/106 transcripts (outputs and final snapshots, including journals and failure markers);\n- 33/33 frames;\n- 14/14 byte frames, with inputType bytes, bytearray or str;\n- 3/3 configuration refusals;\n- 42/42 agreement cases.\nMy own envelope builder and hash chain also matched 106/106 exactly and re-decoded 430 response frames canonically. Each new vector reaches its stated reason. The changed carried vectors are enumerated in the README. Gaps: V1.",
+  "Q7": "No overclaim:\n- DATA_CHECK_ONLY;\n- no installed gate, journal or marker implementation (the storage formats stay open);\n- no native stamping;\n- Envoy and the Kubernetes distribution unselected;\n- the I07 move to v2 stated as W02c-F work;\n- E01-E12 OPEN_UNPROVEN.\nThe claim that validators pin the v1 files is true: validate_i07_policy_write.py FROZEN_PATHS and validate_selinux_matrix.py reference them."
+ },
+ "modelExecution": {
+  "environment": "Run from the worktree root with UV_PROJECT_ENVIRONMENT=.../harness-onion/.venv uv run --offline --frozen --no-sync python and PYTHONDONTWRITEBYTECODE=1. CPython 3.12.14, jsonschema 4.24.0. Both models loaded by path. No .venv or __pycache__ was created in the worktree, and git status is clean. Scratch: /private/tmp/claude-501/w02bf-review-r1/ (lib.py, replay_all.py, own_replay.py, diffvec.py, show.py, probes.py, probe2.py, probe3.py, p7.py, mutants.py, harness.py, dfs.py, dfs_residual.py, k8s/). On the coordinator's scheduling holds, every review process was stopped, killed and run again with fewer processes.",
+  "vectorReplay": "- replay(): 106/106 transcripts, 33/33 frames, 14/14 byte frames, 3/3 configuration refusals, 42/42 agreement cases, and all 3 configurations accepted.\n- Independent envelope builder: 106/106 exact, with 430 response frames re-decoded.\n- render_request matched an independent renderer and v1 for 69 combinations.\n- The v1-to-v2 transcript diff matches the README's list.",
+  "targetedProbes": "- Drain: PA (6 close reasons), PA3, PA3-lost, PA3-seal, Q3.\n- Reported denies: PB, PB2, PB3, PB4, PB5.\n- Restart after failures: PC (RR, EOF, revocation plus malformed frame), PC-residual (RR, EOF, malformed), residual-then-drain, one-journal-plus-marker, residual-restart-then-drain.\n- Q1, Q5, Q6; INSPECTING drain; drain before the channel opens; double drain; drain then restart; drain then expire; open-then-RR; open-then-EOF-unsealed.\n- Second-record failures (DRAINED and DENIED) through a reviewer subclass.\n- Config probes: identity collision within one run; v1-shaped priorBindings.\n- Decode depth from 16 to 8,192.\n- Kubernetes file digests and line citations.",
+  "mutants": "34 source mutants plus 1 schema mutant, replayed against every pinned check. 26 source mutants and the schema mutant were caught. 8 survived: 4 missing vectors (V1) and 4 redundant or unreachable rules.",
+  "fuzz": "Oracle-driven randomized campaigns with protocol-following and disruptive events across three generations, with priorBindings derived from journals and a shadow API-server world.\n- After two oracle bugs of my own were fixed, the final-oracle campaign ran 120 runs: 19,422 events, 360 generations, 141 restarts, 352 forwards, 0 violations.\n- An earlier campaign: 48,844 events, 0 violations.\n- Larger planned campaigns were cut short by the coordinator's CPU holds.",
+  "boundedExhaustive": "Memoized DFS over about 25 abstract events: ARM GET, CREATE and DELETE (own UID, own UID under another manifest, a world UID), OUTCOME, CLOSE (NORMAL, REVOCATION, RR; the other urgent reasons follow the same code path), BACKLOG, ACCEPT, exact and previous-action requests, upstream ok, 500, lost and late, DRAIN, EXPIRE, storage failure plain, torn and fail-second-record, marker failure, EOF, PEER_CHANGED, RESTART, BIND of the next run, malformed frame.\n- Depth 4 from all 8 start states (bound; armed with stamp and backlog; CREATE in flight; created and sealed; drain pending in flight; invalidated in flight; closed clean; DELETE armed): 277,405 nodes, 0 violations.\n- Depth 6: 15 complete sub-searches, 681,529 nodes, 0 violations. The full depth-6 run was stopped by the coordinator's holds.\n- Residual search from closed-clean to depth 5: 51,170 nodes, 4 double-fault divergences, 0 unexplained.",
+  "identity": "All six subject digests and all 15 predecessor digests match source-index. The predecessors are byte-identical to git show 51440c8. HEAD is 96f340e; baseTree 4df04f6 equals the tree of 51440c8. The worktree is unchanged."
+ },
+ "sourcesRead": [
+  "architecture/i05-gate-channel-v2/: REVIEW_BRIEF.md, README.md, source-index.json, outcome-mapping.json (all in full), channel.schema.json (diffed against v1 and its payloads inspected), vectors.json (programmatically)",
+  "scripts/i05_gate_channel_v2.py (in full) and its diff against scripts/i05_gate_channel.py",
+  "architecture/i05-gate-channel/: README.md (in full), review-round3.json (in full), channel.schema.json, outcome-mapping.json, vectors.json (diffed)",
+  "architecture/host-interface-inputs/resolved/HOST_INTERFACE_SPEC.md sections 2.4-3.3 and 5.5-8",
+  "architecture/host-interface-inputs/corrected/HOST_INTERFACE_SPEC.md sections 4-5",
+  "docs/alpha-2/BROKER_HANDOFF_READINESS.md lines 75-90 and 175-245",
+  "architecture/broker-handoff-inputs/channel.schema.json (RESOURCE_RESULT and RESOURCE_ACTION enums)",
+  "architecture/i07-policy-write/README.md (drain and fence decisions), status.json (carried R1-R5), scripts/i07_policy_write.py lines 140-350",
+  "scripts/validate_i07_policy_write.py FROZEN_PATHS (grep only)",
+  "Public: raw.githubusercontent.com/kubernetes/kubernetes/f78e722310e50bcaca9276be22276d9e91d91308: pkg/registry/core/{configmap,pod,service}/storage/storage.go, staging/src/k8s.io/apiserver/pkg/endpoints/handlers/delete.go, staging/src/k8s.io/apiserver/pkg/registry/generic/registry/store.go; api.github.com tag refs for v1.37.1"
+ ],
+ "actions": {
+  "filesEdited": false,
+  "githubMutated": false,
+  "nativeActions": false,
+  "referenceModelExecuted": true,
+  "repositoryValidatorsRun": false,
+  "runnerActivated": false,
+  "testsRun": false,
+  "warmSourcesAccessed": false
+ },
+ "reviewLimit": "Read-only, source-level review by an agent separate from the author. No repository file was created or modified, and no git state change, runner, native, cloud or GitHub mutation took place. Scratch files are only under /private/tmp/claude-501/w02bf-review-r1/.\nThe conclusions hold within the reference model's abstraction: pre-split request heads, in-memory journals, one-shot failure injection (extended by a reviewer subclass), and no real TLS, HTTP, fsync, clock, broker or I07 handshake.\nThe search is bounded. Because of the coordinator's CPU holds, the full exhaustive search reached depth 4 for all start states and depth 6 for 15 sub-searches only, and the randomized campaigns were smaller than planned.\nKubernetes behaviour was checked against v1.37.1 source only; the distribution is unselected.\nThis PASS is not an installed gate, native qualification, a C2/C3 load result or authorization for anything installed. All E01-E12 remain OPEN_UNPROVEN. NOTEs V1-V6 may be carried to W02c-F and the next revision."
+}

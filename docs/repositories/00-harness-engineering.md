@@ -1,6 +1,14 @@
 # Repository Plan: `Harness-Engineering`
 
-## Current source preparation — MET-ENFORCE-011
+## Current source preparation — MET-ENFORCE-012
+
+W02g-F: the I06 backend profile v2 (successor of the adopted W02g profile) binds a distribution evidence
+record by digest to one W02a v3 record that W02a's check accepts, refuses any resource rule on the loopback
+user system:apiserver, and refuses shared or nested backend cgroups through W02a's rules. It passed its
+independent review in round 3. Nothing is observed or selected, and every E01-E12 obligation stays open.
+Alpha2 OPEN; 210 accepted plus ENFORCE-012 only. Native Linux, exact-main and tenant acceptance remain separate.
+
+## Historical W02b-F source preparation — MET-ENFORCE-011
 
 W02b-F: the I05 broker-gate channel v2 (successor of the adopted v1 channel) closes every finding the
 v1 round-3 review carried to W02b-F: the I07 drain answered from the A3 fence in every state, DELETE only
@@ -946,6 +954,7 @@ Every packet uses branch `codex/<packet-id>`, changes only named paths, opens a 
 82. `MET-PERF-032`: cut required-verify time by removing four repeated computations with unchanged refusals; source only.
 83. `MET-ENFORCE-010`: publish the W02a-F native qualification record v3 with independent review; source only.
 84. `MET-ENFORCE-011`: publish the W02b-F I05 broker-gate channel v2 with independent review; source only.
+85. `MET-ENFORCE-012`: publish the W02g-F I06 backend profile v2 with independent review; source only.
 
 ## Testing, verification, and acceptance
 

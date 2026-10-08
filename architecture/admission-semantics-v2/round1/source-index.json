@@ -1,32 +1,32 @@
 {
  "schemaVersion": "planeon.internal.admission-semantics-v2-index/v1",
- "round": 2,
+ "round": 1,
  "baseMain": "487eca6809eca9fd5b2647f79522d107dee8d814",
  "baseTree": "b047a6ba11fabe0a0d58586268bd0608a7b841a7",
  "subject": [
   {
    "path": "architecture/admission-semantics-v2/README.md",
-   "sha256": "48e44b8d6a1c2fca5fffbad9c2fb97daf79ff5efeab221a781ec50e17ba1b9bf"
+   "sha256": "a846ffce1075f33c165de99c69e23aa9737449485204f72d91df44ead58cb485"
   },
   {
    "path": "architecture/admission-semantics-v2/REVIEW_BRIEF.md",
-   "sha256": "06d3700c8f944d965d5c5c866f3a33e713565a9f67c1ab43167dd77da45ac189"
+   "sha256": "96a1587e852ba85e2c0ac10244436f55097718ffd937085ae6fb40ba01ba1d77"
   },
   {
    "path": "architecture/admission-semantics-v2/allowlists.json",
-   "sha256": "2ab837aa50b7ee7fe58a19c9bc0aae67edb49ad4a143e19f928bc42def9bb863"
+   "sha256": "c9229ebfd6b06049fe1c3381edfc64c47f6c80ae58613cc3aa57cddd3d2ecf1e"
   },
   {
    "path": "architecture/admission-semantics-v2/admission-manifests/planeon-a2.json",
-   "sha256": "1096b3cc71c4fe6b5a17ed61e8bf8c17ee17fcf52b192503534d60aed9ce4741"
+   "sha256": "03653abf30414bf643e1ce3f88025a641c1f9b7bb8fc055ee2f5885beb139e73"
   },
   {
    "path": "architecture/admission-semantics-v2/vectors.json",
-   "sha256": "4b79b1ae23993d923d24a26a9e05ae2ea7a013bd722af5e8901176e08b98b2de"
+   "sha256": "af97e67f5524905cc2e274323d52dcec5fb9437ddb54d1989c9af837b779591c"
   },
   {
    "path": "scripts/admission_semantics_v2.py",
-   "sha256": "b62a8c43a82f3e280da38b1dab5241f9b50fc0ef7ba6cf83c7a5f9b147d18d39"
+   "sha256": "e948bb170f0c89a8a2d650e9a788087868fd1d4c4c51d4eacdb8fd683089cdbe"
   }
  ],
  "predecessorInputs": [
@@ -81,20 +81,7 @@
   {
    "path": "architecture/i07-policy-write/review-round1.json",
    "sha256": "837333a076eb794c501d1d2cf754a360eda13d52179423d1199f6cdd60ed4a5a"
-  },
-  {
-   "path": "architecture/i06-backend-profile/writer-inventory.json",
-   "sha256": "8e6b3b7565cfc93a61162b84d740cffb2871eb66ab85e8c4e80ac813f1af3077"
-  },
-  {
-   "path": "scripts/i06_backend_profile.py",
-   "sha256": "bea3c953573478be5b03ab81b4ebd859da62d1eaa2a1be8f361b9dd39a98555e"
   }
  ],
- "earlierRounds": [
-  {
-   "path": "architecture/admission-semantics-v2/review-round1.json",
-   "sha256": "d14b2a293dcb4121fe177cf4ff2906bacfb210ca8df2fdbffb18b86d86194296"
-  }
- ]
+ "earlierRounds": []
 }

@@ -50,10 +50,6 @@ MANIFEST_FILE = "planeon-a2.json"
 ECHO = {"containers": "planeon.ai/a2-containers", "initContainers": "planeon.ai/a2-init-containers",
         "volumes": "planeon.ai/a2-volumes"}
 NOT_READY, UNREACHABLE = "node.kubernetes.io/not-ready", "node.kubernetes.io/unreachable"
-# The one non-gate creator of a matched kind in the qualification namespace (W01 section 2.5): the root-CA publisher
-# of kube-controller-manager, under its per-controller service account (W02g SC06 requires per-controller credentials).
-PUBLISHER_CONFIGMAP = "kube-root-ca.crt"
-PUBLISHER_USER = "system:serviceaccount:kube-system:root-ca-cert-publisher"
 TOKEN_PATH = "/var/run/secrets/kubernetes.io/serviceaccount"
 # Label and annotation keys in a Kubernetes-reserved prefix (kubernetes.io, k8s.io and their subdomains).
 RESERVED_KEY = re.compile(r"^([^/]*\.)?(kubernetes|k8s)\.io/")
@@ -102,8 +98,6 @@ def check_manifest(kind: str, manifest: Any, namespace: str) -> str | None:
     if type(manifest) is not dict or manifest.get("apiVersion") != "v1" or manifest.get("kind") != kind or kind not in KINDS:
         return "MC00 not a v1 manifest of a qualification kind"
     meta = manifest.get("metadata")
-    if kind == "ConfigMap" and type(meta) is dict and meta.get("name") == PUBLISHER_CONFIGMAP:
-        return "MC11 the root-CA publisher's ConfigMap name is reserved"
     if type(meta) is not dict or type(meta.get("name")) is not str or not DNS_LABEL.match(meta["name"]):
         return "MC01 an explicit DNS-label name is required"
     if meta.get("namespace") != namespace:
@@ -146,8 +140,6 @@ def check_manifest(kind: str, manifest: Any, namespace: str) -> str | None:
     names = [v["name"] for v in spec.get("volumes") or []]
     if any(name.startswith("kube-api-access-") for name in names):
         return "MC36 a volume named like the service-account token volume"
-    if any("image" in v for v in spec.get("volumes") or []):
-        return "MC38 an image volume (AlwaysPullImages rewrites its pull policy)"
     annotations = meta.get("annotations") or {}
     for field, key in ECHO.items():
         if annotations.get(key) != echo_value(spec.get(field), field):
@@ -265,9 +257,6 @@ def final_object(kind: str, manifest: dict, server: dict) -> dict:
     if server.get("alwaysPullImages"):
         for c in spec.get("containers", []) + spec.get("initContainers", []):
             c["imagePullPolicy"] = "Always"
-        for v in spec.get("volumes", []):
-            if "image" in v:
-                v["image"]["pullPolicy"] = "Always"     # alwayspullimages/admission.go:76-81
     meta["generation"] = 1
     qos = "Guaranteed" if all((c.get("resources") or {}).get("limits") and c["resources"].get("requests") ==
                               c["resources"].get("limits") for c in spec.get("containers", [])) else "Burstable"
@@ -281,39 +270,24 @@ def _keys_unreserved(meta: dict) -> bool:
     return not any(RESERVED_KEY.match(key) for field in ("labels", "annotations") for key in (meta.get(field) or {}))
 
 
-def _in_cidr(address: Any, cidr: str) -> bool:
-    try:
-        return type(address) is str and ipaddress.ip_address(address) in ipaddress.ip_network(cidr)
-    except ValueError:
-        return False
-
-
-def check_final(kind: str, obj: dict, sealed: dict, username: str | None = None) -> str | None:
-    """None when the static A2 policy for `kind` admits the object created by `username`; otherwise the failing
-    validation. Each branch is one validation of `a2_objects`, in order. A field a CEL expression dereferences
-    without a has() guard is required: its absence is a runtime error, which failurePolicy Fail denies."""
+def check_final(kind: str, obj: dict, sealed: dict) -> str | None:
+    """None when the static A2 policy for `kind` admits the object; otherwise the failing validation.
+    Each branch is one validation of `a2_objects`, in order."""
     meta = obj.get("metadata", {})
-    publisher = kind == "ConfigMap" and meta.get("name") == PUBLISHER_CONFIGMAP
-    if kind == "ConfigMap" and publisher:
-        data = obj.get("data") or {}
-        annotations = meta.get("annotations") or {}
-        if username != PUBLISHER_USER or set(data) != {"ca.crt"} or obj.get("binaryData") or meta.get("labels") \
-                or not set(annotations) <= {"kubernetes.io/description"}:
-            return "A2-CM-PUBLISHER the reserved root-CA ConfigMap is not exactly the publisher's"
-        return None
     if not _keys_unreserved(meta):
         return "A2-RESERVED a label or annotation key in a Kubernetes-reserved prefix"
     if kind == "ConfigMap":
         return None if obj.get("immutable") is True else "A2-CM-IMMUTABLE the ConfigMap is not immutable"
     spec = obj.get("spec", {})
     if kind == "Service":
-        if spec.get("type") != "ClusterIP" or type(spec.get("ports")) is not list or any(key in spec for key in (
+        if spec.get("type") != "ClusterIP" or any(key in spec for key in (
                 "externalIPs", "externalName", "loadBalancerIP", "loadBalancerSourceRanges", "loadBalancerClass",
-                "healthCheckNodePort")) or any("nodePort" in port for port in spec["ports"]):
+                "healthCheckNodePort")) or any("nodePort" in port for port in spec.get("ports", [])):
             return "A2-SVC-TYPE not a plain ClusterIP Service"
+        family, cidr = sealed["ipFamily"], ipaddress.ip_network(sealed["serviceCIDR"])
         ips = spec.get("clusterIPs") or []
-        if spec.get("ipFamilyPolicy") != "SingleStack" or spec.get("ipFamilies") != [sealed["ipFamily"]] or len(ips) != 1 \
-                or spec.get("clusterIP") != ips[0] or ips[0] == "None" or not _in_cidr(ips[0], sealed["serviceCIDR"]):
+        if spec.get("ipFamilyPolicy") != "SingleStack" or spec.get("ipFamilies") != [family] or len(ips) != 1 \
+                or spec.get("clusterIP") != ips[0] or ips[0] == "None" or ipaddress.ip_address(ips[0]) not in cidr:
             return "A2-SVC-ALLOCATION the allocation is not one address of the sealed service CIDR"
         if spec.get("sessionAffinity") != "None" or spec.get("internalTrafficPolicy") != "Cluster":
             return "A2-SVC-DEFAULTS session affinity or traffic policy differs from the defaults"
@@ -326,20 +300,16 @@ def check_final(kind: str, obj: dict, sealed: dict, username: str | None = None)
         return "A2-POD-TOKEN service-account token automount is not disabled"
     if spec.get("imagePullSecrets"):
         return "A2-POD-PULL-SECRETS pull secrets were added"
-    if any("image" in v for v in spec.get("volumes") or []):
-        return "A2-POD-IMAGE-VOLUME an image volume"
     tolerations = spec.get("tolerations") or []
     expected = [{"key": key, "operator": "Exists", "effect": "NoExecute",
                  "tolerationSeconds": sealed["defaultTolerationSeconds"]} for key in (NOT_READY, UNREACHABLE)]
     if len(tolerations) != 2 or not all(sum(t == e for t in tolerations) == 1 for e in expected):
         return "A2-POD-TOLERATIONS the tolerations are not exactly the two default ones"
-    if type(spec.get("priority")) is not int or spec["priority"] != 0 or spec.get("preemptionPolicy") != "PreemptLowerPriority" \
-            or "priorityClassName" in spec:
+    if spec.get("priority") != 0 or spec.get("preemptionPolicy") != "PreemptLowerPriority" or "priorityClassName" in spec:
         return "A2-POD-PRIORITY a priority other than the default"
     if any(key in spec for key in ("runtimeClassName", "overhead", "nodeName", "nodeSelector")):
         return "A2-POD-PLACEMENT a runtime class, overhead or node placement"
-    if type(spec.get("containers")) is not list or not all(
-            c.get("imagePullPolicy") == "Always" for c in spec["containers"] + spec.get("initContainers", [])):
+    if not all(c.get("imagePullPolicy") == "Always" for c in spec.get("containers", []) + spec.get("initContainers", [])):
         return "A2-POD-PULL-POLICY an image pull policy other than Always"
     return None
 
@@ -357,22 +327,11 @@ def _echo_cel(field: str, key: str) -> str:
             % (key, key, field, field, render))
 
 
-PUBLISHER_CEL = "object.metadata.name == '%s'" % PUBLISHER_CONFIGMAP
-
-
 def _validations(kind: str, sealed: dict) -> list[dict]:
-    rows = []
+    rows = [("A2-RESERVED", RESERVED_CEL)]
     if kind == "ConfigMap":
-        rows.append(("A2-CM-PUBLISHER",
-                     "!(%s) || (request.userInfo.username == '%s' && has(object.data) && object.data.size() == 1 && "
-                     "'ca.crt' in object.data && !has(object.binaryData) && !has(object.metadata.labels) && "
-                     "(!has(object.metadata.annotations) || object.metadata.annotations.all(k, k == 'kubernetes.io/description')))"
-                     % (PUBLISHER_CEL, PUBLISHER_USER)))
-        rows += [("A2-RESERVED", "%s || (%s)" % (PUBLISHER_CEL, RESERVED_CEL)),
-                 ("A2-CM-IMMUTABLE", "%s || (has(object.immutable) && object.immutable == true)" % PUBLISHER_CEL)]
-        return [{"expression": expression, "message": code, "reason": "Forbidden"} for code, expression in rows]
-    rows.append(("A2-RESERVED", RESERVED_CEL))
-    if kind == "Service":
+        rows.append(("A2-CM-IMMUTABLE", "has(object.immutable) && object.immutable == true"))
+    elif kind == "Service":
         rows += [
             ("A2-SVC-TYPE", "object.spec.type == 'ClusterIP' && !has(object.spec.externalIPs) && !has(object.spec.externalName) && "
                             "!has(object.spec.loadBalancerIP) && !has(object.spec.loadBalancerSourceRanges) && "
@@ -389,7 +348,6 @@ def _validations(kind: str, sealed: dict) -> list[dict]:
         rows += [("A2-POD-ECHO", " && ".join(_echo_cel(field, key) for field, key in ECHO.items())),
                  ("A2-POD-TOKEN", "has(object.spec.automountServiceAccountToken) && object.spec.automountServiceAccountToken == false"),
                  ("A2-POD-PULL-SECRETS", "!has(object.spec.imagePullSecrets) || object.spec.imagePullSecrets.size() == 0"),
-                 ("A2-POD-IMAGE-VOLUME", "!has(object.spec.volumes) || object.spec.volumes.all(v, !has(v.image))"),
                  ("A2-POD-TOLERATIONS", "has(object.spec.tolerations) && object.spec.tolerations.size() == 2 && "
                                         "object.spec.tolerations.exists_one(t, t.key == '%s' && %s) && "
                                         "object.spec.tolerations.exists_one(t, t.key == '%s' && %s)" % (NOT_READY, tol, UNREACHABLE, tol)),
@@ -491,7 +449,7 @@ CHECKS = ("A1", "A2", "A3", "A4")
 
 def check_claim(claim: Any, pinned: dict) -> str | None:
     """None when POLICY-ADMISSION-SEMANTICS/v2 supports the consumer's claim; otherwise why not.
-    `pinned` carries the sealed manifest-directory hash and the qualification namespace the A2 policies match."""
+    `pinned` carries the sealed manifest-directory hash and the qualification namespace."""
     if type(claim) is not dict:
         return "C00 not a claim"
     if claim.get("semantics") == SEMANTICS_V1:
@@ -516,10 +474,6 @@ def check_claim(claim: Any, pinned: dict) -> str | None:
             return "C22 A2's allowlist argument needs no webhook or mutating-policy objects and only allowlisted admission plugins (W02g OR06, SC05)"
         if evidence.get("a1AdmittedSignedBytes") is not True:
             return "C23 A2 proves final = submitted + allowlisted deltas only together with A1's byte check"
-        if evidence.get("manifestConstraintsMetAtSigning") is not True:
-            return "C25 the signed manifests met check_manifest at signing; A2 re-checks only part of the constraints"
-        if evidence.get("namespace") != pinned["namespace"]:
-            return "C26 A2 covers only the sealed qualification namespace"
         if evidence.get("claimsByteEquality") is True:
             return "C24 A2 never compares bytes; it checks the final object's fields"
         return None

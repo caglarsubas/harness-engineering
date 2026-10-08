@@ -1,30 +1,6 @@
 {
  "schemaVersion": "planeon.internal.admission-allowlists/v1",
  "semantics": "POLICY-ADMISSION-SEMANTICS/v2",
- "constraintCoverage": {
-  "MC00": "RECHECKED_BY_A2 (resource rules of the per-kind policy)",
-  "MC01": "SIGNER_GUARANTEED (A1 bytes)",
-  "MC02": "RECHECKED_BY_A2 (namespaceSelector)",
-  "MC03": "SIGNER_GUARANTEED (wiped or reset by the server)",
-  "MC04": "RECHECKED_BY_A2 A2-RESERVED",
-  "MC05": "SIGNER_GUARANTEED (status reset by the server)",
-  "MC10": "RECHECKED_BY_A2 A2-CM-IMMUTABLE",
-  "MC11": "RECHECKED_BY_A2 A2-CM-PUBLISHER",
-  "MC20": "RECHECKED_BY_A2 A2-SVC-TYPE",
-  "MC21": "RECHECKED_BY_A2 A2-SVC-TYPE and A2-SVC-ALLOCATION",
-  "MC22": "RECHECKED_BY_A2 A2-SVC-DEFAULTS",
-  "MC30": "RECHECKED_BY_A2 A2-POD-PULL-SECRETS, A2-POD-TOLERATIONS, A2-POD-PRIORITY and A2-POD-PLACEMENT (host namespaces, ephemeral containers, scheduling gates and resource claims: SIGNER_GUARANTEED)",
-  "MC31": "RECHECKED_BY_A2 A2-POD-TOKEN",
-  "MC32": "SIGNER_GUARANTEED (A1 bytes)",
-  "MC33": "RECHECKED_BY_A2 A2-POD-PULL-POLICY for the policy; SIGNER_GUARANTEED for the digest pin",
-  "MC34": "SIGNER_GUARANTEED (A2 has no resources check; LimitRanger's action is caught by its annotation, A2-RESERVED)",
-  "MC35": "SIGNER_GUARANTEED",
-  "MC36": "SIGNER_GUARANTEED (a token volume added by the server fails A2-POD-ECHO)",
-  "MC37": "RECHECKED_BY_A2 A2-POD-ECHO",
-  "MC38": "RECHECKED_BY_A2 A2-POD-IMAGE-VOLUME",
-  "DISABLED_GATE_FIELDS": "SIGNER_GUARANTEED: the signer refuses fields of feature gates the W02g profile pins off; the apiserver drops them before A2"
- },
- "publisherIdentity": "system:serviceaccount:kube-system:root-ca-cert-publisher",
  "kubernetes": {
   "tag": "v1.37.1",
   "commit": "f78e722310e50bcaca9276be22276d9e91d91308",
@@ -747,7 +723,6 @@
     "overhead, nodeSelector, tolerations (RuntimeClass)": "MC30",
     "topology labels (PodTopologyLabels)": "MC30",
     "imagePullPolicy (AlwaysPullImages)": "MC33",
-    "image volume pullPolicy (AlwaysPullImages)": "MC38",
     "requests copied from limits": "MC34",
     "fields of disabled feature gates": "manifest content (W03 signer)"
    },
@@ -756,7 +731,6 @@
     "A2-POD-ECHO",
     "A2-POD-TOKEN",
     "A2-POD-PULL-SECRETS",
-    "A2-POD-IMAGE-VOLUME",
     "A2-POD-TOLERATIONS",
     "A2-POD-PRIORITY",
     "A2-POD-PLACEMENT",
@@ -1187,13 +1161,9 @@
     "metadata.name from generateName": "MC01"
    },
    "CHECKED_BY_A2": [
-    "A2-CM-PUBLISHER",
     "A2-RESERVED",
     "A2-CM-IMMUTABLE"
    ],
-   "nonGateCreators": {
-    "kube-root-ca.crt": "the root-CA publisher (system:serviceaccount:kube-system:root-ca-cert-publisher); admitted exactly by A2-CM-PUBLISHER, W01 section 2.5"
-   },
    "upstreamFields": [
     {
      "path": "metadata.uid",

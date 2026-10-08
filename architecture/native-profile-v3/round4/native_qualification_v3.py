@@ -30,7 +30,6 @@ from __future__ import annotations
 import hashlib
 import ipaddress
 import json
-import re
 from datetime import datetime
 from typing import Any
 
@@ -56,15 +55,14 @@ DELEGATED_CHILDREN = ["broker", "probe-worker"]
 BROKER_SERVICE = "/sys/fs/cgroup/planeon.slice/planeon-capacity-broker.service"
 # Native-only roles may list nothing from the enrolled interpreter's installation tree (round 2, W4).
 INTERPRETER_TREE = "/opt/planeon/python/"
-# Closed kernel command-line grammar (round 5, R4-1). Every word of either boot entry is one of these kernel
-# parameters, and the maintenance entry adds exactly MAINTENANCE_UNIT once. Every other word is refused: "--" and
-# everything after it (init arguments), systemd.* and SYSTEMD_* words, runlevel words and any other KEY=value, so the
-# command line cannot select, add, mask or override a unit. W03 widens the list only through a reviewed schema revision.
-KERNEL_PARAMETERS = tuple(re.compile(pattern) for pattern in (
-    r"initrd=[A-Za-z0-9_./\\-]+", r"root=(UUID|PARTUUID|LABEL)=[A-Za-z0-9_.-]+", r"root=/dev/[A-Za-z0-9_/.-]+",
-    r"ro", r"rw", r"rootfstype=[a-z0-9]+", r"rootflags=[A-Za-z0-9_.,=-]+", r"security=selinux", r"selinux=1",
-    r"enforcing=1", r"lockdown=integrity", r"console=[A-Za-z0-9_,.]+", r"quiet", r"loglevel=[0-7]"))
-MAINTENANCE_UNIT = "systemd.unit=planeon-maintenance.target"
+# The maintenance boot entry selects this systemd target; the enrolled entry never names it (rounds 2-4).
+MAINTENANCE_TARGET = "planeon-maintenance.target"
+# systemd v256 on the host also takes the default unit from these SysV runlevel words (rlmap in src/basic/unit-file.c);
+# they share last-wins with systemd.unit= (parse_proc_cmdline_item in src/core/main.c).
+RUNLEVEL_TARGETS = {"emergency": "emergency.target", "-b": "emergency.target", "rescue": "rescue.target",
+                    "single": "rescue.target", "-s": "rescue.target", "s": "rescue.target", "S": "rescue.target",
+                    "1": "rescue.target", "2": "multi-user.target", "3": "multi-user.target", "4": "multi-user.target",
+                    "5": "graphical.target"}
 PIN_ROOT = "/sys/fs/bpf/planeon"
 CGROUP_ROOT = "/sys/fs/cgroup"
 SLICE = CGROUP_ROOT + "/planeon.slice"
@@ -246,12 +244,17 @@ def check_record(record: Any, profile: Any, endpoints: Any, schema: dict) -> Non
     require(entries["ENROLLED"]["entryId"] != entries["MAINTENANCE"]["entryId"]
             and entries["ENROLLED"]["kernelCmdline"] != entries["MAINTENANCE"]["kernelCmdline"],
             "enrolled and maintenance boot entries indistinguishable")
-    enrolled, maintenance = (entries[name]["kernelCmdline"].split(" ") for name in ("ENROLLED", "MAINTENANCE"))
-    require(all(_kernel_parameter(word) for word in enrolled), "enrolled boot entry outside the closed kernel parameters")
-    require("lockdown=integrity" in enrolled, "enrolled boot entry without lockdown=integrity")
-    require(all(_kernel_parameter(word) or word == MAINTENANCE_UNIT for word in maintenance),
-            "maintenance boot entry outside the closed kernel parameters")
-    require(maintenance.count(MAINTENANCE_UNIT) == 1, "maintenance boot entry does not select the maintenance target")
+    require("lockdown=integrity" in _kernel_params(entries["ENROLLED"]["kernelCmdline"]),
+            "enrolled boot entry without lockdown=integrity")
+    # The schema refuses both quote characters, so these words are the ones systemd's unquoting split yields. systemd
+    # reads every word of /proc/cmdline, after "--" too, and the last systemd.unit= or runlevel word is the default unit.
+    require(not any(word in ("systemd.unit=" + MAINTENANCE_TARGET, "rd.systemd.unit=" + MAINTENANCE_TARGET)
+                    for word in entries["ENROLLED"]["kernelCmdline"].split(" ")),
+            "enrolled boot entry names the maintenance target")
+    units = [word[len("systemd.unit="):] if word.startswith("systemd.unit=") else RUNLEVEL_TARGETS[word]
+             for word in entries["MAINTENANCE"]["kernelCmdline"].split(" ")
+             if word.startswith("systemd.unit=") or word in RUNLEVEL_TARGETS]
+    require(units[-1:] == [MAINTENANCE_TARGET], "maintenance boot entry does not select the maintenance target")
     binding = profile["binding"]
     require(record["scope"] == {key: binding[key] for key in record["scope"]}, "scope substitution")
     start, end = _moment(record["scope"]["validFrom"]), _moment(record["scope"]["expiresAt"])
@@ -498,9 +501,10 @@ def check_capture(record: Any, capture: Any, role: str, schema: dict, previous: 
                 and capture["deadlineMs"] == previous["deadlineMs"], "rollback or renewed lifetime")
 
 
-def _kernel_parameter(word: str) -> bool:
-    """One word of the closed kernel command-line grammar."""
-    return any(pattern.fullmatch(word) for pattern in KERNEL_PARAMETERS)
+def _kernel_params(cmdline: str) -> list[str]:
+    """Kernel parameters of a command line: parse_args stops at "--", and later words go to init."""
+    words = cmdline.split(" ")
+    return words[:words.index("--")] if "--" in words else words
 
 
 def _boot_entry(record: dict, observed: dict) -> None:

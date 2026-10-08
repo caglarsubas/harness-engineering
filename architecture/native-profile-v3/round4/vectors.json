@@ -17306,7 +17306,7 @@
      "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity systemd.unit=planeon-maintenance.target quiet"
     }
    ],
-   "refusal": "enrolled boot entry outside the closed kernel parameters"
+   "refusal": "enrolled boot entry names the maintenance target"
   },
   {
    "id": "V48",
@@ -17342,7 +17342,7 @@
      "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 -- lockdown=integrity"
     }
    ],
-   "refusal": "enrolled boot entry outside the closed kernel parameters"
+   "refusal": "enrolled boot entry without lockdown=integrity"
   },
   {
    "id": "V50",
@@ -17397,7 +17397,7 @@
      "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity -- systemd.unit=planeon-maintenance.target"
     }
    ],
-   "refusal": "enrolled boot entry outside the closed kernel parameters"
+   "refusal": "enrolled boot entry names the maintenance target"
   },
   {
    "id": "V53",
@@ -17415,7 +17415,7 @@
      "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity systemd.unit=planeon-maintenance.target systemd.unit=multi-user.target"
     }
    ],
-   "refusal": "maintenance boot entry outside the closed kernel parameters"
+   "refusal": "maintenance boot entry does not select the maintenance target"
   },
   {
    "id": "V54",
@@ -17586,7 +17586,7 @@
      "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity rd.systemd.unit=planeon-maintenance.target"
     }
    ],
-   "refusal": "enrolled boot entry outside the closed kernel parameters"
+   "refusal": "enrolled boot entry names the maintenance target"
   },
   {
    "id": "V58",
@@ -17622,7 +17622,7 @@
      "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity systemd.unit=planeon-maintenance.target 3"
     }
    ],
-   "refusal": "maintenance boot entry outside the closed kernel parameters"
+   "refusal": "maintenance boot entry does not select the maintenance target"
   },
   {
    "id": "V60",
@@ -17640,151 +17640,7 @@
      "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity systemd.unit=planeon-maintenance.target -- emergency"
     }
    ],
-   "refusal": "maintenance boot entry outside the closed kernel parameters"
-  },
-  {
-   "id": "V61",
-   "positive": 1,
-   "target": "record",
-   "intent": "enrolled entry setting systemd's EFI-options environment (round-4 R4-1 E3)",
-   "ops": [
-    {
-     "op": "set",
-     "path": [
-      "bootEntries",
-      "ENROLLED",
-      "kernelCmdline"
-     ],
-     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity SYSTEMD_EFI_OPTIONS=systemd.unit=planeon-maintenance.target"
-    }
-   ],
-   "refusal": "enrolled boot entry outside the closed kernel parameters"
-  },
-  {
-   "id": "V62",
-   "positive": 1,
-   "target": "record",
-   "intent": "enrolled entry adding the maintenance target to the default unit (round-4 R4-1 E5)",
-   "ops": [
-    {
-     "op": "set",
-     "path": [
-      "bootEntries",
-      "ENROLLED",
-      "kernelCmdline"
-     ],
-     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity systemd.wants=planeon-maintenance.target"
-    }
-   ],
-   "refusal": "enrolled boot entry outside the closed kernel parameters"
-  },
-  {
-   "id": "V63",
-   "positive": 1,
-   "target": "record",
-   "intent": "enrolled entry injecting a unit drop-in credential (round-4 R4-1 E6)",
-   "ops": [
-    {
-     "op": "set",
-     "path": [
-      "bootEntries",
-      "ENROLLED",
-      "kernelCmdline"
-     ],
-     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity systemd.set_credential_binary=systemd.unit-dropin.multi-user.target:W1VuaXRdCldhbnRzPXBsYW5lb24tbWFpbnRlbmFuY2UudGFyZ2V0Cg=="
-    }
-   ],
-   "refusal": "enrolled boot entry outside the closed kernel parameters"
-  },
-  {
-   "id": "V64",
-   "positive": 1,
-   "target": "record",
-   "intent": "enrolled entry passing --unit to init after \"--\" (round-4 R4-1 E1)",
-   "ops": [
-    {
-     "op": "set",
-     "path": [
-      "bootEntries",
-      "ENROLLED",
-      "kernelCmdline"
-     ],
-     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity -- --unit=planeon-maintenance.target"
-    }
-   ],
-   "refusal": "enrolled boot entry outside the closed kernel parameters"
-  },
-  {
-   "id": "V65",
-   "positive": 1,
-   "target": "record",
-   "intent": "maintenance entry replacing systemd's command line through the environment (round-4 R4-1 M-b)",
-   "ops": [
-    {
-     "op": "set",
-     "path": [
-      "bootEntries",
-      "MAINTENANCE",
-      "kernelCmdline"
-     ],
-     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity systemd.unit=planeon-maintenance.target SYSTEMD_PROC_CMDLINE=systemd.unit=multi-user.target"
-    }
-   ],
-   "refusal": "maintenance boot entry outside the closed kernel parameters"
-  },
-  {
-   "id": "V66",
-   "positive": 1,
-   "target": "record",
-   "intent": "maintenance entry masking the maintenance target (round-4 R4-1 M-c)",
-   "ops": [
-    {
-     "op": "set",
-     "path": [
-      "bootEntries",
-      "MAINTENANCE",
-      "kernelCmdline"
-     ],
-     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity systemd.unit=planeon-maintenance.target systemd.mask=planeon-maintenance.target"
-    }
-   ],
-   "refusal": "maintenance boot entry outside the closed kernel parameters"
-  },
-  {
-   "id": "V67",
-   "positive": 1,
-   "target": "record",
-   "intent": "maintenance entry naming the maintenance target twice (round-4 R4-1)",
-   "ops": [
-    {
-     "op": "set",
-     "path": [
-      "bootEntries",
-      "MAINTENANCE",
-      "kernelCmdline"
-     ],
-     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity systemd.unit=planeon-maintenance.target systemd.unit=planeon-maintenance.target"
-    }
-   ],
    "refusal": "maintenance boot entry does not select the maintenance target"
-  },
-  {
-   "id": "V68",
-   "positive": 1,
-   "target": "record",
-   "intent": "quoted word in the maintenance entry (round-4 R4-2)",
-   "ops": [
-    {
-     "op": "set",
-     "path": [
-      "bootEntries",
-      "MAINTENANCE",
-      "kernelCmdline"
-     ],
-     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity systemd.unit=planeon-maintenance.target console='ttyS0'"
-    }
-   ],
-   "refusal": "schema $.bootEntries.MAINTENANCE.kernelCmdline pattern"
   }
  ],
  "accepted": [
@@ -17990,16 +17846,16 @@
    "id": "A08",
    "positive": 1,
    "target": "record",
-   "intent": "enrolled entry with console, log level and quiet from the closed kernel parameters (round-4 R4-1)",
+   "intent": "maintenance target after \"--\" (the bootconfig init.* path), which systemd honours (round-2 R2-1)",
    "ops": [
     {
      "op": "set",
      "path": [
       "bootEntries",
-      "ENROLLED",
+      "MAINTENANCE",
       "kernelCmdline"
      ],
-     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity console=ttyS0,115200 loglevel=4 quiet"
+     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity -- systemd.unit=planeon-maintenance.target"
     }
    ]
   }

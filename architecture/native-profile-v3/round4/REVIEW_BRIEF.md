@@ -1,11 +1,11 @@
-# Independent review brief — native qualification record v3 (W02a-F), round 5
+# Independent review brief — native qualification record v3 (W02a-F), round 4
 
-Status: **CONTRACT_CANDIDATE_ROUND5_AWAITING_INDEPENDENT_REVIEW**. The authoring agent wrote this brief. It is not a
+Status: **CONTRACT_CANDIDATE_ROUND4_AWAITING_INDEPENDENT_REVIEW**. The authoring agent wrote this brief. It is not a
 verdict.
 
-Rounds 1 to 4 (`review-round1.json` to `review-round4.json`) returned CHANGES_REQUIRED; their reviewed bytes are kept in
-`round1/` to `round4/`. Round 4 closed every earlier finding and raised R4-1 (MINOR) and R4-2 (NOTE). README "Round-4
-findings and dispositions" states how round 5 answers them: the boot command line now has a closed grammar.
+Rounds 1, 2 and 3 (`review-round1.json` to `review-round3.json`) returned CHANGES_REQUIRED; their reviewed bytes are kept
+in `round1/` to `round3/`. Round 3 left R2-1 and W6 PARTIAL and raised R3-1 (MINOR), R3-2 and R3-3 (NOTE). README
+"Round-3 findings and dispositions" states how round 4 answers them.
 
 ## Subject
 
@@ -26,10 +26,8 @@ checked by the required verify suite, and will not change while you review.
 
 ## Questions to answer
 
-0. **Earlier findings.** For R4-1 and R4-2, is the README disposition true in the round-5 bytes? Does the closed grammar
-   leave any quote-free word through which the command line selects, adds, masks or overrides a unit, or hands init an
-   environment or arguments? Does it refuse a legitimate enrolled or maintenance entry that W03 could not reasonably
-   avoid? Give CLOSED, PARTIAL or OPEN under `openItemStatus`, and confirm that no CLOSED item reopened.
+0. **Earlier findings.** For each of R3-1 to R3-3, and for R2-1 and W6 (PARTIAL in round 3), is the README disposition
+   true in the round-4 bytes? Give CLOSED, PARTIAL or OPEN under `openItemStatus`, and confirm that no CLOSED item reopened.
 1. **Carried findings.** For P1, P3, P4, P5, P6, P7(a), P7(b) and P7(c), the network-policy agent identity, the W02e
    label slots, E1's census and K1: does v3 close the finding as it was required? Give CLOSED, PARTIAL or OPEN under
    `openItemStatus`.
@@ -65,7 +63,7 @@ Set the environment variable inline on every command, and never let uv create a 
 ## Result
 
 Return one JSON object:
-- `schemaVersion` `"planeon.internal.native-profile-v3-review/v1"`, `round` 5, `reviewDate`;
+- `schemaVersion` `"planeon.internal.native-profile-v3-review/v1"`, `round` 4, `reviewDate`;
 - `verdict`: PASS_FOR_SOURCE_PUBLICATION, CHANGES_REQUIRED or BLOCKED;
 - `subjectSha256`: subject file name to digest;
 - `findings`, each with `id`, `severity` (BLOCKING / MAJOR / MINOR / NOTE), `location`, `finding` and `requiredChange`;

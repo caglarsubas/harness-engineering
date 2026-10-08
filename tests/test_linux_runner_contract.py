@@ -32,7 +32,7 @@ def test_exact_current_source_and_complete_history_chain():
     assert linux.validate() is None
     current = packets()
     accepted = linux.historical_catalog(current)
-    assert len(current) == 208 and len(accepted) == 191
+    assert len(current) == 209 and len(accepted) == 191
     assert set(accepted) == set(current) - {linux.NEW_PACKET, linux.successor.NEW_PACKET,
                                             linux.successor.successor.NEW_PACKET,
                                             linux.successor.successor.successor.NEW_PACKET,
@@ -48,7 +48,8 @@ def test_exact_current_source_and_complete_history_chain():
                                             linux.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET,
                                             linux.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET,
                                             linux.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET,
-                                            linux.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET}
+                                            linux.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET,
+                                            linux.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET}
     assert len(performance.historical_catalog(current)) == 190
     assert len(runner.historical_catalog(current)) == 189
     assert len(roadmap.historical_catalog(current)) == 188

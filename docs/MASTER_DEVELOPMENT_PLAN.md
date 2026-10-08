@@ -1,6 +1,39 @@
 # Harness-Onion — unified development roadmap
 
-## Current checkpoint — MET-PERF-032 source preparation, October 7, 2026
+## Current checkpoint — MET-ENFORCE-010 source preparation, October 8, 2026
+
+Alpha2 OPEN. MET-PERF-032 passed required verify (64/64, 564 s, down from 692 s) and merged as
+main 51440c8. MET-ENFORCE-010 is the W02a-F part. The adopted v2 record is frozen, so it
+publishes the successor `planeon.internal.native-qualification/v3`, closing every finding
+carried to W02a-F:
+- code identity: closures without another role's executable or the interpreter tree for
+  native-only roles; observed running images; one file per inode;
+- the slice census against the role captures and `nr_descendants`; the slice's own members;
+  thread counts against `pids.current` and `pids.max`;
+- the test-only fixture profile, unnested backend cgroups and backend identities bound to
+  the W02g closure;
+- W02e's label constants, the E1 effective-program census over the 22 other cgroup attach
+  types of Linux v6.12, and the K1 boot-entry discriminator;
+- migration against the complete v1 and v2 histories.
+
+It passed its independent review in round 6 (PASS_FOR_SOURCE_PUBLICATION; findings carried, none
+blocking). Nothing is observed or installed; all E01-E12 remain OPEN_UNPROVEN. MET-ENFORCE-010
+is the sole 209th specification.
+
+| Phase | ID | Status | Description / gate |
+|---|---|---|---|
+| Alpha2A | MET-ENFORCE-010 / W02a-F | SOURCE_PREPARED | Native qualification record v3 as the 209th packet; verify from the owner's App |
+| Alpha2 | MET-PERF-032 / PERF-032 | VERIFY_PASSED_MERGED | Verify 564 s |
+| Alpha2 | CATALOG-BANK, IND-BANK-001 to IND-BANK-005, KN-BANK-001, CTRL-BANK-001, DIST-BANK-001, CONF-BANK-001 | WAITING_PACKET_PUBLICATION | Banking catalog follow-ups, pack, inputs and journey |
+| Alpha2A | W02d, W02f, W02b-F, W02c-F, W02e-F, W02g-F | WAITING_EXACT_PACKETS | seccomp, admission; follow-ups |
+| Alpha2 qualification | CONF-LINUX-001 / CONF-A2-001 | WAITING_PREREQUISITES | Linux verification only when mandatory |
+
+Keep the inherited 64 argv unchanged (the installed activation cap and the verifier's inheritance rule; the new
+layer validator adds no argv and runs inside the outer pytest), 420/750/900 s/15 min and 32 MiB. No cloud, runner registration,
+live/native/tenant or model-effort changes. Phase-end effort transition NOT_DUE.
+Prior checkpoints below are history only.
+
+## Historical PERF-032 source checkpoint — MET-PERF-032 source preparation, October 7, 2026
 
 Alpha2 OPEN. MET-SECTOR-001 passed required verify (64/64, 692 s) and merged as main
 8f77c3f; SECTOR-D1 is recorded. Verify has grown 545, 554, 639 and 692 s over packets 204-207,
@@ -895,7 +928,7 @@ The [item-level backlog](../architecture/unified-roadmap-backlog.json) records p
 | Alpha 2 CI capacity | MET-UNIFY-008 / PR #141 | BLOCKED_SELF_HOSTED_CI | Source PR open; `verify` queued with no registered runner |
 | Alpha 2 CI capacity | MET-LINUX-003 / PR #142 | BLOCKED_SELF_HOSTED_CI | Draft source PR open; `verify` queued on the same labels; queue must be serialized before one-job admission |
 | Alpha 2A | W01 / MET-ENFORCE-004 | DESIGN_RESOLVED_REVIEWED | G04–G07/G09 resolved at design level and independently reviewed; E01–E12 remain OPEN_UNPROVEN |
-| Alpha 2A | W02 (W02a MET-ENFORCE-005, W02g MET-ENFORCE-006, W02b MET-ENFORCE-007, W02c MET-ENFORCE-008, W02e MET-ENFORCE-009) / W03–W07 | W02a, W02g, W02b, W02c and W02e VERIFY_PASSED_MERGED; others WAITING_EXACT_PACKETS | W02a v2 record contract, W02g I06 backend profile, W02b I05 channel, W02c I07 writer and W02e SELinux matrix contracts reviewed; remaining W02 parts and W03–W07 are labels, not executable YAML |
+| Alpha 2A | W02 (W02a MET-ENFORCE-005, W02g MET-ENFORCE-006, W02b MET-ENFORCE-007, W02c MET-ENFORCE-008, W02e MET-ENFORCE-009, W02a-F MET-ENFORCE-010) / W03–W07 | W02a, W02g, W02b, W02c and W02e VERIFY_PASSED_MERGED; W02a-F SOURCE_PREPARED; others WAITING_EXACT_PACKETS | W02a v2 record contract, W02g I06 backend profile, W02b I05 channel, W02c I07 writer and W02e SELinux matrix contracts reviewed; remaining W02 parts and W03–W07 are labels, not executable YAML |
 | Alpha 2A | CONF-FIX-010 | BLOCKED_SAFE_DESIGN | Zero product attempts; requires separately reviewed safe design and bounded packet authority |
 | Alpha 2A | CONF-LIVE-004/005/006 | WAITING_PREREQUISITES | Native probes, package handoff and trusted campaign integration |
 | Alpha 2A | CONF-LINUX-001 native AMD64 | NOT_RUN_ENV_UNAVAILABLE | Fresh real-Linux PASS gates runtime coding of CTRL-INTEGRATE-001, MODEL-001, EXEC-001 and RUN-001; ARM64 separate |
@@ -936,7 +969,8 @@ These checkboxes count only the named deliverable at the stated evidence level. 
 - [x] Alpha 2A · W02c / MET-ENFORCE-008 · Publish the independently reviewed I07 policy-writer channel contract and closed policy-kind table; pass required verify through the owner's App.
 - [x] Alpha 2A · W02e / MET-ENFORCE-009 · Publish the independently reviewed SELinux domain, type, boolean and permission matrix with the F2 closure; pass required verify through the owner's App.
 - [x] Alpha 2 · MET-SECTOR-001 · Record owner decision SECTOR-D1 (banking replaces white goods through the first enterprise release) with packet dispositions and successor proposals; pass required verify through the owner's App.
-- [ ] Alpha 2 · PERF-032 / MET-PERF-032 · Cut required-verify time by removing four repeated computations with unchanged refusals; pass required verify through the owner's App.
+- [x] Alpha 2 · PERF-032 / MET-PERF-032 · Cut required-verify time by removing four repeated computations with unchanged refusals; pass required verify through the owner's App.
+- [ ] Alpha 2A · W02a-F / MET-ENFORCE-010 · Publish the independently reviewed native qualification record v3 closing the findings carried to W02a-F; pass required verify through the owner's App.
 - [ ] Alpha 2A · CONF-FIX-010 · Complete safe design and exact authority before any product attempt.
 - [ ] Alpha 2A · CONF-LIVE-004 · Produce the exact native-probe source implementation and separately qualify it.
 - [ ] Alpha 2A · CONF-LIVE-005 · Produce a reproducible selected package and operator handoff.

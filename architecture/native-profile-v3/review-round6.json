@@ -1,0 +1,289 @@
+{
+  "schemaVersion": "planeon.internal.native-profile-v3-review/v1",
+  "round": 6,
+  "reviewDate": "2026-10-08",
+  "verdict": "PASS_FOR_SOURCE_PUBLICATION",
+  "subjectSha256": {
+    "README.md": "93b6f3897f4011ab85832b4319db44e4e1e94566adf61062a6170d1437dfcf50",
+    "REVIEW_BRIEF.md": "0a1f639db5db1d73e9a977519923d1158edff26e2b337a1ad7e5a59e2c874f4a",
+    "qualification.schema.json": "ae5cbb6aa39f4edfa2d9919f25e55bad9ab214a99ca927c5afe7e2d943946ac5",
+    "vectors.json": "14af47a69c972039294be8659c31332acd5326bfb0a3a38384a2c6bf9d11fe6d",
+    "native_qualification_v3.py": "2ef5c14ad5d8c962cf3703ccd076059685ed8dcc852059e4f863e8d9dc8965ad"
+  },
+  "findings": [
+    {
+      "id": "R6-1",
+      "severity": "NOTE",
+      "location": "README 'W02e K1: boot entries' row (the sentence 'What this guarantees: ...' and the environment sentence); README K1 statement, the W03/T04 list; scripts/native_qualification_v3.py comment at lines 59-64; README Round-5 dispositions R5-1 ('so both select the same root and initramfs') and R5-3",
+      "finding": "The model enforces exactly this:\n- no quote character (schema);\n- a split on single spaces;\n- every ENROLLED word fully matches one of the 11 KERNEL_PARAMETERS patterns, and lockdown=integrity is present;\n- MAINTENANCE is ENROLLED with MAINTENANCE_UNIT inserted exactly once, at any position.\nDecision 2 states this exactly: 'neither name units nor carry unit-bearing values', and the maintenance entry is bound to the enrolled one. The K1 row and the model comment go further in four places. None of them weakens the K1 discriminator.\n(a) 'no word of either entry names, adds, masks or overrides a systemd unit, carries root mount options'. In systemd v256:\n- in a systemd initrd, root= makes fstab-generator write sysroot.mount (add_sysroot_mount). For a device path (passno 1) it also writes systemd-fsck-root.service (generator_write_fsck_deps, then write_fsck_sysroot_service). root= also disables gpt-auto root discovery;\n- ro and rw are root mount flags: they set sysroot.mount's ro/rw option. On the host they suppress gpt-auto's remount-rw drop-in (add_partition_root_rw);\n- the maintenance entry's own word names a unit.\nsystemd fixes these unit names, and no value names a unit, so the effect is benign. The sentence is still literally untrue.\n(b) 'so both boot the same initramfs and root'. The binding fixes the initrd= words and the root= word only. Nothing on the command line names the kernel image an entry loads: the type #1 linux or efi key, or a UKI. So nothing binds:\n- a built-in initramfs, which init/initramfs.c do_populate_rootfs unpacks before the external initrd;\n- a UKI's embedded .initrd, and under Secure Boot its embedded .cmdline, which replaces the loader options (stub.c use_load_options);\n- systemd-stub's sidecar cpios: /.extra/credentials, /.extra/global_credentials (from \\loader\\credentials), /.extra/sysext and /.extra/confext. If the initramfs ships systemd-sysext.service (ConditionDirectoryNotEmpty=|/.extra/sysext), it merges the sysext images in the initrd under the strict signed-image policy (sysext.c pick_image_policy). /.extra/confext is on the initrd confext search path (discover-image.c), but v256's systemd-confext.service has no condition on it.\nAlso, root=/dev/nfs is accepted (bound probe G10). It hands root selection to the initramfs, which may take the root from the network.\nThe K1 statement lists only 'the initramfs contents'. It names neither the kernel image or UKI of each entry nor these sidecars.\n(c) Environment sentence. Two more allowlisted keys reach init's environment on some kernels: initrd= without CONFIG_BLK_DEV_INITRD (init/Makefile builds do_mounts_initrd.o only with it), and security= without CONFIG_SECURITY (security.o). Both are inert names for systemd. No allowlisted bare word reaches argv: ro and rw (do_mounts.c) and quiet (main.c) are always built.\n(d) Credentials bullet. systemd-stub packs the /.extra credentials; systemd-boot v256 does not. import-creds also imports /.extra/global_credentials, into the encrypted, untrusted directory, so these credentials take effect only if they decrypt.",
+      "requiredChange": "- Restate 'What this guarantees' in decision 2's terms:\n  - no word names a unit or carries a unit-bearing value. root=, ro and rw only drive systemd's fixed root-mount units;\n  - the two command lines differ only by the maintenance unit word, so both name the same initrd= files and root= device.\n- Add to the K1 statement's W03/T04 list:\n  - the kernel image or UKI that each entry loads (the type #1 linux or efi key), with its built-in initramfs, embedded .initrd and .cmdline, and addons;\n  - systemd-stub's sidecars (/.extra/global_credentials, sysext and confext images);\n  - optionally, a network root (root=/dev/nfs).\n- Add initrd= and security= to the environment sentence, or write 'on kernels without the handler of an allowlisted key'.\n- Apply the same wording to the model comment and the R5-1 disposition."
+    },
+    {
+      "id": "R6-2",
+      "severity": "NOTE",
+      "location": "README 'W02e K1: boot entries' row (round-6 text); README 'Round-2 findings and dispositions', row R2-2",
+      "finding": "R2-2 required the K1 row to say that systemd-boot can append the SMBIOS io.systemd.boot.kernel-cmdline-extra string, which then appears in /proc/cmdline.\n- Rounds 3 and 4 said so. Round 5 reworded it to 'is outside it'. Round 6 removes the mention.\n- The R2-2 disposition row still says 'The K1 row names the SMBIOS kernel-cmdline-extra string'. That is no longer true.\nIn v256 the string is still appended:\n- boot.c image_start appends it for LOADER_LINUX entries on non-confidential VMs, regardless of Secure Boot;\n- stub.c appends io.systemd.stub.kernel-cmdline-extra the same way.\nThe words then appear in /proc/cmdline. On the enrolled boot they must therefore satisfy the grammar, and through the binding they appear in both entries. So a hypervisor controls part of the bound text. The model is unaffected.",
+      "requiredChange": "Restore one sentence in the K1 row or the K1 statement:\n- on a non-confidential VM, systemd-boot (io.systemd.boot.kernel-cmdline-extra) and systemd-stub (io.systemd.stub.kernel-cmdline-extra) append SMBIOS words to /proc/cmdline;\n- those words are part of both declared entries and must be inside the grammar."
+    },
+    {
+      "id": "R6-3",
+      "severity": "NOTE",
+      "location": "vectors.json: the one-sided command-line negatives, V71 and V72; README 'Files' ('each pinned to its exact refused rule' and the list of second-defect cases); scripts/native_qualification_v3.py check_record lines 252-258",
+      "finding": "(a) The binding makes every one-sided command-line negative a two-defect case. V38, V47, V48, V49, V52, V53, V57, V59-V66, V69, V70 and V73-V76 also break 'maintenance boot entry differs from the enrolled entry beyond the maintenance unit'. V54, V58 and V68 are refused by the schema first.\nThe README names only L14, V15-V17 and V42 as second-defect cases.\nI disabled the enrolled grammar, the maintenance grammar and the lockdown rule together. No case is accepted; only 20 refusal messages change to the binding message. So the vectors pin the grammar and the lockdown requirement only by their messages. An implementation checked on accept or refuse alone could omit both.\nUnder the binding, the two grammar rules imply each other. In round 5 these cases were single-defect: each was accepted with only the grammar rule disabled.\n(b) Only V71 (a root= change) and V72 (an initrd= change) pin the binding. Every vector still passes under each of these weaker or different bindings: order-insensitive, set-based, superset, root=/initrd= words only, and 'unit last'.\nWord order matters:\n- the kernel (root_dev_setup) and fstab-generator each keep the last root=;\n- the kernel loads microcode only from the first initrd.\nNo vector has a maintenance entry that differs only by a grammar word (probes GM3 drop lockdown=integrity, GM5 drop ro, GM6 add quiet) or only by word order (GM7). The model refuses all four.\n(c) R5-4 residuals. No case changes under any of these hand mutants:\n- re-admitting rootfstype=, which the README states is refused;\n- any initrd= value. The class excludes ',', which stops early_initrd from treating initrd=<addr>,<size> as a physical range that reserve_initrd_mem uses;\n- security=[a-z]+. security=apparmor disables SELinux as a legacy major LSM (ordered_lsm_parse), so the claim 'SELinux ... can only be enabled' rests on this pattern;\n- lockdown=[a-z]+ and loglevel=[0-9]+;\n- dropping root=/dev/ or LABEL=, or admitting any root= value (root=fstab, tmpfs, gpt-auto).",
+      "requiredChange": "- Make the grammar and lockdown negatives bound pairs (MAINTENANCE = ENROLLED + the unit), so that each is refused by its own rule. Then either drop the maintenance-grammar rule, which the binding implies, or keep it and state the overlap. Otherwise, list these cases under Files as also breaking the binding.\n- Add negatives for a maintenance entry that differs from the enrolled one only by a grammar word (for example, without lockdown=integrity) and only by word order.\n- Optional: add negatives for security=apparmor, rootfstype= and initrd=<addr>,<size>, and accepted cases for root=LABEL= and root=/dev/."
+    }
+  ],
+  "openItemStatus": {
+    "R5-1": {
+      "status": "CLOSED",
+      "note": "The required change is implemented.\n- rootflags= and rootfstype= are outside the grammar. V69 pins G01 and V70 pins G06.\n- The maintenance entry must equal the enrolled entry plus the unit word. V71 and V72 pin a changed root= and initrd=.\nRe-run probes:\n- G01-G08, G14, G19 and G20 are refused by the grammar, whether one entry or both entries carry the word;\n- GM1 is refused by the maintenance grammar, and GM2 by the binding;\n- G09-G13 and G16-G18 are accepted only when both entries carry them, which is the design.\nThe K1 row, decision 2 and the model comment are restated. Decision 2 is exact. The K1 row and the comment overstate the guarantee (R6-1)."
+    },
+    "R5-2": {
+      "status": "CLOSED",
+      "note": "(a) console= is outside the grammar. V76 pins it, and T31, G15, L09 and L14 are refused. Admitting console= is stated as a reviewed W03 change, ordered under W01 §5.2 S2.\n(b) The environment sentence is now conditional on kernel configuration. It omits initrd= and security= (R6-1(c)).\n(c) The grammar is widened through a contract revision (KERNEL_PARAMETERS).\n(d) V67 has its own message, 'names the maintenance target twice'."
+    },
+    "R5-3": {
+      "status": "CLOSED",
+      "note": "The K1 statement lists every SystemdOptions word, unit-defining credentials from SMBIOS, fw_cfg and /.extra, and the root's init binary and generators. Remaining precision items are raised as R6-1(b) and (d): global_credentials, the stub rather than systemd-boot, the kernel image or UKI, and sidecars."
+    },
+    "R5-4": {
+      "status": "CLOSED",
+      "note": "- V73, V74 and V75 now catch the selinux=[0-9], enforcing=[0-9] and match/search mutants, by message only (R6-3(a)).\n- A08 and A09 pin rw, quiet, loglevel=, PARTUUID= and '+'. L01 (Debian '+') is accepted when both entries carry it.\n- The optional accepted cases for LABEL= and root=/dev/ were not added. The unpinned residuals are in R6-3(c)."
+    },
+    "R4-1": {
+      "status": "CLOSED",
+      "note": "Not reopened. E1-E6 are refused by the grammar, whether one entry or both entries carry them. M-a, M-b and M-c are refused by the maintenance grammar."
+    },
+    "R4-2": {
+      "status": "CLOSED",
+      "note": "Not reopened. Runlevel words are refused (V59, V60, and the bound tokens T02 and T09-T12). The V17 wording is kept. V68 is a single schema error."
+    },
+    "R3-1": {
+      "status": "CLOSED",
+      "note": "Not reopened. The schema refuses both quote characters (V54, V58, V68)."
+    },
+    "R3-2": {
+      "status": "CLOSED",
+      "note": "Not reopened for its scope: V57, M14, V15-V17 listed as second-defect, and 'migration inputs' named. The binding creates new second-defect boot-entry cases, which are raised separately as R6-3(a)."
+    },
+    "R3-3": {
+      "status": "CLOSED",
+      "note": "Not reopened. W4-b is refused 'native-only role closure lists an interpreter', and W4-c is accepted."
+    },
+    "R2-1": {
+      "status": "CLOSED",
+      "note": "Not reopened. '--' and every later word are refused (V49, V64), and quotes are refused by the schema."
+    },
+    "R2-2": {
+      "status": "PARTIAL",
+      "note": "The positives still put initrd= first, matching v256 initrd_prepare. The K1 row no longer mentions the SMBIOS kernel-cmdline-extra string, but the R2-2 disposition row still says it does (R6-2). This is a documentation regression only."
+    },
+    "R2-3": {
+      "status": "CLOSED",
+      "note": "Not reopened (V55)."
+    },
+    "R2-4": {
+      "status": "CLOSED",
+      "note": "Not reopened (V41, V50, V56)."
+    },
+    "R2-5": {
+      "status": "CLOSED",
+      "note": "Not reopened."
+    },
+    "R2-6": {
+      "status": "CLOSED",
+      "note": "Not reopened."
+    },
+    "R2-7": {
+      "status": "CLOSED",
+      "note": "Not reopened. Caller obligation 3 is unchanged."
+    },
+    "W1": {
+      "status": "CLOSED",
+      "note": "Not reopened. I-a is refused 'one inode reported for two files': the gate executable's capture moved to the server executable's (device, inode), with its image, member images and maps kept consistent. I-b, the same inode on another device, is accepted."
+    },
+    "W2": {
+      "status": "CLOSED",
+      "note": "Not reopened. M01-M14 replay. The positives are accepted under full, v1-only, v2-only and attested-empty histories."
+    },
+    "W3": {
+      "status": "CLOSED",
+      "note": "Not reopened (V45)."
+    },
+    "W4": {
+      "status": "CLOSED",
+      "note": "Not reopened (V46, V55)."
+    },
+    "W5": {
+      "status": "CLOSED",
+      "note": "Not reopened."
+    },
+    "W6": {
+      "status": "CLOSED",
+      "note": "Not reopened. The K1 statement keeps its limits: declared entries, a runtime-writable LoaderEntrySelected, /proc/cmdline as the source, and nothing measured."
+    },
+    "W7": {
+      "status": "CLOSED",
+      "note": "Not reopened (V50)."
+    },
+    "W8": {
+      "status": "CLOSED",
+      "note": "Not reopened (V51, A07)."
+    },
+    "W9": {
+      "status": "CLOSED",
+      "note": "Not reopened."
+    },
+    "P1": {
+      "status": "CLOSED",
+      "note": "Not reopened.\n- C-a, C-b, C-c and C-e are refused.\n- C-d (a library shared by three native roles) and A05 are accepted.\n- V01-V06, V46 and V55 replay."
+    },
+    "P3": {
+      "status": "CLOSED",
+      "note": "Not reopened.\n- S-a, S-d, S-f and S-g are refused.\n- S-c (a nested unpopulated leftover with a raised count) is accepted.\n- V10-V17 and V41 replay."
+    },
+    "P4": {
+      "status": "CLOSED",
+      "note": "Not reopened (V18)."
+    },
+    "P5": {
+      "status": "CLOSED",
+      "note": "Not reopened. V19 and Q07 replay, and S-e is refused 'role-domain process outside its role cgroup'."
+    },
+    "P6": {
+      "status": "CLOSED",
+      "note": "Not reopened (V20-V22)."
+    },
+    "P7(a)": {
+      "status": "CLOSED",
+      "note": "Not reopened. V24 and V25 replay. All four positives are refused 'test-only implementation profile' without test_fixture=True."
+    },
+    "P7(b)": {
+      "status": "CLOSED",
+      "note": "Unchanged. The schema is byte-identical to rounds 4 and 5 (ae5cbb6a), and R61-R66 replay."
+    },
+    "P7(c)": {
+      "status": "CLOSED",
+      "note": "Unchanged (V23)."
+    },
+    "networkPolicyAgentIdentity": {
+      "status": "CLOSED",
+      "note": "Unchanged (V26-V28, V51, A07). The 21 enum identities are pairwise distinct, and the KUBELET system:node: pattern matches none of them. So disjointness stays subsumed."
+    },
+    "W02eLabelSlots": {
+      "status": "CLOSED",
+      "note": "Unchanged (V29-V32)."
+    },
+    "E1Census": {
+      "status": "CLOSED",
+      "note": "Re-derived from v6.12. The 28 CGROUP_ATYPE entries plus BPF_LSM_CGROUP equal the 29 uapi attach types containing CGROUP. Those equal the 22 census types plus the 7 hooks, and the two sets are disjoint. $defs.effectiveCensus requires exactly the 22 and allows no others. V33-V36 replay."
+    },
+    "K1": {
+      "status": "CLOSED",
+      "note": "The record-level discriminator holds and is stronger: the two command lines now differ exactly by the unit word. K-a to K-e are refused: role captures or the lifecycle capture on another entry, a hash taken with the newline, equal IDs, and equal command lines. Statement precision is raised as R6-1 and R6-2."
+    }
+  },
+  "questionAnswers": {
+    "Q0": "The README dispositions for R5-1 to R5-4 are true in the round-6 bytes.\n- rootflags=, rootfstype= and console= are gone.\n- The binding is implemented: MAINTENANCE without MAINTENANCE_UNIT must equal ENROLLED, and the unit appears exactly once.\n- V67 has its own message, and V69-V76, A08 and A09 are present and replay.\n- The environment and widening sentences are restated, and the installed-state list is extended.\nStated guarantee against the model:\n- the model enforces exactly what decision 2 says: a closed grammar whose words neither name units nor carry unit-bearing values, with the maintenance entry bound to the enrolled one;\n- the K1 row's 'What this guarantees' sentence and the model comment overstate it (R6-1). root= and ro/rw drive systemd's fixed root-mount units, and the binding fixes the initrd= and root= words, not 'the same initramfs';\n- I checked one possible split divergence: systemd v256 splits /proc/cmdline with EXTRACT_RETAIN_ESCAPE, so a backslash in an initrd= path is literal. For the allowed characters, the model's single-space split equals both the kernel's (next_arg) and systemd's.\nInstalled and firmware state beyond the command line:\n- the listed items are accurate: default.target, aliases, generators, the init binary, initramfs contents, SystemdOptions and credentials;\n- not listed: the kernel image or UKI each entry loads, its built-in initramfs, a UKI's embedded .initrd and .cmdline, and the stub's global credentials, sysexts and confexts (R6-1(b));\n- the SMBIOS kernel-cmdline-extra mention that R2-2 required was dropped (R6-2).\nEarlier items: no CLOSED item reopened in substance. R2-2's documentation half regressed and is PARTIAL.\nRe-run probes:\n- E1-E6, M-a to M-c, 50 enrolled tokens (bound), 8 maintenance tokens, G01-G08, G14, G19, G20, GM1 to GM7 and K-a to K-e are refused;\n- G09-G13 and G16-G18 are accepted only when both entries carry the same word.",
+    "Q1": "All twelve carried items are CLOSED as required: P1, P3, P4, P5, P6, P7(a), P7(b), P7(c), the network-policy agent identity, the W02e label slots, E1's census and K1.\nThe round-6 diff (723e86c to 946e03c) touches only:\n- the model's KERNEL_PARAMETERS, its comment and the three maintenance rules;\n- README and brief wording;\n- V67's refusal, the new V69-V76, A08 and A09;\n- the source index, the round5/ snapshot and review-round5.json.\nThe schema is byte-identical. round5/ equals the 723e86c subject byte for byte. round1/ to round4/ and the reviews of rounds 1-4 are unchanged.",
+    "Q2": "Every v2 rule still holds.\n- All 131 v2 negatives and the 4 v2 accepted variants replay.\n- R70, R71, L13 and Q07 refuse as the README states.\n- The require-level mutation replay leaves 47 uncaught require sites (46 distinct messages), the same set as in round 5: schema pins, data-bound guards, 'migration inputs', both 'profile substitution' checks, and v2 carry-overs without vectors. Every v3 require is caught.\nLegitimate hosts accepted:\n- A05-A09; C-d (a shared library between native roles); S-c (a leftover unpopulated scope); I-b; W4-c;\n- when both entries carry them: L01 (Debian '+' path), L10 (/dev/mapper root), L15 (microcode initrd first), L16 (LABEL=), L17 (/dev/vda2), L18 (no initrd=), and the unit first or mid-line in the maintenance entry.\nNew refusals by design: the maintenance entry can no longer differ from the enrolled one.\n- A separate maintenance initramfs (V72) and another root (V71) are refused.\n- GM3 (maintenance without lockdown=integrity), accepted in round 5, is refused. The maintenance boot therefore also runs under lockdown=integrity and the enrolled SELinux words. The W01 §5.5 installer steps (policy load, relabel, fs-verity enable) are not lockdown-gated.\nRefusals W03 can avoid: console=, rootflags= (subvol=@, subvol=root), rootfstype=, rd.luks.*, GRUB's BOOT_IMAGE=, kernel hardening words (fips=1, audit=1, intel_iommu=on), PARTNROFF, by-path roots (':'), and a trailing space.",
+    "Q3": "All four facts hold in Linux v6.12. The README digests match the files I fetched at tag v6.12 (7d67e542, c0b27f27, 724cf75e, 362592cc).\n- Attach types: bpf-cgroup.h to_cgroup_bpf_attach_type has 28 CGROUP_ATYPE entries. Adding BPF_LSM_CGROUP gives the 29 uapi bpf_attach_type values containing CGROUP, which equal the 22 census types plus the 7 hooks.\n- Effective query: __cgroup_bpf_query with BPF_F_QUERY_EFFECTIVE reads cgrp->bpf.effective. For BPF_LSM_CGROUP it spans CGROUP_LSM_START to CGROUP_LSM_END (CGROUP_LSM_NUM is 10). compute_effective_progs carries ancestor programs attached with BPF_F_ALLOW_MULTI.\n- pids.current: pids_can_fork charges 1 per task, so threads count, and current reads the counter.\n- /proc/<pid>/exe: exec_binprm switches bprm->file to bprm->interpreter, set_mm_exe_file records it, and proc_exe_link returns get_task_exe_file.",
+    "Q4": "Yes. Recording both entries gives the record-level discriminator K1 asked for, and the binding sharpens it.\n- Each role and lifecycle capture must report the enrolled entry ID and the SHA-256 of its /proc/cmdline text.\n- The two command lines differ by exactly the unit word, so the hash separates them. K-a to K-e are refused.\nThe statement is accurate: loader-reported, not measured; LoaderEntrySelected is runtime-writable; the maintenance domain is a trusted installer that can reach any boolean state. It is sufficient for an honest maintenance boot, with the pinned booleans and hardening.lockdown as the evidence.\nIn the initrd, systemd honours only rd.systemd.unit= (main.c), so the maintenance unit takes effect after switch-root.\nPrecision items: R6-1 (what 'same initramfs and root' covers; the kernel image or UKI and the stub sidecars) and R6-2 (SMBIOS cmdline-extra).",
+    "Q5": "Census and closure soundness are unchanged; the round-6 model diff touches only boot-entry rules.\nRefused:\n- S-a, S-d, S-f, S-g and S-e;\n- I-a, with a consistent image;\n- C-a, C-b, C-c and C-e;\n- W4-b.\nI found no way for a bundle to carry its own observation of a foreign cgroup, process or program and qualify. No role can run another role's code or an interpreter's.\nThe stated residuals stand: interpreted scripts are declared, not observed; a Python runtime outside the tree; a fabricated unpopulated census entry with a matching count.",
+    "Q6": "My independent replay rebuilds every case from fresh JSON copies. Each case gives exactly its pinned result:\n- the 4 positives are accepted under full, v1-only, v2-only and attested-empty histories, and refused 'test-only implementation profile' without the fixture flag;\n- 207/207 negatives, including 52 schema-level refusals, each a single error;\n- 9/9 accepted variants;\n- 14/14 cross-version cases;\n- 14/14 migration cases.\nSingle-defect status changed in round 6 (R6-3(a)):\n- V67, V71 and V72 are single-defect: each is accepted when only its own rule is disabled;\n- V42 is double-defect, as stated;\n- every one-sided command-line negative also breaks the binding.\nThe positives are byte-identical to round 5 and remain plausible for the kernel and the loader. A08 and A09 are plausible. A09's PARTUUID=8c4f2a10-01 has the MBR form, which is valid on an MBR-partitioned ESP.",
+    "Q7": "Nothing claims a native observation, a measured boot, a selected distribution, seccomp filters or an E01-E12 proof. The 'Not claimed' section and the DATA_CHECK_ONLY flags are intact. The only overclaims are in the boot-entry wording: 'both boot the same initramfs and root', and 'no word ... adds ... a unit, carries root mount options' (R6-1)."
+  },
+  "modelExecution": {
+    "environment": "Run from the worktree root as UV_PROJECT_ENVIRONMENT=<harness-onion>/.venv PYTHONDONTWRITEBYTECODE=1 uv run --offline --frozen --no-sync python, with jsonschema Draft 2020-12.\nInputs were byte-identical copies of the 946e03c blobs in /private/tmp/claude-501/w02af-review6/subject/: the model, the schema and the vectors. The v1 and v2 schemas and vectors also came from 946e03c and are unchanged since base 51440c8.\nThe scripts are my own: harness.py, probes.py, probes_inode.py, bootrules.py, mutate.py, handmut.py and combo.py. The round-5 probe definitions (G, GM, L, E, M, T, U, K, C, W4, S and I) were read from the round-5 reviewer's scratch scripts and re-implemented.\nHEAD stayed at 946e03c (tree 9ffcbdbdac2acf945a6a1f971e307ad4409a851a). The five subject files hashed as in source-index.json at the start and the end, in the commit and in the working tree. No .venv or __pycache__ was created in the worktree.",
+    "extraProbes": [
+      {
+        "probe": "Schema pins and inventory",
+        "expected": "v3, v1 and v2 canonical digests equal the model and vector pins; 4/207/9/14/14 cases; unique IDs; a valid 2020-12 schema",
+        "observed": "All equal (1c793035..., 8e184d60..., fd1657c9...). Counts and IDs are as expected, and the schema is valid."
+      },
+      {
+        "probe": "Independent replay of every vector (own JSON-copy applier; qualification cases with full v1 and v2 histories; testFixture defaults to true)",
+        "expected": "every pinned result",
+        "observed": "0 mismatches. 207/207 negatives (52 schema-level, all single-error), 9/9 accepted, 14/14 cross-version and 14/14 migration. The positives are accepted under all four history shapes and refused without the fixture flag."
+      },
+      {
+        "probe": "Round-4 probes E1-E6 (ENROLLED only, and both entries) and M-a to M-c; all captures rebound",
+        "expected": "refused",
+        "observed": "All refused by the enrolled or the maintenance grammar."
+      },
+      {
+        "probe": "50 enrolled tokens carried in both entries (earlier-round tokens plus rodata=off, console=, rootflags=, rootfstype=, lockdown=confidentiality, noinitrd, root=fstab/tmpfs/gpt-auto, security=apparmor, loglevel=8, initrd=<addr>,<size>, systemd.gpt_auto=0, debug, ro=1, RO, quiet=1, ...); 8 maintenance tokens",
+        "expected": "refused, except words inside the grammar",
+        "observed": "All refused except root=/dev/nfs (T40), which the grammar admits (R6-1(b)). The unit twice is refused with V67's message."
+      },
+      {
+        "probe": "K-a to K-e (a role capture or the lifecycle capture on the maintenance entry; a hash with the newline; equal IDs; equal command lines)",
+        "expected": "refused",
+        "observed": "observed on another entry (K-a, K-b, K-e); indistinguishable (K-c, K-d)"
+      },
+      {
+        "probe": "Round-5 G01-G20, each with ENROLLED only and with both entries carrying the word",
+        "expected": "G01-G08, G14, G15, G19 and G20 refused by the grammar; the rest bound",
+        "observed": "As expected. One-sided G09-G13 and G16-G18 are refused by the binding. With both entries carrying them they are ACCEPTED, which is the design: the same root and initrd words."
+      },
+      {
+        "probe": "GM1-GM7 (maintenance rootflags=, another root, no lockdown, another initrd, ro dropped, quiet added, words reordered)",
+        "expected": "refused",
+        "observed": "GM1 is refused by the maintenance grammar and GM2-GM7 by the binding. GM3 was accepted in round 5."
+      },
+      {
+        "probe": "L01-L20 legitimate-entry probes, with ENROLLED only and with both entries carrying the change",
+        "expected": "documented",
+        "observed": "Accepted when both entries carry them: L01 ('+'), L10, L15, L16 (LABEL=), L17 (/dev/vda2), L18 (no initrd=), and the unit first or mid-line in the maintenance entry. Refused by the grammar: BOOT_IMAGE=, a trailing space, subvol=root and subvol=@, rd.luks.uuid=, intel_iommu=on, fips=1, audit=1, both console= forms, PARTNROFF, and an added lockdown=confidentiality."
+      },
+      {
+        "probe": "N01-N12 binding edge cases",
+        "expected": "documented",
+        "observed": "Accepted when both entries carry them: duplicate root= words, ro with rw, a trailing-backslash initrd path (inert: systemd keeps backslashes literal), root=/dev/../run/..., initrd=0x1000 (no comma, so memparse ignores it), minimal 'lockdown=integrity', lockdown twice, and loglevel=0 quiet. Refused: a double space (an empty word); a maintenance entry without the unit ('does not select'); the unit twice; the unit in the enrolled entry."
+      },
+      {
+        "probe": "C-a, C-b, C-c, C-d, C-e, W4-b, W4-c, S-a, S-c, S-d, S-e, S-f, S-g, I-a, I-b",
+        "expected": "C-d, W4-c, S-c and I-b accepted; the rest refused",
+        "observed": "As expected. I-a was rebuilt with a consistent image, member images and maps, and is refused 'one inode reported for two files'."
+      },
+      {
+        "probe": "Require-level mutation replay (each of 134 requires set to True; every vector, positive, cross-version and migration case replayed)",
+        "expected": "every v3 rule caught",
+        "observed": "Each boot-entry require is caught: indistinguishable (2 cases), enrolled grammar (14), lockdown (1), maintenance grammar (5), unit absent (1), unit twice (1) and binding (2). The 47 uncaught require sites (46 messages; 'profile substitution' appears twice) are the same set as in round 5."
+      },
+      {
+        "probe": "Grammar and binding hand mutants (45)",
+        "expected": "each caught",
+        "observed": "Caught by an accept/refuse change:\n- '+', UUID-only and PARTUUID (A09);\n- rw, quiet and loglevel= (A08);\n- dropping initrd=, root=UUID|PARTUUID|LABEL, ro, security=, selinux=, enforcing= or lockdown= from the grammar (the positives);\n- count >= 1 (V67);\n- binding dropped (V71, V72).\nCaught by a message change only, because the one-sided negatives also break the binding (R6-3(a)): '--', 'any word', systemd.*, SYSTEMD_*, rd.*, runlevel digits, --unit, rootflags=, console=, the unit allowed in ENROLLED, lockdown in either entry, match or search instead of fullmatch (V75, V69, V70, V63), selinux=[0-9] (V73) and enforcing=[0-9] (V74).\nUncaught:\n- re-admitting rootfstype=;\n- any initrd= value;\n- any root=, root=/dev/ or LABEL= form;\n- loglevel=[0-9]+, lockdown=[a-z]+ and security=[a-z]+;\n- order-insensitive, set-based, superset, root=/initrd=-only and unit-last bindings (R6-3(b) and (c));\n- splitting on whitespace runs, which is benign because the kernel and systemd also coalesce spaces."
+      },
+      {
+        "probe": "Combined mutant: enrolled grammar, maintenance grammar and lockdown rule all disabled",
+        "expected": "some negative accepted",
+        "observed": "No case is accepted. 20 refusals change to the binding message (R6-3(a))."
+      },
+      {
+        "probe": "Attach-type derivation from v6.12; identity enums",
+        "expected": "22 + 7 = 29; enums pairwise distinct",
+        "observed": "Equal to the 29 attach types and to the schema's effectiveCensus required keys. The 21 identities are distinct, and none matches the KUBELET pattern."
+      }
+    ]
+  },
+  "sourcesRead": [
+    "Subject: commit 946e03c223a3ce71a88000566aac3b64bc0ec345 (tree 9ffcbdbdac2acf945a6a1f971e307ad4409a851a) on branch codex/met-enforce-010-native-profile-v3.\n- The five subject files were hash-verified against source-index.json at the start and the end, in the commit and in the working tree.\n- git diff 723e86c 946e03c was read for the README, brief, model, vectors and source index.\n- round5/ is byte-identical to the 723e86c subject, and review-round5.json matches its index digest (2bea5b50). round1/ to round4/ and review-round1.json to review-round4.json are unchanged.\n- review-round5.json was read in full. R2-2, R2-4 and R3-2 were read from review-round2.json and review-round3.json.",
+    "Predecessor inputs: every source-index digest matches the 946e03c blob, and the files are unchanged since base 51440c8 (base tree 4df04f61 verified).\n- The working-tree copy of scripts/validate_proxy_contract.py differs from the commit, an out-of-subject mechanical edit. It was not read.\n- Read: the v1 and v2 schemas and vectors, scripts/native_qualification_v2.py, and the HOST_INTERFACE_SPEC.md §5.2 S1/S2 lines.\n- Read, not run: scripts/validate_native_profile_v2.py at 946e03c, only for its _apply and _case replay semantics.\n- Grepped only: the selinux-matrix README and status.json (K1 and maintenance rows).\n- The v2 README, status and reviews and the i06 files were checked by digest only.\n- The other out-of-subject working-tree files were not read or run.",
+    "Round-5 reviewer scratch (/private/tmp/claude-501/w02af-review5/probes.py, probes2.py, mutate.py and mutation-req.json) was read for the probe definitions and the round-5 uncaught set. Nothing there was executed.",
+    "systemd v256 from raw.githubusercontent.com/systemd/systemd/v256 (SHA-256 prefixes):\n- command-line parsing: src/basic/extract-word.c (621b9b93), src/basic/extract-word.h (3977981d), src/basic/proc-cmdline.c (3f07d8f2) and src/basic/efivars.c (4766eb31);\n- generators: src/fstab-generator/fstab-generator.c (2a673b1c), src/gpt-auto-generator/gpt-auto-generator.c (633baf58), src/shared/generator.c (6b06631a), src/debug-generator/debug-generator.c (13f35b51) and src/getty-generator/getty-generator.c (4253be0d);\n- PID 1: src/core/main.c (263f984e) and src/core/import-creds.c (f0796704);\n- boot loader and stub: src/boot/efi/boot.c (3fca8df2) and src/boot/efi/stub.c (7298eff3);\n- extensions: src/sysext/sysext.c (b4aefcb9), src/shared/discover-image.c (945697f7), units/systemd-sysext.service (3fe0cbe6) and units/systemd-confext.service (1d01ee29).",
+    "Linux v6.12 from raw.githubusercontent.com/torvalds/linux/v6.12 (SHA-256 prefixes):\n- BPF and cgroup files: include/uapi/linux/bpf.h (7d67e542), include/linux/bpf-cgroup.h (c0b27f27), include/linux/bpf-cgroup-defs.h (724cf75e) and kernel/bpf/cgroup.c (362592cc), all matching the README; kernel/cgroup/pids.c (802a4643);\n- process image: fs/proc/base.c (3cd005fa) and fs/exec.c (98f1bd08);\n- boot parameter handling: init/main.c (dfa6cece), init/Makefile (7e384ce6), init/do_mounts.c (2826547d), init/do_mounts_initrd.c (9ee4d78b), init/initramfs.c (5496a328), kernel/params.c (901757da) and lib/cmdline.c (18d94acd);\n- security: security/Makefile (ca287489), security/security.c (4502c95b), security/selinux/hooks.c (b1db634b) and security/lockdown/lockdown.c (9a6d0599).\nNo util-linux source was needed this round."
+  ],
+  "actions": {
+    "filesEdited": false,
+    "githubMutated": false,
+    "nativeActions": false,
+    "referenceModelExecuted": true,
+    "repositoryValidatorsRun": false,
+    "runnerActivated": false,
+    "testsRun": false,
+    "warmSourcesAccessed": false
+  },
+  "reviewLimit": "This is a source-level, DATA_CHECK_ONLY review of the five subject files at commit 946e03c (tree 9ffcbdbd). The files were hash-verified at the start and the end of the review.\nIt establishes no native qualification. It establishes no kernel, SELinux, cgroup, BPF, boot-loader, systemd, initrd, sysext or TPM behaviour, no installed profile, selected distribution or seccomp filter, and no E01-E12 obligation. It authorizes nothing. A PASS is not authorization for anything installed.\nThe kernel and systemd facts come from reading published sources, not from running them. Which units an initramfs, root tree, UKI or sidecar ships is W03 installed state.\nRepository tests and validators were not run. The v3 model was executed only from byte-identical copies, through my own scripts in /private/tmp/claude-501/w02af-review6/. The out-of-subject working-tree edits and untracked files were not reviewed.\nOnly the repository (read-only), my scratch directory, the round-5 scratch scripts (read) and public source URLs were accessed. No GitHub, runner, sudo, cloud, native or warm-source action was taken."
+}

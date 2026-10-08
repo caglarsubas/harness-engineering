@@ -1,10 +1,7 @@
-# Independent review brief — I06 backend profile v2 (W02g-F), round 2
+# Independent review brief — I06 backend profile v2 (W02g-F), round 1
 
-Status: **CONTRACT_CANDIDATE_ROUND2_AWAITING_INDEPENDENT_REVIEW**. The authoring agent wrote this brief. It is not a
+Status: **CONTRACT_CANDIDATE_ROUND1_AWAITING_INDEPENDENT_REVIEW**. The authoring agent wrote this brief. It is not a
 verdict.
-
-Round 1 (`review-round1.json`) returned CHANGES_REQUIRED: N1-N3 CLOSED, R1-1 (MINOR) and R1-2 to R1-8 (NOTE). The bytes
-it reviewed are kept in `round1/`. README "Round-1 findings and dispositions" states how round 2 answers each finding.
 
 ## Subject
 
@@ -22,9 +19,6 @@ The working tree may also contain later mechanical history-chain edits. They are
 
 ## Questions to answer
 
-0. **Earlier findings.** For R1-1 to R1-8, is the README disposition true in the round-2 bytes? Do G19 and G20 build
-   backends that W02a v3 accepts and pin v1's SC08 distinctness rule? Is the new `qualificationDigest` spelling exactly
-   W02a's? Give CLOSED, PARTIAL or OPEN under `openItemStatus`, and confirm that N1-N3 stay CLOSED.
 1. **N1.** Does `check_evidence` now accept only evidence that names, by digest, a record that W02a v3's `check_record`
    accepts, with the evidence's identity and test-only state equal to that record's backend? Is applying `check_record`
    inside the check (rather than as a caller obligation) sound, and does it examine `cgroupPath`, `apiIdentities` and
@@ -59,11 +53,11 @@ modify any file.
 ## Result
 
 Return one JSON object:
-- `schemaVersion` `"planeon.internal.i06-backend-profile-v2-review/v1"`, `round` 2, `reviewDate`;
+- `schemaVersion` `"planeon.internal.i06-backend-profile-v2-review/v1"`, `round` 1, `reviewDate`;
 - `verdict`: PASS_FOR_SOURCE_PUBLICATION, CHANGES_REQUIRED or BLOCKED;
 - `subjectSha256`: subject file name to digest;
 - `findings`, each with `id`, `severity` (BLOCKING / MAJOR / MINOR / NOTE), `location`, `finding` and `requiredChange`;
-- `openItemStatus` (N1-N6 and R1-1 to R1-8), `questionAnswers` (Q0-Q7), `modelExecution`, `sourcesRead`;
+- `openItemStatus` (N1-N6), `questionAnswers` (Q1-Q7), `modelExecution`, `sourcesRead`;
 - `actions`, booleans: `filesEdited`, `githubMutated`, `nativeActions`, `referenceModelExecuted`,
   `repositoryValidatorsRun`, `runnerActivated`, `testsRun`, `warmSourcesAccessed`;
 - `reviewLimit`.

@@ -15,7 +15,7 @@
     "schemaVersion": "planeon.internal.i06-distribution-evidence/v2",
     "w02aRecord": {
       "schemaVersion": "planeon.internal.native-qualification/v3",
-      "qualificationDigest": "sha256:a0bc05a8bc0e851546a4b346a462beaecfdef3718eebcb826c25833f4223a365"
+      "sha256": "a0bc05a8bc0e851546a4b346a462beaecfdef3718eebcb826c25833f4223a365"
     },
     "implementationId": "unit-distribution",
     "testOnly": true,
@@ -6780,9 +6780,9 @@
           "op": "set",
           "path": [
             "w02aRecord",
-            "qualificationDigest"
+            "sha256"
           ],
-          "value": "sha256:f7d68a6528b164eab53727f5075a3907fcfcb1335d1f597f2c042f62503adc52"
+          "value": "f7d68a6528b164eab53727f5075a3907fcfcb1335d1f597f2c042f62503adc52"
         }
       ],
       "backendOps": [],
@@ -6797,9 +6797,9 @@
           "op": "set",
           "path": [
             "w02aRecord",
-            "qualificationDigest"
+            "sha256"
           ],
-          "value": "sha256:6738ff9ad572c009b86ca7f2057ce823bf3575d10a0f61267350223be3798804"
+          "value": "6738ff9ad572c009b86ca7f2057ce823bf3575d10a0f61267350223be3798804"
         }
       ],
       "backendOps": [],
@@ -6814,14 +6814,14 @@
           "op": "set",
           "path": [
             "w02aRecord",
-            "qualificationDigest"
+            "sha256"
           ],
-          "value": "a0bc05a8bc0e851546a4b346a462beaecfdef3718eebcb826c25833f4223a365"
+          "value": "sha256:a0bc05a8bc0e851546a4b346a462beaecfdef3718eebcb826c25833f4223a365"
         }
       ],
       "backendOps": [],
       "testFixture": true,
-      "intent": "record digest without W02a's sha256: prefix (round-1 R1-6)",
+      "intent": "record digest with a prefix (N1)",
       "refusal": "SC00 evidence names a different W02a record"
     },
     {
@@ -7060,235 +7060,8 @@
         }
       ],
       "testFixture": true,
-      "intent": "a name borrowed from another component's closure entry, refused by the per-component closure enum; W02a's share rule is subsumed (W02a R70; round-1 R1-2)",
+      "intent": "two backend components sharing an API identity (round-2 type sweep)",
       "refusal": "SC00 W02a v3 refuses the backend record: schema $.backendComponents.SERVICE_PROXY.apiIdentities[1] enum"
-    },
-    {
-      "id": "G19",
-      "ops": [],
-      "backendOps": [
-        {
-          "op": "set",
-          "path": [
-            "backendComponents",
-            "APISERVER",
-            "executable"
-          ],
-          "value": "/opt/qualification-k8s/bin/kubelet"
-        },
-        {
-          "op": "set",
-          "path": [
-            "backendComponents",
-            "APISERVER",
-            "artifactDigest"
-          ],
-          "value": "sha256:000000000000000000000000000000000000000000000000000000000000b004"
-        },
-        {
-          "op": "append",
-          "path": [
-            "backendComponents",
-            "APISERVER",
-            "filePaths"
-          ],
-          "value": "/opt/qualification-k8s/bin/kubelet"
-        },
-        {
-          "op": "set",
-          "path": [
-            "backendComponents",
-            "CONTAINER_RUNTIME",
-            "executable"
-          ],
-          "value": "/opt/qualification-k8s/bin/kubelet"
-        },
-        {
-          "op": "set",
-          "path": [
-            "backendComponents",
-            "CONTAINER_RUNTIME",
-            "artifactDigest"
-          ],
-          "value": "sha256:000000000000000000000000000000000000000000000000000000000000b004"
-        },
-        {
-          "op": "append",
-          "path": [
-            "backendComponents",
-            "CONTAINER_RUNTIME",
-            "filePaths"
-          ],
-          "value": "/opt/qualification-k8s/bin/kubelet"
-        },
-        {
-          "op": "set",
-          "path": [
-            "backendComponents",
-            "CONTROLLER_MANAGER",
-            "executable"
-          ],
-          "value": "/opt/qualification-k8s/bin/kubelet"
-        },
-        {
-          "op": "set",
-          "path": [
-            "backendComponents",
-            "CONTROLLER_MANAGER",
-            "artifactDigest"
-          ],
-          "value": "sha256:000000000000000000000000000000000000000000000000000000000000b004"
-        },
-        {
-          "op": "append",
-          "path": [
-            "backendComponents",
-            "CONTROLLER_MANAGER",
-            "filePaths"
-          ],
-          "value": "/opt/qualification-k8s/bin/kubelet"
-        },
-        {
-          "op": "set",
-          "path": [
-            "backendComponents",
-            "DATASTORE",
-            "executable"
-          ],
-          "value": "/opt/qualification-k8s/bin/kubelet"
-        },
-        {
-          "op": "set",
-          "path": [
-            "backendComponents",
-            "DATASTORE",
-            "artifactDigest"
-          ],
-          "value": "sha256:000000000000000000000000000000000000000000000000000000000000b004"
-        },
-        {
-          "op": "append",
-          "path": [
-            "backendComponents",
-            "DATASTORE",
-            "filePaths"
-          ],
-          "value": "/opt/qualification-k8s/bin/kubelet"
-        },
-        {
-          "op": "set",
-          "path": [
-            "backendComponents",
-            "NETWORK_POLICY_AGENT",
-            "executable"
-          ],
-          "value": "/opt/qualification-k8s/bin/kubelet"
-        },
-        {
-          "op": "set",
-          "path": [
-            "backendComponents",
-            "NETWORK_POLICY_AGENT",
-            "artifactDigest"
-          ],
-          "value": "sha256:000000000000000000000000000000000000000000000000000000000000b004"
-        },
-        {
-          "op": "append",
-          "path": [
-            "backendComponents",
-            "NETWORK_POLICY_AGENT",
-            "filePaths"
-          ],
-          "value": "/opt/qualification-k8s/bin/kubelet"
-        },
-        {
-          "op": "set",
-          "path": [
-            "backendComponents",
-            "SCHEDULER",
-            "executable"
-          ],
-          "value": "/opt/qualification-k8s/bin/kubelet"
-        },
-        {
-          "op": "set",
-          "path": [
-            "backendComponents",
-            "SCHEDULER",
-            "artifactDigest"
-          ],
-          "value": "sha256:000000000000000000000000000000000000000000000000000000000000b004"
-        },
-        {
-          "op": "append",
-          "path": [
-            "backendComponents",
-            "SCHEDULER",
-            "filePaths"
-          ],
-          "value": "/opt/qualification-k8s/bin/kubelet"
-        },
-        {
-          "op": "set",
-          "path": [
-            "backendComponents",
-            "SERVICE_PROXY",
-            "executable"
-          ],
-          "value": "/opt/qualification-k8s/bin/kubelet"
-        },
-        {
-          "op": "set",
-          "path": [
-            "backendComponents",
-            "SERVICE_PROXY",
-            "artifactDigest"
-          ],
-          "value": "sha256:000000000000000000000000000000000000000000000000000000000000b004"
-        },
-        {
-          "op": "append",
-          "path": [
-            "backendComponents",
-            "SERVICE_PROXY",
-            "filePaths"
-          ],
-          "value": "/opt/qualification-k8s/bin/kubelet"
-        }
-      ],
-      "testFixture": true,
-      "intent": "one multi-call executable (the kubelet binary) run by every component, each still owning its listed file, a backend W02a v3 accepts; refused by I06's distinctness rule (round-1 R1-1)",
-      "refusal": "SC08 components must use distinct executables with distinct content (one entry type per confined domain)"
-    },
-    {
-      "id": "G20",
-      "ops": [],
-      "backendOps": [
-        {
-          "op": "set",
-          "path": [
-            "backendFiles",
-            {
-              "path": "/opt/qualification-k8s/bin/kube-scheduler"
-            },
-            "sha256"
-          ],
-          "value": "sha256:000000000000000000000000000000000000000000000000000000000000b004"
-        },
-        {
-          "op": "set",
-          "path": [
-            "backendComponents",
-            "SCHEDULER",
-            "artifactDigest"
-          ],
-          "value": "sha256:000000000000000000000000000000000000000000000000000000000000b004"
-        }
-      ],
-      "testFixture": true,
-      "intent": "scheduler and kubelet files with one content digest, a backend W02a v3 accepts; refused by I06's distinctness rule (round-1 R1-1)",
-      "refusal": "SC08 components must use distinct executables with distinct content (one entry type per confined domain)"
     }
   ],
   "snapshotNegative": [

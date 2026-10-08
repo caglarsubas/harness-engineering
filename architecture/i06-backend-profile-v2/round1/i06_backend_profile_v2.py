@@ -6,11 +6,10 @@ later layers pin. The writer inventory, identity closure, upstream facts, upstre
 (scripts/i06_backend_profile.py) stay unchanged and are read from there. v2 answers the W02g round-2 findings
 carried to W02g-F:
 
-- N1: an evidence record names one W02a v3 record by schema version and qualification digest, and that record must be
-  one that W02a v3's `check_record` accepts. A test-only backend qualifies only in an explicit fixture call, as in
-  W02a v3's `check_qualification`. W02a v3 admits only the test-only unit-distribution backend, and this model is
-  bound to W02a v3's pinned schema, so no production call is accepted. Production evidence needs both a reviewed W02a
-  revision with a production backend profile and an I06 successor bound to it (W03).
+- N1: an evidence record names its W02a backend record by schema version and SHA-256, and that record must be one
+  that W02a v3's `check_record` accepts. A test-only backend qualifies only in an explicit fixture call, as in W02a
+  v3's `check_qualification`. W02a v3 admits only the test-only unit-distribution backend, so until W03 adds a
+  production backend profile through a reviewed W02a revision, no production call is accepted.
 - N2: the apiserver's loopback user system:apiserver holds no RBAC rule at all, not only no policy-relevant one.
 - N3: shared and nested backend cgroups are refused by W02a v3's `check_record`, which N1 applies.
 
@@ -42,30 +41,25 @@ check_inventory = v1.check_inventory
 check_closure = v1.check_closure
 
 
-def record_digest(record: Any) -> str:
-    """W02a's qualification digest of a record: "sha256:" and the lowercase hex SHA-256 of W02a's canonical JSON form
-    (sorted keys, no whitespace, UTF-8), as W02a v3 captures spell `qualificationDigest`."""
-    return "sha256:" + w02a.digest(w02a.canonical(record))
+def record_sha256(record: Any) -> str:
+    """SHA-256 of a W02a record in W02a's canonical JSON form (sorted keys, no whitespace, UTF-8)."""
+    return w02a.digest(w02a.canonical(record))
 
 
 def check_evidence(record: Any, inventory: dict, w02a_record: Any, w02a_profile: Any, w02a_endpoints: Any,
                    w02a_schema: dict, test_fixture: bool = False) -> None:
-    """Check one evidence record against SC00-SC15, bound by digest to one W02a v3 record that check_record accepts.
+    """Check one evidence record against SC00-SC15, bound by digest to a W02a v3 record that check_record accepts.
 
-    The evidence binds to that one record (one boot, nonce set and validity window) and is re-issued for each record.
-    `check_record` is not W02a's acceptance decision: combining this check with `check_qualification`'s acceptance of
-    the same record is the caller's composition (W03). Callers inherit W02a v3's caller obligations 1 (the profile is
-    valid under the pinned proxy profile contract) and 4 (`test_fixture=True` only when qualifying a test fixture).
     `test_fixture` must be True to accept a test-only backend; it is the only way to accept one (N1)."""
     require(type(test_fixture) is bool, "SC00 fixture flag must be a boolean")
     v1._keys(record, EVIDENCE_KEYS, "SC00 closed evidence record")
     require(record["schemaVersion"] == EVIDENCE_VERSION, "SC00 evidence version")
     reference = record["w02aRecord"]
-    v1._keys(reference, {"schemaVersion", "qualificationDigest"}, "SC00 closed W02a record reference")
+    v1._keys(reference, {"schemaVersion", "sha256"}, "SC00 closed W02a record reference")
     require(reference["schemaVersion"] == W02A_VERSION, "SC00 evidence names a W02a record of another version")
     refusal = w02a.explain(w02a.check_record, w02a_record, w02a_profile, w02a_endpoints, w02a_schema)
     require(refusal is None, "SC00 W02a v3 refuses the backend record: %s" % refusal)
-    require(type(reference["qualificationDigest"]) is str and reference["qualificationDigest"] == record_digest(w02a_record),
+    require(type(reference["sha256"]) is str and reference["sha256"] == record_sha256(w02a_record),
             "SC00 evidence names a different W02a record")
     backend = w02a_record["backendProfile"]
     require(type(record["testOnly"]) is bool and record["testOnly"] is backend["testOnly"],
@@ -81,10 +75,7 @@ def check_evidence(record: Any, inventory: dict, w02a_record: Any, w02a_profile:
 
 
 def check_rbac_snapshot(snapshot: Any, closure: dict, inventory: dict, bootstrap: Any, namespace: str) -> None:
-    """IC00-IC05 as in v1; in addition the loopback user system:apiserver holds no resource rule at all (N2).
-
-    The v1 snapshot shape carries resource rules only. Observer obligation: a non-resource-URL rule bound to
-    system:apiserver is not dropped; the observer refuses to produce the snapshot (carried to W03)."""
+    """IC00-IC05 as in v1; in addition the loopback user system:apiserver holds no RBAC rule at all (N2)."""
     v1.check_rbac_snapshot(snapshot, closure, inventory, bootstrap, namespace)
     for subject in snapshot["subjects"]:
         if (subject["kind"], subject["name"]) == LOOPBACK_USER:

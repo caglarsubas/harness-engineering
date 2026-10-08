@@ -4,8 +4,8 @@
   "criteria": [
     {
       "id": "SC00",
-      "requirement": "Closed evidence record that names one W02a record by schema version (planeon.internal.native-qualification/v3) and qualification digest (\"sha256:\" and the lowercase hex SHA-256 of W02a's canonical JSON form of the record, spelled as W02a captures spell qualificationDigest); W02a v3's check_record accepts that record; the evidence's implementationId and testOnly equal the record's backendProfile; a test-only backend qualifies only in an explicit fixture call, and the unit-distribution fixture identity never qualifies a production backend. The evidence is per record: combining it with check_qualification's acceptance of the same record is the caller's composition (W03)",
-      "source": "W02a P7(a); W02g review N1; W02g-F review R1-5, R1-6",
+      "requirement": "Closed evidence record that names its W02a record by schema version (planeon.internal.native-qualification/v3) and the SHA-256 of W02a's canonical JSON form of that record; W02a v3's check_record accepts the record; the evidence's implementationId and testOnly equal the record's backendProfile; a test-only backend qualifies only in an explicit fixture call, and the unit-distribution fixture identity never qualifies a production backend",
+      "source": "W02a P7(a); W02g review N1",
       "checkedBy": "check_evidence"
     },
     {
@@ -52,8 +52,8 @@
     },
     {
       "id": "SC08",
-      "requirement": "Exactly the W02a v3 record's backend components (six required, service proxy and network-policy agent optional), each a separate process in its W02a confined type, from a canonical executable path; W02a v3's backend rules hold because SC00 applies check_record: own domains and API identities; API identities within the W02g closure entry for each component, except that KUBELET may also hold at most one system:node:<node name> identity and APISERVER may hold none; owned, listed file paths; cgroups outside the planeon slice that are neither shared nor nested. Distinct executables with distinct content (one entry type per confined domain) is an I06 rule: W02a v3 lets backend components share code within its single backend owner class",
-      "source": "W02a backend rules; W02g review N1, N3; W02g-F review R1-1, R1-3",
+      "requirement": "Exactly the W02a v3 record's backend components (six required, service proxy and network-policy agent optional), each a separate process in its W02a confined type, from a canonical executable path with content distinct from every other component's; W02a v3's backend rules (own domains and API identities, API identities within the W02g closure, owned canonical file paths, cgroups outside the planeon slice that are neither shared nor nested) hold because SC00 applies check_record",
+      "source": "W02a backend rules; W02g review N1, N3",
       "checkedBy": "check_evidence"
     },
     {
@@ -118,8 +118,8 @@
     },
     {
       "id": "IC03",
-      "requirement": "No grant beyond the subject's closure entry; the loopback user system:apiserver holds no resource rule of any kind. The snapshot shape carries resource rules only, so an observer that finds a non-resource-URL rule bound to system:apiserver refuses to produce the snapshot (observer obligation, W03)",
-      "source": "Spec 2.3; W01 F1; W02g review N2; W02g-F review R1-7",
+      "requirement": "No grant beyond the subject's closure entry; the loopback user system:apiserver holds no RBAC rule of any kind",
+      "source": "Spec 2.3; W01 F1; W02g review N2",
       "checkedBy": "check_rbac_snapshot"
     },
     {

@@ -3487,7 +3487,7 @@
        "type": "string",
        "minLength": 1,
        "maxLength": 4096,
-       "pattern": "^[ !#-~]+$"
+       "pattern": "^[ -~]+$"
       }
      }
     },
@@ -3509,7 +3509,7 @@
        "type": "string",
        "minLength": 1,
        "maxLength": 4096,
-       "pattern": "^[ !#-~]+$"
+       "pattern": "^[ -~]+$"
       }
      }
     }

@@ -2,7 +2,7 @@
  "evidenceClass": "DATA_CHECK_ONLY",
  "nativeAcceptance": false,
  "tenantAcceptance": false,
- "schemaSha256": "fc678e93559ab1ccf876d1b5703f9be289df53a52c65d6cb11987ab88b390172",
+ "schemaSha256": "8082ecfc2aa28bfbae2e2647267328e9a1969ea2af8a89702a28c272f5b691cb",
  "v1SchemaSha256": "8e184d60df63863bc627c1655887c32012490e3c7211f8f9a38baee67f64d4cf",
  "v2SchemaSha256": "fd1657c9a9ea437df2d48f03c69a1de62013a47a9fc62ad7776db2fc7029c0c5",
  "derivedFrom": "architecture/native-profile-v2/vectors.json",
@@ -1072,11 +1072,11 @@
     "bootEntries": {
      "ENROLLED": {
       "entryId": "planeon-enrolled.conf",
-      "kernelCmdline": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity"
+      "kernelCmdline": "root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity initrd=\\planeon\\initrd-6.12.img"
      },
      "MAINTENANCE": {
       "entryId": "planeon-maintenance.conf",
-      "kernelCmdline": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity systemd.unit=planeon-maintenance.target"
+      "kernelCmdline": "root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity systemd.unit=planeon-maintenance.target initrd=\\planeon\\initrd-6.12.img"
      }
     }
    },
@@ -1203,7 +1203,7 @@
     {
      "schemaVersion": "planeon.internal.native-qualification-capture/v3",
      "evidenceClass": "DATA_CHECK_ONLY",
-     "qualificationDigest": "sha256:a0bc05a8bc0e851546a4b346a462beaecfdef3718eebcb826c25833f4223a365",
+     "qualificationDigest": "sha256:62f8316b539ad253d7814d8248ae92f27d66770e5505770aae43e80b0073c171",
      "role": "SERVER",
      "host": {
       "machine": "x86_64",
@@ -1559,13 +1559,13 @@
      },
      "bootEntryObserved": {
       "entryId": "planeon-enrolled.conf",
-      "cmdlineSha256": "sha256:b93f9addedb43badc660452b49688b73f77909dcdde37fce2b1e5d8a5e9e04d7"
+      "cmdlineSha256": "sha256:37adb8b1a4b12e40f61b303d83a710cc6bda4f684eb0c9880f653cedc7e2c96f"
      }
     },
     {
      "schemaVersion": "planeon.internal.native-qualification-capture/v3",
      "evidenceClass": "DATA_CHECK_ONLY",
-     "qualificationDigest": "sha256:a0bc05a8bc0e851546a4b346a462beaecfdef3718eebcb826c25833f4223a365",
+     "qualificationDigest": "sha256:62f8316b539ad253d7814d8248ae92f27d66770e5505770aae43e80b0073c171",
      "role": "OBSERVER",
      "host": {
       "machine": "x86_64",
@@ -1903,13 +1903,13 @@
      },
      "bootEntryObserved": {
       "entryId": "planeon-enrolled.conf",
-      "cmdlineSha256": "sha256:b93f9addedb43badc660452b49688b73f77909dcdde37fce2b1e5d8a5e9e04d7"
+      "cmdlineSha256": "sha256:37adb8b1a4b12e40f61b303d83a710cc6bda4f684eb0c9880f653cedc7e2c96f"
      }
     },
     {
      "schemaVersion": "planeon.internal.native-qualification-capture/v3",
      "evidenceClass": "DATA_CHECK_ONLY",
-     "qualificationDigest": "sha256:a0bc05a8bc0e851546a4b346a462beaecfdef3718eebcb826c25833f4223a365",
+     "qualificationDigest": "sha256:62f8316b539ad253d7814d8248ae92f27d66770e5505770aae43e80b0073c171",
      "role": "BROKER",
      "host": {
       "machine": "x86_64",
@@ -2256,13 +2256,13 @@
      },
      "bootEntryObserved": {
       "entryId": "planeon-enrolled.conf",
-      "cmdlineSha256": "sha256:b93f9addedb43badc660452b49688b73f77909dcdde37fce2b1e5d8a5e9e04d7"
+      "cmdlineSha256": "sha256:37adb8b1a4b12e40f61b303d83a710cc6bda4f684eb0c9880f653cedc7e2c96f"
      }
     },
     {
      "schemaVersion": "planeon.internal.native-qualification-capture/v3",
      "evidenceClass": "DATA_CHECK_ONLY",
-     "qualificationDigest": "sha256:a0bc05a8bc0e851546a4b346a462beaecfdef3718eebcb826c25833f4223a365",
+     "qualificationDigest": "sha256:62f8316b539ad253d7814d8248ae92f27d66770e5505770aae43e80b0073c171",
      "role": "WORKER",
      "host": {
       "machine": "x86_64",
@@ -2614,13 +2614,13 @@
      },
      "bootEntryObserved": {
       "entryId": "planeon-enrolled.conf",
-      "cmdlineSha256": "sha256:b93f9addedb43badc660452b49688b73f77909dcdde37fce2b1e5d8a5e9e04d7"
+      "cmdlineSha256": "sha256:37adb8b1a4b12e40f61b303d83a710cc6bda4f684eb0c9880f653cedc7e2c96f"
      }
     },
     {
      "schemaVersion": "planeon.internal.native-qualification-capture/v3",
      "evidenceClass": "DATA_CHECK_ONLY",
-     "qualificationDigest": "sha256:a0bc05a8bc0e851546a4b346a462beaecfdef3718eebcb826c25833f4223a365",
+     "qualificationDigest": "sha256:62f8316b539ad253d7814d8248ae92f27d66770e5505770aae43e80b0073c171",
      "role": "EFFECT_GATE",
      "host": {
       "machine": "x86_64",
@@ -2949,14 +2949,14 @@
      },
      "bootEntryObserved": {
       "entryId": "planeon-enrolled.conf",
-      "cmdlineSha256": "sha256:b93f9addedb43badc660452b49688b73f77909dcdde37fce2b1e5d8a5e9e04d7"
+      "cmdlineSha256": "sha256:37adb8b1a4b12e40f61b303d83a710cc6bda4f684eb0c9880f653cedc7e2c96f"
      }
     }
    ],
    "lifecycle": {
     "schemaVersion": "planeon.internal.native-qualification-lifecycle/v3",
     "evidenceClass": "DATA_CHECK_ONLY",
-    "qualificationDigest": "sha256:a0bc05a8bc0e851546a4b346a462beaecfdef3718eebcb826c25833f4223a365",
+    "qualificationDigest": "sha256:62f8316b539ad253d7814d8248ae92f27d66770e5505770aae43e80b0073c171",
     "subject": "HOST_CONTAINMENT",
     "host": {
      "machine": "x86_64",
@@ -3029,14 +3029,14 @@
     "sliceDescendants": 7,
     "bootEntryObserved": {
      "entryId": "planeon-enrolled.conf",
-     "cmdlineSha256": "sha256:b93f9addedb43badc660452b49688b73f77909dcdde37fce2b1e5d8a5e9e04d7"
+     "cmdlineSha256": "sha256:37adb8b1a4b12e40f61b303d83a710cc6bda4f684eb0c9880f653cedc7e2c96f"
     }
    },
    "backendCaptures": [
     {
      "schemaVersion": "planeon.internal.native-qualification-backend/v3",
      "evidenceClass": "DATA_CHECK_ONLY",
-     "qualificationDigest": "sha256:a0bc05a8bc0e851546a4b346a462beaecfdef3718eebcb826c25833f4223a365",
+     "qualificationDigest": "sha256:62f8316b539ad253d7814d8248ae92f27d66770e5505770aae43e80b0073c171",
      "component": "APISERVER",
      "host": {
       "machine": "x86_64",
@@ -3060,7 +3060,7 @@
     {
      "schemaVersion": "planeon.internal.native-qualification-backend/v3",
      "evidenceClass": "DATA_CHECK_ONLY",
-     "qualificationDigest": "sha256:a0bc05a8bc0e851546a4b346a462beaecfdef3718eebcb826c25833f4223a365",
+     "qualificationDigest": "sha256:62f8316b539ad253d7814d8248ae92f27d66770e5505770aae43e80b0073c171",
      "component": "CONTAINER_RUNTIME",
      "host": {
       "machine": "x86_64",
@@ -3084,7 +3084,7 @@
     {
      "schemaVersion": "planeon.internal.native-qualification-backend/v3",
      "evidenceClass": "DATA_CHECK_ONLY",
-     "qualificationDigest": "sha256:a0bc05a8bc0e851546a4b346a462beaecfdef3718eebcb826c25833f4223a365",
+     "qualificationDigest": "sha256:62f8316b539ad253d7814d8248ae92f27d66770e5505770aae43e80b0073c171",
      "component": "CONTROLLER_MANAGER",
      "host": {
       "machine": "x86_64",
@@ -3108,7 +3108,7 @@
     {
      "schemaVersion": "planeon.internal.native-qualification-backend/v3",
      "evidenceClass": "DATA_CHECK_ONLY",
-     "qualificationDigest": "sha256:a0bc05a8bc0e851546a4b346a462beaecfdef3718eebcb826c25833f4223a365",
+     "qualificationDigest": "sha256:62f8316b539ad253d7814d8248ae92f27d66770e5505770aae43e80b0073c171",
      "component": "DATASTORE",
      "host": {
       "machine": "x86_64",
@@ -3132,7 +3132,7 @@
     {
      "schemaVersion": "planeon.internal.native-qualification-backend/v3",
      "evidenceClass": "DATA_CHECK_ONLY",
-     "qualificationDigest": "sha256:a0bc05a8bc0e851546a4b346a462beaecfdef3718eebcb826c25833f4223a365",
+     "qualificationDigest": "sha256:62f8316b539ad253d7814d8248ae92f27d66770e5505770aae43e80b0073c171",
      "component": "KUBELET",
      "host": {
       "machine": "x86_64",
@@ -3156,7 +3156,7 @@
     {
      "schemaVersion": "planeon.internal.native-qualification-backend/v3",
      "evidenceClass": "DATA_CHECK_ONLY",
-     "qualificationDigest": "sha256:a0bc05a8bc0e851546a4b346a462beaecfdef3718eebcb826c25833f4223a365",
+     "qualificationDigest": "sha256:62f8316b539ad253d7814d8248ae92f27d66770e5505770aae43e80b0073c171",
      "component": "NETWORK_POLICY_AGENT",
      "host": {
       "machine": "x86_64",
@@ -3180,7 +3180,7 @@
     {
      "schemaVersion": "planeon.internal.native-qualification-backend/v3",
      "evidenceClass": "DATA_CHECK_ONLY",
-     "qualificationDigest": "sha256:a0bc05a8bc0e851546a4b346a462beaecfdef3718eebcb826c25833f4223a365",
+     "qualificationDigest": "sha256:62f8316b539ad253d7814d8248ae92f27d66770e5505770aae43e80b0073c171",
      "component": "SCHEDULER",
      "host": {
       "machine": "x86_64",
@@ -3204,7 +3204,7 @@
     {
      "schemaVersion": "planeon.internal.native-qualification-backend/v3",
      "evidenceClass": "DATA_CHECK_ONLY",
-     "qualificationDigest": "sha256:a0bc05a8bc0e851546a4b346a462beaecfdef3718eebcb826c25833f4223a365",
+     "qualificationDigest": "sha256:62f8316b539ad253d7814d8248ae92f27d66770e5505770aae43e80b0073c171",
      "component": "SERVICE_PROXY",
      "host": {
       "machine": "x86_64",
@@ -4303,11 +4303,11 @@
     "bootEntries": {
      "ENROLLED": {
       "entryId": "planeon-enrolled.conf",
-      "kernelCmdline": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity"
+      "kernelCmdline": "root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity initrd=\\planeon\\initrd-6.12.img"
      },
      "MAINTENANCE": {
       "entryId": "planeon-maintenance.conf",
-      "kernelCmdline": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity systemd.unit=planeon-maintenance.target"
+      "kernelCmdline": "root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity systemd.unit=planeon-maintenance.target initrd=\\planeon\\initrd-6.12.img"
      }
     }
    },
@@ -4526,7 +4526,7 @@
     {
      "schemaVersion": "planeon.internal.native-qualification-capture/v3",
      "evidenceClass": "DATA_CHECK_ONLY",
-     "qualificationDigest": "sha256:f7d68a6528b164eab53727f5075a3907fcfcb1335d1f597f2c042f62503adc52",
+     "qualificationDigest": "sha256:4989381bef4f71b6c064e3a9545583657b9547f5b0ba57a40a1ad717d7a67c30",
      "role": "SERVER",
      "host": {
       "machine": "x86_64",
@@ -4882,13 +4882,13 @@
      },
      "bootEntryObserved": {
       "entryId": "planeon-enrolled.conf",
-      "cmdlineSha256": "sha256:b93f9addedb43badc660452b49688b73f77909dcdde37fce2b1e5d8a5e9e04d7"
+      "cmdlineSha256": "sha256:37adb8b1a4b12e40f61b303d83a710cc6bda4f684eb0c9880f653cedc7e2c96f"
      }
     },
     {
      "schemaVersion": "planeon.internal.native-qualification-capture/v3",
      "evidenceClass": "DATA_CHECK_ONLY",
-     "qualificationDigest": "sha256:f7d68a6528b164eab53727f5075a3907fcfcb1335d1f597f2c042f62503adc52",
+     "qualificationDigest": "sha256:4989381bef4f71b6c064e3a9545583657b9547f5b0ba57a40a1ad717d7a67c30",
      "role": "OBSERVER",
      "host": {
       "machine": "x86_64",
@@ -5226,13 +5226,13 @@
      },
      "bootEntryObserved": {
       "entryId": "planeon-enrolled.conf",
-      "cmdlineSha256": "sha256:b93f9addedb43badc660452b49688b73f77909dcdde37fce2b1e5d8a5e9e04d7"
+      "cmdlineSha256": "sha256:37adb8b1a4b12e40f61b303d83a710cc6bda4f684eb0c9880f653cedc7e2c96f"
      }
     },
     {
      "schemaVersion": "planeon.internal.native-qualification-capture/v3",
      "evidenceClass": "DATA_CHECK_ONLY",
-     "qualificationDigest": "sha256:f7d68a6528b164eab53727f5075a3907fcfcb1335d1f597f2c042f62503adc52",
+     "qualificationDigest": "sha256:4989381bef4f71b6c064e3a9545583657b9547f5b0ba57a40a1ad717d7a67c30",
      "role": "BROKER",
      "host": {
       "machine": "x86_64",
@@ -5579,13 +5579,13 @@
      },
      "bootEntryObserved": {
       "entryId": "planeon-enrolled.conf",
-      "cmdlineSha256": "sha256:b93f9addedb43badc660452b49688b73f77909dcdde37fce2b1e5d8a5e9e04d7"
+      "cmdlineSha256": "sha256:37adb8b1a4b12e40f61b303d83a710cc6bda4f684eb0c9880f653cedc7e2c96f"
      }
     },
     {
      "schemaVersion": "planeon.internal.native-qualification-capture/v3",
      "evidenceClass": "DATA_CHECK_ONLY",
-     "qualificationDigest": "sha256:f7d68a6528b164eab53727f5075a3907fcfcb1335d1f597f2c042f62503adc52",
+     "qualificationDigest": "sha256:4989381bef4f71b6c064e3a9545583657b9547f5b0ba57a40a1ad717d7a67c30",
      "role": "WORKER",
      "host": {
       "machine": "x86_64",
@@ -5952,13 +5952,13 @@
      },
      "bootEntryObserved": {
       "entryId": "planeon-enrolled.conf",
-      "cmdlineSha256": "sha256:b93f9addedb43badc660452b49688b73f77909dcdde37fce2b1e5d8a5e9e04d7"
+      "cmdlineSha256": "sha256:37adb8b1a4b12e40f61b303d83a710cc6bda4f684eb0c9880f653cedc7e2c96f"
      }
     },
     {
      "schemaVersion": "planeon.internal.native-qualification-capture/v3",
      "evidenceClass": "DATA_CHECK_ONLY",
-     "qualificationDigest": "sha256:f7d68a6528b164eab53727f5075a3907fcfcb1335d1f597f2c042f62503adc52",
+     "qualificationDigest": "sha256:4989381bef4f71b6c064e3a9545583657b9547f5b0ba57a40a1ad717d7a67c30",
      "role": "EFFECT_GATE",
      "host": {
       "machine": "x86_64",
@@ -6287,14 +6287,14 @@
      },
      "bootEntryObserved": {
       "entryId": "planeon-enrolled.conf",
-      "cmdlineSha256": "sha256:b93f9addedb43badc660452b49688b73f77909dcdde37fce2b1e5d8a5e9e04d7"
+      "cmdlineSha256": "sha256:37adb8b1a4b12e40f61b303d83a710cc6bda4f684eb0c9880f653cedc7e2c96f"
      }
     }
    ],
    "lifecycle": {
     "schemaVersion": "planeon.internal.native-qualification-lifecycle/v3",
     "evidenceClass": "DATA_CHECK_ONLY",
-    "qualificationDigest": "sha256:f7d68a6528b164eab53727f5075a3907fcfcb1335d1f597f2c042f62503adc52",
+    "qualificationDigest": "sha256:4989381bef4f71b6c064e3a9545583657b9547f5b0ba57a40a1ad717d7a67c30",
     "subject": "HOST_CONTAINMENT",
     "host": {
      "machine": "x86_64",
@@ -6367,14 +6367,14 @@
     "sliceDescendants": 7,
     "bootEntryObserved": {
      "entryId": "planeon-enrolled.conf",
-     "cmdlineSha256": "sha256:b93f9addedb43badc660452b49688b73f77909dcdde37fce2b1e5d8a5e9e04d7"
+     "cmdlineSha256": "sha256:37adb8b1a4b12e40f61b303d83a710cc6bda4f684eb0c9880f653cedc7e2c96f"
     }
    },
    "backendCaptures": [
     {
      "schemaVersion": "planeon.internal.native-qualification-backend/v3",
      "evidenceClass": "DATA_CHECK_ONLY",
-     "qualificationDigest": "sha256:f7d68a6528b164eab53727f5075a3907fcfcb1335d1f597f2c042f62503adc52",
+     "qualificationDigest": "sha256:4989381bef4f71b6c064e3a9545583657b9547f5b0ba57a40a1ad717d7a67c30",
      "component": "APISERVER",
      "host": {
       "machine": "x86_64",
@@ -6398,7 +6398,7 @@
     {
      "schemaVersion": "planeon.internal.native-qualification-backend/v3",
      "evidenceClass": "DATA_CHECK_ONLY",
-     "qualificationDigest": "sha256:f7d68a6528b164eab53727f5075a3907fcfcb1335d1f597f2c042f62503adc52",
+     "qualificationDigest": "sha256:4989381bef4f71b6c064e3a9545583657b9547f5b0ba57a40a1ad717d7a67c30",
      "component": "CONTAINER_RUNTIME",
      "host": {
       "machine": "x86_64",
@@ -6422,7 +6422,7 @@
     {
      "schemaVersion": "planeon.internal.native-qualification-backend/v3",
      "evidenceClass": "DATA_CHECK_ONLY",
-     "qualificationDigest": "sha256:f7d68a6528b164eab53727f5075a3907fcfcb1335d1f597f2c042f62503adc52",
+     "qualificationDigest": "sha256:4989381bef4f71b6c064e3a9545583657b9547f5b0ba57a40a1ad717d7a67c30",
      "component": "CONTROLLER_MANAGER",
      "host": {
       "machine": "x86_64",
@@ -6446,7 +6446,7 @@
     {
      "schemaVersion": "planeon.internal.native-qualification-backend/v3",
      "evidenceClass": "DATA_CHECK_ONLY",
-     "qualificationDigest": "sha256:f7d68a6528b164eab53727f5075a3907fcfcb1335d1f597f2c042f62503adc52",
+     "qualificationDigest": "sha256:4989381bef4f71b6c064e3a9545583657b9547f5b0ba57a40a1ad717d7a67c30",
      "component": "DATASTORE",
      "host": {
       "machine": "x86_64",
@@ -6470,7 +6470,7 @@
     {
      "schemaVersion": "planeon.internal.native-qualification-backend/v3",
      "evidenceClass": "DATA_CHECK_ONLY",
-     "qualificationDigest": "sha256:f7d68a6528b164eab53727f5075a3907fcfcb1335d1f597f2c042f62503adc52",
+     "qualificationDigest": "sha256:4989381bef4f71b6c064e3a9545583657b9547f5b0ba57a40a1ad717d7a67c30",
      "component": "KUBELET",
      "host": {
       "machine": "x86_64",
@@ -6494,7 +6494,7 @@
     {
      "schemaVersion": "planeon.internal.native-qualification-backend/v3",
      "evidenceClass": "DATA_CHECK_ONLY",
-     "qualificationDigest": "sha256:f7d68a6528b164eab53727f5075a3907fcfcb1335d1f597f2c042f62503adc52",
+     "qualificationDigest": "sha256:4989381bef4f71b6c064e3a9545583657b9547f5b0ba57a40a1ad717d7a67c30",
      "component": "NETWORK_POLICY_AGENT",
      "host": {
       "machine": "x86_64",
@@ -6518,7 +6518,7 @@
     {
      "schemaVersion": "planeon.internal.native-qualification-backend/v3",
      "evidenceClass": "DATA_CHECK_ONLY",
-     "qualificationDigest": "sha256:f7d68a6528b164eab53727f5075a3907fcfcb1335d1f597f2c042f62503adc52",
+     "qualificationDigest": "sha256:4989381bef4f71b6c064e3a9545583657b9547f5b0ba57a40a1ad717d7a67c30",
      "component": "SCHEDULER",
      "host": {
       "machine": "x86_64",
@@ -6542,7 +6542,7 @@
     {
      "schemaVersion": "planeon.internal.native-qualification-backend/v3",
      "evidenceClass": "DATA_CHECK_ONLY",
-     "qualificationDigest": "sha256:f7d68a6528b164eab53727f5075a3907fcfcb1335d1f597f2c042f62503adc52",
+     "qualificationDigest": "sha256:4989381bef4f71b6c064e3a9545583657b9547f5b0ba57a40a1ad717d7a67c30",
      "component": "SERVICE_PROXY",
      "host": {
       "machine": "x86_64",
@@ -7630,11 +7630,11 @@
     "bootEntries": {
      "ENROLLED": {
       "entryId": "planeon-enrolled.conf",
-      "kernelCmdline": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity"
+      "kernelCmdline": "root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity initrd=\\planeon\\initrd-6.12.img"
      },
      "MAINTENANCE": {
       "entryId": "planeon-maintenance.conf",
-      "kernelCmdline": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity systemd.unit=planeon-maintenance.target"
+      "kernelCmdline": "root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity systemd.unit=planeon-maintenance.target initrd=\\planeon\\initrd-6.12.img"
      }
     }
    },
@@ -7761,7 +7761,7 @@
     {
      "schemaVersion": "planeon.internal.native-qualification-capture/v3",
      "evidenceClass": "DATA_CHECK_ONLY",
-     "qualificationDigest": "sha256:3bcb853e55415c7039626609a52305b013f9481bed63cfe788098b6a857a94de",
+     "qualificationDigest": "sha256:ff97fe9360705bb48a52367b43f4547f2600e019c47d516ae7a36b64099c369c",
      "role": "SERVER",
      "host": {
       "machine": "aarch64",
@@ -8117,13 +8117,13 @@
      },
      "bootEntryObserved": {
       "entryId": "planeon-enrolled.conf",
-      "cmdlineSha256": "sha256:b93f9addedb43badc660452b49688b73f77909dcdde37fce2b1e5d8a5e9e04d7"
+      "cmdlineSha256": "sha256:37adb8b1a4b12e40f61b303d83a710cc6bda4f684eb0c9880f653cedc7e2c96f"
      }
     },
     {
      "schemaVersion": "planeon.internal.native-qualification-capture/v3",
      "evidenceClass": "DATA_CHECK_ONLY",
-     "qualificationDigest": "sha256:3bcb853e55415c7039626609a52305b013f9481bed63cfe788098b6a857a94de",
+     "qualificationDigest": "sha256:ff97fe9360705bb48a52367b43f4547f2600e019c47d516ae7a36b64099c369c",
      "role": "OBSERVER",
      "host": {
       "machine": "aarch64",
@@ -8461,13 +8461,13 @@
      },
      "bootEntryObserved": {
       "entryId": "planeon-enrolled.conf",
-      "cmdlineSha256": "sha256:b93f9addedb43badc660452b49688b73f77909dcdde37fce2b1e5d8a5e9e04d7"
+      "cmdlineSha256": "sha256:37adb8b1a4b12e40f61b303d83a710cc6bda4f684eb0c9880f653cedc7e2c96f"
      }
     },
     {
      "schemaVersion": "planeon.internal.native-qualification-capture/v3",
      "evidenceClass": "DATA_CHECK_ONLY",
-     "qualificationDigest": "sha256:3bcb853e55415c7039626609a52305b013f9481bed63cfe788098b6a857a94de",
+     "qualificationDigest": "sha256:ff97fe9360705bb48a52367b43f4547f2600e019c47d516ae7a36b64099c369c",
      "role": "BROKER",
      "host": {
       "machine": "aarch64",
@@ -8814,13 +8814,13 @@
      },
      "bootEntryObserved": {
       "entryId": "planeon-enrolled.conf",
-      "cmdlineSha256": "sha256:b93f9addedb43badc660452b49688b73f77909dcdde37fce2b1e5d8a5e9e04d7"
+      "cmdlineSha256": "sha256:37adb8b1a4b12e40f61b303d83a710cc6bda4f684eb0c9880f653cedc7e2c96f"
      }
     },
     {
      "schemaVersion": "planeon.internal.native-qualification-capture/v3",
      "evidenceClass": "DATA_CHECK_ONLY",
-     "qualificationDigest": "sha256:3bcb853e55415c7039626609a52305b013f9481bed63cfe788098b6a857a94de",
+     "qualificationDigest": "sha256:ff97fe9360705bb48a52367b43f4547f2600e019c47d516ae7a36b64099c369c",
      "role": "WORKER",
      "host": {
       "machine": "aarch64",
@@ -9172,13 +9172,13 @@
      },
      "bootEntryObserved": {
       "entryId": "planeon-enrolled.conf",
-      "cmdlineSha256": "sha256:b93f9addedb43badc660452b49688b73f77909dcdde37fce2b1e5d8a5e9e04d7"
+      "cmdlineSha256": "sha256:37adb8b1a4b12e40f61b303d83a710cc6bda4f684eb0c9880f653cedc7e2c96f"
      }
     },
     {
      "schemaVersion": "planeon.internal.native-qualification-capture/v3",
      "evidenceClass": "DATA_CHECK_ONLY",
-     "qualificationDigest": "sha256:3bcb853e55415c7039626609a52305b013f9481bed63cfe788098b6a857a94de",
+     "qualificationDigest": "sha256:ff97fe9360705bb48a52367b43f4547f2600e019c47d516ae7a36b64099c369c",
      "role": "EFFECT_GATE",
      "host": {
       "machine": "aarch64",
@@ -9507,14 +9507,14 @@
      },
      "bootEntryObserved": {
       "entryId": "planeon-enrolled.conf",
-      "cmdlineSha256": "sha256:b93f9addedb43badc660452b49688b73f77909dcdde37fce2b1e5d8a5e9e04d7"
+      "cmdlineSha256": "sha256:37adb8b1a4b12e40f61b303d83a710cc6bda4f684eb0c9880f653cedc7e2c96f"
      }
     }
    ],
    "lifecycle": {
     "schemaVersion": "planeon.internal.native-qualification-lifecycle/v3",
     "evidenceClass": "DATA_CHECK_ONLY",
-    "qualificationDigest": "sha256:3bcb853e55415c7039626609a52305b013f9481bed63cfe788098b6a857a94de",
+    "qualificationDigest": "sha256:ff97fe9360705bb48a52367b43f4547f2600e019c47d516ae7a36b64099c369c",
     "subject": "HOST_CONTAINMENT",
     "host": {
      "machine": "aarch64",
@@ -9587,14 +9587,14 @@
     "sliceDescendants": 7,
     "bootEntryObserved": {
      "entryId": "planeon-enrolled.conf",
-     "cmdlineSha256": "sha256:b93f9addedb43badc660452b49688b73f77909dcdde37fce2b1e5d8a5e9e04d7"
+     "cmdlineSha256": "sha256:37adb8b1a4b12e40f61b303d83a710cc6bda4f684eb0c9880f653cedc7e2c96f"
     }
    },
    "backendCaptures": [
     {
      "schemaVersion": "planeon.internal.native-qualification-backend/v3",
      "evidenceClass": "DATA_CHECK_ONLY",
-     "qualificationDigest": "sha256:3bcb853e55415c7039626609a52305b013f9481bed63cfe788098b6a857a94de",
+     "qualificationDigest": "sha256:ff97fe9360705bb48a52367b43f4547f2600e019c47d516ae7a36b64099c369c",
      "component": "APISERVER",
      "host": {
       "machine": "aarch64",
@@ -9618,7 +9618,7 @@
     {
      "schemaVersion": "planeon.internal.native-qualification-backend/v3",
      "evidenceClass": "DATA_CHECK_ONLY",
-     "qualificationDigest": "sha256:3bcb853e55415c7039626609a52305b013f9481bed63cfe788098b6a857a94de",
+     "qualificationDigest": "sha256:ff97fe9360705bb48a52367b43f4547f2600e019c47d516ae7a36b64099c369c",
      "component": "CONTAINER_RUNTIME",
      "host": {
       "machine": "aarch64",
@@ -9642,7 +9642,7 @@
     {
      "schemaVersion": "planeon.internal.native-qualification-backend/v3",
      "evidenceClass": "DATA_CHECK_ONLY",
-     "qualificationDigest": "sha256:3bcb853e55415c7039626609a52305b013f9481bed63cfe788098b6a857a94de",
+     "qualificationDigest": "sha256:ff97fe9360705bb48a52367b43f4547f2600e019c47d516ae7a36b64099c369c",
      "component": "CONTROLLER_MANAGER",
      "host": {
       "machine": "aarch64",
@@ -9666,7 +9666,7 @@
     {
      "schemaVersion": "planeon.internal.native-qualification-backend/v3",
      "evidenceClass": "DATA_CHECK_ONLY",
-     "qualificationDigest": "sha256:3bcb853e55415c7039626609a52305b013f9481bed63cfe788098b6a857a94de",
+     "qualificationDigest": "sha256:ff97fe9360705bb48a52367b43f4547f2600e019c47d516ae7a36b64099c369c",
      "component": "DATASTORE",
      "host": {
       "machine": "aarch64",
@@ -9690,7 +9690,7 @@
     {
      "schemaVersion": "planeon.internal.native-qualification-backend/v3",
      "evidenceClass": "DATA_CHECK_ONLY",
-     "qualificationDigest": "sha256:3bcb853e55415c7039626609a52305b013f9481bed63cfe788098b6a857a94de",
+     "qualificationDigest": "sha256:ff97fe9360705bb48a52367b43f4547f2600e019c47d516ae7a36b64099c369c",
      "component": "KUBELET",
      "host": {
       "machine": "aarch64",
@@ -9714,7 +9714,7 @@
     {
      "schemaVersion": "planeon.internal.native-qualification-backend/v3",
      "evidenceClass": "DATA_CHECK_ONLY",
-     "qualificationDigest": "sha256:3bcb853e55415c7039626609a52305b013f9481bed63cfe788098b6a857a94de",
+     "qualificationDigest": "sha256:ff97fe9360705bb48a52367b43f4547f2600e019c47d516ae7a36b64099c369c",
      "component": "NETWORK_POLICY_AGENT",
      "host": {
       "machine": "aarch64",
@@ -9738,7 +9738,7 @@
     {
      "schemaVersion": "planeon.internal.native-qualification-backend/v3",
      "evidenceClass": "DATA_CHECK_ONLY",
-     "qualificationDigest": "sha256:3bcb853e55415c7039626609a52305b013f9481bed63cfe788098b6a857a94de",
+     "qualificationDigest": "sha256:ff97fe9360705bb48a52367b43f4547f2600e019c47d516ae7a36b64099c369c",
      "component": "SCHEDULER",
      "host": {
       "machine": "aarch64",
@@ -9762,7 +9762,7 @@
     {
      "schemaVersion": "planeon.internal.native-qualification-backend/v3",
      "evidenceClass": "DATA_CHECK_ONLY",
-     "qualificationDigest": "sha256:3bcb853e55415c7039626609a52305b013f9481bed63cfe788098b6a857a94de",
+     "qualificationDigest": "sha256:ff97fe9360705bb48a52367b43f4547f2600e019c47d516ae7a36b64099c369c",
      "component": "SERVICE_PROXY",
      "host": {
       "machine": "aarch64",
@@ -10861,11 +10861,11 @@
     "bootEntries": {
      "ENROLLED": {
       "entryId": "planeon-enrolled.conf",
-      "kernelCmdline": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity"
+      "kernelCmdline": "root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity initrd=\\planeon\\initrd-6.12.img"
      },
      "MAINTENANCE": {
       "entryId": "planeon-maintenance.conf",
-      "kernelCmdline": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity systemd.unit=planeon-maintenance.target"
+      "kernelCmdline": "root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity systemd.unit=planeon-maintenance.target initrd=\\planeon\\initrd-6.12.img"
      }
     }
    },
@@ -11084,7 +11084,7 @@
     {
      "schemaVersion": "planeon.internal.native-qualification-capture/v3",
      "evidenceClass": "DATA_CHECK_ONLY",
-     "qualificationDigest": "sha256:5d0ecf9bbc0462b4738bbb231ab85be5c297b71e0aba01bc6bae53bacafb120b",
+     "qualificationDigest": "sha256:9fc886b10435ad96adaeaff31282656de5601fd20880f25eb5b3fc2dbc4849c2",
      "role": "SERVER",
      "host": {
       "machine": "aarch64",
@@ -11440,13 +11440,13 @@
      },
      "bootEntryObserved": {
       "entryId": "planeon-enrolled.conf",
-      "cmdlineSha256": "sha256:b93f9addedb43badc660452b49688b73f77909dcdde37fce2b1e5d8a5e9e04d7"
+      "cmdlineSha256": "sha256:37adb8b1a4b12e40f61b303d83a710cc6bda4f684eb0c9880f653cedc7e2c96f"
      }
     },
     {
      "schemaVersion": "planeon.internal.native-qualification-capture/v3",
      "evidenceClass": "DATA_CHECK_ONLY",
-     "qualificationDigest": "sha256:5d0ecf9bbc0462b4738bbb231ab85be5c297b71e0aba01bc6bae53bacafb120b",
+     "qualificationDigest": "sha256:9fc886b10435ad96adaeaff31282656de5601fd20880f25eb5b3fc2dbc4849c2",
      "role": "OBSERVER",
      "host": {
       "machine": "aarch64",
@@ -11784,13 +11784,13 @@
      },
      "bootEntryObserved": {
       "entryId": "planeon-enrolled.conf",
-      "cmdlineSha256": "sha256:b93f9addedb43badc660452b49688b73f77909dcdde37fce2b1e5d8a5e9e04d7"
+      "cmdlineSha256": "sha256:37adb8b1a4b12e40f61b303d83a710cc6bda4f684eb0c9880f653cedc7e2c96f"
      }
     },
     {
      "schemaVersion": "planeon.internal.native-qualification-capture/v3",
      "evidenceClass": "DATA_CHECK_ONLY",
-     "qualificationDigest": "sha256:5d0ecf9bbc0462b4738bbb231ab85be5c297b71e0aba01bc6bae53bacafb120b",
+     "qualificationDigest": "sha256:9fc886b10435ad96adaeaff31282656de5601fd20880f25eb5b3fc2dbc4849c2",
      "role": "BROKER",
      "host": {
       "machine": "aarch64",
@@ -12137,13 +12137,13 @@
      },
      "bootEntryObserved": {
       "entryId": "planeon-enrolled.conf",
-      "cmdlineSha256": "sha256:b93f9addedb43badc660452b49688b73f77909dcdde37fce2b1e5d8a5e9e04d7"
+      "cmdlineSha256": "sha256:37adb8b1a4b12e40f61b303d83a710cc6bda4f684eb0c9880f653cedc7e2c96f"
      }
     },
     {
      "schemaVersion": "planeon.internal.native-qualification-capture/v3",
      "evidenceClass": "DATA_CHECK_ONLY",
-     "qualificationDigest": "sha256:5d0ecf9bbc0462b4738bbb231ab85be5c297b71e0aba01bc6bae53bacafb120b",
+     "qualificationDigest": "sha256:9fc886b10435ad96adaeaff31282656de5601fd20880f25eb5b3fc2dbc4849c2",
      "role": "WORKER",
      "host": {
       "machine": "aarch64",
@@ -12510,13 +12510,13 @@
      },
      "bootEntryObserved": {
       "entryId": "planeon-enrolled.conf",
-      "cmdlineSha256": "sha256:b93f9addedb43badc660452b49688b73f77909dcdde37fce2b1e5d8a5e9e04d7"
+      "cmdlineSha256": "sha256:37adb8b1a4b12e40f61b303d83a710cc6bda4f684eb0c9880f653cedc7e2c96f"
      }
     },
     {
      "schemaVersion": "planeon.internal.native-qualification-capture/v3",
      "evidenceClass": "DATA_CHECK_ONLY",
-     "qualificationDigest": "sha256:5d0ecf9bbc0462b4738bbb231ab85be5c297b71e0aba01bc6bae53bacafb120b",
+     "qualificationDigest": "sha256:9fc886b10435ad96adaeaff31282656de5601fd20880f25eb5b3fc2dbc4849c2",
      "role": "EFFECT_GATE",
      "host": {
       "machine": "aarch64",
@@ -12845,14 +12845,14 @@
      },
      "bootEntryObserved": {
       "entryId": "planeon-enrolled.conf",
-      "cmdlineSha256": "sha256:b93f9addedb43badc660452b49688b73f77909dcdde37fce2b1e5d8a5e9e04d7"
+      "cmdlineSha256": "sha256:37adb8b1a4b12e40f61b303d83a710cc6bda4f684eb0c9880f653cedc7e2c96f"
      }
     }
    ],
    "lifecycle": {
     "schemaVersion": "planeon.internal.native-qualification-lifecycle/v3",
     "evidenceClass": "DATA_CHECK_ONLY",
-    "qualificationDigest": "sha256:5d0ecf9bbc0462b4738bbb231ab85be5c297b71e0aba01bc6bae53bacafb120b",
+    "qualificationDigest": "sha256:9fc886b10435ad96adaeaff31282656de5601fd20880f25eb5b3fc2dbc4849c2",
     "subject": "HOST_CONTAINMENT",
     "host": {
      "machine": "aarch64",
@@ -12925,14 +12925,14 @@
     "sliceDescendants": 7,
     "bootEntryObserved": {
      "entryId": "planeon-enrolled.conf",
-     "cmdlineSha256": "sha256:b93f9addedb43badc660452b49688b73f77909dcdde37fce2b1e5d8a5e9e04d7"
+     "cmdlineSha256": "sha256:37adb8b1a4b12e40f61b303d83a710cc6bda4f684eb0c9880f653cedc7e2c96f"
     }
    },
    "backendCaptures": [
     {
      "schemaVersion": "planeon.internal.native-qualification-backend/v3",
      "evidenceClass": "DATA_CHECK_ONLY",
-     "qualificationDigest": "sha256:5d0ecf9bbc0462b4738bbb231ab85be5c297b71e0aba01bc6bae53bacafb120b",
+     "qualificationDigest": "sha256:9fc886b10435ad96adaeaff31282656de5601fd20880f25eb5b3fc2dbc4849c2",
      "component": "APISERVER",
      "host": {
       "machine": "aarch64",
@@ -12956,7 +12956,7 @@
     {
      "schemaVersion": "planeon.internal.native-qualification-backend/v3",
      "evidenceClass": "DATA_CHECK_ONLY",
-     "qualificationDigest": "sha256:5d0ecf9bbc0462b4738bbb231ab85be5c297b71e0aba01bc6bae53bacafb120b",
+     "qualificationDigest": "sha256:9fc886b10435ad96adaeaff31282656de5601fd20880f25eb5b3fc2dbc4849c2",
      "component": "CONTAINER_RUNTIME",
      "host": {
       "machine": "aarch64",
@@ -12980,7 +12980,7 @@
     {
      "schemaVersion": "planeon.internal.native-qualification-backend/v3",
      "evidenceClass": "DATA_CHECK_ONLY",
-     "qualificationDigest": "sha256:5d0ecf9bbc0462b4738bbb231ab85be5c297b71e0aba01bc6bae53bacafb120b",
+     "qualificationDigest": "sha256:9fc886b10435ad96adaeaff31282656de5601fd20880f25eb5b3fc2dbc4849c2",
      "component": "CONTROLLER_MANAGER",
      "host": {
       "machine": "aarch64",
@@ -13004,7 +13004,7 @@
     {
      "schemaVersion": "planeon.internal.native-qualification-backend/v3",
      "evidenceClass": "DATA_CHECK_ONLY",
-     "qualificationDigest": "sha256:5d0ecf9bbc0462b4738bbb231ab85be5c297b71e0aba01bc6bae53bacafb120b",
+     "qualificationDigest": "sha256:9fc886b10435ad96adaeaff31282656de5601fd20880f25eb5b3fc2dbc4849c2",
      "component": "DATASTORE",
      "host": {
       "machine": "aarch64",
@@ -13028,7 +13028,7 @@
     {
      "schemaVersion": "planeon.internal.native-qualification-backend/v3",
      "evidenceClass": "DATA_CHECK_ONLY",
-     "qualificationDigest": "sha256:5d0ecf9bbc0462b4738bbb231ab85be5c297b71e0aba01bc6bae53bacafb120b",
+     "qualificationDigest": "sha256:9fc886b10435ad96adaeaff31282656de5601fd20880f25eb5b3fc2dbc4849c2",
      "component": "KUBELET",
      "host": {
       "machine": "aarch64",
@@ -13052,7 +13052,7 @@
     {
      "schemaVersion": "planeon.internal.native-qualification-backend/v3",
      "evidenceClass": "DATA_CHECK_ONLY",
-     "qualificationDigest": "sha256:5d0ecf9bbc0462b4738bbb231ab85be5c297b71e0aba01bc6bae53bacafb120b",
+     "qualificationDigest": "sha256:9fc886b10435ad96adaeaff31282656de5601fd20880f25eb5b3fc2dbc4849c2",
      "component": "NETWORK_POLICY_AGENT",
      "host": {
       "machine": "aarch64",
@@ -13076,7 +13076,7 @@
     {
      "schemaVersion": "planeon.internal.native-qualification-backend/v3",
      "evidenceClass": "DATA_CHECK_ONLY",
-     "qualificationDigest": "sha256:5d0ecf9bbc0462b4738bbb231ab85be5c297b71e0aba01bc6bae53bacafb120b",
+     "qualificationDigest": "sha256:9fc886b10435ad96adaeaff31282656de5601fd20880f25eb5b3fc2dbc4849c2",
      "component": "SCHEDULER",
      "host": {
       "machine": "aarch64",
@@ -13100,7 +13100,7 @@
     {
      "schemaVersion": "planeon.internal.native-qualification-backend/v3",
      "evidenceClass": "DATA_CHECK_ONLY",
-     "qualificationDigest": "sha256:5d0ecf9bbc0462b4738bbb231ab85be5c297b71e0aba01bc6bae53bacafb120b",
+     "qualificationDigest": "sha256:9fc886b10435ad96adaeaff31282656de5601fd20880f25eb5b3fc2dbc4849c2",
      "component": "SERVICE_PROXY",
      "host": {
       "machine": "aarch64",
@@ -13129,7 +13129,7 @@
    "id": "R01",
    "positive": 0,
    "target": "record",
-   "intent": "v1 schema version in a v3 record (version discriminator)",
+   "intent": "v1 schema version in a v2 record (version discriminator)",
    "ops": [
     {
      "op": "set",
@@ -15557,13 +15557,6 @@
       "path": "/sys/fs/cgroup/planeon.slice/run-writer.scope",
       "populated": 1
      }
-    },
-    {
-     "op": "set",
-     "path": [
-      "sliceDescendants"
-     ],
-     "value": 8
     }
    ],
    "refusal": "unenrolled populated cgroup in the planeon slice"
@@ -15583,13 +15576,6 @@
       "path": "/sys/fs/cgroup/planeon.slice/planeon-effect-gate.service/x",
       "populated": 1
      }
-    },
-    {
-     "op": "set",
-     "path": [
-      "sliceDescendants"
-     ],
-     "value": 8
     }
    ],
    "refusal": "unenrolled populated cgroup in the planeon slice"
@@ -15625,13 +15611,6 @@
       "path": "/sys/fs/cgroup/system.slice/x.service",
       "populated": 0
      }
-    },
-    {
-     "op": "set",
-     "path": [
-      "sliceDescendants"
-     ],
-     "value": 8
     }
    ],
    "refusal": "planeon slice census malformed"
@@ -15754,7 +15733,7 @@
      "value": {
       "schemaVersion": "planeon.internal.native-qualification-capture/v3",
       "evidenceClass": "DATA_CHECK_ONLY",
-      "qualificationDigest": "sha256:f7d68a6528b164eab53727f5075a3907fcfcb1335d1f597f2c042f62503adc52",
+      "qualificationDigest": "sha256:4989381bef4f71b6c064e3a9545583657b9547f5b0ba57a40a1ad717d7a67c30",
       "role": "SERVER",
       "host": {
        "machine": "x86_64",
@@ -16110,7 +16089,7 @@
       },
       "bootEntryObserved": {
        "entryId": "planeon-enrolled.conf",
-       "cmdlineSha256": "sha256:b93f9addedb43badc660452b49688b73f77909dcdde37fce2b1e5d8a5e9e04d7"
+       "cmdlineSha256": "sha256:37adb8b1a4b12e40f61b303d83a710cc6bda4f684eb0c9880f653cedc7e2c96f"
       }
      }
     }
@@ -17073,7 +17052,7 @@
       "ENROLLED",
       "kernelCmdline"
      ],
-     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1"
+     "value": "root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 initrd=\\planeon\\initrd-6.12.img"
     }
    ],
    "refusal": "enrolled boot entry without lockdown=integrity"
@@ -17108,7 +17087,7 @@
       "bootEntryObserved",
       "cmdlineSha256"
      ],
-     "value": "sha256:2f0923c0dacfe32c35f75efe3c2cd00973a10dd59201044d3efa8e06e36d382b"
+     "value": "sha256:b23a733889eb84cafed7a12d19c998a803863f4dd6d30d9e841b1b6a3657af10"
     }
    ],
    "refusal": "observed on a boot entry other than the enrolled one"
@@ -17125,13 +17104,6 @@
       "sliceCgroups",
       4
      ]
-    },
-    {
-     "op": "set",
-     "path": [
-      "sliceDescendants"
-     ],
-     "value": 6
     }
    ],
    "refusal": "planeon slice census incomplete"
@@ -17149,7 +17121,7 @@
       "MAINTENANCE",
       "kernelCmdline"
      ],
-     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity"
+     "value": "root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity initrd=\\planeon\\initrd-6.12.img"
     }
    ],
    "refusal": "enrolled and maintenance boot entries indistinguishable"
@@ -17303,10 +17275,10 @@
       "ENROLLED",
       "kernelCmdline"
      ],
-     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity systemd.unit=planeon-maintenance.target quiet"
+     "value": "root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity initrd=\\planeon\\initrd-6.12.img systemd.unit=planeon-maintenance.target"
     }
    ],
-   "refusal": "enrolled boot entry names the maintenance target"
+   "refusal": "maintenance target not selected by the maintenance entry alone"
   },
   {
    "id": "V48",
@@ -17321,10 +17293,10 @@
       "MAINTENANCE",
       "kernelCmdline"
      ],
-     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity quiet"
+     "value": "root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity quiet initrd=\\planeon\\initrd-6.12.img"
     }
    ],
-   "refusal": "maintenance boot entry does not select the maintenance target"
+   "refusal": "maintenance target not selected by the maintenance entry alone"
   },
   {
    "id": "V49",
@@ -17339,7 +17311,7 @@
       "ENROLLED",
       "kernelCmdline"
      ],
-     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 -- lockdown=integrity"
+     "value": "root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 initrd=\\planeon\\initrd-6.12.img -- lockdown=integrity"
     }
    ],
    "refusal": "enrolled boot entry without lockdown=integrity"
@@ -17358,7 +17330,7 @@
      "value": 8
     }
    ],
-   "refusal": "slice descendants differ from the census"
+   "refusal": "planeon slice census incomplete"
   },
   {
    "id": "V51",
@@ -17380,195 +17352,6 @@
     }
    ],
    "refusal": "more than one node identity"
-  },
-  {
-   "id": "V52",
-   "positive": 1,
-   "target": "record",
-   "intent": "enrolled entry naming the maintenance target after \"--\", which systemd still reads (round-2 R2-1)",
-   "ops": [
-    {
-     "op": "set",
-     "path": [
-      "bootEntries",
-      "ENROLLED",
-      "kernelCmdline"
-     ],
-     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity -- systemd.unit=planeon-maintenance.target"
-    }
-   ],
-   "refusal": "enrolled boot entry names the maintenance target"
-  },
-  {
-   "id": "V53",
-   "positive": 1,
-   "target": "record",
-   "intent": "maintenance entry whose last systemd.unit= is another target (round-2 R2-1)",
-   "ops": [
-    {
-     "op": "set",
-     "path": [
-      "bootEntries",
-      "MAINTENANCE",
-      "kernelCmdline"
-     ],
-     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity systemd.unit=planeon-maintenance.target systemd.unit=multi-user.target"
-    }
-   ],
-   "refusal": "maintenance boot entry does not select the maintenance target"
-  },
-  {
-   "id": "V54",
-   "positive": 1,
-   "target": "record",
-   "intent": "quoted command line, which a space split would misread (round-2 R2-1)",
-   "ops": [
-    {
-     "op": "set",
-     "path": [
-      "bootEntries",
-      "ENROLLED",
-      "kernelCmdline"
-     ],
-     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity x=\" -- \""
-    }
-   ],
-   "refusal": "schema $.bootEntries.ENROLLED.kernelCmdline pattern"
-  },
-  {
-   "id": "V55",
-   "positive": 1,
-   "target": "record",
-   "intent": "native-only gate listing a copy of the interpreter tree's runtime library outside the tree (round-2 R2-3)",
-   "ops": [
-    {
-     "op": "append",
-     "path": [
-      "files"
-     ],
-     "value": {
-      "path": "/opt/planeon/python/3.12.14/lib/libpython3.12.so.1.0",
-      "mode": "0555",
-      "size": 4096,
-      "sha256": "sha256:000000000000000000000000000000000000000000000000000000000000d201",
-      "verityDigest": "sha256:000000000000000000000000000000000000000000000000000000000000d202",
-      "selinuxLabel": "system_u:object_r:planeon_code_t:s0",
-      "executableSegments": [
-       {
-        "offset": 0,
-        "length": 4096,
-        "permissions": "r-xp"
-       }
-      ]
-     }
-    },
-    {
-     "op": "append",
-     "path": [
-      "roles",
-      "SERVER",
-      "filePaths"
-     ],
-     "value": "/opt/planeon/python/3.12.14/lib/libpython3.12.so.1.0"
-    },
-    {
-     "op": "append",
-     "path": [
-      "files"
-     ],
-     "value": {
-      "path": "/opt/planeon/lib/libpython3.12.so.1.0",
-      "mode": "0555",
-      "size": 4096,
-      "sha256": "sha256:000000000000000000000000000000000000000000000000000000000000d201",
-      "verityDigest": "sha256:000000000000000000000000000000000000000000000000000000000000d202",
-      "selinuxLabel": "system_u:object_r:planeon_code_t:s0",
-      "executableSegments": [
-       {
-        "offset": 0,
-        "length": 4096,
-        "permissions": "r-xp"
-       }
-      ]
-     }
-    },
-    {
-     "op": "append",
-     "path": [
-      "roles",
-      "EFFECT_GATE",
-      "filePaths"
-     ],
-     "value": "/opt/planeon/lib/libpython3.12.so.1.0"
-    }
-   ],
-   "refusal": "native-only role closure lists an interpreter"
-  },
-  {
-   "id": "V56",
-   "positive": 1,
-   "target": "qualification",
-   "intent": "interpreter observed at another inode in the worker capture (round-2 R2-4)",
-   "ops": [
-    {
-     "op": "set",
-     "path": [
-      "captures",
-      3,
-      "files",
-      1,
-      "inode"
-     ],
-     "value": 2105
-    },
-    {
-     "op": "set",
-     "path": [
-      "captures",
-      3,
-      "executableMaps",
-      0,
-      "inode"
-     ],
-     "value": 2105
-    },
-    {
-     "op": "set",
-     "path": [
-      "captures",
-      3,
-      "process",
-      "exe",
-      "inode"
-     ],
-     "value": 2105
-    },
-    {
-     "op": "set",
-     "path": [
-      "captures",
-      3,
-      "cgroupMembers",
-      0,
-      "exe",
-      "inode"
-     ],
-     "value": 2105
-    },
-    {
-     "op": "set",
-     "path": [
-      "captures",
-      3,
-      "cgroupMembers",
-      1,
-      "exe",
-      "inode"
-     ],
-     "value": 2105
-    }
-   ],
-   "refusal": "one file reported at two inodes"
   }
  ],
  "accepted": [
@@ -17767,23 +17550,6 @@
      "value": [
       "system:node:node-2.example"
      ]
-    }
-   ]
-  },
-  {
-   "id": "A08",
-   "positive": 1,
-   "target": "record",
-   "intent": "maintenance target after \"--\" (the bootconfig init.* path), which systemd honours (round-2 R2-1)",
-   "ops": [
-    {
-     "op": "set",
-     "path": [
-      "bootEntries",
-      "MAINTENANCE",
-      "kernelCmdline"
-     ],
-     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity -- systemd.unit=planeon-maintenance.target"
     }
    ]
   }

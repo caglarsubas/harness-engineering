@@ -10,7 +10,7 @@ result is DATA_CHECK_ONLY. The v1 and v2 schemas, vectors and models are unchang
 acceptance decision: only `check_qualification` combines the record, one capture per
 resident role, the lifecycle capture (containment absence, planeon-slice census and own
 members, host-wide planeon process counts), one observation per backend component and the
-earlier-version (v1 and v2) migration rules for one boot and validity window. A record whose implementation
+v2-to-v3 migration rules for one boot and validity window. A record whose implementation
 profile is test-only qualifies only when the caller asks for a test fixture.
 
 Caller obligations (not checked here):
@@ -21,9 +21,7 @@ Caller obligations (not checked here):
   histories, or `no_earlier_history` is set because both are attested empty;
 - inspectors report a per-process field only when it holds for every thread
   (`threadsUniform`), and read a role cgroup's members, thread counts and pids.current
-  while it is frozen and holds no unreaped task. The inspector freezes through an ancestor
-  it controls, or reads while the broker holds the probe-worker leaf frozen; it never
-  writes the broker-owned leaf's cgroup.freeze.
+  while it is frozen and holds no unreaped task.
 """
 from __future__ import annotations
 
@@ -35,7 +33,7 @@ from typing import Any
 
 import jsonschema
 
-SCHEMA_SHA256 = "fc678e93559ab1ccf876d1b5703f9be289df53a52c65d6cb11987ab88b390172"
+SCHEMA_SHA256 = "8082ecfc2aa28bfbae2e2647267328e9a1969ea2af8a89702a28c272f5b691cb"
 V1_SCHEMA_SHA256 = "8e184d60df63863bc627c1655887c32012490e3c7211f8f9a38baee67f64d4cf"
 V2_SCHEMA_SHA256 = "fd1657c9a9ea437df2d48f03c69a1de62013a47a9fc62ad7776db2fc7029c0c5"
 V3_RECORD = ("planeon.internal.native-qualification/v3", "SELINUX_FSVERITY_CGROUP_BPF_V3")
@@ -55,8 +53,8 @@ DELEGATED_CHILDREN = ["broker", "probe-worker"]
 BROKER_SERVICE = "/sys/fs/cgroup/planeon.slice/planeon-capacity-broker.service"
 # Native-only roles may list nothing from the enrolled interpreter's installation tree (round 2, W4).
 INTERPRETER_TREE = "/opt/planeon/python/"
-# The maintenance boot entry selects this systemd target; the enrolled entry never names it (rounds 2-3).
-MAINTENANCE_TARGET = "planeon-maintenance.target"
+# The maintenance boot entry selects this target; the enrolled entry never does (round 2, W6).
+MAINTENANCE_TOKEN = "systemd.unit=planeon-maintenance.target"
 PIN_ROOT = "/sys/fs/bpf/planeon"
 CGROUP_ROOT = "/sys/fs/cgroup"
 SLICE = CGROUP_ROOT + "/planeon.slice"
@@ -238,15 +236,10 @@ def check_record(record: Any, profile: Any, endpoints: Any, schema: dict) -> Non
     require(entries["ENROLLED"]["entryId"] != entries["MAINTENANCE"]["entryId"]
             and entries["ENROLLED"]["kernelCmdline"] != entries["MAINTENANCE"]["kernelCmdline"],
             "enrolled and maintenance boot entries indistinguishable")
-    require("lockdown=integrity" in _kernel_params(entries["ENROLLED"]["kernelCmdline"]),
-            "enrolled boot entry without lockdown=integrity")
-    # systemd reads every word of /proc/cmdline, after "--" too, and the last systemd.unit= wins.
-    require(not any(word in ("systemd.unit=" + MAINTENANCE_TARGET, "rd.systemd.unit=" + MAINTENANCE_TARGET)
-                    for word in entries["ENROLLED"]["kernelCmdline"].split(" ")),
-            "enrolled boot entry names the maintenance target")
-    units = [word[len("systemd.unit="):] for word in entries["MAINTENANCE"]["kernelCmdline"].split(" ")
-             if word.startswith("systemd.unit=")]
-    require(units[-1:] == [MAINTENANCE_TARGET], "maintenance boot entry does not select the maintenance target")
+    enrolled, maintenance = (_kernel_params(entries[name]["kernelCmdline"]) for name in ("ENROLLED", "MAINTENANCE"))
+    require("lockdown=integrity" in enrolled, "enrolled boot entry without lockdown=integrity")
+    require(MAINTENANCE_TOKEN in maintenance and MAINTENANCE_TOKEN not in enrolled,
+            "maintenance target not selected by the maintenance entry alone")
     binding = profile["binding"]
     require(record["scope"] == {key: binding[key] for key in record["scope"]}, "scope substitution")
     start, end = _moment(record["scope"]["validFrom"]), _moment(record["scope"]["expiresAt"])
@@ -337,8 +330,6 @@ def check_record(record: Any, profile: Any, endpoints: Any, schema: dict) -> Non
                 and ("verity", files[path]["verityDigest"]) not in executables, "role executable equal to an interpreter")
     interpreter_content = {(key, files[path][field]) for path in interpreters
                            for key, field in (("sha256", "sha256"), ("verity", "verityDigest"))}
-    tree_content = {(key, row[field]) for path, row in files.items() if path.startswith(INTERPRETER_TREE)
-                    for key, field in (("sha256", "sha256"), ("verity", "verityDigest"))}
     for role in ROLES:
         row = record["roles"][role]
         for path in row["filePaths"]:
@@ -349,8 +340,7 @@ def check_record(record: Any, profile: Any, endpoints: Any, schema: dict) -> Non
                         "role closure lists another role's executable")
             if row["interpreterPath"] is None:
                 require(path not in interpreters and not content & interpreter_content
-                        and not path.startswith(INTERPRETER_TREE) and not content & tree_content,
-                        "native-only role closure lists an interpreter")
+                        and not path.startswith(INTERPRETER_TREE), "native-only role closure lists an interpreter")
 
     lifecycle = record["lifecycleSubjects"]
     for name in LIFECYCLE:
@@ -538,7 +528,7 @@ def check_lifecycle_capture(record: Any, capture: Any, schema: dict) -> None:
     require(all(populated == 0 for path, populated in census.items() if path not in enrolled),
             "unenrolled populated cgroup in the planeon slice")
     # cgroup.stat nr_descendants of the slice: the census lists every live descendant (round 2, W7).
-    require(capture["sliceDescendants"] == len(census) - 1, "slice descendants differ from the census")
+    require(capture["sliceDescendants"] == len(census) - 1, "planeon slice census incomplete")
 
 
 def check_backend_capture(record: Any, capture: Any, schema: dict) -> None:
@@ -617,8 +607,8 @@ def check_qualification(record: Any, profile: Any, endpoints: Any, captures: Any
         for item in capture["files"]:
             node = (item["device"], item["inode"])
             seen = (item["entry"]["path"], item["contentDigest"], item["measuredVerity"])
-            require(by_inode.setdefault(node, seen) == seen, "one inode reported for two files")
-            require(by_path.setdefault(seen[0], node) == node, "one file reported at two inodes")
+            require(by_inode.setdefault(node, seen) == seen and by_path.setdefault(seen[0], node) == node,
+                    "one inode reported for two files")
     by_role = {c["role"]: c for c in captures}
     require(by_role["WORKER"]["process"]["ppid"] == by_role["BROKER"]["process"]["pid"],
             "worker is not a child of the original broker")

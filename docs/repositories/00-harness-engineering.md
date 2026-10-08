@@ -1,6 +1,16 @@
 # Repository Plan: `Harness-Engineering`
 
-## Current source preparation — MET-SECTOR-001
+## Current source preparation — MET-PERF-032
+
+PERF-032: verify reached 692 s of the 900 s cap at packet 207. Four repeats are removed with the same assertions:
+route tests compute only their own route's input, native-profile status mutations stub only the pure vector replay
+after a passing control, the credential-lifecycle inventory builder projects each exact input set once, and the
+readiness uniqueItems check groups items by an equality-sound key (scripts/schema_unique.py), giving jsonschema's
+answer wherever jsonschema returns one, apart from inputs within one stack frame of the recursion limit. No
+validator caches a projection or verdict. Alpha2 OPEN; 207 accepted plus PERF-032
+only. Native Linux, exact-main and tenant acceptance remain separate.
+
+## Historical SECTOR-001 source preparation — MET-SECTOR-001
 
 SECTOR-D1: banking replaces white goods as the first and only release sector from Alpha 2 through the first
 enterprise release. A decision record gives each of the 28 published packets that name white goods a disposition,
@@ -913,6 +923,7 @@ Every packet uses branch `codex/<packet-id>`, changes only named paths, opens a 
 79. `MET-ENFORCE-008`: publish the W02c I07 policy-writer channel contract and closed policy-kind table with independent review; source only.
 80. `MET-ENFORCE-009`: publish the W02e SELinux domain, type, boolean and permission matrix with independent review; source only.
 81. `MET-SECTOR-001`: record owner decision SECTOR-D1 (banking replaces white goods through the first enterprise release) with dispositions and successor proposals; source only.
+82. `MET-PERF-032`: cut required-verify time by removing four repeated computations with unchanged refusals; source only.
 
 ## Testing, verification, and acceptance
 

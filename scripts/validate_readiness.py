@@ -17,6 +17,11 @@ import jsonschema
 import yaml
 
 try:
+    from schema_unique import SchemaInstanceValidator
+except ImportError:
+    from scripts.schema_unique import SchemaInstanceValidator
+
+try:
     from safe_yaml import SafeLoader as MetaSafeLoader, safe_load as safe_yaml_load
 except ModuleNotFoundError:
     from scripts.safe_yaml import SafeLoader as MetaSafeLoader, safe_load as safe_yaml_load
@@ -132,7 +137,7 @@ EXPECTED_BASE_SOURCES = {
     "harness-onion-raster",
 }
 
-EXPECTED_PACKET_COUNT = 207
+EXPECTED_PACKET_COUNT = 208
 EXPECTED_REUSE_PATH_COUNT = 5107
 LIVE_CAMPAIGN_PACKET_IDS = {
     "CONF-A1-001",
@@ -459,9 +464,7 @@ def validate_schema_instance(
     ) as exc:
         validation.error(f"{label} schema is invalid or unreadable: {exc}")
         return
-    validator = jsonschema.Draft202012Validator(
-        schema, format_checker=SCHEMA_FORMAT_CHECKER
-    )
+    validator = SchemaInstanceValidator(schema, format_checker=SCHEMA_FORMAT_CHECKER)
     for error in sorted(
         validator.iter_errors(instance),
         key=lambda item: tuple(str(part) for part in item.absolute_path),
@@ -4861,6 +4864,10 @@ def validate_packets(
                             for path in packets["MET-SECTOR-001"]["allowedPaths"]
                             if path in authority_owner or path.startswith(("architecture/", "scripts/"))})
     authority_owner["task-packets/MET-SECTOR-001.yaml"] = "MET-SECTOR-001"
+    authority_owner.update({path: "MET-PERF-032"
+                            for path in packets["MET-PERF-032"]["allowedPaths"]
+                            if path in authority_owner or path.startswith(("architecture/", "scripts/"))})
+    authority_owner["task-packets/MET-PERF-032.yaml"] = "MET-PERF-032"
     observation_authority_path = "architecture/observations/data-harness-v1.json"
     if (ROOT / observation_authority_path).is_file():
         authority_owner[observation_authority_path] = "MET-002"

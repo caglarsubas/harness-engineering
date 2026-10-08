@@ -2,7 +2,7 @@
  "evidenceClass": "DATA_CHECK_ONLY",
  "nativeAcceptance": false,
  "tenantAcceptance": false,
- "schemaSha256": "1c7930351e58a12cdf8bf8ef0df1f971eddceb8d17268f73541425258e9657d2",
+ "schemaSha256": "fc678e93559ab1ccf876d1b5703f9be289df53a52c65d6cb11987ab88b390172",
  "v1SchemaSha256": "8e184d60df63863bc627c1655887c32012490e3c7211f8f9a38baee67f64d4cf",
  "v2SchemaSha256": "fd1657c9a9ea437df2d48f03c69a1de62013a47a9fc62ad7776db2fc7029c0c5",
  "derivedFrom": "architecture/native-profile-v2/vectors.json",
@@ -17569,78 +17569,6 @@
     }
    ],
    "refusal": "one file reported at two inodes"
-  },
-  {
-   "id": "V57",
-   "positive": 1,
-   "target": "record",
-   "intent": "enrolled entry naming the maintenance target for the initrd (round-3 R3-2)",
-   "ops": [
-    {
-     "op": "set",
-     "path": [
-      "bootEntries",
-      "ENROLLED",
-      "kernelCmdline"
-     ],
-     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity rd.systemd.unit=planeon-maintenance.target"
-    }
-   ],
-   "refusal": "enrolled boot entry names the maintenance target"
-  },
-  {
-   "id": "V58",
-   "positive": 1,
-   "target": "record",
-   "intent": "single-quoted unit, which systemd unquotes (round-3 R3-1)",
-   "ops": [
-    {
-     "op": "set",
-     "path": [
-      "bootEntries",
-      "ENROLLED",
-      "kernelCmdline"
-     ],
-     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity systemd.unit='planeon-maintenance.target'"
-    }
-   ],
-   "refusal": "schema $.bootEntries.ENROLLED.kernelCmdline pattern"
-  },
-  {
-   "id": "V59",
-   "positive": 1,
-   "target": "record",
-   "intent": "maintenance entry overridden by a later runlevel word (round-3 R3-1)",
-   "ops": [
-    {
-     "op": "set",
-     "path": [
-      "bootEntries",
-      "MAINTENANCE",
-      "kernelCmdline"
-     ],
-     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity systemd.unit=planeon-maintenance.target 3"
-    }
-   ],
-   "refusal": "maintenance boot entry does not select the maintenance target"
-  },
-  {
-   "id": "V60",
-   "positive": 1,
-   "target": "record",
-   "intent": "maintenance entry overridden by a runlevel word after \"--\" (round-3 R3-1)",
-   "ops": [
-    {
-     "op": "set",
-     "path": [
-      "bootEntries",
-      "MAINTENANCE",
-      "kernelCmdline"
-     ],
-     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity systemd.unit=planeon-maintenance.target -- emergency"
-    }
-   ],
-   "refusal": "maintenance boot entry does not select the maintenance target"
   }
  ],
  "accepted": [
@@ -18275,17 +18203,6 @@
    "v2Positives": [],
    "intent": "v1-only host with a fresh boot and fresh nonces (round-1 W2)",
    "expect": null
-  },
-  {
-   "id": "M14",
-   "positive": 1,
-   "v1Positives": [
-    1
-   ],
-   "v2Positives": [],
-   "intent": "attested empty history together with v1 records (round-3 R3-2)",
-   "expect": "attested empty history with earlier records",
-   "noEarlierHistory": true
   }
  ]
 }

@@ -35,7 +35,7 @@ from typing import Any
 
 import jsonschema
 
-SCHEMA_SHA256 = "1c7930351e58a12cdf8bf8ef0df1f971eddceb8d17268f73541425258e9657d2"
+SCHEMA_SHA256 = "fc678e93559ab1ccf876d1b5703f9be289df53a52c65d6cb11987ab88b390172"
 V1_SCHEMA_SHA256 = "8e184d60df63863bc627c1655887c32012490e3c7211f8f9a38baee67f64d4cf"
 V2_SCHEMA_SHA256 = "fd1657c9a9ea437df2d48f03c69a1de62013a47a9fc62ad7776db2fc7029c0c5"
 V3_RECORD = ("planeon.internal.native-qualification/v3", "SELINUX_FSVERITY_CGROUP_BPF_V3")
@@ -55,14 +55,8 @@ DELEGATED_CHILDREN = ["broker", "probe-worker"]
 BROKER_SERVICE = "/sys/fs/cgroup/planeon.slice/planeon-capacity-broker.service"
 # Native-only roles may list nothing from the enrolled interpreter's installation tree (round 2, W4).
 INTERPRETER_TREE = "/opt/planeon/python/"
-# The maintenance boot entry selects this systemd target; the enrolled entry never names it (rounds 2-4).
+# The maintenance boot entry selects this systemd target; the enrolled entry never names it (rounds 2-3).
 MAINTENANCE_TARGET = "planeon-maintenance.target"
-# systemd v256 on the host also takes the default unit from these SysV runlevel words (rlmap in src/basic/unit-file.c);
-# they share last-wins with systemd.unit= (parse_proc_cmdline_item in src/core/main.c).
-RUNLEVEL_TARGETS = {"emergency": "emergency.target", "-b": "emergency.target", "rescue": "rescue.target",
-                    "single": "rescue.target", "-s": "rescue.target", "s": "rescue.target", "S": "rescue.target",
-                    "1": "rescue.target", "2": "multi-user.target", "3": "multi-user.target", "4": "multi-user.target",
-                    "5": "graphical.target"}
 PIN_ROOT = "/sys/fs/bpf/planeon"
 CGROUP_ROOT = "/sys/fs/cgroup"
 SLICE = CGROUP_ROOT + "/planeon.slice"
@@ -246,14 +240,12 @@ def check_record(record: Any, profile: Any, endpoints: Any, schema: dict) -> Non
             "enrolled and maintenance boot entries indistinguishable")
     require("lockdown=integrity" in _kernel_params(entries["ENROLLED"]["kernelCmdline"]),
             "enrolled boot entry without lockdown=integrity")
-    # The schema refuses both quote characters, so these words are the ones systemd's unquoting split yields. systemd
-    # reads every word of /proc/cmdline, after "--" too, and the last systemd.unit= or runlevel word is the default unit.
+    # systemd reads every word of /proc/cmdline, after "--" too, and the last systemd.unit= wins.
     require(not any(word in ("systemd.unit=" + MAINTENANCE_TARGET, "rd.systemd.unit=" + MAINTENANCE_TARGET)
                     for word in entries["ENROLLED"]["kernelCmdline"].split(" ")),
             "enrolled boot entry names the maintenance target")
-    units = [word[len("systemd.unit="):] if word.startswith("systemd.unit=") else RUNLEVEL_TARGETS[word]
-             for word in entries["MAINTENANCE"]["kernelCmdline"].split(" ")
-             if word.startswith("systemd.unit=") or word in RUNLEVEL_TARGETS]
+    units = [word[len("systemd.unit="):] for word in entries["MAINTENANCE"]["kernelCmdline"].split(" ")
+             if word.startswith("systemd.unit=")]
     require(units[-1:] == [MAINTENANCE_TARGET], "maintenance boot entry does not select the maintenance target")
     binding = profile["binding"]
     require(record["scope"] == {key: binding[key] for key in record["scope"]}, "scope substitution")

@@ -1,6 +1,6 @@
 # Native qualification record v3 — W02a-F contract (DATA_CHECK_ONLY)
 
-Alpha 2A; 2026-10-08. Status: **CONTRACT_CANDIDATE_ROUND1_AWAITING_INDEPENDENT_REVIEW**.
+Alpha 2A; 2026-10-08. Status: **CONTRACT_CANDIDATE_ROUND2_AWAITING_INDEPENDENT_REVIEW**.
 
 v3 is the W02a-F successor of the adopted v2 record (`../native-profile-v2/`, ADOPTED_DATA_CONTRACT after three review
 rounds). It closes the findings carried to W02a-F:
@@ -8,7 +8,10 @@ rounds). It closes the findings carried to W02a-F:
 - W02g: P7(a)-(c) and the network-policy agent identity;
 - W02e: the label constants, the E1 effective-program census and K1, the boot-entry discriminator.
 
-The v1 and v2 schemas, vectors, models and records are byte-identical; v3 never reinterprets v2 data. Nothing here is a
+Review history: round 1 CHANGES_REQUIRED (`review-round1.json`: 2 MINOR, 7 NOTE; all twelve carried items CLOSED). Its
+reviewed bytes are kept unchanged in `round1/`, and this round-2 candidate answers W1-W9 (table at the end).
+
+The v1 and v2 schemas, vectors, models and records are byte-identical; v3 never reinterprets earlier data. Nothing here is a
 native result, installed profile, kernel observation or grant. Every vector and model result is DATA_CHECK_ONLY, and all
 E01-E12 stay OPEN_UNPROVEN.
 
@@ -19,25 +22,27 @@ Accepted base: main `51440c8de083b09e9d74fbaef3365b86d9fe89da` (MET-PERF-032, 20
 - `qualification.schema.json`: JSON Schema 2020-12, `$id` `urn:planeon:internal:native-qualification:v3`. It is the
   v2 schema with the changes below and every version discriminator moved to v3. It has the same four variants: `record`,
   `capture`, `lifecycleCapture` and `backendCapture`.
-- `vectors.json`: 4 positives derived from the 4 adopted v2 positives; 173 negatives (all 131 v2 negatives replayed
-  under v3, plus V01-V42), each pinned to its exact refused rule, with every schema-level refusal a single error; 7
-  accepted variants (the 4 from v2 plus A05-A07); 14 cross-version cases; 9 v2-to-v3 migration cases.
+- `vectors.json`: 4 positives derived from the 4 adopted v2 positives; 182 negatives (all 131 v2 negatives replayed
+  under v3, plus V01-V51), each pinned to its exact refused rule, with every schema-level refusal a single error; 7
+  accepted variants (the 4 from v2 plus A05-A07); 14 cross-version cases; 13 migration cases.
 - `../../scripts/native_qualification_v3.py`: the reference data model. It is the v2 model with the changes below, so
   the v2-to-v3 diff is the review surface. `check_qualification` remains the only acceptance-shaped check.
 
 Caller obligations (stated in the model, not checked by it):
 1. The profile is valid under the pinned proxy profile contract (`scripts/validate_proxy_contract.py`).
-2. `v2_records` is the host's complete retained v2 enrollment history, owned by the host's enrollment ledger (W03), or
-   `no_v2_history` is set because that history is attested empty.
-3. Inspectors report a per-process field only when it holds for every thread (`threadsUniform`).
+2. `v1_records` and `v2_records` are the host's complete retained v1 and v2 enrollment histories, owned by the host's
+   enrollment ledger (W03), or `no_earlier_history` is set because both are attested empty.
+3. Inspectors report a per-process field only when it holds for every thread (`threadsUniform`). They read a role
+   cgroup's members, thread counts and `pids.current` while the cgroup is frozen and holds no unreaped task: an exited,
+   unreaped task still counts in `pids.current` but is no longer in `cgroup.procs`.
 4. `test_fixture=True` is passed only when qualifying a test fixture.
 
 ## What v3 changes
 
 | Item | v3 rule | Vectors |
 |---|---|---|
-| P1: role closures | Only the role's own executable may appear in its closure. No closure lists another role's executable, by path or by content (sha256 or verity). A native-only role (`interpreterPath` null: OBSERVER, BROKER, EFFECT_GATE) lists no enrolled interpreter, by path or content. | V01-V06; A05 |
-| P1: running image | Each role capture records the process image (`/proc/<pid>/exe`: path, device, inode). It must be the role's interpreter if it has one, otherwise its executable, with the device and inode observed for that file. | V07-V09 |
+| P1: role closures | No declared closure lists another role's executable, by path or by content (sha256 or verity); only the role's own executable may appear. A native-only role (`interpreterPath` null: OBSERVER, BROKER, EFFECT_GATE) lists no enrolled interpreter, by path or content, and nothing from the interpreter's installation tree `/opt/planeon/python/` (its runtime library and modules). A Python runtime installed elsewhere and embedded by a native binary is not recognised by the data; it would need that role's own enrolled binary to load it. | V01-V06, V46; A05 |
+| P1: running image | Each role capture records the process image (`/proc/<pid>/exe`: path, device, inode) of the inspected process and of every cgroup member. Each must be the role's interpreter if it has one, otherwise its executable, with the device and inode observed for that file. Across all role captures, one (device, inode) names one path with one content, and one path one (device, inode). For the interpreted roles (SERVER, WORKER) the script is declared, not observed: the image is the interpreter. | V07-V09, V43-V45 |
 | P3: census and captures | `check_qualification` refuses a census entry below any role cgroup. The direct children of `planeon-capacity-broker.service` must be exactly `broker` and `probe-worker`. The slice, the broker service and every role cgroup must be reported populated: each holds a captured process. Census paths must be canonical, and every listed cgroup's parent must be listed. | V10-V17, V41 |
 | P4: one process, one report | (pid, start ticks) is unique over every role cgroup member and every backend process. | V18 |
 | P5: the slice's own members | The lifecycle capture lists the processes directly in `planeon.slice` (`cgroup.procs`), required empty. This is observed rather than inferred from cgroup v2's no-internal-process rule. | V19 |
@@ -45,24 +50,35 @@ Caller obligations (stated in the model, not checked by it):
 | P7(a): fixture profile | Implementation profiles carry `testOnly`. `unit-distribution` is bound to `testOnly: true`, and `check_qualification` refuses a test-only profile unless the caller passes `test_fixture=True`. No production profile exists until W03 adds one through a reviewed schema revision. | V24, V25 |
 | P7(b): type names | The confined backend types are fixed per component: `qualk8s_apiserver_t`, `qualk8s_datastore_t`, `qualk8s_controller_manager_t`, `qualk8s_scheduler_t`, `qualk8s_kubelet_t`, `qualk8s_runtime_t` (CONTAINER_RUNTIME), `qualk8s_proxy_t` (SERVICE_PROXY) and `qualk8s_netpol_t` (NETWORK_POLICY_AGENT). That they are confined is a W02e/W03 policy obligation. | unchanged R61-R66 |
 | P7(c): nested backend cgroups | No backend cgroup lies inside another backend cgroup. | V23 |
-| Network-policy agent identity | Each backend component's `apiIdentities` must be names the reviewed W02g identity closure gives that component as holder. KUBELET may also use `system:node:<node name>`, and DATASTORE and CONTAINER_RUNTIME have none. The fixture's agent is now the host-component user `planeon:netpol-agent`. | V26-V28; A07 |
+| Network-policy agent identity | Each backend component's `apiIdentities` lists the identities of the reviewed W02g closure that the component holds, by holder: a subset of those names, not every identity it authenticates as (controller service accounts outside the closure are not listed). KUBELET may also use one `system:node:<node name>`, and DATASTORE and CONTAINER_RUNTIME have none. The fixture's agent is now the host-component user `planeon:netpol-agent`. | V26-V28, V51; A07 |
 | W02e label slots | The schema fixes the W02e values: each role cgroup's label (`planeon_cgroup_server_t`, `_observer_t`, `_broker_t`, `_worker_t`, `_gate_t`), `planeon_bpf_pin_t` for every pin and `planeon_seal_t` for the seal marker. | V29-V32 |
 | W02e E1: effective-program census | Each role capture reports the effective program IDs (BPF_PROG_QUERY with BPF_F_QUERY_EFFECTIVE, command 16, already in the reader set) for every other cgroup attach type of Linux v6.12 (22 types, listed below), each required empty. The seven containment hooks are observed per hook as in v2. | V33-V36 |
-| W02e K1: boot entries | The record pins the enrolled and the maintenance boot entry (loader entry ID and kernel command line); the two must differ in both. The enrolled command line must carry `lockdown=integrity` (W01 §5.2 S1). Every role and lifecycle capture reports the boot entry it observed (`entryId`, and SHA-256 of the command line text without its trailing newline), which must be the enrolled one. | V37-V40, V42 |
+| W02e K1: boot entries | The record pins the enrolled and the maintenance boot entry: the loader entry ID and the kernel command line as `/proc/cmdline` reports it for that entry (for a systemd-boot type #1 entry, its options line plus the `initrd=` it adds). The two must differ in both. Among the kernel parameters (the words before `--`), the enrolled entry must carry `lockdown=integrity` (W01 §5.2 S1) and must not carry `systemd.unit=planeon-maintenance.target`, which the maintenance entry must carry. Every role and lifecycle capture reports the boot entry it observed (`entryId`, and SHA-256 of the command line text without its trailing newline), which must be the enrolled one. | V37-V40, V42, V47-V49 |
 
 **Counts row, reworded (P5).** The lifecycle capture counts processes per planeon domain. The containment domain must be
 0, and each role domain must equal its role cgroup's membership, so no role-domain process exists outside its role
 cgroup. The policy-writer count is informational: writer processes run outside the slice by design (decision 8 of v2).
 
 **K1 statement.** The maintenance domain is a trusted installer. With `load_policy` and boolean preservation it can reach
-any boolean state, so v2's boolean pins alone cannot tell a maintenance boot from an enrolled one. The boot entry can.
-The entry ID and command line are what the boot loader and kernel report (systemd-boot's `LoaderEntrySelected` and
-`/proc/cmdline`); they are not measured. Measuring them (TPM event log) is a T04 obligation.
+any boolean state, so v2's boolean pins alone cannot tell a maintenance boot from an enrolled one. The recorded boot
+entries tell an honest maintenance boot apart, within these limits:
+- the two entries are declared data, not tied to the installed loader configuration;
+- `LoaderEntrySelected` is a volatile EFI variable with runtime access, so a privileged domain could rewrite it; the
+  command line in `/proc/cmdline` is fixed for the boot, and the two command lines must differ;
+- `kernelCmdline` is the `/proc/cmdline` text, which may include bootconfig keys and init arguments;
+- nothing is measured. Measuring the entry and command line (TPM event log) is a T04 obligation.
+
+The observed `hardening.lockdown` value, pinned to `integrity`, remains the evidence of the lockdown state itself.
 
 **E1 census, scope.** Every process inside the planeon slice is in a role cgroup: the slice's and the broker service's
-own members are observed empty, and unenrolled slice cgroups must be unpopulated. So any cgroup program effective on a
-process in the slice is effective at its role cgroup, and the census covers role cgroups. The policy writer runs outside
-the slice by design and is not covered. It sees only cgroup attachments, and only when it
+own members are observed empty, unenrolled slice cgroups must be unpopulated, and the census must list every live
+descendant of the slice (its `cgroup.stat` `nr_descendants`). Task-selected programs (DEVICE, SYSCTL, LSM on the current
+task) are therefore effective at the role cgroup. Socket-attached programs (INGRESS/EGRESS, SOCK_OPS, the sock_addr and
+sockopt types, LSM socket hooks) select by the cgroup the socket was created in, so the census covers sockets a role
+creates in its role cgroup. A descriptor created elsewhere and passed in (socket activation, SCM_RIGHTS) or created
+before a cgroup move is out of this census; W03 must not hand planeon roles such sockets. The policy writer runs outside
+the slice by design and is not covered. This narrowing of owner decision E1's "every planeon cgroup" to role cgroups
+(decision 3) is carried to W03 and T04 in this contract's status record; W02e's adopted status record is not changed. It sees only cgroup attachments, and only when it
 runs. The runtime's other BPF use, and attachments made and removed between census points, rest on W03 runtime
 selection and T04 (W02e owner decision E1).
 
@@ -94,7 +110,9 @@ All names except BPF_LSM_CGROUP take the `BPF_CGROUP_` prefix.
 ## Replayed v2 cases
 
 All 131 v2 negatives and 4 accepted variants are replayed under v3 against the derived positives. v2 member rows gain
-`threadCount` 1, and Q03 uses a v3 capture. Four refusals change, each recorded:
+`threadCount` 1 and an image of their own (an unenrolled path), Q03 uses a v3 capture, and A02 also lowers the slice's
+descendant count with the removed containment cgroup. R01's refusal changes mechanically, from "not a v2 record" to "not
+a v3 record". Four refusals change for a reason, each recorded:
 
 | Case | v2 refusal | v3 refusal | Reason |
 |---|---|---|---|
@@ -103,16 +121,18 @@ All 131 v2 negatives and 4 accepted variants are replayed under v3 against the d
 | L13 | planeon slice census incomplete | planeon slice census omits a parent cgroup | Deleting the slice root now meets the parent rule first. V41 keeps a vector for the incomplete-census rule. |
 | Q07 | planeon process outside its role cgroup | role-domain process outside its role cgroup | Reworded (P5). |
 
-## Migration from v2
+## Migration from v1 and v2
 
-A v3 enrollment needs a maintenance reboot (a boot ID different from every retained v2 record) and fresh nonces. No v2
-nonce may appear anywhere in v3 data. Predecessors must be valid under the pinned v2 schema, or the v2 history must be
-attested empty (M01-M09). The rules are v2's v1-to-v2 rules, one version later.
+A v3 enrollment needs a maintenance reboot and fresh nonces against every earlier version: its boot ID differs from every
+retained v1 and v2 record, and no v1 or v2 nonce appears anywhere in v3 data. v1 predecessors must be valid under the
+pinned v1 schema and v2 predecessors under the pinned v2 schema, or both histories must be attested empty (M01-M13; M10
+to M13 cover a v1-only host).
 
 ## Decisions made in this contract
 
 1. The process image is observed through `/proc/<pid>/exe`. An interpreted role's image is its interpreter.
-2. Boot-entry observation is loader-reported, not measured (T04 measures).
+2. Boot-entry observation is loader-reported, not measured (T04 measures). The maintenance entry selects
+   `systemd.unit=planeon-maintenance.target`; W01 leaves the mechanism open, and W02e K1 names the systemd target.
 3. The effective census covers role cgroups only. Every other planeon cgroup is observed to hold no process.
 4. Test-only implementation profiles qualify only in an explicit fixture call.
 
@@ -121,3 +141,17 @@ attested empty (M01-M09). The rules are v2's v1-to-v2 rules, one version later.
 No real kernel, SELinux policy, bpffs, cgroup, boot loader or TPM was observed. The kernel facts come from the reviewed
 W01 candidate and the v6.12 source files above, and stay T04 obligations. The exact seccomp filters (W02d), the backend
 policy module and the distribution (W03), and native, installation and tenant acceptance remain separate.
+
+## Round-1 findings and dispositions
+
+| Finding | Severity | Disposition |
+|---|---|---|
+| W1 one inode, two files | MINOR | One path and one content per (device, inode), and one inode per path, across all role captures. The positives' gate binary now has its own inode (2104), not the interpreter's inherited from v2. V43, V44 |
+| W2 v1 history dropped from migration | MINOR | `check_migration` and `check_qualification` take the complete v1 and v2 histories under their pinned schemas; no shared boot ID and no earlier nonce. Caller obligation 2 restated. M10-M13 |
+| W3 co-member images, interpreted scripts | NOTE | Every cgroup member reports its image, which must be the role's image. Scripts are stated as declared, not observed. V45 |
+| W4 interpreter runtime in native-only roles | NOTE | Nothing under `/opt/planeon/python/` in a native-only closure. The residual (an interpreter elsewhere, loaded by the role's own binary) is stated. V46 |
+| W5 unreaped tasks in pids.current | NOTE | Inspector obligation 3: read the cgroup frozen, with no unreaped task |
+| W6 K1 precision | NOTE | Statement qualified. Maintenance token pinned. Parameters only before `--`. Systemd-boot-shaped command lines. V47-V49 |
+| W7 socket-attached programs, census completeness | NOTE | Scope sentence restated for socket programs. The census must match the slice's `nr_descendants`. Decision 3's narrowing is carried to W03 and T04. V50 |
+| W8 several node names, identity meaning | NOTE | At most one `system:node:` name. `apiIdentities` stated as held closure identities. V51 |
+| W9 R01 and stale strings | NOTE | R01's mechanical change noted. The docstrings now say "one v3 record" and "earlier-version nonce scan" |

@@ -1,11 +1,7 @@
-# Independent review brief — native qualification record v3 (W02a-F), round 2
+# Independent review brief — native qualification record v3 (W02a-F), round 1
 
-Status: **CONTRACT_CANDIDATE_ROUND2_AWAITING_INDEPENDENT_REVIEW**. The authoring agent wrote this brief. It is not a
+Status: **CONTRACT_CANDIDATE_ROUND1_AWAITING_INDEPENDENT_REVIEW**. The authoring agent wrote this brief. It is not a
 verdict.
-
-Round 1 (`review-round1.json`) returned CHANGES_REQUIRED, with W1 and W2 MINOR and W3-W9 NOTE; all twelve carried
-items were CLOSED. Its reviewed bytes are kept in `round1/`. README "Round-1 findings and dispositions" states how round 2
-answers W1-W9.
 
 ## Subject
 
@@ -26,8 +22,6 @@ checked by the required verify suite, and will not change while you review.
 
 ## Questions to answer
 
-0. **Round-1 findings.** For each of W1-W9, is the README disposition true in the round-2 bytes? Give CLOSED, PARTIAL or
-   OPEN under `openItemStatus`, and confirm that no CLOSED carried item reopened.
 1. **Carried findings.** For P1, P3, P4, P5, P6, P7(a), P7(b) and P7(c), the network-policy agent identity, the W02e
    label slots, E1's census and K1: does v3 close the finding as it was required? Give CLOSED, PARTIAL or OPEN under
    `openItemStatus`.
@@ -63,11 +57,11 @@ Set the environment variable inline on every command, and never let uv create a 
 ## Result
 
 Return one JSON object:
-- `schemaVersion` `"planeon.internal.native-profile-v3-review/v1"`, `round` 2, `reviewDate`;
+- `schemaVersion` `"planeon.internal.native-profile-v3-review/v1"`, `round` 1, `reviewDate`;
 - `verdict`: PASS_FOR_SOURCE_PUBLICATION, CHANGES_REQUIRED or BLOCKED;
 - `subjectSha256`: subject file name to digest;
 - `findings`, each with `id`, `severity` (BLOCKING / MAJOR / MINOR / NOTE), `location`, `finding` and `requiredChange`;
-- `openItemStatus`, `questionAnswers` (Q0-Q7), `modelExecution`, `sourcesRead`;
+- `openItemStatus`, `questionAnswers` (Q1-Q7), `modelExecution`, `sourcesRead`;
 - `actions`, booleans: `filesEdited`, `githubMutated`, `nativeActions`, `referenceModelExecuted`,
   `repositoryValidatorsRun`, `runnerActivated`, `testsRun`, `warmSourcesAccessed`;
 - `reviewLimit`.

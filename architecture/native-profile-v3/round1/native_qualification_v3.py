@@ -16,12 +16,11 @@ profile is test-only qualifies only when the caller asks for a test fixture.
 Caller obligations (not checked here):
 - `profile` is already valid under the pinned proxy profile contract
   (`scripts/validate_proxy_contract.py`, `validate_profile`); this model only adds the
-  binding-nonce label rule and the earlier-version nonce scan;
-- `v1_records` and `v2_records` are the host's complete retained v1 and v2 enrollment
-  histories, or `no_earlier_history` is set because both are attested empty;
+  binding-nonce label rule and the v1-nonce scan;
+- `v2_records` is the host's complete retained v2 enrollment history, or
+  `no_v2_history` is set because that history is attested empty;
 - inspectors report a per-process field only when it holds for every thread
-  (`threadsUniform`), and read a role cgroup's members, thread counts and pids.current
-  while it is frozen and holds no unreaped task.
+  (`threadsUniform`).
 """
 from __future__ import annotations
 
@@ -33,8 +32,7 @@ from typing import Any
 
 import jsonschema
 
-SCHEMA_SHA256 = "8082ecfc2aa28bfbae2e2647267328e9a1969ea2af8a89702a28c272f5b691cb"
-V1_SCHEMA_SHA256 = "8e184d60df63863bc627c1655887c32012490e3c7211f8f9a38baee67f64d4cf"
+SCHEMA_SHA256 = "c5b984fe185d5253a451b31ed44539d6aa15bc68aec36e4ab0f6b4a058be247a"
 V2_SCHEMA_SHA256 = "fd1657c9a9ea437df2d48f03c69a1de62013a47a9fc62ad7776db2fc7029c0c5"
 V3_RECORD = ("planeon.internal.native-qualification/v3", "SELINUX_FSVERITY_CGROUP_BPF_V3")
 V3_CAPTURE = "planeon.internal.native-qualification-capture/v3"
@@ -51,10 +49,6 @@ ROLE_DIRS = {"SERVER": "proxy-server", "OBSERVER": "policy-observer", "BROKER": 
              "WORKER": "probe-worker", "EFFECT_GATE": "effect-gate"}
 DELEGATED_CHILDREN = ["broker", "probe-worker"]
 BROKER_SERVICE = "/sys/fs/cgroup/planeon.slice/planeon-capacity-broker.service"
-# Native-only roles may list nothing from the enrolled interpreter's installation tree (round 2, W4).
-INTERPRETER_TREE = "/opt/planeon/python/"
-# The maintenance boot entry selects this target; the enrolled entry never does (round 2, W6).
-MAINTENANCE_TOKEN = "systemd.unit=planeon-maintenance.target"
 PIN_ROOT = "/sys/fs/bpf/planeon"
 CGROUP_ROOT = "/sys/fs/cgroup"
 SLICE = CGROUP_ROOT + "/planeon.slice"
@@ -227,7 +221,7 @@ class _Owners:
 
 
 def check_record(record: Any, profile: Any, endpoints: Any, schema: dict) -> None:
-    """Expected-data consistency of one v3 record; raises with the first refused rule."""
+    """Expected-data consistency of one v2 record; raises with the first refused rule."""
     require(type(record) is dict and (record.get("schemaVersion"), record.get("qualificationProfile")) == V3_RECORD,
             "not a v3 record")
     _shape(record, "record", schema)
@@ -236,10 +230,8 @@ def check_record(record: Any, profile: Any, endpoints: Any, schema: dict) -> Non
     require(entries["ENROLLED"]["entryId"] != entries["MAINTENANCE"]["entryId"]
             and entries["ENROLLED"]["kernelCmdline"] != entries["MAINTENANCE"]["kernelCmdline"],
             "enrolled and maintenance boot entries indistinguishable")
-    enrolled, maintenance = (_kernel_params(entries[name]["kernelCmdline"]) for name in ("ENROLLED", "MAINTENANCE"))
-    require("lockdown=integrity" in enrolled, "enrolled boot entry without lockdown=integrity")
-    require(MAINTENANCE_TOKEN in maintenance and MAINTENANCE_TOKEN not in enrolled,
-            "maintenance target not selected by the maintenance entry alone")
+    require("lockdown=integrity" in entries["ENROLLED"]["kernelCmdline"].split(" "),
+            "enrolled boot entry without lockdown=integrity")
     binding = profile["binding"]
     require(record["scope"] == {key: binding[key] for key in record["scope"]}, "scope substitution")
     start, end = _moment(record["scope"]["validFrom"]), _moment(record["scope"]["expiresAt"])
@@ -339,8 +331,8 @@ def check_record(record: Any, profile: Any, endpoints: Any, schema: dict) -> Non
                         and all(path != record["roles"][other]["executable"] for other in ROLES),
                         "role closure lists another role's executable")
             if row["interpreterPath"] is None:
-                require(path not in interpreters and not content & interpreter_content
-                        and not path.startswith(INTERPRETER_TREE), "native-only role closure lists an interpreter")
+                require(path not in interpreters and not content & interpreter_content,
+                        "native-only role closure lists an interpreter")
 
     lifecycle = record["lifecycleSubjects"]
     for name in LIFECYCLE:
@@ -371,8 +363,6 @@ def check_record(record: Any, profile: Any, endpoints: Any, schema: dict) -> Non
         require(row["cgroupPath"] not in cgroups_seen, "backend components share a cgroup")
         require(not any(row["cgroupPath"].startswith(seen + "/") or seen.startswith(row["cgroupPath"] + "/")
                         for seen in cgroups_seen), "backend cgroup nested in another backend cgroup")
-        require(sum(identity.startswith("system:node:") for identity in row["apiIdentities"]) <= 1,
-                "more than one node identity")
         cgroups_seen.add(row["cgroupPath"])
         if name in NO_API_CLIENT:
             require(row["apiIdentities"] == [], "backend API identity")
@@ -421,7 +411,7 @@ def check_capture(record: Any, capture: Any, role: str, schema: dict, previous: 
                 and actual["capAmbient"] == [] and actual["capInheritable"] == [],
                 "capability sets differ from the enrolled set")
     me = {key: actual[key] for key in ("pid", "startTicks", "ppid", "uid", "processLabel", "noNewPrivs", "seccompMode",
-                                       "threadCount", "exe")}
+                                       "threadCount")}
     members = capture["cgroupMembers"]
     if role in SINGLE_PROCESS_ROLES:
         require(members == [me], "unenrolled cgroup member")
@@ -456,8 +446,8 @@ def check_capture(record: Any, capture: Any, role: str, schema: dict, previous: 
         observed[path] = item
     require(set(observed) == set(expected["filePaths"]), "incomplete loaded-code closure")
     image = expected["interpreterPath"] or expected["executable"]
-    require(actual["exe"] == {"path": image, "device": observed[image]["device"], "inode": observed[image]["inode"]}
-            and all(m["exe"] == actual["exe"] for m in members), "running image is not the role's executable or interpreter")
+    require(actual["exe"] == {"path": image, "device": observed[image]["device"], "inode": observed[image]["inode"]},
+            "running image is not the role's executable or interpreter")
     mappings = [dict(path=path, **segment, device=observed[path]["device"], inode=observed[path]["inode"])
                 for path in expected["filePaths"] for segment in rows[path]["executableSegments"]]
     key = lambda m: (m["path"], m["offset"], m["length"], m["permissions"], m["device"], m["inode"])
@@ -481,12 +471,6 @@ def check_capture(record: Any, capture: Any, role: str, schema: dict, previous: 
         require(capture["inspectionStartedMs"] >= previous["inspectionFinishedMs"]
                 and capture["observedAt"] >= previous["observedAt"]
                 and capture["deadlineMs"] == previous["deadlineMs"], "rollback or renewed lifetime")
-
-
-def _kernel_params(cmdline: str) -> list[str]:
-    """Kernel parameters of a command line: parse_args stops at "--", and later words go to init."""
-    words = cmdline.split(" ")
-    return words[:words.index("--")] if "--" in words else words
 
 
 def _boot_entry(record: dict, observed: dict) -> None:
@@ -527,8 +511,6 @@ def check_lifecycle_capture(record: Any, capture: Any, schema: dict) -> None:
             and census.get(containment, 0) == 0, "containment subject still resident")
     require(all(populated == 0 for path, populated in census.items() if path not in enrolled),
             "unenrolled populated cgroup in the planeon slice")
-    # cgroup.stat nr_descendants of the slice: the census lists every live descendant (round 2, W7).
-    require(capture["sliceDescendants"] == len(census) - 1, "planeon slice census incomplete")
 
 
 def check_backend_capture(record: Any, capture: Any, schema: dict) -> None:
@@ -548,42 +530,39 @@ def check_backend_capture(record: Any, capture: Any, schema: dict) -> None:
                                           "measuredVerity": executable["verityDigest"]}, "backend observation differs")
 
 
-def check_migration(v1_records: Any, v2_records: Any, v3_record: Any, v3_profile: Any, v1_schema: dict,
-                    v2_schema: dict, schema: dict, no_earlier_history: bool = False) -> None:
-    """A v3 enrollment needs a maintenance reboot and fresh nonces against every earlier version.
+def check_migration(v2_records: Any, v3_record: Any, v3_profile: Any, v2_schema: dict, schema: dict,
+                    no_v2_history: bool = False) -> None:
+    """v2 to v3 needs a maintenance reboot and fresh nonces; v2 data is never reinterpreted.
 
-    `v1_records` and `v2_records` must be the complete retained v1 and v2 histories (a caller
-    obligation); a host whose histories are both attested empty passes `no_earlier_history=True`
-    with two empty lists. Earlier data is never reinterpreted."""
+    `v2_records` must be the complete retained v2 history (a caller obligation); a host
+    whose history is attested empty passes `no_v2_history=True` with an empty list."""
     _shape(v3_record, "record", schema)
     require(v3_record["profileDigest"] == "sha256:" + digest(canonical(v3_profile)), "profile substitution")
-    require(digest(canonical(v1_schema)) == V1_SCHEMA_SHA256, "unreviewed v1 schema")
     require(digest(canonical(v2_schema)) == V2_SCHEMA_SHA256, "unreviewed v2 schema")
-    require(type(v1_records) is list and type(v2_records) is list and type(no_earlier_history) is bool, "migration inputs")
-    if no_earlier_history:
-        require(v1_records == [] and v2_records == [], "attested empty history with earlier records")
-    require(no_earlier_history or v1_records or v2_records, "retained earlier records required")
+    require(type(v2_records) is list and type(no_v2_history) is bool, "migration inputs")
+    if no_v2_history:
+        require(v2_records == [], "attested empty v2 history with v2 records")
+    require(no_v2_history or v2_records, "retained v2 records required")
     old_nonces: set[str] = set()
-    for version, records, old_schema in (("v1", v1_records, v1_schema), ("v2", v2_records, v2_schema)):
-        for old in records:
-            require(type(old) is dict and old.get("schemaVersion") == "planeon.internal.native-qualification/" + version
-                    and not schema_errors(old, old_schema, "record"), "predecessor is not a valid %s record" % version)
-            require(old["host"]["bootId"] != v3_record["host"]["bootId"], "v3 enrollment without a maintenance reboot")
-            old_nonces |= {old["scope"]["runNonce"], old["scope"]["capacityNonce"]}
+    for old in v2_records:
+        require(type(old) is dict and old.get("schemaVersion") == "planeon.internal.native-qualification/v2"
+                and not schema_errors(old, v2_schema, "record"), "predecessor is not a valid v2 record")
+        require(old["host"]["bootId"] != v3_record["host"]["bootId"], "v3 enrollment without a maintenance reboot")
+        old_nonces |= {old["scope"]["runNonce"], old["scope"]["capacityNonce"]}
     new_nonces = {v3_record["scope"]["runNonce"], v3_record["scope"]["capacityNonce"]}
     require(not new_nonces & old_nonces, "nonce reused across versions")
     require(not set(_strings(v3_profile)) & old_nonces and not set(_strings(v3_record)) & old_nonces,
-            "earlier nonce carried into v3 data")
+            "v2 nonce carried into v3 data")
 
 
 def check_qualification(record: Any, profile: Any, endpoints: Any, captures: Any, lifecycle: Any,
-                        backend_captures: Any, v1_records: Any, v2_records: Any, v1_schema: dict, v2_schema: dict,
-                        schema: dict, no_earlier_history: bool = False, test_fixture: bool = False) -> None:
+                        backend_captures: Any, v2_records: Any, v2_schema: dict, schema: dict,
+                        no_v2_history: bool = False, test_fixture: bool = False) -> None:
     """The only acceptance-shaped check: everything for one boot and window, still DATA_CHECK_ONLY.
 
-    Caller obligations: the profile passed the pinned proxy profile contract, and `v1_records`
-    and `v2_records` are the complete retained earlier histories (see the module docstring). A
-    test-only implementation profile qualifies only with `test_fixture=True`."""
+    Caller obligations: the profile passed the pinned proxy profile contract, and
+    `v2_records` is the complete retained v2 history (see the module docstring). A test-only
+    implementation profile qualifies only with `test_fixture=True`."""
     check_record(record, profile, endpoints, schema)
     require(type(test_fixture) is bool and (test_fixture or not record["backendProfile"]["testOnly"]),
             "test-only implementation profile")
@@ -600,15 +579,6 @@ def check_qualification(record: Any, profile: Any, endpoints: Any, captures: Any
     processes = [(m["pid"], m["startTicks"]) for c in captures for m in c["cgroupMembers"]]
     processes += [(c["process"]["pid"], c["process"]["startTicks"]) for c in backend_captures]
     require(len(set(processes)) == len(processes), "one process reported twice")
-    # One observed file per (device, inode) and one inode per path, across every role capture (round 2, W1).
-    by_inode: dict[tuple, tuple] = {}
-    by_path: dict[str, tuple] = {}
-    for capture in captures:
-        for item in capture["files"]:
-            node = (item["device"], item["inode"])
-            seen = (item["entry"]["path"], item["contentDigest"], item["measuredVerity"])
-            require(by_inode.setdefault(node, seen) == seen and by_path.setdefault(seen[0], node) == node,
-                    "one inode reported for two files")
     by_role = {c["role"]: c for c in captures}
     require(by_role["WORKER"]["process"]["ppid"] == by_role["BROKER"]["process"]["pid"],
             "worker is not a child of the original broker")
@@ -626,7 +596,7 @@ def check_qualification(record: Any, profile: Any, endpoints: Any, captures: Any
             "census children of the delegated broker service differ")
     require(all(census[path] == 1 for path in role_cgroups | {SLICE, BROKER_SERVICE}),
             "census reports a cgroup with captured processes as unpopulated")
-    check_migration(v1_records, v2_records, record, profile, v1_schema, v2_schema, schema, no_earlier_history)
+    check_migration(v2_records, record, profile, v2_schema, schema, no_v2_history)
 
 
 ERRORS = (ValueError, TypeError, KeyError, AttributeError, RecursionError, jsonschema.ValidationError)

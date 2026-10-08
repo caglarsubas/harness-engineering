@@ -1,6 +1,16 @@
 # Repository Plan: `Harness-Engineering`
 
-## Current source preparation — MET-PERF-032
+## Current source preparation — MET-ENFORCE-010
+
+W02a-F: the native qualification record v3 (successor of the adopted v2 record) closes every finding
+carried to W02a-F: code identity and running images, the slice census, tasks against pids.max, the
+test-only fixture profile, backend identities from the W02g closure, W02e's label constants, the E1
+effective-program census over every v6.12 cgroup attach type and the K1 boot-entry discriminator. It passed
+its independent review in round 6. Nothing is observed or installed, and every E01-E12 obligation stays
+open. Alpha2 OPEN; 208 accepted plus ENFORCE-010 only. Native Linux, exact-main and tenant acceptance remain
+separate.
+
+## Historical PERF-032 source preparation — MET-PERF-032
 
 PERF-032: verify reached 692 s of the 900 s cap at packet 207. Four repeats are removed with the same assertions:
 route tests compute only their own route's input, native-profile status mutations stub only the pure vector replay
@@ -924,6 +934,7 @@ Every packet uses branch `codex/<packet-id>`, changes only named paths, opens a 
 80. `MET-ENFORCE-009`: publish the W02e SELinux domain, type, boolean and permission matrix with independent review; source only.
 81. `MET-SECTOR-001`: record owner decision SECTOR-D1 (banking replaces white goods through the first enterprise release) with dispositions and successor proposals; source only.
 82. `MET-PERF-032`: cut required-verify time by removing four repeated computations with unchanged refusals; source only.
+83. `MET-ENFORCE-010`: publish the W02a-F native qualification record v3 with independent review; source only.
 
 ## Testing, verification, and acceptance
 

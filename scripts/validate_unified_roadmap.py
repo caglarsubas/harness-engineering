@@ -484,8 +484,8 @@ def validate() -> None:
     )
     old_ids = set(record["baselinePackets"])
     packet_files = sorted((ROOT / "task-packets").glob("*.yaml"))
-    require(len(packet_files) == 208, "208 current packets")
-    require({path.stem for path in packet_files} == old_ids | {NEW_PACKET, "MET-RUNNER-001", "MET-PERF-028", "MET-LINUX-005", "MET-VERIFY-001", "MET-PERF-029", "MET-PERF-030", "MET-LINUX-006", "MET-VERIFY-002", "MET-VERIFY-003", "MET-VERIFY-004", "MET-ENFORCE-004", "MET-ENFORCE-005", "MET-ENFORCE-006", "MET-ENFORCE-007", "MET-PERF-031", "MET-ENFORCE-008", "MET-ENFORCE-009", "MET-SECTOR-001", "MET-PERF-032"}, "closed packet catalog")
+    require(len(packet_files) == 209, "209 current packets")
+    require({path.stem for path in packet_files} == old_ids | {NEW_PACKET, "MET-RUNNER-001", "MET-PERF-028", "MET-LINUX-005", "MET-VERIFY-001", "MET-PERF-029", "MET-PERF-030", "MET-LINUX-006", "MET-VERIFY-002", "MET-VERIFY-003", "MET-VERIFY-004", "MET-ENFORCE-004", "MET-ENFORCE-005", "MET-ENFORCE-006", "MET-ENFORCE-007", "MET-PERF-031", "MET-ENFORCE-008", "MET-ENFORCE-009", "MET-SECTOR-001", "MET-PERF-032", "MET-ENFORCE-010"}, "closed packet catalog")
     for name, expected in record["baselinePackets"].items():
         raw = regular_bytes("task-packets/" + name + ".yaml")
         require(digest(raw) == expected, "changed predecessor YAML: " + name)
@@ -659,4 +659,4 @@ if __name__ == "__main__":
     except (ValueError, TypeError, KeyError, OSError, UnicodeError) as exc:
         print("Unified roadmap publication invalid: " + str(exc))
         raise SystemExit(1)
-    print("Unified roadmap source valid: 208 packets; 188 immutable predecessor YAML; no product acceptance.")
+    print("Unified roadmap source valid: 209 packets; 188 immutable predecessor YAML; no product acceptance.")

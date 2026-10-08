@@ -1,6 +1,16 @@
 # Sol-High Task Packet Catalog
 
-## Current source preparation — MET-PERF-032
+## Current source preparation — MET-ENFORCE-010
+
+W02a-F: the native qualification record v3 (successor of the adopted v2 record) closes every finding
+carried to W02a-F: code identity and running images, the slice census, tasks against pids.max, the
+test-only fixture profile, backend identities from the W02g closure, W02e's label constants, the E1
+effective-program census over every v6.12 cgroup attach type and the K1 boot-entry discriminator. It passed
+its independent review in round 6. Nothing is observed or installed, and every E01-E12 obligation stays
+open. Alpha2 OPEN; 208 accepted plus ENFORCE-010 only. Native Linux, exact-main and tenant acceptance remain
+separate.
+
+## Historical PERF-032 source preparation — MET-PERF-032
 
 PERF-032: verify reached 692 s of the 900 s cap at packet 207. Four repeats are removed with the same assertions:
 route tests compute only their own route's input, native-profile status mutations stub only the pure vector replay
@@ -1164,3 +1174,4 @@ acceptance is claimed. Alpha2 ONGOING; model-effort transition NOT_DUE.
 | 206 | `MET-ENFORCE-009` | `Harness-Engineering` | W02e SELinux domain, type, boolean and permission matrix with the F2 closure, independently reviewed |
 | 207 | `MET-SECTOR-001` | `Harness-Engineering` | Owner decision SECTOR-D1: banking replaces white goods through the first enterprise release |
 | 208 | `MET-PERF-032` | `Harness-Engineering` | Verify-time headroom: route-local test inputs, stubbed status replay, shared inventory projection, grouped uniqueItems |
+| 209 | `MET-ENFORCE-010` | `Harness-Engineering` | W02a-F native qualification record v3: carried W02a, W02g and W02e findings closed, independently reviewed |

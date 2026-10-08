@@ -1,0 +1,288 @@
+{
+  "schemaVersion": "planeon.internal.native-profile-v3-review/v1",
+  "round": 2,
+  "reviewDate": "2026-10-08",
+  "verdict": "CHANGES_REQUIRED",
+  "subjectSha256": {
+    "README.md": "39ce4ad70ec47294598e7285506f021b8ce4924c7bc5a48ae7973446d376a79a",
+    "REVIEW_BRIEF.md": "63375780b780bac82304ad8a9767bea4ee162caf6f7185c24466462fc68f761b",
+    "qualification.schema.json": "50b79787c28c1e819990cbc1fdef0b204a6b9696fd46822787f4f7ec35d22697",
+    "vectors.json": "faf3bf9e97ae7e7e5d3374a019fcc2236df37e98421b0d8a381854ca1ef81bb8",
+    "native_qualification_v3.py": "7288eebe50502ad0d71002f29a185e017f43b364d503f14ca130e229e00d7849"
+  },
+  "findings": [
+    {
+      "id": "R2-1",
+      "severity": "MINOR",
+      "location": "scripts/native_qualification_v3.py check_record boot-entry rules (lines 239-242), _kernel_params (486-489), MAINTENANCE_TOKEN comment (56); README 'W02e K1: boot entries' row and decision 2; vectors.json V47-V49",
+      "finding": "The new token rules split the command line on single spaces and stop at the first bare \"--\". Neither the kernel nor systemd reads the line that way.\n(1) systemd v256 PID 1 on a host reads all of /proc/cmdline. In src/basic/proc-cmdline.c, proc_cmdline_strv_internal splits the line with EXTRACT_UNQUOTE and has no \"--\" handling on the host path. In src/core/main.c, parse_proc_cmdline_item sets arg_default_unit from every systemd.unit=, and the last one wins. In addition, the kernel's setup_command_line (init/main.c) places bootconfig init.* keys after \" -- \" in saved_command_line.\n- Probe W6-a: ENROLLED is the positive's line plus \" -- systemd.unit=planeon-maintenance.target\". check_qualification ACCEPTS it with every capture rebound, yet that boot starts the maintenance target.\n- Probe W6-d: a MAINTENANCE entry whose token comes after \"--\" (the bootconfig init.* path) is refused.\n(2) The kernel's next_arg (lib/cmdline.c) and systemd both honour double quotes. The model does not.\n- Probe W6-b: ENROLLED with 'lockdown=integrity x=\" -- \" systemd.unit=planeon-maintenance.target' is ACCEPTED, although the kernel and systemd both see the token as a parameter.\n- Probe W6-c: 'x=\" lockdown=integrity \"' passes the lockdown test. The observed hardening.lockdown value still covers the actual state.\n- Probe W6-h: '\"lockdown=integrity\"' is refused, although the kernel applies it.\n(3) Probe W6-e: a MAINTENANCE entry 'systemd.unit=planeon-maintenance.target systemd.unit=multi-user.target' is ACCEPTED, although systemd boots multi-user.target.\nEvery capture hash-binds the /proc/cmdline text, so this is an analysis error on observed data. It defeats the rule's stated purpose ('the enrolled entry never does'), and W02e K1 ties the maintenance window to exactly this systemd target. The discriminator itself, two different entry IDs and command lines with captures bound to the enrolled one, is not affected.",
+      "requiredChange": "Test the maintenance target the way systemd reads it: over every word of the command line, after unquoting, with the last systemd.unit= winning.\n- Refuse an ENROLLED entry in which any systemd.unit= or rd.systemd.unit= names the maintenance target.\n- Require the MAINTENANCE entry's effective (last) systemd.unit= to be that target.\n- Keep lockdown=integrity as a test on kernel parameters only, before the first bare \"--\" as next_arg tokenises the line. The simplest way to make a space split equal next_arg is to refuse '\"' in kernelCmdline through the schema pattern.\n- Add vectors for W6-a, W6-b and W6-e, and restate the README K1 row.\n- Optional: without Secure Boot, systemd v256 also reads systemd.unit= from the SystemdOptions EFI variable (src/basic/efivars.c). /proc/cmdline overrides it only if it names a unit itself. Either require the ENROLLED entry to name its own target, or list this among the K1 limits."
+    },
+    {
+      "id": "R2-2",
+      "severity": "NOTE",
+      "location": "vectors.json positive[0..3].record.bootEntries and the command-line values of V38, V42, V47-V49; README K1 row ('its options line plus the initrd= it adds')",
+      "finding": "systemd-boot v256 does not produce the positives' command lines.\n- initrd_prepare (src/boot/efi/boot.c) builds the load options as 'initrd=<path> [initrd=<path> ...] <entry options>', so initrd= comes first.\n- image_start may also append the SMBIOS string io.systemd.boot.kernel-cmdline-extra on non-confidential VMs.\nThe positives put initrd= after the options ('... lockdown=integrity initrd=\\planeon\\initrd-6.12.img'). No rule depends on the order: probe W6-f, with initrd= first, is accepted. So this is fixture plausibility only. Round-1 W6's request to make the positives consistent with the named loader is met only in part: BOOT_IMAGE= is gone.",
+      "requiredChange": "Put initrd= first in the positives and the derived vectors. Mention in the K1 row that systemd-boot can append the SMBIOS kernel-cmdline-extra string, which then appears in /proc/cmdline."
+    },
+    {
+      "id": "R2-3",
+      "severity": "NOTE",
+      "location": "scripts/native_qualification_v3.py check_record native-only rule (lines 341-343); README 'P1: role closures' row and W4 disposition",
+      "finding": "The two native-only rules are uneven. The enrolled interpreter executable is refused by path or by content. The interpreter's installation tree is refused only by path prefix.\nProbe W4-a: SERVER lists /opt/planeon/python/3.12.14/lib/libpython3.12.so.1.0, which is allowed. EFFECT_GATE lists /opt/planeon/lib/libpython3.12.so.1.0, with the same sha256 and verity, at its own inode. check_qualification ACCEPTS this.\nThe README residual says 'a Python runtime installed elsewhere ... is not recognised by the data'. That does not fit this case, because the record itself carries this content under the tree path. Exploiting it still needs the gate's own enrolled binary to load the library, so the risk stays low.",
+      "requiredChange": "In native-only closures, also refuse any file whose sha256 or verity equals that of a record file under INTERPRETER_TREE, and add a vector. Otherwise, state in the README that the tree rule works by path only."
+    },
+    {
+      "id": "R2-4",
+      "severity": "NOTE",
+      "location": "vectors.json V41, L11, L12, L14, V43, V44; scripts/native_qualification_v3.py check_lifecycle_capture (lines 525, 531) and check_qualification inode rule (lines 603-611); README 'Files' ('each pinned to its exact refused rule')",
+      "finding": "Mutation replay shows that two rules are not pinned by any vector.\n(a) Deleting the 'one path, one (device, inode)' half of the inode rule leaves the 4 positives and all 216 cases with their pinned results. The model does refuse python3.12 at (123, 2004) in SERVER and (123, 2005) in WORKER, but with the message 'one inode reported for two files'.\n(b) Deleting the enrolled-cgroups-in-census rule also leaves every case passing. V41 removes the gate cgroup but keeps sliceDescendants at 7, so the new nr_descendants rule refuses it with the same message, 'planeon slice census incomplete'. With sliceDescendants 6, the model refuses V41 and the mutant accepts it.\n(c) L11, L12 and L14 add census entries without raising sliceDescendants, so each of them carries two defects.\nThe 'exact refused rule' claim is therefore weaker than stated.",
+      "requiredChange": "- Add a vector for one path at two inodes across captures, and give that half of the rule a distinct message.\n- Set sliceDescendants to 6 in V41, and give the nr_descendants rule its own message.\n- Raise sliceDescendants in L11, L12 and L14."
+    },
+    {
+      "id": "R2-5",
+      "severity": "NOTE",
+      "location": "vectors.json R01 intent; scripts/native_qualification_v3.py module docstring line 13",
+      "finding": "Two stale strings from W9 remain.\n- R01's intent still reads 'v1 schema version in a v2 record (version discriminator)'. Round-1 W9 named this string explicitly.\n- The module docstring still says 'the v2-to-v3 migration rules', although migration now scans both the v1 and the v2 histories.\nR07 and C31 keep their v2 intents as replays, which is acceptable.",
+      "requiredChange": "Change R01's intent to describe a v3 record. Change the docstring to describe the earlier-version (v1 and v2) migration rules."
+    },
+    {
+      "id": "R2-6",
+      "severity": "NOTE",
+      "location": "README 'E1 census, scope' ('is carried to W03 and T04 in this contract's status record'); README W7 disposition",
+      "finding": "The subject at 761c9b8 contains no v3 status record. architecture/native-profile-v3/ holds only the README, the brief, the schema, the vectors, source-index.json, review-round1.json and round1/. Decision 3's narrowing of E1 is therefore recorded only as README text, and the sentence refers to a record that does not yet exist.",
+      "requiredChange": "Reword the sentence to say the narrowing will be carried in the status record written at adoption, and carry it there. Alternatively, add that record now."
+    },
+    {
+      "id": "R2-7",
+      "severity": "NOTE",
+      "location": "README caller obligation 3; scripts/native_qualification_v3.py module docstring (inspector obligation)",
+      "finding": "Obligation 3 has the inspector read a role cgroup while it is frozen. For the probe-worker leaf, W01 §5.4 W1-W6 makes cgroup.freeze part of the broker's own lifecycle: freeze before clone3, thaw at W4, freeze before the kill at W6. An inspector that writes the leaf's cgroup.freeze could thaw a leaf the broker froze, or freeze the child during its pre-exec steps.\ncgroup v2 freezes a cgroup when that cgroup or any ancestor is frozen (Documentation/admin-guide/cgroup-v2.rst, cgroup.freeze). So an inspector can freeze an ancestor without touching the leaf's own setting.",
+      "requiredChange": "State that the inspector freezes through an ancestor it controls, or reads while the broker holds the leaf frozen, and never writes the broker-owned leaf's cgroup.freeze. Carry this to the W02e/W03 inspector policy."
+    }
+  ],
+  "openItemStatus": {
+    "W1": {
+      "status": "CLOSED",
+      "note": "check_qualification enforces one path and one content per (device, inode), and one (device, inode) per path, across all role captures. The positives' gate binary now has its own inode, 2104, and every inode in the positives names one path. Probes refused with 'one inode reported for two files': A (gate at the broker's inode, V43), A3 (server script at the python inode, V44), python at two inodes across captures, and the worker script at the broker's inode. Separately, the schema already requires nlink 1. Residual: R2-4(a) (the path-to-inode half has no vector)."
+    },
+    "W2": {
+      "status": "CLOSED",
+      "note": "check_migration and check_qualification take the v1 and v2 histories, validate each under its pinned schema, refuse a shared boot ID and refuse any earlier nonce (M10-M13). Caller obligation 2 is restated.\nRefused probes: v1 capacity-nonce reuse with v1-only history; a v1 nonce in a profile annotation; a v1 record in the v2 list and the reverse; attested-empty history together with v1 records; v3 on a v1 boot with v2 history present.\nAccepted: a v1-only host with a fresh boot and fresh nonces, both in check_migration and in full qualification. The module docstring still says v2-to-v3 (R2-5)."
+    },
+    "W3": {
+      "status": "CLOSED",
+      "note": "exe is required on the cgroupMembers, delegatedServiceMembers and sliceMembers rows. Every member's image must equal the inspected process's image (V45; probe with a worker co-member running python at another inode refused). The README states that interpreted roles' scripts are declared, not observed."
+    },
+    "W4": {
+      "status": "CLOSED",
+      "note": "Native-only closures may list nothing under /opt/planeon/python/ (V46; probe with python3.11 under the tree refused). Content copies of the enrolled interpreter are still refused. The README states the residual for a runtime installed elsewhere. Residual: a content-identical copy of a tree file outside the tree is accepted (R2-3)."
+    },
+    "W5": {
+      "status": "CLOSED",
+      "note": "Inspector obligation 3 (frozen, no unreaped task) is in the README and the model docstring. The probe with an unreaped child is still refused, as the obligation intends. See R2-7 on how to freeze without clobbering the broker's freeze of the probe-worker leaf."
+    },
+    "W6": {
+      "status": "PARTIAL",
+      "note": "The K1 statement is qualified accurately:\n- the entries are declared data;\n- LoaderEntrySelected is a volatile, runtime-writable variable (systemd v256 save_selected_entry);\n- the source is the /proc/cmdline text, which is saved_command_line, including bootconfig keys and init arguments;\n- nothing is measured.\nThe maintenance token is pinned and the lockdown test stops at \"--\" (V47-V49). But the token rule does not model how systemd reads the command line: it misses tokens after \"--\", ignores quoting and ignores last-wins (R2-1). The positives remain only partly loader-consistent (R2-2)."
+    },
+    "W7": {
+      "status": "CLOSED",
+      "note": "The scope sentence for socket programs is accurate: in v6.12 kernel/bpf/cgroup.c, the skb, sk, sock_addr, sock_ops, sockopt and LSM sock/socket runners use sk_cgrp_data, while device, sysctl and LSM current use current's cgroup.\nThe sliceDescendants rule (V50) matches cgroup.stat nr_descendants, which counts live descendants at every depth (cgroup_create, cgroup_destroy_locked). A02, A06 and V10-V12 were adjusted consistently.\nThe narrowing is recorded as decision 3. The 'status record' it cites does not exist yet (R2-6)."
+    },
+    "W8": {
+      "status": "CLOSED",
+      "note": "At most one system:node: identity is allowed (V51). The kubelet with one node name plus system:nodes, and with system:nodes alone, is accepted. The README states that apiIdentities lists the closure identities a component holds. Disjointness remains subsumed by the schema."
+    },
+    "W9": {
+      "status": "PARTIAL",
+      "note": "The README now notes R01's mechanical change, and the two named docstrings were fixed. R01's intent ('in a v2 record') and the module docstring's 'v2-to-v3 migration rules' are still stale (R2-5)."
+    },
+    "P1": {
+      "status": "CLOSED",
+      "note": "Not reopened. V01-V06 replay unchanged. V46 and the member-image, inode and tree rules strengthen the observation. Residuals: R2-3, and the stated residual that scripts are declared."
+    },
+    "P3": {
+      "status": "CLOSED",
+      "note": "Not reopened. V10-V17 and V41 replay with the same refusals. V10-V12 now raise sliceDescendants to 8. The census is also cross-checked against nr_descendants. Residual: R2-4(b), V41 no longer pins the enrolled-cgroup rule."
+    },
+    "P4": {
+      "status": "CLOSED",
+      "note": "Not reopened. V18 now carries a member image and is still refused 'one process reported twice'."
+    },
+    "P5": {
+      "status": "CLOSED",
+      "note": "Not reopened (V19). sliceMembers rows now carry exe."
+    },
+    "P6": {
+      "status": "CLOSED",
+      "note": "Not reopened (V20-V22). The zombie caveat became inspector obligation 3."
+    },
+    "P7(a)": {
+      "status": "CLOSED",
+      "note": "Not reopened (V24, V25). The positives are refused 'test-only implementation profile' without test_fixture=True."
+    },
+    "P7(b)": {
+      "status": "CLOSED",
+      "note": "Unchanged (R61-R66)."
+    },
+    "P7(c)": {
+      "status": "CLOSED",
+      "note": "Unchanged (V23)."
+    },
+    "networkPolicyAgentIdentity": {
+      "status": "CLOSED",
+      "note": "Unchanged enum binding (V26-V28), plus the one-node-identity rule (V51). The enums are pairwise disjoint, and the KUBELET pattern matches no other component's name."
+    },
+    "W02eLabelSlots": {
+      "status": "CLOSED",
+      "note": "The schema consts still equal the W02e 'W02a slot values' table: five role cgroup labels, planeon_bpf_pin_t on every pin, and planeon_seal_t on the seal marker. V29-V32 replay."
+    },
+    "E1Census": {
+      "status": "CLOSED",
+      "note": "22 census types plus 7 hooks equal the 29 cgroup attach types of v6.12, re-derived from to_cgroup_bpf_attach_type plus BPF_LSM_CGROUP and from the uapi enum, and equal to the schema's effectiveCensus required keys. V33-V36 replay. Census completeness is now cross-checked with nr_descendants."
+    },
+    "K1": {
+      "status": "CLOSED",
+      "note": "Not reopened. The entry IDs and command lines must differ (V37, V42). Captures must observe the enrolled entry ID and the SHA-256 of its command line (V39, V40; V40's value is the maintenance line's hash). The trusted-installer statement is present and qualified. R2-1 is a defect in the new token rule added in this round, not in the discriminator that K1 asked for."
+    }
+  },
+  "questionAnswers": {
+    "Q0": "Round-1 dispositions:\n- CLOSED: W1, W2, W3, W4, W5, W7, W8.\n- PARTIAL: W6 (R2-1, R2-2) and W9 (R2-5).\nThe README disposition table is true except in three places:\n- W6, 'Parameters only before --': this is right for lockdown but wrong for the systemd target.\n- W6, 'Systemd-boot-shaped command lines': initrd= is in the wrong position.\n- W9: R01's intent and one module docstring line are still stale.\nNo CLOSED carried item reopened. V01-V42 replay with unchanged refusals. Only the ops of V07-V12, V18, V19, V38, V40 and V42 changed, to keep the new fields (member exe, sliceDescendants, the new command lines) consistent.",
+    "Q1": "All twelve carried items are CLOSED as required: P1, P3, P4, P5, P6, P7(a), P7(b), P7(c), the network-policy agent identity, the W02e label slots, E1's census and K1. None is PARTIAL or OPEN. The new residuals are R2-1 to R2-4 and R2-7.",
+    "Q2": "Every v2 rule still holds:\n- All 131 v2 negatives replay.\n- Exactly R70, R71, L13 and Q07 change for a reason. R01's change is mechanical and is now noted.\n- C14-C18 and C20 only add threadCount 1 and an unenrolled image. Q03 uses a v3 capture.\n- The four v2 accepted variants replay. A02 now also sets sliceDescendants to 6.\nThe v1 migration guarantees of v2 are restored.\nThe identity-disjointness rule is still subsumed: no enum name is shared, the KUBELET pattern matches no other name, and the new node-count rule does not change that.\nLegitimate hosts accepted:\n- A05, A06 and A07;\n- the gate on another device with the same inode number;\n- libpython shared by SERVER and WORKER under the tree;\n- the kubelet with one node name plus system:nodes;\n- the systemd-boot initrd-first order.\nThe schema's nlink const 1 makes the inode rule consistent with real hosts.\nLegitimate configurations refused:\n- a MAINTENANCE entry whose systemd.unit= comes after \"--\" (bootconfig init.*);\n- a quoted lockdown parameter (both R2-1);\n- a role cgroup read with an unreaped task, which inspector obligation 3 is meant to exclude.",
+    "Q3": "All four facts hold in Linux v6.12, and the four README digests match the files at tag v6.12.\n- Attach types: the 22 census types plus the 7 hooks are disjoint, and their union equals to_cgroup_bpf_attach_type's 28 types plus BPF_LSM_CGROUP. That set is exactly the uapi enum's 29 cgroup types.\n- Effective query: __cgroup_bpf_query with BPF_F_QUERY_EFFECTIVE reads cgrp->bpf.effective. compute_effective_progs includes an ancestor's programs when the ancestor has BPF_F_ALLOW_MULTI, or when no nearer program exists. For BPF_LSM_CGROUP the query spans CGROUP_LSM_START..END, which is 10 slots with CONFIG_BPF_LSM and none without it. BPF_PROG_QUERY is command 16.\n- pids.current: it is charged in pids_can_fork for every copy_process and uncharged in pids_release, which release_task reaches through cgroup_release. So it counts tasks. The cgroup-v2 documentation also notes that migration can push pids.current above pids.max; refusing that is appropriate.\n- /proc/<pid>/exe: exec_binprm swaps bprm->file for bprm->interpreter, begin_new_exec calls set_mm_exe_file, and proc_exe_link reads the exe file, so the link names the interpreter.\nNew facts used in round 2 also hold:\n- cgroup.stat nr_descendants counts live descendants at every depth (cgroup_create increments every ancestor; cgroup_destroy_locked moves the count to nr_dying_descendants).\n- /proc/cmdline is saved_command_line, with bootconfig kernel keys prepended and init.* keys after ' -- '.\n- parse_args stops at a bare \"--\".\n- next_arg honours double quotes.\n- The socket-attached runners select the socket's cgroup; device, sysctl and LSM current select current's.",
+    "Q4": "Yes, as a loader-reported, unmeasured discriminator. The entry IDs and command lines must differ, and every role and lifecycle capture must report the enrolled entry ID and the SHA-256 of its /proc/cmdline text. A boot through the MAINTENANCE entry therefore cannot qualify (V39, V40).\nThe README statement is accurate:\n- the entries are declared;\n- LoaderEntrySelected is exported volatile and is runtime-writable;\n- /proc/cmdline is fixed for the boot and includes bootconfig keys and init arguments;\n- nothing is measured, and measurement is a T04 obligation;\n- the maintenance domain is a trusted installer.\nThe statement is sufficient for K1's 'explicit statement' alternative. It is not complete on two points, neither of which affects telling an honest maintenance boot apart:\n- the new maintenance-token rule does not model how systemd reads the command line, so an ENROLLED line can select the maintenance target and still pass (R2-1);\n- without Secure Boot, systemd's default target can also come from the SystemdOptions EFI variable, unless the command line names its own unit.",
+    "Q5": "Refused as intended:\n- the gate at the broker's inode;\n- the server script at the python inode;\n- python at two inodes across captures;\n- the worker script at the broker's inode;\n- a worker co-member at another python inode, or running the gate image;\n- a server member whose image differs from the process image;\n- python3.11 under the tree in the gate;\n- a content copy of the enrolled python3.12 in the observer;\n- the kubelet with two node names;\n- an extra census entry without a matching nr_descendants;\n- every v1/v2 boot or nonce reuse.\nAccepted:\n- a content copy of the tree's libpython outside the tree in the gate (R2-3);\n- python3.11 outside the tree (stated residual);\n- interpreted roles running any script (stated: declared, not observed);\n- a fabricated unpopulated census entry with a matching nr_descendants (inspector honesty);\n- ENROLLED lines carrying the maintenance token after \"--\" or after a quoted \" -- \" (R2-1).\nBeyond inspector-honesty limits, I found no way for a bundle to carry its own observation of a foreign cgroup, process or program and still qualify. Cgroup paths and inodes, (pid, start ticks) and program IDs stay bound and unique.",
+    "Q6": "Each case produces exactly its pinned result:\n- the 4 positives are accepted with test_fixture=True, including with full, v1-only, v2-only or attested-empty histories, and are refused 'test-only implementation profile' without it;\n- 182/182 negatives, of which 49 are schema-level refusals, each a single error;\n- 7/7 accepted variants;\n- 14/14 cross-version cases;\n- 13/13 migration cases.\nThe intents of V43-V51 match the rules that fire. My harness rebuilds every case from fresh JSON copies, so the withdrawn shared-object problem cannot hide a result.\nThe positives are kernel-plausible in the new parts:\n- the gate has its own inode, and every inode names one path, with nlink 1;\n- each member's image equals the inspected process's image;\n- the worker's pids.current equals its members' threads;\n- sliceDescendants 7 equals the 7 listed descendants.\nRemaining implausibilities:\n- initrd= is placed after the options (R2-2);\n- python3.12's sha256 string equals the proxy-serve script's verity string. This is inherited from v2 and harmless, because the model keys sha256 and verity separately.\nVector weaknesses are in R2-4.",
+    "Q7": "Nothing claims a native observation, a measured boot, a selected distribution, seccomp filters or an E01-E12 proof. The 'Not claimed' section is intact.\nWording that claims more than the bytes support:\n- the model comment 'the enrolled entry never does', and the K1 row's implied property (R2-1);\n- 'its options line plus the initrd= it adds', next to positives that use the wrong order (R2-2);\n- 'not recognised by the data', which does not fit content copies (R2-3);\n- 'each pinned to its exact refused rule' (R2-4);\n- 'is carried ... in this contract's status record' (R2-6)."
+  },
+  "modelExecution": {
+    "environment": "From the worktree root: UV_PROJECT_ENVIRONMENT=<harness-onion>/.venv PYTHONDONTWRITEBYTECODE=1 uv run --offline --frozen --no-sync python (Python 3.12.14, jsonschema 4.24.0). The model, schema and vectors were imported from byte-identical HEAD copies in /private/tmp/claude-501/w02af-review2/src/. The v1 and v2 schemas and vectors came from HEAD. My own scripts were harness.py, replay.py, v2diff.py, posdiff.py, probes.py, probes_mig.py, mutate.py, replay_core.py and fixvec.py. No .venv or __pycache__ was created in the worktree.",
+    "extraProbes": [
+      {
+        "probe": "Schema pins",
+        "expected": "v3, v1 and v2 canonical digests equal SCHEMA_SHA256, V1_SCHEMA_SHA256, V2_SCHEMA_SHA256 and the vectors' pins",
+        "observed": "all true (8082ecfc..., 8e184d60..., fd1657c9...)"
+      },
+      {
+        "probe": "Independent replay of every vector (own JSON-copy applier; qualification cases with full v1+v2 histories, test_fixture default True, V24 False)",
+        "expected": "every pinned result",
+        "observed": "182/182 negatives (49 schema-level, all single-error), 7/7 accepted, 14/14 cross-version, 13/13 migration; positives accepted, and refused 'test-only implementation profile' without the fixture flag"
+      },
+      {
+        "probe": "Diff of v2 vs round-1 vs round-2 cases",
+        "expected": "only documented changes",
+        "observed": "v2-to-v3 refusal changes: R01, R70, R71, L13, Q07; op changes: C14-C18, C20, Q03, A02. Round-1-to-round-2 changes: V07-V12, V18, V19, V38, V40, V42, A02 and A06 ops; V43-V51 added; refusals unchanged"
+      },
+      {
+        "probe": "Round-1 probe A / A3 (gate at broker inode; script at python inode)",
+        "expected": "refused",
+        "observed": "both 'one inode reported for two files'"
+      },
+      {
+        "probe": "python3.12 at (123,2004) in SERVER and (123,2005) in WORKER",
+        "expected": "refused",
+        "observed": "refused 'one inode reported for two files'; no shipped vector covers it (R2-4a)"
+      },
+      {
+        "probe": "Gate binary on another device with the same inode number",
+        "expected": "accepted",
+        "observed": "accepted"
+      },
+      {
+        "probe": "Worker co-member python at another inode; server member image differing from its process",
+        "expected": "refused",
+        "observed": "'running image is not the role's executable or interpreter'; 'unenrolled cgroup member'"
+      },
+      {
+        "probe": "W4-0: libpython under the tree in SERVER and WORKER",
+        "expected": "accepted",
+        "observed": "accepted"
+      },
+      {
+        "probe": "W4-a: content-identical libpython copy outside the tree in the gate",
+        "expected": "refused if the tree rule covered content",
+        "observed": "ACCEPTED (R2-3); the same at the tree file's inode is refused by the inode rule"
+      },
+      {
+        "probe": "python3.11 under the tree in the gate; outside the tree in the observer; python3.12 content copy in the observer",
+        "expected": "refused; stated residual; refused",
+        "observed": "refused; accepted; refused"
+      },
+      {
+        "probe": "W6-a: ENROLLED + ' -- systemd.unit=planeon-maintenance.target', captures rebound",
+        "expected": "refused (systemd v256 reads the whole /proc/cmdline)",
+        "observed": "ACCEPTED (R2-1)"
+      },
+      {
+        "probe": "W6-b: ENROLLED 'lockdown=integrity x=\" -- \" systemd.unit=planeon-maintenance.target'",
+        "expected": "refused (kernel and systemd unquote)",
+        "observed": "ACCEPTED (R2-1)"
+      },
+      {
+        "probe": "W6-c / W6-h: lockdown inside a quoted value; whole token quoted",
+        "expected": "refused; accepted",
+        "observed": "accepted; refused (R2-1)"
+      },
+      {
+        "probe": "W6-d: MAINTENANCE token only after '--' (bootconfig init.* path)",
+        "expected": "accepted (systemd honours it)",
+        "observed": "refused 'maintenance target not selected by the maintenance entry alone' (R2-1)"
+      },
+      {
+        "probe": "W6-e: MAINTENANCE token followed by systemd.unit=multi-user.target",
+        "expected": "refused (systemd uses the last value)",
+        "observed": "ACCEPTED (R2-1)"
+      },
+      {
+        "probe": "W6-f: systemd-boot v256 order with initrd= first",
+        "expected": "accepted",
+        "observed": "accepted"
+      },
+      {
+        "probe": "W7: extra unpopulated census entry without raising nr_descendants; fabricated entry with nr_descendants raised",
+        "expected": "refused; accepted (inspector honesty)",
+        "observed": "refused 'planeon slice census incomplete'; accepted"
+      },
+      {
+        "probe": "W8: kubelet [system:node:a, system:nodes]; [system:node:a, system:node:b]; [system:nodes]",
+        "expected": "accepted; refused; accepted",
+        "observed": "accepted; 'more than one node identity'; accepted"
+      },
+      {
+        "probe": "W2: v1 capacity-nonce reuse; v1 nonce in a profile annotation; v1 record in the v2 list and the reverse; attested-empty with v1 records; v3 on a v1 boot with v2 history",
+        "expected": "all refused",
+        "observed": "all refused with the matching migration rule; a v1-only host with a fresh boot is accepted, also in full qualification"
+      },
+      {
+        "probe": "Mutation replay (each round-2 rule removed, all vectors replayed)",
+        "expected": "every rule caught by at least one case",
+        "observed": "caught: maintenance token (V47, V48), '--' stop (V49), tree prefix (V46), node identity (V51), member image (V45), nr_descendants (V50), inode rule (V43, V44), v1 scan (M10-M12). Not caught: the path-to-inode half of the inode rule, the enrolled-cgroups-in-census rule (V41 masked by nr_descendants; R2-4). The v1 schema pin has no vector either, but vectors.json pins v1SchemaSha256"
+      },
+      {
+        "probe": "Identity enums",
+        "expected": "pairwise disjoint",
+        "observed": "no shared names; the KUBELET pattern matches no other component's name"
+      }
+    ]
+  },
+  "sourcesRead": [
+    "Subject at commit 761c9b8d53c423176beb4bc9bfdda8e9313a218e (tree e9487d40f0c24968210bfb9604548e7741ec12d4) on branch codex/met-enforce-010-native-profile-v3. The five subject files were hash-verified against source-index.json at the start and end of the review, and equal the working-tree copies. Also read: architecture/native-profile-v3/source-index.json, review-round1.json and round1/ (all identical to bcd64ee). Diffs read: git diff bcd64ee..HEAD and dcfde94..HEAD (vectors only); the dcfde94 subject itself was not reviewed.",
+    "Predecessor inputs, hash-verified against source-index at HEAD and base 51440c8:\n- architecture/native-profile-v2/README.md, qualification.schema.json, vectors.json, status.json, review-round3.json;\n- scripts/native_qualification_v2.py (check_migration);\n- architecture/i06-backend-profile/identity-closure.json, README.md, review-round2.json (hash only);\n- architecture/selinux-matrix/README.md ('W02a slot values'), status.json (K1, E1), review-round3.json (hash only);\n- architecture/host-interface-inputs/resolved/HOST_INTERFACE_SPEC.md (§4.1-4.4, §5.2, §5.4, §5.5);\n- scripts/validate_proxy_contract.py (hash only).",
+    "Context, not in the subject:\n- architecture/native-qualification-inputs/qualification.schema.json and vectors.json (v1 schema and positives);\n- scripts/validate_native_profile_v2.py at HEAD (_apply, _case and validate_vectors replay logic, mirrored in my harness).\nThe untracked files (architecture/native-profile-v3-authority.json, scripts/validate_native_profile_v3.py, tests/test_native_profile_v3.py, task-packets/MET-ENFORCE-010.yaml) and the 123 modified out-of-subject files were not read or run.",
+    "Linux v6.12 from raw.githubusercontent.com/torvalds/linux/v6.12:\n- include/uapi/linux/bpf.h (7d67e542...), include/linux/bpf-cgroup.h (c0b27f27...), include/linux/bpf-cgroup-defs.h (724cf75e...), kernel/bpf/cgroup.c (362592cc...); all four match the README;\n- kernel/params.c, lib/cmdline.c (next_arg), init/main.c (setup_command_line, unknown_bootoption, parse_args calls);\n- kernel/cgroup/cgroup.c (cgroup_stat_show, nr_descendants accounting), kernel/cgroup/pids.c;\n- fs/proc/base.c (proc_exe_link), fs/proc/cmdline.c, fs/exec.c (interpreter swap, set_mm_exe_file);\n- kernel/bpf/syscall.c, security/lockdown/lockdown.c, kernel/exit.c (fetched; consulted only for the facts above);\n- Documentation/admin-guide/cgroup-v2.rst (cgroup.freeze, pids.current, nr_descendants).",
+    "systemd v256 from raw.githubusercontent.com/systemd/systemd/v256:\n- src/basic/proc-cmdline.c (proc_cmdline_strv_internal, proc_cmdline_parse, proc_cmdline_filter_pid1_args);\n- src/core/main.c (parse_proc_cmdline_item systemd.unit);\n- src/basic/efivars.c (SystemdOptions, ignored under Secure Boot);\n- src/boot/efi/boot.c (initrd_prepare prepends initrd=, the SMBIOS kernel-cmdline-extra, save_selected_entry, type #1 entry id = file name)."
+  ],
+  "actions": {
+    "filesEdited": false,
+    "githubMutated": false,
+    "nativeActions": false,
+    "referenceModelExecuted": true,
+    "repositoryValidatorsRun": false,
+    "runnerActivated": false,
+    "testsRun": false,
+    "warmSourcesAccessed": false
+  },
+  "reviewLimit": "This is a source-level, DATA_CHECK_ONLY review of the five subject files at commit 761c9b8 (tree e9487d40). The files were hash-verified at the start and end of the review.\nIt establishes no native qualification and no kernel, SELinux, cgroup, BPF, boot-loader, systemd or TPM behaviour. It establishes no installed profile, selected distribution, seccomp filter or E01-E12 obligation, and it authorizes nothing.\nThe kernel and systemd facts come from reading the v6.12 and systemd v256 sources, not from running them.\nRepository tests and validators were not run. The v3 model was imported read-only from byte-identical copies and executed through my own harness in /private/tmp/claude-501/w02af-review2/. The v2 model was read but not executed.\nThe out-of-subject working-tree edits were not reviewed. Only the repository, my scratch directory and public source URLs were accessed. No GitHub, runner, sudo, cloud, native or warm-source action was taken."
+}

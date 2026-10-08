@@ -1,0 +1,102 @@
+{
+ "schemaVersion": "planeon.internal.w02-adm-f-review/v1",
+ "round": 2,
+ "reviewDate": "2026-10-09",
+ "verdict": "PASS_FOR_SOURCE_PUBLICATION",
+ "subjectSha256": {
+  "architecture/w02-adm-f/REVIEW_BRIEF.md": "54a33f2522be5f777f34eb00551fa562fc24fb7ed84c9037c6ba1e9906cf5edd",
+  "architecture/i05-gate-channel-v3/README.md": "f82f43330125640d3ac946d2afc9a1804a21e5e60a7ac4b94e5d6cb6ed2ea3aa",
+  "architecture/i05-gate-channel-v3/channel.schema.json": "3bfee13c9d32e82fe5ab908eb6f716bc11881f9d57b324f8ea4a21a3ad35356f",
+  "architecture/i05-gate-channel-v3/outcome-mapping.json": "4466f379f1cc669e047cffd8afa5fa88b2cc7648a51e2d38b17f0bd5e2252a3a",
+  "architecture/i05-gate-channel-v3/vectors.json": "ab75d86fe54ade7ee2695ef84b200d0473e14e4112e64e7702032593658763ed",
+  "scripts/i05_gate_channel_v3.py": "2c7985b539c0ce8eb79eaabfa1f1ab7d43bdca7515defc590a76ecb1697ca959",
+  "architecture/admission-semantics-v3/README.md": "c3106482b4ff79649cbef7c65797c6fcd6b64f8419e871ae7d89eecad3ff98ab",
+  "architecture/admission-semantics-v3/allowlists.json": "9314cd0732880a8e6af91df562af0a392183f6ef078c12fa9b479f6953fad5d4",
+  "architecture/admission-semantics-v3/admission-manifests/planeon-a2.json": "1096b3cc71c4fe6b5a17ed61e8bf8c17ee17fcf52b192503534d60aed9ce4741",
+  "architecture/admission-semantics-v3/vectors.json": "a3e2dc9818742ae2188e0e83cf91bb833be836115975b3fb23d5f280f6928cc1",
+  "scripts/admission_semantics_v3.py": "3db8f51ab55f49dc33cf6f028306bfb6d7aa1c5d7d96f264cfe709dae925ad22",
+  "architecture/i07-policy-write-v3/README.md": "a8c51a725b99d84351aba7a326196e7078c239ba4e28d3eaec1cf09fb3dca43d",
+  "architecture/i07-policy-write-v3/channel.schema.json": "c68721a1002fccc7d6e59eeee9016a0a0f4a7428fad714e5a3d90a362d30ce09",
+  "architecture/i07-policy-write-v3/policy-kinds.json": "4e427204b89959cb855d8641c3fa6f95d358b0b6a6a7730bfc7776adc4a173c0",
+  "architecture/i07-policy-write-v3/vectors.json": "c4c24c5ff15618aa2f0fe0f016011359bc4316220c6e40d5168f9ee24b6f736d",
+  "scripts/i07_policy_write_v3.py": "6cc7ea0d3df0c7f2966184bb6d322189de3b49b5b02dfe2429911121973afe08"
+ },
+ "findings": [
+  {
+   "id": "AF2-ADM-1",
+   "contract": "ADMISSION",
+   "severity": "MINOR",
+   "location": "architecture/admission-semantics-v3/allowlists.json kinds.Pod.ALLOWED_FIXED ('probe defaults (not modelled by final_object; native T03)') and the upstreamFields row 'probe/lifecycle httpGet.path, httpGet.scheme; grpc.service'; README 'Allowed differences per kind' (Pod bullet); scripts/admission_semantics_v3.py final_object; upstream pkg/apis/core/v1/zz_generated.defaults.go:358-369 and :432-443 (SetDefaults_HTTPGetAction on lifecycle postStart/preStop httpGet), defaults.go:358-365",
+   "finding": "Round 2 split the old catch-all 'probe and volume defaults' in two:\n- the volume defaults are now ALLOWED_FIXED and modelled (MC41, E14);\n- 'probe defaults (not modelled)' is described in the README as 'timeouts, periods, thresholds'.\nUpstream also defaults httpGet.path to '/' and httpGet.scheme to HTTP on container lifecycle hooks (postStart and preStop), for containers and init containers. Those are not probes. The upstreamFields row lists them with a FIXED value, but no disposition names them any more, and check_manifest allows lifecycle hooks.\nProbe PLIFE: a Pod whose container has lifecycle.preStop.httpGet {port: 8080} passes check_manifest. final_object leaves the hook unchanged, upstream adds path '/' and scheme HTTP, and check_final admits.\nThis is the R2-F1 and AF-ADM-1 class: a deterministic function of the A1-admitted bytes, not a cluster-state lever and not an A2 bypass. But the brief's question 'is any other create-path delta still without a disposition?' still has one answer. The probe httpGet path and scheme and grpc.service defaults are covered only implicitly by 'probe defaults'.",
+   "requiredChange": "Do one of the following:\n- name the httpGet path and scheme defaults of probes and lifecycle hooks, and the probe grpc.service default, in ALLOWED_FIXED and in the README Pod bullet, as not modelled (native T03);\n- rule out lifecycle httpGet handlers with a manifest constraint;\n- model the defaults.\nAdd a vector for the chosen rule."
+  },
+  {
+   "id": "AF2-ADM-2",
+   "contract": "ADMISSION",
+   "severity": "NOTE",
+   "location": "architecture/admission-semantics-v3/README.md line 134 (manifest-constraint table, MC39 row)",
+   "finding": "AF-ADM-2 is answered in the model message (N31), the R2-F1 row and the allowlists. The constraint table's MC39 'Rules out' cell still reads 'DefaultPodLevelResources filling pod-level requests and hugepage limits' and leaves out pod-level limits.",
+   "requiredChange": "Change the cell to 'pod-level requests, limits and hugepage limits'."
+  },
+  {
+   "id": "AF2-I05-1",
+   "contract": "I05",
+   "severity": "NOTE",
+   "location": "architecture/i05-gate-channel-v3/README.md 'Model test injections' ('only one is pending at a time: a second replaces the first (T120)'); vectors T120",
+   "finding": "T120 pins attempt counting: STORAGE_FAIL_NEXT plus AFTER 1 fails the CLOSED and INVALIDATED records, and the journal is BIND, ARM, DENIED, RESTARTED with the marker present. It contains only one STORAGE_FAIL_AFTER event, so the README's 'a second replaces the first (T120)' is not exercised by T120. The model does behave that way: my probe with AFTER 5 then AFTER 1 fails the DENIED after one record, journal BIND, ARM, CLOSED, INVALIDATED. No vector pins it.",
+   "requiredChange": "Drop '(T120)' from the replacement clause, or add a second AFTER event to T120 or to a new vector."
+  }
+ ],
+ "openItemStatus": {
+  "V1": "CLOSED. T107-T113 unchanged. T120 now pins the attempt counting of STORAGE_FAIL_AFTER, and the README and model comment state it.",
+  "V2": "CLOSED (unchanged from round 1). A HELD fence answers HELD at once, and OPEN is a point-in-time answer. In the I07 campaign no maintenance was OPEN after HELD.",
+  "V3": "CLOSED (unchanged). The re-run PC-* probes give the same results as round 1. A 3,000-run general oracle campaign found no non-HELD restart from an in-memory HELD outside the precondition.",
+  "V4": "CLOSED. Decision 12 now bounds the exchange by the 900-second limit counted from consumption, and Decision 9 is unchanged: at expiry an in-flight action completes, reported admittedBeforeInvalidation. The two rules no longer conflict.\nThe EXPIRE-in-flight probe (DRAIN PENDING, EXPIRE, then 201 relayed, drain OPEN) now matches the README. T119 pins EXPIRE then UPSTREAM_TIMEOUT: IO_AMBIGUOUS, not relayed, admittedBeforeInvalidation true, drain HELD.",
+  "V5": "CLOSED. The two further v1 sentences are restored, see AF-I05-3.",
+  "V6": "CLOSED (unchanged; K02, K04, K05, G34 and B01-B14 replay, and the priorBindings probes are refused).",
+  "R2-F1": "CLOSED for the three named deltas: probes PG and PH get MC39 and MC40, and PN shows both env defaults. A sibling delta, the lifecycle httpGet defaults, remains (AF2-ADM-1).",
+  "R2-F2": "CLOSED (C27; Q22; probe PI behaves as documented).",
+  "R2-F3": "CLOSED. The check_claim docstring now says v3.",
+  "R2-F4": "CLOSED. PJ gets C12, each missing key gets C12, and C03 refuses v2 claims for every check.",
+  "R2-F5": "CLOSED. The code range is now MC00-MC41 and the vector ranges are N01-N36 and E01-E14. PB2 and PB3 are admitted for the publisher only.",
+  "W1": "CLOSED (unchanged). G39-G47 replay. A 3,000-run I07 campaign from an open-maintenance prefix (58,799 events, 1,376 forwarded writes) reached no W1 combination.",
+  "W2": "CLOSED (unchanged). T59, T61 and T62 replay, and the campaign had 251 write timeouts with 0 violations.",
+  "W3": "CLOSED (unchanged; T60).",
+  "W4": "CLOSED (unchanged; K01-K79 replay, and SCOPES has no CLUSTER).",
+  "AF-I05-1": "CLOSED. Decision 12, the V4 row, the _timeout docstring and Still open all name the 900-second limit from consumption. Decision 9 is unchanged, and T119 pins expiry followed by the bound. The I05 channel item 4 still bounds broker requests by the signed lifetime, which is a different rule and consistent.",
+  "AF-I05-2": "CLOSED. The README V1 row, 'Model test injections', the model comment and the I07 README all say that attempts are counted, failed ones and those inside the storage-failure path included, and that one injection is pending at a time.\nRe-run probes: NEXT + AFTER 1 gives journal BIND, ARM, DENIED; NEXT + AFTER 2 gives BIND, ARM, INVALIDATED; AFTER 5 then AFTER 1 gives BIND, ARM, CLOSED, INVALIDATED. All match the wording. T120 pins the counting; the replacement rule is not pinned (AF2-I05-1, NOTE).",
+  "AF-I05-3": "CLOSED. 'Object content beyond that is not verified' and 'admittedBeforeInvalidation keeps the mapped outcome, but such an execution never ends COMPLETED' are restored under Outcome mapping and named in the V5 row.",
+  "AF-I07-1": "CLOSED. The Channel section reads 'with the v3 frame version'.",
+  "AF-ADM-1": "CLOSED. MC41 limits volumes to emptyDir, configMap, secret, downwardAPI and projected, and projected sources to configMap, secret and downwardAPI. It also refuses a source-less volume (probe PBARE), a volume with two sources (PTWO) and a projected clusterTrustBundle (PCTB). N34-N36 refuse hostPath, a projected token and a PVC.\nfinal_object models defaultMode 420 on configMap, secret, downwardAPI and projected volumes and fieldRef.apiVersion v1 on downwardAPI items, including inside projected sources. This matches defaults.go:289-317 and :397-401 and zz_generated.defaults.go:234-275, and an explicit defaultMode is kept (PMODE). The re-run PDAPI and PCMV probes now show the defaults, and E14 replays.\nThe change is consistent with the rest of the contract:\n- all six positives pass check_manifest, and PodVol's echo 'cfg,sec,info,bundle' matches its volumes;\n- U01-U05 still fail their earlier codes (MC31, MC30, MC30, MC33, MC38) and replay;\n- U01's ServiceAccount token volume is appended after the volume defaulting, as upstream admission runs after decode-time defaulting, so carried E and U final objects are byte-equal;\n- MC41 is SIGNER_GUARANTEED, which is accurate.\nThe probe defaults are stated as not modelled. The lifecycle httpGet sibling is AF2-ADM-1.",
+  "AF-ADM-2": "CLOSED.\n- The check_claim docstring says v3.\n- The fileKeyRef comment cites zz_generated.defaults.go:312-316 and 386-390, the generated inline default (verified).\n- The MC39 message names pod-level requests, limits and hugepage limits (N31's expected text changed accordingly; it is a round-1 vector, not a carried v2 one).\n- The env rows say containers and initContainers.\nThe README constraint-table cell for MC39 is still the old wording (AF2-ADM-2, NOTE)."
+ },
+ "questionAnswers": {
+  "Q0": "Every disposition holds in the round-2 bytes. The 15 earlier items and the six round-1 findings are CLOSED, with three residual items: AF2-ADM-1 (MINOR), AF2-ADM-2 (NOTE) and AF2-I05-1 (NOTE).\nNothing the round-1 changes touched is inconsistent:\n- MC41 runs after MC31, MC38, MC39 and MC40 and before the MC37 echo check;\n- every positive passes, and U01-U05 keep their codes;\n- PodVol's echo matches its volumes;\n- U01's token volume is unchanged.\nThe original probes (PC-*, V6 identity and priorBindings, PG, PH, PN, PI, PJ, PB2, PB3, the W1 combinations, the W2 reasons and W3/T60) behave as the READMEs say.",
+  "Q1": "Faithful.\nRound-1 to round-2 changes:\n- I05 model: comments and the _timeout docstring only (no executable change);\n- admission model: MC41, the volume defaulting in final_object, the MC39 message and two comments or docstrings;\n- I07 v3 model, I07 v3 vectors and schemas, outcome mapping, policy kinds and planeon-a2.json: unchanged.\nVector changes from round 1:\n- I05: only T119 and T120 added;\n- admission: N34-N36, E14 and the PodVol positive added, and N31's expected text changed;\n- everything else is identical.\nAgainst v2, all carried vectors are unchanged apart from version strings, the bytes and digests that follow from them, the K02 text, G10/G38 intents and the claim semantics and evidence keys.\nAll 27 predecessor digests match, the v2 contracts are untouched, and v3 planeon-a2.json is byte-identical to v2's and to the round-1 bytes.",
+  "Q2": "No change from round 1.\n- UPSTREAM_TIMEOUT always gives IO_AMBIGUOUS and HELD with nothing relayed, including when its TERMINAL record fails.\n- A pending drain settles HELD, and a late response is not relayed.\n- I07 TIMEOUT answers the writer IO_AMBIGUOUS with the maintenance HELD.\nThe I05/I07 difference is sound for the reasons given in round 1. The signed lifetime no longer conflicts: expiry lets the exchange run to completion or to the 900-second bound (T61, T119).\nCampaigns: I05 in-flight prefix, 75,104 events, 860 timeouts, 555 late responses; I07, 251 timeouts. 0 violations.",
+  "Q3": "Yes, and now as stated. Alone, AFTER k fails the (k+1)-th attempt (T110-T113). With NEXT, the attempts count (T120). With MARKER_FAIL_NEXT, the INVALIDATED HELD record is durable and the restart is HELD. A second AFTER replaces the first, which is stated but not pinned (AF2-I05-1). I07 inherits it unchanged (T56 replays). The remaining limits are now stated.",
+  "Q4": "Unchanged from round 1. The precondition is exact as a necessary condition, and T116-T118 are accurate. Re-run probes and a 75,197-event oracle campaign (2 residual restarts, both inside the precondition) found nothing outside it.",
+  "Q5": "MC39 and MC40 still rule out every pod-level resource and label-key merge delta. The env defaults are modelled as upstream sets them. MC41 closes the volume-source defaults, and the allowed sources' defaults are modelled.\nOne create-path delta still has no named disposition: the httpGet path and scheme defaults on lifecycle hooks (AF2-ADM-1). Quantity re-emission of a downwardAPI resourceFieldRef divisor (for example 1000m becomes 1) falls under the existing ALLOWED_FIXED 'resource quantities in canonical form' and, like other non-vector quantities, is not modelled (stated in the _quantity docstring).\nC03, C12 and C27 behave exactly as stated. The allowlists file matches the README: MC41 coverage, the ALLOWED_FIXED volume and env rows, the RULED_OUT MC41 entry and the publisher wording. The one README cell lag is AF2-ADM-2.",
+  "Q6": "Unchanged and yes. The schema refuses exactly the four combinations, and no gate response was refused in about 59,000 I07 events. The subset bound is correctly stated as outside JSON Schema.",
+  "Q7": "Yes. Every vector replays to its stated result:\n- I05 v3: 120 transcripts, 42 agreement, 34 frames, 14 byte frames, 5 config refusals;\n- I07 v3: 79 kind, 7 render, 22 outcome, 48 frames, 9 byte frames, 62 transcripts;\n- admission v3: 6 positives, 36 manifest, 19 endToEnd (finalObject byte-equal), 24 finalObject, 9 objects, 4 directoryHash, 22 claims.\nAll with 0 mismatches. T119, T120, N34-N36 and E14 do what their intents say, apart from the T120 reference noted in AF2-I05-1. The README counts are correct.",
+  "Q8": "No overclaim. Everything is still DATA_CHECK_ONLY: nothing installed, all E01-E12 OPEN_UNPROVEN, the substrate and distribution unselected, the signer W03, and the bound's enforcement W03. Probe defaults and the native comparison of env, volume and probe defaults are explicitly left to W03 T03."
+ },
+ "modelExecution": "Run read-only from the worktree root (commit 1de8640, clean before and after, no __pycache__ and no .venv) with UV_PROJECT_ENVIRONMENT pointed at harness-onion/.venv, PYTHONDONTWRITEBYTECODE=1 and 'uv run --offline --frozen --no-sync python'. One process at a time, each under a 60 s timeout. No PAUSE file was present during the runs.\n\nDigests:\n- All 16 subject and 27 predecessor digests in the round-2 source-index.json were recomputed and match.\n- architecture/w02-adm-f/review-round1.json is byte-identical to the record I wrote in round 1.\n- Every round1/ copy matches the round-1 subject digests, and the files without a copy are unchanged.\nChanges were reviewed with git diff --no-index round1/<path> <path> for both models and all three READMEs, the allowlists and a programmatic diff of the vectors.\n\nScratch scripts in /private/tmp/claude-501/w02admf-review-r2/ (round-1 scripts reused):\n- i05_replay.py and i05_bytes.py: 0 mismatches; carried-vector diff against v2.\n- i05_probes.py: AFTER alone, NEXT + AFTER 1 and 2, AFTER overwrite, AFTER + MARKER, the PC-* residual probes, the timeout, late and failed-record probes, the EXPIRE-in-flight probe, and priorBindings.\n- i05_fuzz.py: seed 11 from an in-flight prefix, 3,000 runs and 75,104 events; seed 12 general, 3,000 runs and 75,197 events; 0 violations.\n- i07_replay.py: 0 mismatches.\n- i07_fuzz.py: seed 13 from an open-maintenance prefix, 3,000 runs and 58,799 events; 0 violations.\n- adm_replay.py: v2 and v3, 0 mismatches.\n- adm_probes.py: PG, PH, PN, PDAPI, PCMV, PI, PJ, C12, C03, C27, PB2 and PB3, plus the new probes PLIFE, PPROBE, PBARE, PCTB, PTWO, PDIV and PMODE, the positives and U01-U05 against check_manifest.",
+ "sourcesRead": [
+  "architecture/w02-adm-f/REVIEW_BRIEF.md (round 2), source-index.json (round 2), review-round1.json, round1/ copies",
+  "git diff --no-index round1 -> current: scripts/i05_gate_channel_v3.py, scripts/admission_semantics_v3.py, architecture/i05-gate-channel-v3/README.md, architecture/i07-policy-write-v3/README.md, architecture/admission-semantics-v3/README.md and allowlists.json; vectors diffed programmatically",
+  "Round-1 reading of the full subject and predecessors (listed in review-round1.json sourcesRead) carried; the unchanged files were verified by digest",
+  "Kubernetes v1.37.1 (commit f78e722310e50bcaca9276be22276d9e91d91308), local cited copy read in round 1 and re-used: pkg/apis/core/v1/defaults.go (289-317, 358-365, 397-401), zz_generated.defaults.go (206-443). No network access."
+ ],
+ "actions": {
+  "filesEdited": false,
+  "githubMutated": false,
+  "nativeActions": false,
+  "referenceModelExecuted": true,
+  "repositoryValidatorsRun": false,
+  "runnerActivated": false,
+  "testsRun": false,
+  "warmSourcesAccessed": false
+ },
+ "reviewLimit": "This is a read-only, source-level review by an agent separate from the author. I edited no repository file and changed no git state. Scratch files are only under /private/tmp/claude-501/w02admf-review-r2/. I ran no pytest, scripts/validate_*.py, runner, native, cloud, network or GitHub action.\n\nThe conclusions hold within the reference models' abstraction: in-memory journal and marker, the bounds as events with no clock, and no real socket, TLS, HTTP, fsync, apiserver or CEL. The campaigns are bounded (about 209,000 events this round). Kubernetes behaviour was read at v1.37.1 from the local cited copy only.\n\nThis PASS is not an installed gate, writer, journal, marker or admission configuration, native qualification, a signer or any E01-E12 proof. All E01-E12 remain OPEN_UNPROVEN. AF2-ADM-1 (MINOR) and AF2-ADM-2 and AF2-I05-1 (NOTE) must be fixed or explicitly carried."
+}

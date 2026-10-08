@@ -1,6 +1,16 @@
 # Repository Plan: `Harness-Engineering`
 
-## Current source preparation — MET-ENFORCE-010
+## Current source preparation — MET-ENFORCE-011
+
+W02b-F: the I05 broker-gate channel v2 (successor of the adopted v1 channel) closes every finding the
+v1 round-3 review carried to W02b-F: the I07 drain answered from the A3 fence in every state, DELETE only
+for this execution's own created UID and one run per manifest digest and identity, reported denies after
+storage failures, a failure marker and torn-record detection at restart, the 408 agreement rows, pinned
+Kubernetes sources and decode codes. It passed its independent review in round 1. Nothing is opened or
+installed, and every E01-E12 obligation stays open. Alpha2 OPEN; 209 accepted plus ENFORCE-011 only.
+Native Linux, exact-main and tenant acceptance remain separate.
+
+## Historical W02a-F source preparation — MET-ENFORCE-010
 
 W02a-F: the native qualification record v3 (successor of the adopted v2 record) closes every finding
 carried to W02a-F: code identity and running images, the slice census, tasks against pids.max, the
@@ -935,6 +945,7 @@ Every packet uses branch `codex/<packet-id>`, changes only named paths, opens a 
 81. `MET-SECTOR-001`: record owner decision SECTOR-D1 (banking replaces white goods through the first enterprise release) with dispositions and successor proposals; source only.
 82. `MET-PERF-032`: cut required-verify time by removing four repeated computations with unchanged refusals; source only.
 83. `MET-ENFORCE-010`: publish the W02a-F native qualification record v3 with independent review; source only.
+84. `MET-ENFORCE-011`: publish the W02b-F I05 broker-gate channel v2 with independent review; source only.
 
 ## Testing, verification, and acceptance
 

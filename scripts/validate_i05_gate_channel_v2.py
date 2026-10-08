@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate the isolated offline runner call and the exact 197-to-196 projection."""
+"""Validate the I05 broker-gate channel v2 contract (W02b-F) and the exact 210-to-209 projection."""
 from __future__ import annotations
 
 import base64
@@ -14,19 +14,19 @@ from typing import Any
 
 try:
     from safe_yaml import safe_load
-    import validate_isolated_network_canary as successor
+    import i05_gate_channel_v2 as model
 except ImportError:
     from scripts.safe_yaml import safe_load
-    from scripts import validate_isolated_network_canary as successor
+    from scripts import i05_gate_channel_v2 as model
 
 
 ROOT = Path(__file__).resolve().parents[1]
-AUTHORITY_PATH = "architecture/isolated-offline-runner-authority.json"
-AUTHORITY_SHA256 = "40e1e957caf0395fa7d376b591988c9ebb351f9d1d4509c2fd1235eadc734607"
-VALIDATOR_PATH = "scripts/validate_isolated_offline_runner.py"
-BASE_COMMIT = "0cacd205061b8916d01cd348365f670da0757e93"
-NEW_PACKET = "MET-VERIFY-002"
-PREVIOUS_PACKET = "MET-LINUX-006"
+AUTHORITY_PATH = "architecture/i05-gate-channel-v2-authority.json"
+AUTHORITY_SHA256 = "62da18524bfa5e6102ec1b3e0912f3c2c94122ad87b57247dbe5c55aa326c7dd"
+VALIDATOR_PATH = "scripts/validate_i05_gate_channel_v2.py"
+BASE_COMMIT = "a29c93c7813ff71eb8179c4e8611032d972e3a36"
+NEW_PACKET = "MET-ENFORCE-011"
+PREVIOUS_PACKET = "MET-ENFORCE-010"
 MAX_FILE_BYTES = 16_777_216
 # Test routes cover the top-level ci/test_ files as well as tests/.
 TEST_PREFIXES = ("tests/", "ci/test_")
@@ -50,12 +50,12 @@ def parse(raw: bytes) -> Any:
     def unique(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
         result: dict[str, Any] = {}
         for key, value in pairs:
-            require(key not in result, "duplicate isolated-runner authority member")
+            require(key not in result, "duplicate i05-gate-channel-v2 authority member")
             result[key] = value
         return result
 
     def no_constant(_value: str) -> Any:
-        raise ValueError("nonfinite isolated-runner authority number")
+        raise ValueError("nonfinite i05-gate-channel-v2 authority number")
 
     return json.loads(raw, object_pairs_hook=unique, parse_constant=no_constant)
 
@@ -93,18 +93,10 @@ _VERIFIED_AUTHORITY: tuple[str, bytes] | None = None
 
 
 def _checked_authority_raw() -> bytes:
-    """Newest first: every newer authority, then this one, each read exactly once."""
-    successor._checked_authority_raw()
-    return _checked_own_authority_raw()
-
-
-def _checked_own_authority_raw() -> bytes:
-    """Fresh complete read of this layer's authority only; callers reach newer
-    authorities through exactly one successor route per public call."""
     global _VERIFIED_AUTHORITY
     raw = regular_bytes(AUTHORITY_PATH)
     if type(raw) is not bytes or _VERIFIED_AUTHORITY != (AUTHORITY_SHA256, raw):
-        require(digest(raw) == AUTHORITY_SHA256, "isolated runner history authority digest")
+        require(digest(raw) == AUTHORITY_SHA256, "I05 channel v2 history authority digest")
         if type(raw) is bytes:
             _VERIFIED_AUTHORITY = (AUTHORITY_SHA256, raw)
     return raw
@@ -124,18 +116,18 @@ def authority() -> dict[str, Any]:
     require(type(value) is dict and set(value) == {
         "schemaVersion", "authorityPacket", "acceptedBase", "baselinePackets",
         "packetSha256", "changedFiles", "newFiles", "validatorNormalizedSha256",
-    }, "closed isolated runner history authority")
-    require(value["schemaVersion"] == "harness.planeon.ai/isolated-offline-runner-authority/v1"
+    }, "closed I05 channel v2 history authority")
+    require(value["schemaVersion"] == "harness.planeon.ai/i05-gate-channel-v2-authority/v1"
             and value["authorityPacket"] == NEW_PACKET
             and value["acceptedBase"] == BASE_COMMIT
             and type(value["baselinePackets"]) is dict
-            and len(value["baselinePackets"]) == 196
+            and len(value["baselinePackets"]) == 209
             and NEW_PACKET not in value["baselinePackets"]
             and type(value["changedFiles"]) is dict
             and type(value["newFiles"]) is dict
             and _sha(value["packetSha256"])
             and _sha(value["validatorNormalizedSha256"]),
-            "accepted 196-packet base")
+            "accepted 209-packet base")
     for name, expected in value["baselinePackets"].items():
         require(type(name) is str and name and "/" not in name
                 and all(char in "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-" for char in name)
@@ -261,18 +253,10 @@ def _inverse(raw: bytes, hunks: tuple[tuple[int, bytes, bytes], ...]) -> bytes:
 
 
 def historical_bytes(path: str, raw: bytes) -> bytes:
-    """Undo the newer successor, then this step; every authority is read once."""
+    """Recheck the pinned authority and undo only this reviewed successor."""
+    _checked_authority_raw()
     _path(path)
     require(type(raw) is bytes and len(raw) <= MAX_FILE_BYTES, "bounded source bytes required")
-    rule = _PROJECTION_RULES.get(path)
-    # An exact 196-era byte string is already older than the successor layer.
-    # Every newer authority and this one are still rechecked before this fast return.
-    if rule is not None and digest(raw) == rule["beforeSha256"]:
-        _checked_authority_raw()
-        return raw
-    # The successor route freshly rechecks every newer authority exactly once.
-    raw = successor.historical_bytes(path, raw)
-    _checked_own_authority_raw()
     return _undo_this_layer(path, raw)
 
 
@@ -292,9 +276,8 @@ def _undo_this_layer(path: str, raw: bytes) -> bytes:
 
 
 def historical_test_bytes(raw: bytes) -> bytes:
+    _checked_authority_raw()
     require(type(raw) is bytes and len(raw) <= MAX_FILE_BYTES, "bounded test bytes required")
-    raw = successor.historical_test_bytes(raw)
-    _checked_own_authority_raw()
     current_sha = digest(raw)
     matches = [path for path, rule in _PROJECTION_RULES.items()
                if path.startswith(TEST_PREFIXES) and current_sha == rule["afterSha256"]]
@@ -303,26 +286,23 @@ def historical_test_bytes(raw: bytes) -> bytes:
 
 
 def current_test_bytes(before: bytes) -> bytes:
+    _checked_authority_raw()
     require(type(before) is bytes and len(before) <= MAX_FILE_BYTES, "bounded test bytes required")
     before_sha = digest(before)
     matches = [path for path, rule in _PROJECTION_RULES.items()
                if path.startswith(TEST_PREFIXES) and before_sha == rule["beforeSha256"]]
     require(len(matches) <= 1, "ambiguous predecessor test")
     if not matches:
-        current = successor.current_test_bytes(before)
-        _checked_own_authority_raw()
-        return current
-    current = successor.historical_bytes(matches[0], regular_bytes(matches[0]))
-    _checked_own_authority_raw()
+        return before
+    current = regular_bytes(matches[0])
     require(digest(current) == _PROJECTION_RULES[matches[0]]["afterSha256"],
             "current test drift")
-    return successor.current_test_bytes(current)
+    return current
 
 
 def historical_catalog(packets: dict[str, Any]) -> dict[str, Any]:
     """Remove only this layer, leaving predecessor checks to their owners."""
-    packets = successor.historical_catalog(packets)
-    _checked_own_authority_raw()
+    _checked_authority_raw()
     require(type(packets) is dict, "packet mapping")
     current_ids = set(_PACKET_BYTE_RULES)
     require(NEW_PACKET in current_ids and set(packets) == current_ids,
@@ -359,23 +339,171 @@ def validate_packet_payloads(packets: dict[str, Any]) -> None:
         require(supplied_sha == payload_sha, "changed packet payload: " + name)
 
 
+# MET-ENFORCE-011 publishes the W02b-F successor contract planeon.internal.effect-gate-frame/v2. Repository bytes are
+# read only through reviewed_bytes, so a later bridged successor projects its own edits away first; the reference model
+# is imported and executed, and its exact bytes are bound by the review round below.
+CONTRACT_DIR = "architecture/i05-gate-channel-v2/"
+STATUS_PATH = CONTRACT_DIR + "status.json"
+MODEL_PATH = "scripts/i05_gate_channel_v2.py"
+SUBJECT_PATHS = {"README.md": CONTRACT_DIR + "README.md", "REVIEW_BRIEF.md": CONTRACT_DIR + "REVIEW_BRIEF.md",
+                 "channel.schema.json": CONTRACT_DIR + "channel.schema.json",
+                 "outcome-mapping.json": CONTRACT_DIR + "outcome-mapping.json",
+                 "vectors.json": CONTRACT_DIR + "vectors.json", "i05_gate_channel_v2.py": MODEL_PATH}
+V1_DIR = "architecture/i05-gate-channel/"
+# The adopted v1 contract and model, the I07 contract that extends the v1 model and the W01 resolution stay
+# byte-identical.
+FROZEN_PATHS = (V1_DIR + "README.md", V1_DIR + "channel.schema.json", V1_DIR + "outcome-mapping.json",
+                V1_DIR + "vectors.json", V1_DIR + "status.json", "scripts/i05_gate_channel.py",
+                "architecture/i07-policy-write/README.md", "architecture/i07-policy-write/status.json",
+                "scripts/i07_policy_write.py", "architecture/host-interface-inputs/resolved/HOST_INTERFACE_SPEC.md")
+KUBERNETES_COMMIT = "f78e722310e50bcaca9276be22276d9e91d91308"
+OBLIGATIONS = tuple("E%02d" % number for number in range(1, 13))
+FALSE_FLAGS = ("nativeAcceptance", "tenantAcceptance", "gateInstalled", "journalImplemented", "failureMarkerImplemented",
+               "substrateSelected", "distributionSelected", "i07MovedToV2", "productExecution", "runnerActivated",
+               "phaseComplete")
+CARRIED = ("P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8")
+VECTOR_FLOORS = {"transcripts": 106, "agreement": 42, "frames": 33, "byteFrames": 14, "configRefusals": 3}
+INPUT_TYPES = {"bytes": bytes, "bytearray": bytearray, "str": lambda raw: raw.decode("ascii")}
+
+
+def reviewed_bytes(path: str) -> bytes:
+    """This packet's reviewed bytes of path; a bridged successor projects newer bytes back first."""
+    return regular_bytes(path)
+
+
+def _json(path: str) -> Any:
+    return parse(reviewed_bytes(path))
+
+
+def validate_v2_schema(schema: dict, mapping: dict) -> None:
+    """The frame schema is the v2 version; the mapping excludes 408 from the mutation 4xx rows and pins its sources."""
+    import jsonschema
+    jsonschema.Draft202012Validator.check_schema(schema)
+    require(schema.get("$id") == "urn:planeon:internal:effect-gate-frame:v2"
+            and all(variant["properties"]["schemaVersion"] == {"const": model.FRAME_VERSION} for variant in schema["oneOf"])
+            and len(schema["oneOf"]) == 2 * len(model.OPERATIONS), "v2 frame schema version")
+    require(mapping.get("schemaVersion") == "planeon.internal.effect-gate-outcome-mapping/v2"
+            and all(type(row.get("excludeStatus")) is list for row in mapping["rows"])
+            and {(row["verb"], row["httpStatus"]): row["excludeStatus"] for row in mapping["rows"]
+                 if row["httpStatus"] == "4xx"} == {("CREATE", "4xx"): [408], ("GET", "4xx"): [], ("DELETE", "4xx"): [408]},
+            "the mutation 4xx agreement rows exclude 408")
+    source = mapping.get("upstreamSource", {})
+    require(source.get("tag") == "v1.37.1" and source.get("commit") == KUBERNETES_COMMIT
+            and len(source.get("files", [])) == 5 and all(_sha(row.get("sha256")) for row in source["files"]),
+            "pinned upstream Kubernetes sources")
+
+
+def validate_v2_vectors(schema: dict, mapping: dict, vectors: dict) -> int:
+    """Every case replays to its pinned result through the reference model."""
+    require(vectors["evidenceClass"] == "DATA_CHECK_ONLY" and set(vectors["configs"]) == {"ACTIVE", "INSPECTING", "LATER"}
+            and all(len(vectors[key]) >= floor for key, floor in VECTOR_FLOORS.items()), "v2 vectors are closed")
+    checks = 0
+    for row in vectors["transcripts"]:
+        outputs, final = model.replay(vectors["configs"][row["config"]], row["events"], schema)
+        require(outputs == row["outputs"] and final == row["final"], "transcript " + row["id"])
+        checks += 1
+    for row in vectors["agreement"]:
+        got = model.check_agreement(mapping, row["verb"], row["identity"], row["outcome"], row["resourceResult"])
+        require(got == row["expect"], "agreement " + row["id"])
+        checks += 1
+    for row in vectors["frames"]:
+        try:
+            model.check_frame(row["frame"], schema)
+            got = None
+        except ValueError as exc:
+            got = str(exc)
+        require(got == row["expect"], "frame " + row["id"])
+        checks += 1
+    for row in vectors["byteFrames"]:
+        try:
+            model.decode_frame(INPUT_TYPES[row["inputType"]](_base64(row["base64"])), schema)
+            got = None
+        except ValueError as exc:
+            got = str(exc)
+        require(got == row["expect"], "byte frame " + row["id"])
+        checks += 1
+    for row in vectors["configRefusals"]:
+        try:
+            model.Gate(dict(vectors["configs"]["ACTIVE"], **row["override"]))
+            got = None
+        except ValueError as exc:
+            got = str(exc)
+        require(got is not None and got == row["expect"], "configuration refusal " + row["id"])
+        checks += 1
+    return checks
+
+
+def validate_v2_status() -> None:
+    status = _json(STATUS_PATH)
+    require(type(status) is dict and set(status) == {
+        "schemaVersion", "contract", "predecessorContract", "reviewRounds", "closedFindings", "carriedFindings",
+        "ownerDecisions", "contractState", "obligations", "independentReviewer", *FALSE_FLAGS,
+    } and status["schemaVersion"] == "planeon.internal.i05-gate-channel-v2-status/v1"
+            and status["contract"] == model.FRAME_VERSION
+            and status["predecessorContract"] == "planeon.internal.effect-gate-frame/v1"
+            and status["obligations"] == {name: "OPEN_UNPROVEN" for name in OBLIGATIONS}
+            and status["independentReviewer"] == "SEPARATE_AGENT_NOT_AUTHOR" and status["ownerDecisions"] == []
+            and all(status[flag] is False for flag in FALSE_FLAGS), "closed I05 v2 status")
+    require(type(status["closedFindings"]) is dict and set(status["closedFindings"]) == set(CARRIED),
+            "the carried v1 round-3 findings are dispositioned")
+    rounds = status["reviewRounds"]
+    require(type(rounds) is list and len(rounds) == 1, "review rounds")
+    row = rounds[0]
+    require(type(row) is dict and set(row) == {"round", "record", "recordSha256", "verdict", "subjectDirectory"}
+            and row["round"] == 1 and row["subjectDirectory"] == "CURRENT"
+            and row["record"] == CONTRACT_DIR + "review-round1.json", "review round identity")
+    raw = reviewed_bytes(row["record"])
+    require(digest(raw) == row["recordSha256"], "review record drift: " + row["record"])
+    review = parse(raw)
+    require(type(review) is dict and review.get("schemaVersion") == "planeon.internal.i05-gate-channel-v2-review/v1"
+            and review.get("round") == 1 and review.get("verdict") == row["verdict"]
+            and row["verdict"] in ("PASS_FOR_SOURCE_PUBLICATION", "CHANGES_REQUIRED", "BLOCKED")
+            and type(review.get("actions")) is dict
+            and all(review["actions"][key] is False for key in review["actions"] if key != "referenceModelExecuted"),
+            "review record 1")
+    subject = review.get("subjectSha256", {})
+    require(set(subject) == set(SUBJECT_PATHS)
+            and all(digest(reviewed_bytes(path)) == subject[name] for name, path in SUBJECT_PATHS.items()),
+            "review round 1 is bound to its exact subject bytes")
+    require(type(review.get("openItemStatus")) is dict
+            and all(review["openItemStatus"].get(name, {}).get("status") == "CLOSED" for name in CARRIED),
+            "the review closes every carried finding")
+    findings = review.get("findings")
+    passed = review["verdict"] == "PASS_FOR_SOURCE_PUBLICATION"
+    require(type(findings) is list and type(status["carriedFindings"]) is dict
+            and set(status["carriedFindings"]) == {finding.get("id") for finding in findings}
+            and (not passed or all(finding.get("severity") in ("MINOR", "NOTE") for finding in findings)),
+            "every final finding is carried; a pass has no blocking or major finding")
+    require(status["contractState"] == ("ADOPTED_DATA_CONTRACT" if passed else "CONTRACT_CANDIDATE"),
+            "contract state follows the final independent review")
+
+
+def validate_i05_gate_channel_v2() -> None:
+    """The v2 contract is closed and replays exactly; predecessors are untouched; adoption follows the review."""
+    for path in FROZEN_PATHS:
+        require(path not in _PROJECTION_RULES, "predecessor contract bytes must stay unchanged: " + path)
+    schema = _json(SUBJECT_PATHS["channel.schema.json"])
+    mapping = _json(SUBJECT_PATHS["outcome-mapping.json"])
+    validate_v2_schema(schema, mapping)
+    checks = validate_v2_vectors(schema, mapping, _json(SUBJECT_PATHS["vectors.json"]))
+    require(checks >= sum(VECTOR_FLOORS.values()), "every v2 vector replays")
+    validate_v2_status()
+
+
 def validate() -> None:
     record = authority()
-    validator_raw = successor.historical_bytes(VALIDATOR_PATH, regular_bytes(VALIDATOR_PATH))
+    validator_raw = regular_bytes(VALIDATOR_PATH)
     literal = b'AUTHORITY_SHA256 = "' + AUTHORITY_SHA256.encode("ascii") + b'"'
     placeholder = b'AUTHORITY_SHA256 = "TO_BE_PINNED_AFTER_SOURCE_FREEZE"'
     require(validator_raw.count(literal) == 1
             and digest(validator_raw.replace(literal, placeholder))
-            == record["validatorNormalizedSha256"], "isolated runner validator drift")
+            == record["validatorNormalizedSha256"], "I05 channel v2 validator drift")
     paths = sorted((ROOT / "task-packets").glob("*.yaml"))
     old = set(record["baselinePackets"])
-    require(len(paths) == 210
-            and {path.stem for path in paths} == old | {NEW_PACKET, successor.NEW_PACKET, successor.successor.NEW_PACKET, successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET},
-            "closed 210-packet catalog retaining the 197-packet checkpoint")
+    require(len(paths) == 210 and {path.stem for path in paths} == old | {NEW_PACKET},
+            "closed 210-packet catalog")
     packets = {}
     for path in paths:
-        if path.stem in (successor.NEW_PACKET, successor.successor.NEW_PACKET, successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET):
-            continue
         raw = regular_bytes("task-packets/" + path.name)
         expected = record["packetSha256"] if path.stem == NEW_PACKET else record["baselinePackets"][path.stem]
         require(digest(raw) == expected, "packet YAML drift: " + path.stem)
@@ -385,31 +513,30 @@ def validate() -> None:
     previous = packets[PREVIOUS_PACKET]
     commands = packet["offlineAcceptanceCommands"]
     require(packet["id"] == NEW_PACKET and packet["repository"] == "Harness-Engineering"
-            and packet["predecessors"] == ["MET-VERIFY-001", PREVIOUS_PACKET]
+            and packet["predecessors"] == [PREVIOUS_PACKET]
             and packet["warmSourceAccess"] == "PROHIBITED_DURING_IMPLEMENTATION"
             and packet["sourceReuse"] == packet["prefetchCommands"] == []
             and packet["offlineExecution"] == previous["offlineExecution"]
             and "liveCampaignExecution" not in packet
-            and len(commands) == 59
-            and commands[:-3] + commands[-2:] == previous["offlineAcceptanceCommands"]
-            and commands[-3] == ["uv", "run", "--offline", "--frozen", "--no-sync",
-                                 "python", VALIDATOR_PATH],
-            "closed source-only isolated-runner packet and inherited commands")
+            and len(commands) == 64
+            and commands == previous["offlineAcceptanceCommands"]
+            and not any(VALIDATOR_PATH in argv for argv in commands),
+            "closed source-only i05-gate-channel-v2 packet and inherited commands")
     require(len(packet["allowedPaths"]) == len(set(packet["allowedPaths"]))
             and set(packet["allowedPaths"]) == set(record["changedFiles"])
             | set(record["newFiles"]) | {AUTHORITY_PATH, VALIDATOR_PATH,
                                          "task-packets/" + NEW_PACKET + ".yaml"},
-            "unreviewed or omitted isolated-runner packet path")
+            "unreviewed or omitted i05-gate-channel-v2 packet path")
     for path, rule in record["changedFiles"].items():
-        current = successor.historical_bytes(path, regular_bytes(path))
+        current = regular_bytes(path)
         require(digest(current) == rule["afterSha256"]
                 and digest(historical_bytes(path, current)) == rule["beforeSha256"],
                 "unreviewed current source: " + path)
     for path, expected in record["newFiles"].items():
-        require(digest(successor.historical_bytes(path, regular_bytes(path))) == expected,
-                "new source drift: " + path)
+        require(digest(regular_bytes(path)) == expected, "new source drift: " + path)
+    validate_i05_gate_channel_v2()
 
 
 if __name__ == "__main__":
     validate()
-    print("Isolated offline runner valid: 210 current specifications; 197-packet checkpoint and exact 196-packet predecessor; transport changes need the owner's exact-commit approval.")
+    print("I05 channel v2 contract valid: 210 current specifications; exact 209-packet predecessor; DATA_CHECK_ONLY, every E01-E12 obligation open.")

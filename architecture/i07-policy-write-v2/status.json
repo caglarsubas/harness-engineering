@@ -1,0 +1,60 @@
+{
+  "schemaVersion": "planeon.internal.i07-policy-write-v2-status/v1",
+  "contract": "planeon.internal.policy-write-frame/v2",
+  "supersedes": "planeon.internal.policy-write-frame/v1",
+  "baseGate": "planeon.internal.effect-gate-frame/v2",
+  "reviewRounds": [
+    {
+      "round": 1,
+      "record": "architecture/i07-policy-write-v2/review-round1.json",
+      "recordSha256": "38fc2d83fc07e32f6550d84ed1a8b0843c1322a31258c481b30f4c586bbb439d",
+      "verdict": "PASS_FOR_SOURCE_PUBLICATION",
+      "subjectDirectory": "CURRENT"
+    }
+  ],
+  "closedFindings": {
+    "R1": "CLOSED",
+    "R2": "CLOSED",
+    "R3": "PARTIAL: remainder carried as W1",
+    "R4": "CLOSED (gate side; enrollment W03)",
+    "R5": "CLOSED",
+    "R6": "CLOSED",
+    "R7": "CLOSED (drain path; MAINT_REQUESTED failure note carried as W3)",
+    "R8": "CLOSED",
+    "W02B-F-V2": "CLOSED (OPEN is point-in-time; T57)",
+    "W02F-SEALED": "CLOSED (admission kinds sealed)"
+  },
+  "carriedFindings": {
+    "W1": "W02c-F2: schema constraints MAINTENANCE_STATUS ENDED => gateState not ACTIVE/INSPECTING, PENDING => inFlightActionId integer, gateState CLOSED => inFlightActionId null, WRITE_END ambiguousWriteIds non-empty => HELD, with G vectors; or narrow the README R3 row and list the unexpressible ambiguousWriteIds/writes bound",
+    "W2": "W02c-F2: reword the restart reason (recorded MAINT_ENDED reason, else GATE_RESTART if begun, else GENERATION_REBUILT); state whether the 10-second upstream expiry is LOST (relayed) or an abort ({aborted: UPSTREAM_TIMEOUT}) and pin it with a vector",
+    "W3": "W02c-F2: state that a WRITE_BEGIN refused STORAGE_FAILURE (MAINT_REQUESTED record) may have denied an armed I05 action, reported only through ACTION_OUTCOME",
+    "W4": "W02c-F2: add architecture/i06-backend-profile/README.md with its digest to predecessorInputs; remove or mark unreachable the CLUSTER scope branches"
+  },
+  "ownerDecisions": [],
+  "contractState": "ADOPTED_DATA_CONTRACT",
+  "obligations": {
+    "E01": "OPEN_UNPROVEN",
+    "E02": "OPEN_UNPROVEN",
+    "E03": "OPEN_UNPROVEN",
+    "E04": "OPEN_UNPROVEN",
+    "E05": "OPEN_UNPROVEN",
+    "E06": "OPEN_UNPROVEN",
+    "E07": "OPEN_UNPROVEN",
+    "E08": "OPEN_UNPROVEN",
+    "E09": "OPEN_UNPROVEN",
+    "E10": "OPEN_UNPROVEN",
+    "E11": "OPEN_UNPROVEN",
+    "E12": "OPEN_UNPROVEN"
+  },
+  "independentReviewer": "SEPARATE_AGENT_NOT_AUTHOR",
+  "nativeAcceptance": false,
+  "tenantAcceptance": false,
+  "gateInstalled": false,
+  "writerInstalled": false,
+  "substrateSelected": false,
+  "enrollmentRulesDefined": false,
+  "staticGuardInstalled": false,
+  "productExecution": false,
+  "runnerActivated": false,
+  "phaseComplete": false
+}

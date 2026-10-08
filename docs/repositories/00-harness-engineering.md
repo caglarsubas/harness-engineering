@@ -1,6 +1,15 @@
 # Repository Plan: `Harness-Engineering`
 
-## Current source preparation — MET-ENFORCE-013
+## Current source preparation — MET-ENFORCE-014
+
+W02c-F: the I07 policy writer channel v2 (successor of the adopted v1 channel) extends the I05 v2 gate, seals the
+admission-policy kinds per W02f, splits a write's upstream outcome into its own event with aborts recorded
+before the session or maintenance ends, opens no maintenance in a rebuilt generation, and answers the v1
+review findings R1-R8. It passed its independent review in round 1. Nothing is opened or installed, and
+every E01-E12 obligation stays open. Alpha2 OPEN; 212 accepted plus ENFORCE-014 only. Native Linux,
+exact-main and tenant acceptance remain separate.
+
+## Historical W02f source preparation — MET-ENFORCE-013
 
 W02f: POLICY-ADMISSION-SEMANTICS/v2 states A1-A4 at named positions and refuses the v1 pre-commit sentence;
 the A2 per-kind allowlists for Pod, immutable ConfigMap and ClusterIP Service come from Kubernetes v1.37.1 with
@@ -965,6 +974,7 @@ Every packet uses branch `codex/<packet-id>`, changes only named paths, opens a 
 84. `MET-ENFORCE-011`: publish the W02b-F I05 broker-gate channel v2 with independent review; source only.
 85. `MET-ENFORCE-012`: publish the W02g-F I06 backend profile v2 with independent review; source only.
 86. `MET-ENFORCE-013`: publish W02f POLICY-ADMISSION-SEMANTICS/v2 and the A2 admission allowlists with independent review; source only.
+87. `MET-ENFORCE-014`: publish the W02c-F I07 policy writer channel v2 with independent review; source only.
 
 ## Testing, verification, and acceptance
 

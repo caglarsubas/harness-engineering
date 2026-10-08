@@ -50,10 +50,11 @@ def test_exact_current_source_and_complete_history_chain():
     assert profile.validate() is None
     current = packets()
     accepted = profile.historical_catalog(current)
-    assert len(current) == 212 and len(accepted) == 208
+    assert len(current) == 213 and len(accepted) == 208
     assert set(accepted) == set(current) - {profile.NEW_PACKET, profile.successor.NEW_PACKET,
                                             profile.successor.successor.NEW_PACKET,
-                                            profile.successor.successor.successor.NEW_PACKET}
+                                            profile.successor.successor.successor.NEW_PACKET,
+                                            profile.successor.successor.successor.successor.NEW_PACKET}
     assert len(hprofile.historical_catalog(current)) == 207
     assert len(dprofile.historical_catalog(current)) == 206
     assert len(sprofile.historical_catalog(current)) == 205

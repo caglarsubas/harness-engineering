@@ -1,6 +1,15 @@
 # Sol-High Task Packet Catalog
 
-## Current source preparation — MET-ENFORCE-013
+## Current source preparation — MET-ENFORCE-014
+
+W02c-F: the I07 policy writer channel v2 (successor of the adopted v1 channel) extends the I05 v2 gate, seals the
+admission-policy kinds per W02f, splits a write's upstream outcome into its own event with aborts recorded
+before the session or maintenance ends, opens no maintenance in a rebuilt generation, and answers the v1
+review findings R1-R8. It passed its independent review in round 1. Nothing is opened or installed, and
+every E01-E12 obligation stays open. Alpha2 OPEN; 212 accepted plus ENFORCE-014 only. Native Linux,
+exact-main and tenant acceptance remain separate.
+
+## Historical W02f source preparation — MET-ENFORCE-013
 
 W02f: POLICY-ADMISSION-SEMANTICS/v2 states A1-A4 at named positions and refuses the v1 pre-commit sentence;
 the A2 per-kind allowlists for Pod, immutable ConfigMap and ClusterIP Service come from Kubernetes v1.37.1 with
@@ -1205,3 +1214,4 @@ acceptance is claimed. Alpha2 ONGOING; model-effort transition NOT_DUE.
 | 210 | `MET-ENFORCE-011` | `Harness-Engineering` | W02b-F I05 broker-gate channel v2: carried W02b findings P1-P8 closed, independently reviewed |
 | 211 | `MET-ENFORCE-012` | `Harness-Engineering` | W02g-F I06 backend profile v2: carried W02g findings N1-N3 closed, independently reviewed |
 | 212 | `MET-ENFORCE-013` | `Harness-Engineering` | W02f POLICY-ADMISSION-SEMANTICS/v2 and A2 admission allowlists in a sealed static directory, independently reviewed |
+| 213 | `MET-ENFORCE-014` | `Harness-Engineering` | W02c-F I07 policy writer channel v2: on the I05 v2 gate, admission kinds sealed, R1-R8 closed, independently reviewed |

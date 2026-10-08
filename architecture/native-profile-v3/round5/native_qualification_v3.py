@@ -56,16 +56,14 @@ DELEGATED_CHILDREN = ["broker", "probe-worker"]
 BROKER_SERVICE = "/sys/fs/cgroup/planeon.slice/planeon-capacity-broker.service"
 # Native-only roles may list nothing from the enrolled interpreter's installation tree (round 2, W4).
 INTERPRETER_TREE = "/opt/planeon/python/"
-# Closed kernel command-line grammar (rounds 5-6, R4-1, R5-1). Every word of the enrolled entry is one of these kernel
-# parameters, none of which names, adds, masks or overrides a systemd unit or passes init arguments: "--" and every
-# later word, systemd.*, rd.* and SYSTEMD_* words, runlevel words, root mount options (rootflags= carries
-# x-systemd.* dependencies), console= (getty-generator adds a serial getty) and every other word are refused. The
-# maintenance entry is the enrolled entry plus MAINTENANCE_UNIT once, so both boot the same initramfs and root. The
-# grammar is widened only through a reviewed revision of this contract.
+# Closed kernel command-line grammar (round 5, R4-1). Every word of either boot entry is one of these kernel
+# parameters, and the maintenance entry adds exactly MAINTENANCE_UNIT once. Every other word is refused: "--" and
+# everything after it (init arguments), systemd.* and SYSTEMD_* words, runlevel words and any other KEY=value, so the
+# command line cannot select, add, mask or override a unit. W03 widens the list only through a reviewed schema revision.
 KERNEL_PARAMETERS = tuple(re.compile(pattern) for pattern in (
-    r"initrd=[A-Za-z0-9_./\\+-]+", r"root=(UUID|PARTUUID|LABEL)=[A-Za-z0-9_.-]+", r"root=/dev/[A-Za-z0-9_/.-]+",
-    r"ro", r"rw", r"security=selinux", r"selinux=1", r"enforcing=1", r"lockdown=integrity", r"quiet",
-    r"loglevel=[0-7]"))
+    r"initrd=[A-Za-z0-9_./\\-]+", r"root=(UUID|PARTUUID|LABEL)=[A-Za-z0-9_.-]+", r"root=/dev/[A-Za-z0-9_/.-]+",
+    r"ro", r"rw", r"rootfstype=[a-z0-9]+", r"rootflags=[A-Za-z0-9_.,=-]+", r"security=selinux", r"selinux=1",
+    r"enforcing=1", r"lockdown=integrity", r"console=[A-Za-z0-9_,.]+", r"quiet", r"loglevel=[0-7]"))
 MAINTENANCE_UNIT = "systemd.unit=planeon-maintenance.target"
 PIN_ROOT = "/sys/fs/bpf/planeon"
 CGROUP_ROOT = "/sys/fs/cgroup"
@@ -253,10 +251,7 @@ def check_record(record: Any, profile: Any, endpoints: Any, schema: dict) -> Non
     require("lockdown=integrity" in enrolled, "enrolled boot entry without lockdown=integrity")
     require(all(_kernel_parameter(word) or word == MAINTENANCE_UNIT for word in maintenance),
             "maintenance boot entry outside the closed kernel parameters")
-    require(MAINTENANCE_UNIT in maintenance, "maintenance boot entry does not select the maintenance target")
-    require(maintenance.count(MAINTENANCE_UNIT) == 1, "maintenance boot entry names the maintenance target twice")
-    require([word for word in maintenance if word != MAINTENANCE_UNIT] == enrolled,
-            "maintenance boot entry differs from the enrolled entry beyond the maintenance unit")
+    require(maintenance.count(MAINTENANCE_UNIT) == 1, "maintenance boot entry does not select the maintenance target")
     binding = profile["binding"]
     require(record["scope"] == {key: binding[key] for key in record["scope"]}, "scope substitution")
     start, end = _moment(record["scope"]["validFrom"]), _moment(record["scope"]["expiresAt"])

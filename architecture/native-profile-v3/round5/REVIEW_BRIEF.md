@@ -1,11 +1,11 @@
-# Independent review brief — native qualification record v3 (W02a-F), round 6
+# Independent review brief — native qualification record v3 (W02a-F), round 5
 
-Status: **CONTRACT_CANDIDATE_ROUND6_AWAITING_INDEPENDENT_REVIEW**. The authoring agent wrote this brief. It is not a
+Status: **CONTRACT_CANDIDATE_ROUND5_AWAITING_INDEPENDENT_REVIEW**. The authoring agent wrote this brief. It is not a
 verdict.
 
-Rounds 1 to 5 (`review-round1.json` to `review-round5.json`) returned CHANGES_REQUIRED; their reviewed bytes are kept in
-`round1/` to `round5/`. Rounds 2-5 concerned only the boot-entry command line. Round 5 closed every earlier finding and raised
-R5-1 (MINOR) and R5-2 to R5-4 (NOTE). README "Round-5 findings and dispositions" states how round 6 answers them.
+Rounds 1 to 4 (`review-round1.json` to `review-round4.json`) returned CHANGES_REQUIRED; their reviewed bytes are kept in
+`round1/` to `round4/`. Round 4 closed every earlier finding and raised R4-1 (MINOR) and R4-2 (NOTE). README "Round-4
+findings and dispositions" states how round 5 answers them: the boot command line now has a closed grammar.
 
 ## Subject
 
@@ -26,9 +26,10 @@ checked by the required verify suite, and will not change while you review.
 
 ## Questions to answer
 
-0. **Earlier findings.** For R5-1 to R5-4, is the README disposition true in the round-6 bytes? Is the stated
-   command-line guarantee exactly what the model enforces, and is everything beyond it listed as installed or firmware
-   state for W03 and T04? Give CLOSED, PARTIAL or OPEN under `openItemStatus`, and confirm that no CLOSED item reopened.
+0. **Earlier findings.** For R4-1 and R4-2, is the README disposition true in the round-5 bytes? Does the closed grammar
+   leave any quote-free word through which the command line selects, adds, masks or overrides a unit, or hands init an
+   environment or arguments? Does it refuse a legitimate enrolled or maintenance entry that W03 could not reasonably
+   avoid? Give CLOSED, PARTIAL or OPEN under `openItemStatus`, and confirm that no CLOSED item reopened.
 1. **Carried findings.** For P1, P3, P4, P5, P6, P7(a), P7(b) and P7(c), the network-policy agent identity, the W02e
    label slots, E1's census and K1: does v3 close the finding as it was required? Give CLOSED, PARTIAL or OPEN under
    `openItemStatus`.
@@ -64,7 +65,7 @@ Set the environment variable inline on every command, and never let uv create a 
 ## Result
 
 Return one JSON object:
-- `schemaVersion` `"planeon.internal.native-profile-v3-review/v1"`, `round` 6, `reviewDate`;
+- `schemaVersion` `"planeon.internal.native-profile-v3-review/v1"`, `round` 5, `reviewDate`;
 - `verdict`: PASS_FOR_SOURCE_PUBLICATION, CHANGES_REQUIRED or BLOCKED;
 - `subjectSha256`: subject file name to digest;
 - `findings`, each with `id`, `severity` (BLOCKING / MAJOR / MINOR / NOTE), `location`, `finding` and `requiredChange`;

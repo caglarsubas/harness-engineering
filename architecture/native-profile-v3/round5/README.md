@@ -1,6 +1,6 @@
 # Native qualification record v3 — W02a-F contract (DATA_CHECK_ONLY)
 
-Alpha 2A; 2026-10-08. Status: **CONTRACT_CANDIDATE_ROUND6_AWAITING_INDEPENDENT_REVIEW**.
+Alpha 2A; 2026-10-08. Status: **CONTRACT_CANDIDATE_ROUND5_AWAITING_INDEPENDENT_REVIEW**.
 
 v3 is the W02a-F successor of the adopted v2 record (`../native-profile-v2/`, ADOPTED_DATA_CONTRACT after three review
 rounds). It closes the findings carried to W02a-F:
@@ -11,10 +11,9 @@ rounds). It closes the findings carried to W02a-F:
 Review history: round 1 CHANGES_REQUIRED (`review-round1.json`: 2 MINOR, 7 NOTE; all twelve carried items CLOSED);
 round 2 CHANGES_REQUIRED (`review-round2.json`: 1 MINOR, 6 NOTE; W1-W5, W7 and W8 CLOSED, W6 and W9 PARTIAL); round 3
 CHANGES_REQUIRED (`review-round3.json`: 1 MINOR, 2 NOTE; every earlier finding CLOSED except R2-1 and W6, PARTIAL); round 4
-CHANGES_REQUIRED (`review-round4.json`: 1 MINOR, 1 NOTE); round 5 CHANGES_REQUIRED (`review-round5.json`: 1 MINOR, 3 NOTE).
-Every finding before round 5 is CLOSED. The reviewed bytes of each round are kept unchanged in `round1/` to `round5/`. Rounds
-2-5 concerned only the boot-entry command line. This round-6 candidate answers R5-1 to R5-4 (tables at the end): the
-grammar is narrower, the maintenance entry is bound to the enrolled one, and the property is stated as the model enforces it.
+CHANGES_REQUIRED (`review-round4.json`: 1 MINOR, 1 NOTE; every earlier finding CLOSED). The reviewed bytes of each round
+are kept unchanged in `round1/` to `round4/`. This round-5 candidate answers R4-1 and R4-2 (tables at the end): the
+command line now has a closed grammar instead of enumerated systemd selectors.
 
 The v1 and v2 schemas, vectors, models and records are byte-identical; v3 never reinterprets earlier data. Nothing here is a
 native result, installed profile, kernel observation or grant. Every vector and model result is DATA_CHECK_ONLY, and all
@@ -27,9 +26,9 @@ Accepted base: main `51440c8de083b09e9d74fbaef3365b86d9fe89da` (MET-PERF-032, 20
 - `qualification.schema.json`: JSON Schema 2020-12, `$id` `urn:planeon:internal:native-qualification:v3`. It is the
   v2 schema with the changes below and every version discriminator moved to v3. It has the same four variants: `record`,
   `capture`, `lifecycleCapture` and `backendCapture`.
-- `vectors.json`: 4 positives derived from the 4 adopted v2 positives; 207 negatives (all 131 v2 negatives replayed
-  under v3, plus V01-V76), each pinned to its exact refused rule, with every schema-level refusal a single error; 9
-  accepted variants (the 4 from v2 plus A05-A09); 14 cross-version cases; 14 migration cases. The positives are
+- `vectors.json`: 4 positives derived from the 4 adopted v2 positives; 199 negatives (all 131 v2 negatives replayed
+  under v3, plus V01-V68), each pinned to its exact refused rule, with every schema-level refusal a single error; 8
+  accepted variants (the 4 from v2 plus A05-A08); 14 cross-version cases; 14 migration cases. The positives are
   JSON round-tripped before any case is pinned, so each result is what a replay from the file computes. Disabling any
   one v3 rule in the model changes the result of at least one negative or migration case. The exceptions are the
   schema-digest pins (checked by the layer validator), the capture, lifecycle and backend version discriminators
@@ -68,7 +67,7 @@ Caller obligations (stated in the model, not checked by it):
 | Network-policy agent identity | Each backend component's `apiIdentities` lists the identities of the reviewed W02g closure that the component holds, by holder: a subset of those names, not every identity it authenticates as (controller service accounts outside the closure are not listed). KUBELET may also use one `system:node:<node name>`, and DATASTORE and CONTAINER_RUNTIME have none. The fixture's agent is now the host-component user `planeon:netpol-agent`. | V26-V28, V51; A07 |
 | W02e label slots | The schema fixes the W02e values: each role cgroup's label (`planeon_cgroup_server_t`, `_observer_t`, `_broker_t`, `_worker_t`, `_gate_t`), `planeon_bpf_pin_t` for every pin and `planeon_seal_t` for the seal marker. | V29-V32 |
 | W02e E1: effective-program census | Each role capture reports the effective program IDs (BPF_PROG_QUERY with BPF_F_QUERY_EFFECTIVE, command 16, already in the reader set) for every other cgroup attach type of Linux v6.12 (22 types, listed below), each required empty. The seven containment hooks are observed per hook as in v2. | V33-V36 |
-| W02e K1: boot entries | The record pins the enrolled and the maintenance boot entry: the loader entry ID and the kernel command line as `/proc/cmdline` reports it for that entry (for a systemd-boot v256 type #1 entry, `initrd=<path>` followed by the entry's options). The entry IDs must differ. The command line contains no quote character and is split on single spaces. Every word of the enrolled entry must be one of `initrd=<path>`, `root=UUID=`/`PARTUUID=`/`LABEL=<id>` or `root=/dev/<name>`, `ro`, `rw`, `security=selinux`, `selinux=1`, `enforcing=1`, `lockdown=integrity`, `quiet` and `loglevel=<0-7>`, and `lockdown=integrity` must be present (W01 §5.2 S1). The maintenance entry is the enrolled entry with `systemd.unit=planeon-maintenance.target` added exactly once and nothing else changed. What this guarantees: no word of either entry names, adds, masks or overrides a systemd unit, carries root mount options or passes init arguments; the only difference between the entries is the maintenance unit, so both boot the same initramfs and root; and SELinux and lockdown can only be enabled. Refused, among others: `--` and every later word, every `systemd.*`, `rd.*` and `SYSTEMD_*` word, runlevel words, `rootflags=` (`x-systemd.*` options add initrd unit dependencies; `subvol=` and `X-mount.subdir=` pick another tree), `rootfstype=`, `console=` (systemd's getty generator adds a serial login getty; W03 may admit it through review, ordered after containment per W01 §5.2 S2) and any `selinux=`, `enforcing=` or `lockdown=` value other than the enabling one. On kernels built without the SELinux boot-parameter, SELinux develop or lockdown LSM handlers, `selinux=`, `enforcing=` and `lockdown=` reach init's environment, where they are inert names for systemd. The grammar is widened only through a reviewed revision of this contract (`KERNEL_PARAMETERS` in the model). Every role and lifecycle capture reports the boot entry it observed (`entryId`, and SHA-256 of the command line text without its trailing newline), which must be the enrolled one. | V37-V40, V42, V47-V49, V52-V54, V57-V76; A08, A09 |
+| W02e K1: boot entries | The record pins the enrolled and the maintenance boot entry: the loader entry ID and the kernel command line as `/proc/cmdline` reports it for that entry (for a systemd-boot v256 type #1 entry, `initrd=<path>` followed by the entry's options). The two must differ in both. The command line has a closed grammar: split on single spaces (no quote character is allowed), every word of either entry must be one of `initrd=<path>`, `root=UUID=`/`PARTUUID=`/`LABEL=<id>` or `root=/dev/<name>`, `ro`, `rw`, `rootfstype=<fs>`, `rootflags=<flags>`, `security=selinux`, `selinux=1`, `enforcing=1`, `lockdown=integrity`, `console=<device>`, `quiet` and `loglevel=<0-7>`. The maintenance entry adds `systemd.unit=planeon-maintenance.target` exactly once, and the enrolled entry must carry `lockdown=integrity` (W01 §5.2 S1). Every other word is refused: `--` and every word after it (init arguments such as `--unit`), every `systemd.*`, `rd.*` and `SYSTEMD_*` word, runlevel words and any other `KEY=value`. So the command line can neither select, add, mask or override a unit nor hand init an environment. W03 widens the grammar only through a reviewed schema revision; a VM's SMBIOS `io.systemd.boot.kernel-cmdline-extra` string is outside it. Every role and lifecycle capture reports the boot entry it observed (`entryId`, and SHA-256 of the command line text without its trailing newline), which must be the enrolled one. | V37-V40, V42, V47-V49, V52-V54, V57-V68; A08 |
 
 **Counts row, reworded (P5).** The lifecycle capture counts processes per planeon domain. The containment domain must be
 0, and each role domain must equal its role cgroup's membership, so no role-domain process exists outside its role
@@ -81,15 +80,10 @@ entries tell an honest maintenance boot apart, within these limits:
 - `LoaderEntrySelected` is a volatile EFI variable with runtime access, so a privileged domain could rewrite it; the
   command line in `/proc/cmdline` is fixed for the boot, and the two command lines must differ;
 - `kernelCmdline` is the `/proc/cmdline` text, which may include bootconfig keys and init arguments;
-- the enrolled entry names no unit, so systemd starts the installed default target. Which units start is otherwise
-  installed and firmware state, which W03 must fix and T04 check:
-  - the root tree's `default.target` link, unit aliases, generators and its init binary;
-  - the initramfs contents and its own command-line handling;
-  - without Secure Boot, every word of the `SystemdOptions` EFI variable (`systemd.unit=`, `systemd.wants=`,
-    `systemd.mask=`, credentials and root mount options alike);
-  - system credentials that define units or drop-ins (`systemd.extra-unit.*`, `systemd.unit-dropin.*`) from SMBIOS
-    type 11 strings, qemu fw_cfg and `/.extra/credentials` placed by systemd-boot or its stub, which systemd v256 imports
-    regardless of Secure Boot;
+- the enrolled entry names no unit, so systemd starts the installed default target. Outside the command line, the unit
+  systemd starts still depends on installed and firmware state, which W03 must fix and T04 check: the `default.target`
+  link and unit aliases, the initrd's own command line handling and argument forwarding, and, without Secure Boot, a
+  `systemd.unit=` in the `SystemdOptions` EFI variable;
 - nothing is measured. Measuring the entry and command line (TPM event log) is a T04 obligation.
 
 The observed `hardening.lockdown` value, pinned to `integrity`, remains the evidence of the lockdown state itself.
@@ -158,9 +152,8 @@ to M13 cover a v1-only host).
 1. The process image is observed through `/proc/<pid>/exe`. An interpreted role's image is its interpreter.
 2. Boot-entry observation is loader-reported, not measured (T04 measures). The maintenance entry selects
    `planeon-maintenance.target` with `systemd.unit=`; W01 leaves the mechanism open, and W02e K1 names the systemd target.
-   The command line has a closed grammar of kernel parameters that neither name units nor carry unit-bearing values,
-   and the maintenance entry is bound to the enrolled one. The guarantee is limited to the command line; which units
-   start is installed and firmware state (rounds 2-5).
+   The command line has a closed grammar of named kernel parameters instead of a list of refused systemd selectors,
+   because systemd takes units from more inputs than any such list covered (rounds 2-4).
 3. The effective census covers role cgroups only. Every other planeon cgroup is observed to hold no process.
 4. Test-only implementation profiles qualify only in an explicit fixture call.
 
@@ -210,12 +203,3 @@ policy module and the distribution (W03), and native, installation and tenant ac
 |---|---|---|
 | R4-1 systemd selectors beyond the word parse | MINOR | Closed grammar: every word of either entry is a named kernel parameter, and the maintenance entry adds `systemd.unit=planeon-maintenance.target` exactly once. `--` and later words, `systemd.*`, `rd.*`, `SYSTEMD_*`, runlevel words and every other word are refused. The K1 row, statement, decision 2 and the model comment are restated, and the installed-state residuals are W03 obligations. V61-V67; A08 is now an accepted case inside the grammar |
 | R4-2 rlmap coverage, V17 wording, maintenance quote | NOTE | The rlmap table is gone: runlevel words are outside the grammar (V59, V60). The V17 wording now names the unraised count. V68 pins the quote refusal on the maintenance entry |
-
-## Round-5 findings and dispositions
-
-| Finding | Severity | Disposition |
-|---|---|---|
-| R5-1 rootflags= unit dependencies, unbound tree selection | MINOR | `rootflags=` and `rootfstype=` are outside the grammar (W03 sets root mount options in the file system). The maintenance entry must equal the enrolled entry plus the maintenance unit word, so both select the same root and initramfs. The K1 row, decision 2 and the model comment state the enforced property. V69-V72 |
-| R5-2 console= getty, environment claim, grammar location, V67 message | NOTE | `console=` is outside the grammar (V76), and admitting it is a reviewed W03 change ordered under W01 §5.2 S2. The environment claim is stated per kernel configuration. The grammar is widened through a reviewed contract revision (the model's `KERNEL_PARAMETERS`). V67 has its own message |
-| R5-3 incomplete installed-state list | NOTE | The K1 statement lists every `SystemdOptions` word, unit-defining system credentials (SMBIOS, fw_cfg, `/.extra`), the root's init binary, generators and the initramfs as W03/T04 state |
-| R5-4 unpinned value constraints, Debian initrd paths | NOTE | V73-V75 pin `selinux=0`, `enforcing=0` and a prefix-extended word. A08 and A09 accept `rw`, `quiet`, `loglevel=`, `root=PARTUUID=` and a `+` in the initrd path |

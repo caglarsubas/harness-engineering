@@ -1,11 +1,8 @@
-# I06 backend profile v2 — W02g-F, round 3
+# I06 backend profile v2 — W02g-F, round 2
 
-Status: **CONTRACT_CANDIDATE_ROUND3_AWAITING_INDEPENDENT_REVIEW**. Round 1 (`review-round1.json`, reviewed bytes in
+Status: **CONTRACT_CANDIDATE_ROUND2_AWAITING_INDEPENDENT_REVIEW**. Round 1 (`review-round1.json`, reviewed bytes in
 `round1/`) returned CHANGES_REQUIRED with 1 MINOR and 7 NOTE findings and closed N1-N3; "Round-1 findings and
-dispositions" answers each. Round 2 (`review-round2.json`, reviewed bytes in `round2/`) returned
-PASS_FOR_SOURCE_PUBLICATION with 5 NOTE findings. Round 3 is opened by the author after that pass: the round-2 model
-could not be imported as `scripts.i06_backend_profile_v2`, the way the repository's tests import modules, because it
-imported its two predecessor models by bare name only. "Round-2 findings and dispositions" lists the round-3 changes. DATA_CHECK_ONLY: no cluster, distribution, host or
+dispositions" answers each. DATA_CHECK_ONLY: no cluster, distribution, host or
 kernel is observed, nothing is installed and no distribution is selected. All E01-E12 stay OPEN_UNPROVEN.
 
 This is the successor of the adopted I06 backend profile (`architecture/i06-backend-profile/`, W02g, MET-ENFORCE-006,
@@ -80,10 +77,9 @@ distinct content (one entry type per confined domain), therefore stays an I06 ru
 G19 and G20 pin it with backends that W02a v3 accepts (round-1 R1-1).
 
 **No production evidence yet.** W02a v3's schema admits exactly one backend profile: the test-only `unit-distribution`
-fixture with its eight components. Every production call (`test_fixture=False`) is therefore refused: at step 2 when
-the backend is not the fixture (W02a's schema), and for the fixture backend at step 4 when the evidence claims
-`testOnly` false or at step 5 when it claims `testOnly` true (round-2 R2-1). Under W02a v3, v1's production rules in step
-6 are unreachable. v2 is also bound to W02a v3 itself: `W02A_VERSION` is fixed, and W02a's `check_record` pins its
+fixture with its eight components. Every production call (`test_fixture=False`) is therefore refused, at step 2 (a
+non-fixture backend fails W02a's schema) or at step 5 (the fixture backend); under W02a v3, v1's production rules in
+step 6 are unreachable. v2 is also bound to W02a v3 itself: `W02A_VERSION` is fixed, and W02a's `check_record` pins its
 schema digest, so a widened schema is refused as an unreviewed v3 schema. Production evidence therefore needs both a
 reviewed W02a revision that adds a production backend profile and an I06 successor bound to that revision. The same
 holds for any W02a successor, including W02a-F2 (round-1 R1-4). Until then, v2 has no non-fixture accepted variant, and
@@ -165,22 +161,11 @@ No adopted v1 evidence or snapshot exists outside these vectors, so there is not
 | R1-1 SC08 distinctness unpinned | MINOR | G19 (one multi-call executable for every component) and G20 (two files with one digest), both backends W02a v3 accepts, pinned to v1's SC08 distinctness rule; E38/E56 reason restated; SC08 states that distinctness is an I06 rule |
 | R1-2 G18 reason | NOTE | G18's intent restated: a name borrowed from another component's closure entry, refused by the per-component closure enum; W02a's share rule is subsumed (W02a R70) |
 | R1-3 KUBELET node identity, APISERVER none | NOTE | README N1 bullet and SC08 state both exceptions |
-| R1-4 production path and version coupling | NOTE | "No production evidence yet" names the refusing steps (2, 4 and 5 since round 3) and says that production needs a reviewed W02a revision plus an I06 successor bound to it; "Still open" carries the pairing to W03 |
+| R1-4 production path and version coupling | NOTE | "No production evidence yet" says step 2 or step 5, and that production needs a reviewed W02a revision plus an I06 successor bound to it; "Still open" carries the pairing to W03 |
 | R1-5 per-record binding, inherited obligations | NOTE | README N1 and the `check_evidence` docstring state the per-record scope, the composition with `check_qualification` (W03) and the inherited W02a caller obligations 1 and 4 |
 | R1-6 digest spelling | NOTE | The reference is now `qualificationDigest: "sha256:<hex>"`, W02a's own spelling; G06 refuses the bare hex form |
 | R1-7 non-resource-URL rules | NOTE | IC03 says "resource rule"; observer obligation (refuse, never drop) carried to W03 |
 | R1-8 P7 chain wording | NOTE | The chain is restated with the W02a side of P7(a) and the network-policy agent identity |
-
-## Round-2 findings and dispositions
-
-| Finding | Severity | Disposition |
-|---|---|---|
-| R2-1 refusing steps | NOTE | "No production evidence yet" names step 4 (evidence claiming `testOnly` false) next to steps 2 and 5; the R1-4 row matches |
-| R2-2 stale brief wording | NOTE | The brief's question 1 asks about W02a's `sha256:` prefix |
-| R2-3 module docstring | NOTE | The module docstring says "no resource rule" and names the observer obligation, as IC03 does |
-| R2-4 SHA-256-only distinctness | NOTE | Carried to W02g-F2 or W03: also require distinct `verityDigest` values for backend executables, or state that SHA-256 distinctness relies on the observed backend captures in the W03 composition |
-| R2-5 carries in the status record | NOTE | The status record written at adoption carries R1-4, R1-5 and R1-7 next to the P7 chain and N4-N6 |
-| Author: package import | — | The model imports its predecessors as `i06_backend_profile` and `native_qualification_v3`, and falls back to `scripts.i06_backend_profile` and `scripts.native_qualification_v3`, as the repository's validators do. No rule changed |
 
 ## Not claimed
 

@@ -11,8 +11,7 @@ carried to W02g-F:
   W02a v3's `check_qualification`. W02a v3 admits only the test-only unit-distribution backend, and this model is
   bound to W02a v3's pinned schema, so no production call is accepted. Production evidence needs both a reviewed W02a
   revision with a production backend profile and an I06 successor bound to it (W03).
-- N2: the apiserver's loopback user system:apiserver holds no resource rule at all, not only no policy-relevant one;
-  an observer that finds a non-resource-URL rule on it refuses to produce the snapshot (W03).
+- N2: the apiserver's loopback user system:apiserver holds no RBAC rule at all, not only no policy-relevant one.
 - N3: shared and nested backend cgroups are refused by W02a v3's `check_record`, which N1 applies.
 
 - `check_evidence` checks one distribution evidence record (SC00-SC15) against its W02a v3 record.
@@ -26,12 +25,8 @@ from __future__ import annotations
 
 from typing import Any
 
-try:
-    import i06_backend_profile as v1
-    import native_qualification_v3 as w02a
-except ImportError:
-    from scripts import i06_backend_profile as v1
-    from scripts import native_qualification_v3 as w02a
+import i06_backend_profile as v1
+import native_qualification_v3 as w02a
 
 EVIDENCE_VERSION = "planeon.internal.i06-distribution-evidence/v2"
 SNAPSHOT_VERSION = v1.SNAPSHOT_VERSION

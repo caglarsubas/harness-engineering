@@ -1,13 +1,10 @@
-# Independent review brief — I06 backend profile v2 (W02g-F), round 3
+# Independent review brief — I06 backend profile v2 (W02g-F), round 2
 
-Status: **CONTRACT_CANDIDATE_ROUND3_AWAITING_INDEPENDENT_REVIEW**. The authoring agent wrote this brief. It is not a
+Status: **CONTRACT_CANDIDATE_ROUND2_AWAITING_INDEPENDENT_REVIEW**. The authoring agent wrote this brief. It is not a
 verdict.
 
-Round 1 (`review-round1.json`) returned CHANGES_REQUIRED: N1-N3 CLOSED, R1-1 (MINOR) and R1-2 to R1-8 (NOTE). Round 2
-(`review-round2.json`) returned PASS_FOR_SOURCE_PUBLICATION with R2-1 to R2-5 (NOTE). The bytes each round reviewed are
-kept in `round1/` and `round2/`. The author opened round 3 after the pass because the round-2 model could not be
-imported as a package module (`from scripts import i06_backend_profile_v2`). README "Round-2 findings and dispositions"
-lists every round-3 change; `git diff b2acad8` against the round-3 commit is the change surface.
+Round 1 (`review-round1.json`) returned CHANGES_REQUIRED: N1-N3 CLOSED, R1-1 (MINOR) and R1-2 to R1-8 (NOTE). The bytes
+it reviewed are kept in `round1/`. README "Round-1 findings and dispositions" states how round 2 answers each finding.
 
 ## Subject
 
@@ -25,14 +22,13 @@ The working tree may also contain later mechanical history-chain edits. They are
 
 ## Questions to answer
 
-0. **Earlier findings and the round-3 change.** For R2-1 to R2-5, is the README disposition true in the round-3 bytes?
-   Does the model now import both as a top-level module (with `scripts` on `sys.path`) and as `scripts.i06_backend_profile_v2`
-   (repository root on `sys.path`, `scripts` not on it), with identical results, and did no rule change? Give CLOSED,
-   PARTIAL or OPEN under `openItemStatus`, and confirm that N1-N3 and R1-1 to R1-8 stay CLOSED.
+0. **Earlier findings.** For R1-1 to R1-8, is the README disposition true in the round-2 bytes? Do G19 and G20 build
+   backends that W02a v3 accepts and pin v1's SC08 distinctness rule? Is the new `qualificationDigest` spelling exactly
+   W02a's? Give CLOSED, PARTIAL or OPEN under `openItemStatus`, and confirm that N1-N3 stay CLOSED.
 1. **N1.** Does `check_evidence` now accept only evidence that names, by digest, a record that W02a v3's `check_record`
    accepts, with the evidence's identity and test-only state equal to that record's backend? Is applying `check_record`
    inside the check (rather than as a caller obligation) sound, and does it examine `cgroupPath`, `apiIdentities` and
-   `filePaths` as the round-2 type sweep required? Is the digest well defined (canonical form, W02a's `sha256:` prefix)? Is the
+   `filePaths` as the round-2 type sweep required? Is the digest well defined (canonical form, no prefix)? Is the
    statement that no production evidence can be accepted until a reviewed W02a revision adds a production backend
    profile correct, and is that an acceptable answer to round 2's request for non-fixture accepted variants? Give
    CLOSED, PARTIAL or OPEN under `openItemStatus`.
@@ -63,11 +59,11 @@ modify any file.
 ## Result
 
 Return one JSON object:
-- `schemaVersion` `"planeon.internal.i06-backend-profile-v2-review/v1"`, `round` 3, `reviewDate`;
+- `schemaVersion` `"planeon.internal.i06-backend-profile-v2-review/v1"`, `round` 2, `reviewDate`;
 - `verdict`: PASS_FOR_SOURCE_PUBLICATION, CHANGES_REQUIRED or BLOCKED;
 - `subjectSha256`: subject file name to digest;
 - `findings`, each with `id`, `severity` (BLOCKING / MAJOR / MINOR / NOTE), `location`, `finding` and `requiredChange`;
-- `openItemStatus` (N1-N6, R1-1 to R1-8 and R2-1 to R2-5), `questionAnswers` (Q0-Q7), `modelExecution`, `sourcesRead`;
+- `openItemStatus` (N1-N6 and R1-1 to R1-8), `questionAnswers` (Q0-Q7), `modelExecution`, `sourcesRead`;
 - `actions`, booleans: `filesEdited`, `githubMutated`, `nativeActions`, `referenceModelExecuted`,
   `repositoryValidatorsRun`, `runnerActivated`, `testsRun`, `warmSourcesAccessed`;
 - `reviewLimit`.

@@ -137,7 +137,7 @@ EXPECTED_BASE_SOURCES = {
     "harness-onion-raster",
 }
 
-EXPECTED_PACKET_COUNT = 212
+EXPECTED_PACKET_COUNT = 213
 EXPECTED_REUSE_PATH_COUNT = 5107
 LIVE_CAMPAIGN_PACKET_IDS = {
     "CONF-A1-001",
@@ -4884,6 +4884,10 @@ def validate_packets(
                             for path in packets["MET-ENFORCE-013"]["allowedPaths"]
                             if path in authority_owner or path.startswith(("architecture/", "scripts/"))})
     authority_owner["task-packets/MET-ENFORCE-013.yaml"] = "MET-ENFORCE-013"
+    authority_owner.update({path: "MET-ENFORCE-014"
+                            for path in packets["MET-ENFORCE-014"]["allowedPaths"]
+                            if path in authority_owner or path.startswith(("architecture/", "scripts/"))})
+    authority_owner["task-packets/MET-ENFORCE-014.yaml"] = "MET-ENFORCE-014"
     observation_authority_path = "architecture/observations/data-harness-v1.json"
     if (ROOT / observation_authority_path).is_file():
         authority_owner[observation_authority_path] = "MET-002"

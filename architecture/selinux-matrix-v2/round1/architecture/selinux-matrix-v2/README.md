@@ -1,21 +1,12 @@
 # SELinux domain, type, boolean and permission matrix v4 — W02e-F (DATA_CHECK_ONLY)
 
-Status: **CONTRACT_CANDIDATE_ROUND2_AWAITING_INDEPENDENT_REVIEW**. Round 1 (`review-round1.json`, reviewed bytes of the
-files changed since in `round1/`) returned CHANGES_REQUIRED with 2 MINOR and 3 NOTE findings, all on the text; each is
-answered under "Round-1 findings and dispositions". DATA_CHECK_ONLY: no policy module is written or
+Status: **CONTRACT_CANDIDATE_ROUND1_AWAITING_INDEPENDENT_REVIEW**. DATA_CHECK_ONLY: no policy module is written or
 compiled, nothing is loaded or installed, and all E01-E12 stay OPEN_UNPROVEN.
 
 v4 is the W02e-F successor of the adopted W02e matrix `../selinux-matrix/` (`planeon.internal.selinux-matrix/v3`,
 MET-ENFORCE-009, review round 3 PASS_FOR_SOURCE_PUBLICATION with K1-K6 carried). A later layer pins the v3 bytes, so v3
 stays byte-identical and v4 is published beside it. v4 keeps the v3 matrix and changes only what round 3 carried to
-W02e-F: K2, K3, K4 and K6. The other two round-3 findings stay carried as the v3 `status.json` records them:
-- K1 to W02a-F, T04 and W01's record: A62-A65 hold under the pinned policy only. The maintenance domain's `load_policy`
-  preserves boolean values by name, so as the trusted installer it can reach any boolean state, and the early
-  maintenance-boot window relies on the systemd target. It needs a record-level boot-entry discriminator (a measured
-  boot entry or command line) or an explicit statement in W01's record.
-- K5 to W03 and T04, three requirements: `DelegateSubgroup=broker` (systemd 254 or later) for the pre-created delegated
-  leaves; the maintenance unit writes the planeon booleans while running in `init_t` itself; `planeon_server_port_t` is
-  assigned by portcon from the signed port at the maintenance install.
+W02e-F: K2, K3, K4 and K6. K1 stays carried to W02a-F and T04 and K5 to W03 and T04 (the v3 README states both).
 
 Accepted base: main `4196dae` (MET-ENFORCE-015, 214 packets). The packet that publishes v4 is claimed only after the
 primary lane's PERF packet merges (owner decision, 2026-10-09).
@@ -24,8 +15,8 @@ primary lane's PERF packet merges (owner decision, 2026-10-09).
 
 | Finding | v4 rule | Vectors |
 |---|---|---|
-| K2 MINOR, A59 checked a union | One assertion per planeon target (the five resident roles, the writer, containment and the maintenance domain; the admin login is not a planeon target and its `/proc` is host policy, round-1 F5), `A59.<target>`, each allowing only that target's `procAccess` peers. A59 stays as the union bound (its statement now says so), so every v3 identifier is kept. | M51-M53 (gate to server, gate to containment, broker to maintenance: each breaks exactly its per-target assertion); M34, M45 now also name the per-target assertion |
-| K3 NOTE, no assertion pinned load_policy before the seal | A66: in ENROLLED_CONTAINMENT no domain holds `security load_policy`; with A21, no `load_policy` grant is reachable in the two modelled enrolled states, and A23 pins `setenforce` in every state. That the reviewed policy is the only one loaded throughout an enrolled boot does not follow from these assertions alone: systemd may set `planeon_maintenance_mode` before the seal, which reaches a boolean combination the model does not evaluate. It rests on decision 10 and on the policy digest and booleans W01's record pins, the same dependency as K1 (round-1 F3). | M54, M55 |
+| K2 MINOR, A59 checked a union | One assertion per planeon target, `A59.<target>`, each allowing only that target's `procAccess` peers. A59 stays as the union bound (its statement now says so), so every v3 identifier is kept. | M51-M53 (gate to server, gate to containment, broker to maintenance: each breaks exactly its per-target assertion); M34, M45 now also name the per-target assertion |
+| K3 NOTE, no assertion pinned load_policy before the seal | A66: in ENROLLED_CONTAINMENT no domain holds `security load_policy`. With A21 (sealed) the reviewed policy is the only one loaded throughout the enrolled boot; `setenforce` is already pinned in every state by A23. | M54, M55 |
 | K4 NOTE, cgroup2 wording and S11 | The three cgroup2 statements are corrected under "Cgroup creation and labels". S11 now checks `dir create` against `planeon_cgroup_slice_t`, the type computed from the parent, which is what the kernel checks. | S11 |
 | K6 NOTE, stale count in the brief | The v4 review brief states 109 assertions. | — |
 
@@ -139,15 +130,9 @@ unconfined or privileged type, such as container-selinux's `kubelet_t`, `contain
     capability. `cgroup_seclabel` only makes cgroup2 relabelable through setxattr (`selinux_is_genfs_special_handling`,
     `SBLABEL_MNT`); with it enabled an xattr would override the genfs label, which is why the relabel denials (A44, and
     no `relabelfrom` grant anywhere) carry weight (review K4).
-  - The kernel checks `dir create` against the type `selinux_determine_inode_label` returns, not against the genfs type
-    the new node receives. With `cgroup_seclabel` the cgroup2 mount is `SBLABEL_MNT`, so a creator's fscreate context,
-    when set, is that type; otherwise it is the type computed from the parent (the slice type, or the delegate type under
-    the broker's delegated cgroup). S11 checks containment's `dir create` on `planeon_cgroup_slice_t` (review K4).
-    `process setfscreate` is outside the matrix, so W03 and T04 require that no creator of a planeon cgroup (systemd,
-    containment, the broker) sets an fscreate context when it creates one (round-1 F4).
-  - Why the matrix lists `cgroup_seclabel`: the path labels do not need it. It is listed because the base policies W03
-    can select declare it, and listing it makes the relabel and fscreate consequences above explicit rather than
-    depending on its absence (round-1 F4).
+  - The kernel checks `dir create` against the type computed from the parent (`selinux_determine_inode_label`: the slice
+    type, or the delegate type under the broker's delegated cgroup), not against the genfs type the new node receives.
+    S11 checks containment's `dir create` on `planeon_cgroup_slice_t` (review K4).
   - genfscon matches by prefix and the longest match wins. So no other cgroup path may begin with a planeon path; systemd's
     fixed, sealed unit names keep it that way, and W03 and T04 check it.
   - Nothing relabels a cgroup (A44). `check_matrix` refuses a named type transition under a genfs-labelled parent (M49).
@@ -220,7 +205,7 @@ host domains' capabilities are outside the matrix.
 | A45-A48 | Capabilities of declared domains: no `dac_read_search` except systemd, none in a user namespace; `sys_admin` only systemd, kubelet and runtime; `net_bind_service` only systemd, server, gate, admin login and runtime | F2; W01 §5.3; W02a N1; R2 |
 | A49-A55 | Pins, seal marker, gate journal and datastore data | W01 §5.1, §5.2 S5; W02a; W02b; counterexample 25; R10 |
 | A56-A59 | Units only by systemd; signals to the roles, the writer and containment only from systemd, to the worker also from the broker; no domain outside the union of the `/proc` peers reads any planeon domain's `/proc` | W01 §5.3, §4.3, §5.4; R4, R15, N8 |
-| A59.* (v4) | Eight per-target assertions: each planeon resident, lifecycle and maintenance domain's `/proc` only for its own `procAccess` peers (not the admin login's) | W01 §4.3, §5.3; K2 |
+| A59.* (v4) | Eight per-target assertions: each planeon domain's `/proc` only for its own `procAccess` peers | W01 §4.3, §5.3; K2 |
 | A60.* | 28 per-source closures: each closed source gets nothing beyond its listed ports, sockets and (no) `execute_no_trans`, including an undeclared port, socket and program type | W01 §5.3; R5, N5 |
 | A61-A65 | The server alone binds its listener; the three planeon boolean files only by their writers in the initial state, by nobody afterwards | W01 §5.3, §5.2, §5.5; N2, N4 |
 | A66 (v4) | Before the seal no domain loads policy | W01 §5.2 S1, S4; K3 |
@@ -412,16 +397,6 @@ E1 amends W01 §5.3 and is carried to W01's record, W03 and T04.
 | K6 NOTE, stale count | The v4 brief states 109 |
 
 The round-1 and round-2 dispositions above are carried from v3 unchanged.
-
-## Round-1 findings and dispositions (W02e-F review)
-
-| Finding | Disposition in round 2 |
-|---|---|
-| F1 MINOR, the evaluator comment still said cgroup2 has no xattr labelling | Comment above `GENFS_CATEGORIES` corrected |
-| F2 MINOR, the K1 and K5 carries were attributed to the v3 README | Stated from the v3 `status.json`, including K1's carry to W01's record and K5's three requirements |
-| F3 NOTE, the K3 row claimed more than the assertions show | Narrowed; the dependency on decision 10 and W01's record stated |
-| F4 NOTE, the fscreate branch and the reason for `cgroup_seclabel` | Both stated; a W03 and T04 requirement on fscreate added |
-| F5 NOTE, the admin login is not a per-target `/proc` target | The per-target scope is stated: planeon resident, lifecycle and maintenance domains |
 
 ## Not claimed
 

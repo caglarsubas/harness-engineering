@@ -33,10 +33,9 @@ DOMAIN_KINDS = ("RESIDENT_ROLE", "LIFECYCLE", "MAINTENANCE", "BACKEND", "CONTAIN
 OPEN_ENTRY_KINDS = ("ADMIN", "SYSTEM")
 TYPE_CATEGORIES = ("ENTRYPOINT", "INTERPRETER", "SEALED_CONFIG", "UNIT_FILE", "CREDENTIAL", "SOCKET_FILE",
                    "CGROUP", "BPF_PIN", "BOOLEAN_FILE", "SEAL_MARKER", "JOURNAL", "RUNTIME_DIR", "DATA", "CONTAINER_FILE")
-# Types labelled by genfscon path rules: cgroup2, bpffs and selinuxfs. kernfs (cgroup2) supports security xattrs, but no
-# planeon cgroup node carries one (the root has none and nothing relabels), so their labels come from the path rules,
-# applied when a node is instantiated, and a named type transition under such a parent never fires (v6.12
-# selinux_kernfs_init_security returns without labelling when the parent has no xattr; review K4).
+# Types on filesystems without xattr labelling: cgroup2 (kernfs), bpffs and selinuxfs. Their labels come only from
+# genfscon path rules, applied when a node is instantiated; a named type transition under such a parent never fires
+# (v6.12 selinux_kernfs_init_security returns without labelling when the parent has no xattr).
 GENFS_CATEGORIES = ("CGROUP", "BPF_PIN", "BOOLEAN_FILE")
 GENFS_FILESYSTEMS = {"CGROUP": "cgroup2", "BPF_PIN": "bpf", "BOOLEAN_FILE": "selinuxfs"}
 # Parents outside the matrix that a named type transition may use: the host's /run (refpolicy var_run_t, tmpfs).

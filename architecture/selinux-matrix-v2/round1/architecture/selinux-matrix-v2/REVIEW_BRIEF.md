@@ -1,11 +1,7 @@
-# Independent review brief — W02e-F SELinux matrix v4, round 2
+# Independent review brief — W02e-F SELinux matrix v4, round 1
 
-Status: **CONTRACT_CANDIDATE_ROUND2_AWAITING_INDEPENDENT_REVIEW**. The authoring agent wrote this brief. It is not a
+Status: **CONTRACT_CANDIDATE_ROUND1_AWAITING_INDEPENDENT_REVIEW**. The authoring agent wrote this brief. It is not a
 verdict.
-
-Round 1 (`review-round1.json`; the round-1 bytes of the files changed since are in `round1/`) returned CHANGES_REQUIRED
-with F1, F2 (MINOR) and F3-F5 (NOTE), all on the text: no matrix datum or vector changed for round 2. README.md
-("Round-1 findings and dispositions (W02e-F review)") states each answer.
 
 v4 is the successor of the adopted matrix `../selinux-matrix/` (`planeon.internal.selinux-matrix/v3`; review round 3
 `review-round3.json` PASS_FOR_SOURCE_PUBLICATION with K1-K6 carried). The v3 bytes stay unchanged. README.md ("What v4
@@ -23,7 +19,7 @@ Nothing else in the working tree is part of the subject.
 
 ## Questions to answer
 
-0. **Carried findings.** For K2, K3, K4, K6 and the round-1 findings F1-F5, is the README disposition true in the v4 bytes? Give CLOSED, PARTIAL or
+0. **Carried findings.** For K2, K3, K4 and K6, is the README disposition true in the v4 bytes? Give CLOSED, PARTIAL or
    OPEN under `openItemStatus`. Re-run the round-3 probes for K2 (the gate-to-server, gate-to-containment and
    broker-to-maintenance `procAccess` mutations) and K3 (init_t `load_policy` before the seal).
 1. **Successor fidelity.** Is v4 the v3 matrix plus exactly the disclosed changes (the A59 statement, A59.<target>, A66,
@@ -48,10 +44,10 @@ file; scratch files go outside the repository. Stop at once when asked to pause,
 
 ## Result
 
-Return one JSON object: `schemaVersion` `"planeon.internal.selinux-matrix-v2-review/v1"`, `round` 2, `reviewDate`,
+Return one JSON object: `schemaVersion` `"planeon.internal.selinux-matrix-v2-review/v1"`, `round` 1, `reviewDate`,
 `verdict` (PASS_FOR_SOURCE_PUBLICATION, CHANGES_REQUIRED or BLOCKED), `subjectSha256` (subject repository path to
 digest), `findings` (each with `id`, `severity` BLOCKING / MAJOR / MINOR / NOTE, `location`, `finding`,
-`requiredChange`), `openItemStatus` (K2, K3, K4, K6, F1-F5), `questionAnswers` (Q0-Q6), `modelExecution`, `sourcesRead`,
+`requiredChange`), `openItemStatus` (K2, K3, K4, K6), `questionAnswers` (Q0-Q6), `modelExecution`, `sourcesRead`,
 `actions` (booleans `filesEdited`, `githubMutated`, `nativeActions`, `referenceModelExecuted`, `repositoryValidatorsRun`,
 `runnerActivated`, `testsRun`, `warmSourcesAccessed`) and `reviewLimit`. A PASS is not a policy module, a loaded policy or
 native qualification.

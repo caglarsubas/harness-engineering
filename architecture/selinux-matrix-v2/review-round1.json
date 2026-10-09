@@ -1,0 +1,95 @@
+{
+  "schemaVersion": "planeon.internal.selinux-matrix-v2-review/v1",
+  "round": 1,
+  "reviewDate": "2026-10-09",
+  "verdict": "CHANGES_REQUIRED",
+  "subjectSha256": {
+    "architecture/selinux-matrix-v2/README.md": "7ad0e14f7b51a0f1f53dac4eddfa4d2b75cbbf6d2fb6b88ac66f79939294e577",
+    "architecture/selinux-matrix-v2/REVIEW_BRIEF.md": "cd2bac2e778617a7d353a5b80be3849b590c9808a482216c0be250c475f26220",
+    "architecture/selinux-matrix-v2/matrix.json": "1d2f27e53d7b1a77d1c80b5e167fd477bc5c25dd78250399edc33de8397eebff",
+    "architecture/selinux-matrix-v2/vectors.json": "e6a0afb937443d6f6cb941ba06e9bd46d9bda5b8f1bcdf97d6dba0b634f25961",
+    "scripts/selinux_matrix_v2.py": "6291ae4b0684f1780e7ab07c428f9a250c9595e1a1793a5ed7e8a94197f0f9d2"
+  },
+  "findings": [
+    {
+      "id": "F1",
+      "severity": "MINOR",
+      "location": "scripts/selinux_matrix_v2.py lines 36-38 (GENFS_CATEGORIES comment); README 'What v4 changes' K4 row and 'Round-3 findings and dispositions in v4' K4 row ('Corrected')",
+      "finding": "Round-3 K4 named the GENFS_CATEGORIES comment as a location of statement (1). The v4 evaluator copies it unchanged: 'Types on filesystems without xattr labelling: cgroup2 (kernfs), bpffs and selinuxfs. Their labels come only from genfscon path rules'. For cgroup2 this is the statement K4 corrected. v6.12 selinux_set_mnt_opts sets SE_SBGENFS | SE_SBGENFS_XATTR for cgroup2, and inode_doinit_with_dentry lets an xattr override the genfs SID. With cgroup_seclabel, which the matrix requires, SBLABEL_MNT is set and setxattr can create such an xattr. The README text is corrected, but the subject still carries the old statement, so the disposition 'Corrected' is only partly true. bpffs and selinuxfs get only SE_SBGENFS, so the comment is right for them.",
+      "requiredChange": "Correct the comment. Suggested wording: cgroup2 is kernfs with xattr support, and its labels come from genfscon because no planeon node carries an xattr (A44); bpffs and selinuxfs are genfs-only. Alternatively, limit the K4 disposition to the README text."
+    },
+    {
+      "id": "F2",
+      "severity": "MINOR",
+      "location": "README introduction ('K1 stays carried to W02a-F and T04 and K5 to W03 and T04 (the v3 README states both)'); 'Round-3 findings and dispositions in v4' K1 and K5 rows",
+      "finding": "The v3 README (sha256 6cb8603b...) predates round 3. It contains no K1 or K5 text (searched for K1-K6, 'round-3' and the carry targets). The carries are recorded in v3 status.json carriedFindings, and that record carries K1 to 'W02a-F, T04 and W01's record', not only to W02a-F and T04. The v4 README states K1 in one sentence under 'Booleans and states'. K5's three W03 and T04 requirements (DelegateSubgroup=broker, the maintenance unit writing booleans in init_t, portcon of planeon_server_port_t) appear nowhere in v4 or v3 README text. The pointer for carried obligations is therefore wrong, and the K1 target list is incomplete.",
+      "requiredChange": "Point to architecture/selinux-matrix/status.json carriedFindings, or restate K1 with all three targets (W02a-F, T04, W01's record) and K5's three requirements in the v4 README."
+    },
+    {
+      "id": "F3",
+      "severity": "NOTE",
+      "location": "README 'What v4 changes' K3 row ('With A21 (sealed) the reviewed policy is the only one loaded throughout the enrolled boot'); A66; A62",
+      "finding": "A66 is not vacuous: M54 and M55 break exactly A66, and grants to admin or init before the seal break A66 in v4 but no assertion in v3. The assertions are evaluated only over the three modelled boolean states, though. ENROLLED_CONTAINMENT (1,0,0) is also the maintenance boot's initial state. In it, init_t may write planeon_bool_maintenance_t and commit (A62 allows this), which can reach the unmodelled state (1,1,0). In that state allowed() gives admin to planeon_maint_t transition True and planeon_maint_t load_policy True (probed with a scratch state). An in-memory load_policy grant guarded by {containment 1, maintenance 1} breaks no assertion in v3 or v4. The initial policy load also precedes any SELinux check. The property therefore rests on three things: decision 10 (the maintenance unit exists only in the maintenance target and commits once), W01 S1's pinned policy digest, and §5.5's record-pinned booleans. This is the same dependency as K1, not on A66 and A21 alone.",
+      "requiredChange": "Scope the sentence. A66 and A21 keep load_policy closed in the modelled enrolled states. That the enrolled boot never leaves those states, and that the initially loaded policy is the reviewed one, rest on decision 10 and the record (W01 S1, §5.5; K1)."
+    },
+    {
+      "id": "F4",
+      "severity": "NOTE",
+      "location": "README 'Cgroup creation and labels' second bullet ('The kernel checks dir create against the type computed from the parent'); decision 8 (cgroup_seclabel required); vector S11",
+      "finding": "v6.12 selinux_determine_inode_label first returns tsec->create_sid when the superblock has SBLABEL_MNT and the task has an fscreate context. Only otherwise does it use security_transition_sid on the parent SID. On cgroup2, SBLABEL_MNT is set exactly when cgroup_seclabel is enabled (selinux_is_genfs_special_handling), and the matrix requires it. process setfscreate is outside the matrix (allowed() returns None). So the statement holds only for a creator without an fscreate context. S11's object (planeon_cgroup_slice_t, the parent of the role cgroups under /planeon.slice) is right on that assumption. The parent add_name/search check and the genfs label of the new node are unaffected, because selinux_kernfs_init_security returns early when the parent has no xattr. After the K4 correction the README also gives no reason why cgroup_seclabel is required (decision 8). The only effects it now states are enabling relabel and, by the code above, the create_sid branch.",
+      "requiredChange": "Qualify the dir create statement ('when the creating domain has set no fscreate context'), or add closing process setfscreate for the creators of planeon cgroups as a W03/T04 requirement. State why decision 8 requires cgroup_seclabel."
+    },
+    {
+      "id": "F5",
+      "severity": "NOTE",
+      "location": "A59.<target> set (8 targets); README A59.* row ('each planeon domain's /proc only for its own procAccess peers'); A59 statement ('any planeon domain')",
+      "finding": "An exhaustive in-memory probe appended every out-of-procAccess pair between declared domains (295 mutations). The 124 pairs that target the eight planeon role, lifecycle and maintenance domains each break exactly one per-target assertion. 171 pass all 109 assertions: 18 for planeon_admin_t as target, 18 for init_t and 135 for the nine qualk8s targets. planeon_admin_t is a declared planeon_ domain (kind ADMIN), so 'each planeon domain' and 'any planeon domain' are wider than the eight targets checked. Decision 6 covers the admin only as a reader.",
+      "requiredChange": "Either add A59.planeon_admin_t with an empty allow list and a mutation check, or state that the per-target set is the eight planeon role, lifecycle and maintenance domains and that the admin login, init_t and backend domains as /proc targets are outside the assertions."
+    }
+  ],
+  "openItemStatus": {
+    "K2": {
+      "status": "CLOSED",
+      "basis": "Eight A59.<target> assertions. Each allow list equals that target's procAccess peers (checked programmatically). All carry class file read/open, all three states and sources ALL. The round-3 probes now fail only their per-target assertion: gate to server (A59.planeon_server_t), gate to containment (A59.planeon_contain_t), broker to maintenance (A59.planeon_maint_t). v3 fails none of them. M51-M53 encode these and M34/M45 name the per-target assertion. Every one of the 124 out-of-procAccess pairs to the eight targets is caught. The admin-target wording is F5."
+    },
+    "K3": {
+      "status": "CLOSED",
+      "basis": "A66 closes security load_policy for all sources in ENROLLED_CONTAINMENT. M54 (init_t) and M55 (containment) break exactly A66, as do an admin grant before the seal and an unconditional init grant, which also break A21 and A22. setenforce is pinned in all three states by A23 (init and maintenance setenforce probes break A23). This answers the round-3 required change. The scope of the README claim is F3."
+    },
+    "K4": {
+      "status": "PARTIAL",
+      "basis": "The README's three cgroup2 statements match v6.12 hooks.c: SE_SBGENFS | SE_SBGENFS_XATTR set unconditionally for cgroup2 in selinux_set_mnt_opts; selinux_is_genfs_special_handling/SBLABEL_MNT gated by cgroup_seclabel; may_create using selinux_determine_inode_label. S11 now targets planeon_cgroup_slice_t. But the evaluator's GENFS_CATEGORIES comment, which round 3 located, still carries statement (1) (F1), and the dir create statement omits the create_sid branch (F4)."
+    },
+    "K6": {
+      "status": "CLOSED",
+      "basis": "The v4 brief states 109 assertions (Q2, Q5), which equals the matrix. The v3 brief remains frozen with its old count, as intended."
+    }
+  },
+  "questionAnswers": {
+    "Q0": "K2 CLOSED, K3 CLOSED, K4 PARTIAL (F1, F4), K6 CLOSED. The round-3 probes were re-run on v3 and v4: the three /proc pair mutations pass all 100 v3 assertions and each fails exactly its A59.<target> in v4. init_t load_policy before the seal passes v3 and fails A66 in v4. The README's statement of where K1 and K5 are carried is wrong (F2).",
+    "Q1": "Yes. Removing A59.* and A66 from the v4 matrix, restoring A59's v3 statement and restoring the schemaVersion yields a structure equal to the v3 matrix.json. The only other change is A59's statement text. The evaluator differs from v3 only in the docstring and MATRIX_VERSION. All 1,716 v3 access-check ids are present in their original relative order, and every one is identical except S11 (target and intent, disclosed). All 50 v3 mutation ids are present, identical except M34 and M45 (disclosed). 157 new access checks C1623-C1779 and M51-M55 are added. They are inserted after C1622 and after M36, not appended at the array ends, which is harmless but slightly differs from 'appended'. The v3 bytes (README, brief, matrix, vectors, status, three review records, evaluator) match the source-index digests, and git diff 4196dae..b8a5640 touches only the six new files.",
+    "Q2": "Yes for the eight targets. Each A59.<target> allows exactly that target's procAccess peers (procAccess has no conditional entries). No out-of-procAccess pair to those eight targets passes. Pairs to planeon_admin_t (and init_t and the backends) as targets pass all 109 assertions (F5).",
+    "Q3": "Within the three modelled states, yes: A66 (containment state), A21 (sealed) and A22 (maintenance) cover load_policy, and A23 pins setenforce in all states. None of these is vacuous (M54, M55; setenforce probes). The 'throughout the enrolled boot' claim also depends on unmodelled boolean states reachable by init_t's setbool, and on the initial policy load. Both rest on decision 10 and W01's record-pinned digest and booleans, the K1 dependency (F3).",
+    "Q4": "The kernfs xattr, SE_SBGENFS, cgroup_seclabel/SBLABEL_MNT and xattr-override statements are true for v6.12 (hooks.c re-read this round). The dir create statement is true for a creator without an fscreate context; with cgroup_seclabel enabled the create_sid branch applies (F4). S11 on planeon_cgroup_slice_t is the object checked for containment creating a role cgroup under /planeon.slice. The evaluator comment is uncorrected (F1).",
+    "Q5": "Yes. check_matrix passes, failed_assertions returns [] over 109 assertions, and w02a_slots equals the vectors. All 1,873 access checks reproduce (336 True, 1,529 False, 8 None). All 55 mutation checks reproduce exactly (failedAssertions lists and matrixError strings compared by equality). The new checks' intents agree with their assertion, state, class, perm, target, allow membership and expected value. Counts in the README agree: 42 grant, 2 closure-removal and 11 refusal mutations.",
+    "Q6": "No claim of a policy module, compiled or loaded policy, selected distribution or E01-E12 proof. 'Not claimed' and 'Still open' keep all of them open. The one broad sentence is the K3 'only policy loaded' claim (F3), which states a property, not a loaded policy."
+  },
+  "modelExecution": "From the worktree root with UV_PROJECT_ENVIRONMENT set to the harness-onion .venv, run as 'uv run --offline --frozen --no-sync python', one process at a time, each under 60 s. p1_replay.py (3.2 s) imported scripts/selinux_matrix_v2.py and checked: check_matrix, failed_assertions (109, none failed), w02a_slots, all 1,873 access checks and all 55 mutation checks, with zero mismatches. p2_probe.py (23.2 s) imported both evaluators. It checked v4-minus-disclosed-changes equal to v3, v3 check_matrix with failed_assertions [] over 100, and per-target allow lists against procAccess. It ran 295 out-of-procAccess pair mutations, the round-3 K2 and K3 probes against v3 and v4, load_policy and setenforce grant probes (including one guarded by an unmodelled boolean combination), a scratch (1,1,0) state for the admin-to-maintenance transition and load_policy, and dir create on cgroup types per state. Scripts and the fetched hooks.c are under /private/tmp/claude-501/w02ef-review-r1/. All mutations were in memory. No repository file was written.",
+  "sourcesRead": [
+    "Subject: architecture/selinux-matrix-v2/{README.md, REVIEW_BRIEF.md, matrix.json, vectors.json, source-index.json}, scripts/selinux_matrix_v2.py",
+    "Predecessors: architecture/selinux-matrix/{README.md, matrix.json, vectors.json, status.json, review-round3.json}, scripts/selinux_matrix.py; architecture/host-interface-inputs/resolved/HOST_INTERFACE_SPEC.md §5.2 and §5.5 (excerpts); review-round1/round2 records not re-read beyond their digests",
+    "Linux v6.12 security/selinux/hooks.c from raw.githubusercontent.com/torvalds/linux/v6.12 (sha256 b1db634b2e3366259c35ac990f3b6a6baeffd325c430292e87e511257be7a469): selinux_is_genfs_special_handling, selinux_is_sblabel_mnt, selinux_set_mnt_opts cgroup2 flags and SBLABEL_MNT setting, inode_doinit_with_dentry SE_SBGENFS_XATTR override, selinux_determine_inode_label, may_create, selinux_inode_mkdir, selinux_kernfs_init_security, fscreate handling in selinux_lsm_setattr",
+    "From upstream knowledge, not re-read: security_compute_sid default object type (parent type when no type_transition), vfs_mkdir calling security_inode_mkdir for cgroup2 mkdir"
+  ],
+  "actions": {
+    "filesEdited": false,
+    "githubMutated": false,
+    "nativeActions": false,
+    "referenceModelExecuted": true,
+    "repositoryValidatorsRun": false,
+    "runnerActivated": false,
+    "testsRun": false,
+    "warmSourcesAccessed": false
+  },
+  "reviewLimit": "A source-only review of the round-1 subject at b8a5640 against the adopted v3 bytes and Linux v6.12 hooks.c. No policy was compiled, loaded or queried, and no host, systemd or distribution behaviour was observed. Boolean states beyond the three modelled ones were probed only with a scratch state in memory. All findings are text or scope, and no matrix datum or vector result is wrong. CHANGES_REQUIRED because two of the README's closure statements (K4 'Corrected' and the K1/K5 carry pointer) are not true in the subject bytes. F3-F5 may be carried. This is not a policy module, a loaded policy or native qualification."
+}

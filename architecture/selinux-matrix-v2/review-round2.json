@@ -1,0 +1,88 @@
+{
+  "schemaVersion": "planeon.internal.selinux-matrix-v2-review/v1",
+  "round": 2,
+  "reviewDate": "2026-10-09",
+  "verdict": "PASS_FOR_SOURCE_PUBLICATION",
+  "subjectSha256": {
+    "architecture/selinux-matrix-v2/README.md": "5a944d166070252b01d727072219a5247dc0f4103d9bea805b51d6d5a6aaea57",
+    "architecture/selinux-matrix-v2/REVIEW_BRIEF.md": "00d0cad4e3265a761647168ae15cfac346c25464c6fa12fb9aa16ae3f86c45db",
+    "architecture/selinux-matrix-v2/matrix.json": "1d2f27e53d7b1a77d1c80b5e167fd477bc5c25dd78250399edc33de8397eebff",
+    "architecture/selinux-matrix-v2/vectors.json": "e6a0afb937443d6f6cb941ba06e9bd46d9bda5b8f1bcdf97d6dba0b634f25961",
+    "scripts/selinux_matrix_v2.py": "09fe67b911e66adfc4eb6ba26b5cb75a16a90748157f628c9ca2d9066412ddd8"
+  },
+  "findings": [
+    {
+      "id": "G1",
+      "severity": "NOTE",
+      "location": "README 'Booleans and states' (lines 82-83: 'K1 ... stays carried to W02a-F and T04'); 'Round-3 findings and dispositions in v4' K1 row (line 407: 'carried to W02a-F and T04')",
+      "finding": "The F2 answer added the full K1 carry to the introduction: W02a-F, T04 and W01's record, as v3 status.json records it. Two older sentences were left as they were and still name only W02a-F and T04. The README is therefore internally inconsistent about K1's carry targets. The introduction is correct, and nothing is lost, because it states the complete carry.",
+      "requiredChange": "When the README is next revised, add W01's record to the two remaining K1 mentions, or point them to the introduction. Carry this finding; it does not block source publication."
+    }
+  ],
+  "openItemStatus": {
+    "K2": {
+      "status": "CLOSED",
+      "basis": "Unchanged data since round 1. Re-run on the round-2 bytes: gate to server, gate to containment and broker to maintenance each fail exactly A59.planeon_server_t, A59.planeon_contain_t and A59.planeon_maint_t. Round 1's exhaustive probe (124 out-of-procAccess pairs to the eight targets, all caught) applies, because matrix.json is byte-identical."
+    },
+    "K3": {
+      "status": "CLOSED",
+      "basis": "A66 fails for init_t load_policy before the seal (re-run). M54 and M55 reproduce. A23 pins setenforce. The README's claim is now scoped to the modelled states (F3)."
+    },
+    "K4": {
+      "status": "CLOSED",
+      "basis": "The evaluator comment is corrected (F1). The dir create statement now includes the create_sid branch under SBLABEL_MNT (F4). The kernfs xattr, SE_SBGENFS and cgroup_seclabel/SBLABEL_MNT statements match v6.12 hooks.c. S11 targets planeon_cgroup_slice_t, the parent-computed object when no fscreate context is set."
+    },
+    "K6": {
+      "status": "CLOSED",
+      "basis": "The round-2 brief keeps 109 assertions, which equals the matrix."
+    },
+    "F1": {
+      "status": "CLOSED",
+      "basis": "The GENFS_CATEGORIES comment now says kernfs (cgroup2) supports security xattrs, that no planeon cgroup node carries one, and that labels therefore come from the path rules. This is accurate for v6.12 (SE_SBGENFS_XATTR for cgroup2; bpffs gets SE_SBGENFS only). The diff against round1/scripts/selinux_matrix_v2.py touches only those comment lines."
+    },
+    "F2": {
+      "status": "CLOSED",
+      "basis": "The introduction states K1 (W02a-F, T04, W01's record; pinned-policy scope, boolean preservation, early window, boot-entry discriminator or explicit statement) and K5 (DelegateSubgroup=broker, the maintenance unit writing booleans in init_t, portcon of planeon_server_port_t). Both match v3 status.json carriedFindings. Two older K1 mentions still list only W02a-F and T04 (G1, NOTE)."
+    },
+    "F3": {
+      "status": "CLOSED",
+      "basis": "The K3 row now claims only that no load_policy grant is reachable in the two modelled enrolled states. It states that the single-policy property rests on decision 10 and on the digest and booleans W01's record pins, the K1 dependency, and names the unmodelled combination systemd can reach."
+    },
+    "F4": {
+      "status": "CLOSED",
+      "basis": "The fscreate text matches v6.12 selinux_determine_inode_label: create_sid is used when SBLABEL_MNT is set, and for cgroup2 that holds when cgroup_seclabel is enabled (selinux_is_genfs_special_handling). The W03/T04 requirement that no creator of a planeon cgroup sets an fscreate context is added. The reason for listing cgroup_seclabel is stated. Its premise that base policies declare it holds for the two upstreams I read: refpolicy main and Fedora selinux-policy rawhide both have 'policycap cgroup_seclabel;' in policy/policy_capabilities."
+    },
+    "F5": {
+      "status": "CLOSED",
+      "basis": "The per-target scope is stated in the K2 row and the A59.* row: the five resident roles, the writer, containment and the maintenance domain, not the admin login. Re-run: gate to admin passes all 109 assertions, as disclosed. One precision note, not a finding: the README calls the admin login's /proc 'host policy', yet allowed() closes it (False, not None), because procAccess grants no reader. The matrix denies it without asserting it."
+    }
+  },
+  "questionAnswers": {
+    "Q0": "K2, K3, K4 and K6 are CLOSED, and F1-F5 are CLOSED. The round-3 probes were re-run on the round-2 bytes with the expected per-target and A66 failures. One new NOTE (G1): two leftover K1 carry mentions.",
+    "Q1": "Yes. matrix.json and vectors.json are byte-identical to round 1 (digests 1d2f27e5... and e6a0afb9...), so the round-1 successor check stands: v4 minus the disclosed changes equals v3. The evaluator differs from round 1 only in the GENFS_CATEGORIES comment. git diff 4196dae..3d999b1 touches no v3 file or scripts/selinux_matrix.py. The round1/ archive matches the round-1 digests, and the published review-round1.json is byte-identical to my round-1 record.",
+    "Q2": "Yes for the eight stated targets. No out-of-procAccess pair to them passes. Pairs to the admin login pass, now disclosed as out of scope.",
+    "Q3": "Within the modelled states, yes: A66, A21, A22 and A23, none vacuous. The README no longer claims more. The single-policy property for the whole enrolled boot is now attributed to decision 10 and W01's record.",
+    "Q4": "Yes for v6.12. S11 is the object checked when no fscreate context is set, and the fscreate case is now a disclosed W03/T04 requirement.",
+    "Q5": "Yes. check_matrix passes and failed_assertions returns [] over 109 assertions. w02a_slots matches. All 1,873 access checks and all 55 mutation checks reproduce exactly with the round-2 evaluator.",
+    "Q6": "No claim of a policy module, compiled or loaded policy, selected distribution or E01-E12 proof. The cgroup_seclabel reason refers to base policies 'W03 can select' without selecting one."
+  },
+  "modelExecution": "One process at a time, each under 60 s, with 'uv run --offline --frozen --no-sync python' and UV_PROJECT_ENVIRONMENT set to the harness-onion .venv. p1_replay.py (3.7 s) imported the round-2 scripts/selinux_matrix_v2.py and checked: check_matrix, failed_assertions (109, none failed), w02a_slots, all 1,873 access checks and all 55 mutation checks (zero mismatches). It then ran in-memory probes: the three round-3 /proc pairs, init_t load_policy before the seal, and gate to admin /proc. Two curl fetches (25 s cap each) retrieved the upstream policy_capabilities files. Work paused on the coordinator's PAUSE and resumed only after RESUME. No repository file was written.",
+  "sourcesRead": [
+    "Subject (round 2): architecture/selinux-matrix-v2/{README.md, REVIEW_BRIEF.md, source-index.json}, scripts/selinux_matrix_v2.py; matrix.json and vectors.json verified byte-identical to round 1 by digest",
+    "Round-1 archive: architecture/selinux-matrix-v2/round1/{architecture/selinux-matrix-v2/README.md, architecture/selinux-matrix-v2/REVIEW_BRIEF.md, scripts/selinux_matrix_v2.py}, diffed against the current paths; architecture/selinux-matrix-v2/review-round1.json compared with my round-1 record",
+    "Predecessor: architecture/selinux-matrix/status.json carriedFindings (re-read from round 1) for the K1 and K5 text",
+    "Linux v6.12 security/selinux/hooks.c (fetched in round 1, sha256 b1db634b...): selinux_determine_inode_label, selinux_is_genfs_special_handling, selinux_set_mnt_opts cgroup2 flags",
+    "SELinuxProject/refpolicy main policy/policy_capabilities and fedora-selinux/selinux-policy rawhide policy/policy_capabilities from raw.githubusercontent.com: both declare policycap cgroup_seclabel"
+  ],
+  "actions": {
+    "filesEdited": false,
+    "githubMutated": false,
+    "nativeActions": false,
+    "referenceModelExecuted": true,
+    "repositoryValidatorsRun": false,
+    "runnerActivated": false,
+    "testsRun": false,
+    "warmSourcesAccessed": false
+  },
+  "reviewLimit": "A source-only review of the round-2 subject at 3d999b1 against the round-1 bytes, the adopted v3 bytes, Linux v6.12 hooks.c and two upstream policy capability files (current branches, not a pinned distribution release). No policy was compiled, loaded or queried, and no host, systemd or distribution behaviour was observed. This PASS is for source publication with G1 carried, and with K1 and K5 still carried as v3 status.json records them. It is not a policy module, a loaded policy or native qualification."
+}

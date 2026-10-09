@@ -39,7 +39,7 @@ def test_exact_current_source_and_complete_history_chain():
     assert account.validate() is None
     current = packets()
     accepted = account.historical_catalog(current)
-    assert len(current) == 214 and len(accepted) == 198
+    assert len(current) == 215 and len(accepted) == 198
     assert set(accepted) == set(current) - {account.NEW_PACKET, account.successor.NEW_PACKET,
                                             account.successor.successor.NEW_PACKET,
                                             account.successor.successor.successor.NEW_PACKET,
@@ -54,7 +54,8 @@ def test_exact_current_source_and_complete_history_chain():
                                             account.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET,
                                             account.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET,
                                             account.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET,
-                                            account.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET}
+                                            account.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET,
+                                            account.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET}
     assert len(canary.historical_catalog(current)) == 197
     assert len(isolated.historical_catalog(current)) == 196
     assert len(portable.historical_catalog(current)) == 195

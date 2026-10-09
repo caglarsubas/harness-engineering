@@ -1,6 +1,14 @@
 # Repository Plan: `Harness-Engineering`
 
-## Current source preparation — MET-ENFORCE-015
+## Current source preparation — MET-ENFORCE-016
+
+W02e-F: the SELinux matrix v4 (successor of the adopted v3 matrix) adds one /proc assertion per planeon
+target with exactly its peers (K2) and A66, no policy load before the seal (K3), corrects the cgroup2
+labelling text and points S11 at the slice type (K4). Review round 2 passed. Nothing is written or
+loaded, and every E01-E12 obligation stays open. Alpha2 OPEN; 214 accepted plus ENFORCE-016 only. Native
+Linux, exact-main and tenant acceptance remain separate.
+
+## Historical W02-ADM-F source preparation — MET-ENFORCE-015
 
 W02-ADM-F: one packet with three successor contracts under one combined review: I05 v3 (bounded upstream
 exchange, finer failure injection, exact residual precondition), POLICY-ADMISSION-SEMANTICS/v3 (MC39-MC41,
@@ -985,6 +993,7 @@ Every packet uses branch `codex/<packet-id>`, changes only named paths, opens a 
 86. `MET-ENFORCE-013`: publish W02f POLICY-ADMISSION-SEMANTICS/v2 and the A2 admission allowlists with independent review; source only.
 87. `MET-ENFORCE-014`: publish the W02c-F I07 policy writer channel v2 with independent review; source only.
 88. `MET-ENFORCE-015`: publish the W02-ADM-F successor contracts (I05 v3, admission semantics v3, I07 v3) with one combined independent review; source only.
+89. `MET-ENFORCE-016`: publish the W02e-F SELinux matrix v4 with independent review; source only.
 
 ## Testing, verification, and acceptance
 

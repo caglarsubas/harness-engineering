@@ -35,7 +35,7 @@ def test_exact_current_source_and_complete_history_chain():
     assert proof.validate() is None
     current = packets()
     accepted = proof.historical_catalog(current)
-    assert len(current) == 214 and len(accepted) == 194
+    assert len(current) == 215 and len(accepted) == 194
     assert set(accepted) == set(current) - {proof.NEW_PACKET, proof.successor.NEW_PACKET,
                                             proof.successor.successor.NEW_PACKET,
                                             proof.successor.successor.successor.NEW_PACKET,
@@ -54,7 +54,8 @@ def test_exact_current_source_and_complete_history_chain():
                                             proof.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET,
                                             proof.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET,
                                             proof.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET,
-                                            proof.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET}
+                                            proof.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET,
+                                            proof.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET}
     assert len(recheck.historical_catalog(current)) == 193
     assert len(verifier.historical_catalog(current)) == 192
     assert len(linux.historical_catalog(current)) == 191

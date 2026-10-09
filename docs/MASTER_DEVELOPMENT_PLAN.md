@@ -1,6 +1,34 @@
 # Harness-Onion — unified development roadmap
 
-## Current checkpoint — MET-ENFORCE-015 source preparation, October 9, 2026
+## Current checkpoint — MET-ENFORCE-016 source preparation, October 9, 2026
+
+Alpha2 OPEN. MET-ENFORCE-015 (W02-ADM-F) passed required verify (64/64, 731 s) and merged as main
+4196dae. The owner put W02e-F ahead of the PERF packet, which is mandatory next because this
+packet's verify is expected to cross the 750 s floor. MET-ENFORCE-016 is W02e-F. The adopted v3
+SELinux matrix is frozen, so it publishes the successor `planeon.internal.selinux-matrix/v4`:
+- one `/proc` assertion per planeon target with exactly that target's peers (K2);
+- A66: no domain loads policy before the seal (K3);
+- the cgroup2 labelling text corrected and S11 checked against the slice type (K4); the review
+  brief's count (K6).
+
+Review round 2 passed (PASS_FOR_SOURCE_PUBLICATION; one NOTE carried). Nothing is written or
+loaded; all E01-E12 remain OPEN_UNPROVEN. MET-ENFORCE-016 is the sole 215th specification.
+
+| Phase | ID | Status | Description / gate |
+|---|---|---|---|
+| Alpha2A | MET-ENFORCE-016 / W02e-F | SOURCE_PREPARED | SELinux matrix v4 as the 215th packet; verify from the owner's App |
+| Alpha2A | MET-ENFORCE-015 / W02-ADM-F | VERIFY_PASSED_MERGED | Verify 731 s |
+| Alpha2 | PERF-035 | NEXT_MANDATORY | The 216th packet; verify headroom below the 150 s floor |
+| Alpha2 | CATALOG-BANK, IND-BANK-001 to IND-BANK-005, KN-BANK-001, CTRL-BANK-001, DIST-BANK-001, CONF-BANK-001 | WAITING_PACKET_PUBLICATION | Banking catalog follow-ups, pack, inputs and journey |
+| Alpha2A | W02d, W02a-F2, W02g-F2 | WAITING_EXACT_PACKETS | seccomp; follow-ups |
+| Alpha2 qualification | CONF-LINUX-001 / CONF-A2-001 | WAITING_PREREQUISITES | Linux verification only when mandatory |
+
+Keep the inherited 64 argv unchanged (the installed activation cap and the verifier's inheritance rule; the new
+layer validator adds no argv and runs inside the outer pytest), 420/750/900 s/15 min and 32 MiB. No cloud, runner registration,
+live/native/tenant or model-effort changes. Phase-end effort transition NOT_DUE.
+Prior checkpoints below are history only.
+
+## Historical W02-ADM-F source checkpoint — MET-ENFORCE-015 source preparation, October 9, 2026
 
 Alpha2 OPEN. MET-ENFORCE-014 (W02c-F) passed required verify (64/64, 692 s) and merged as
 main f88e7f7. PERF-035 was not shipped; the owner lifted the PERF gate with a floor (a PERF
@@ -1084,7 +1112,7 @@ The [item-level backlog](../architecture/unified-roadmap-backlog.json) records p
 | Alpha 2 CI capacity | MET-UNIFY-008 / PR #141 | BLOCKED_SELF_HOSTED_CI | Source PR open; `verify` queued with no registered runner |
 | Alpha 2 CI capacity | MET-LINUX-003 / PR #142 | BLOCKED_SELF_HOSTED_CI | Draft source PR open; `verify` queued on the same labels; queue must be serialized before one-job admission |
 | Alpha 2A | W01 / MET-ENFORCE-004 | DESIGN_RESOLVED_REVIEWED | G04–G07/G09 resolved at design level and independently reviewed; E01–E12 remain OPEN_UNPROVEN |
-| Alpha 2A | W02 (W02a MET-ENFORCE-005, W02g MET-ENFORCE-006, W02b MET-ENFORCE-007, W02c MET-ENFORCE-008, W02e MET-ENFORCE-009, W02a-F MET-ENFORCE-010, W02b-F MET-ENFORCE-011, W02g-F MET-ENFORCE-012, W02f MET-ENFORCE-013, W02c-F MET-ENFORCE-014, W02-ADM-F MET-ENFORCE-015) / W03–W07 | W02a, W02g, W02b, W02c, W02e, W02a-F, W02b-F, W02g-F, W02f and W02c-F VERIFY_PASSED_MERGED; W02-ADM-F SOURCE_PREPARED; others WAITING_EXACT_PACKETS | W02a v2 record contract, W02g I06 backend profile, W02b I05 channel, W02c I07 writer and W02e SELinux matrix contracts reviewed; remaining W02 parts and W03–W07 are labels, not executable YAML |
+| Alpha 2A | W02 (W02a MET-ENFORCE-005, W02g MET-ENFORCE-006, W02b MET-ENFORCE-007, W02c MET-ENFORCE-008, W02e MET-ENFORCE-009, W02a-F MET-ENFORCE-010, W02b-F MET-ENFORCE-011, W02g-F MET-ENFORCE-012, W02f MET-ENFORCE-013, W02c-F MET-ENFORCE-014, W02-ADM-F MET-ENFORCE-015, W02e-F MET-ENFORCE-016) / W03–W07 | W02a, W02g, W02b, W02c, W02e, W02a-F, W02b-F, W02g-F, W02f, W02c-F and W02-ADM-F VERIFY_PASSED_MERGED; W02e-F SOURCE_PREPARED; others WAITING_EXACT_PACKETS | W02a v2 record contract, W02g I06 backend profile, W02b I05 channel, W02c I07 writer and W02e SELinux matrix contracts reviewed; remaining W02 parts and W03–W07 are labels, not executable YAML |
 | Alpha 2A | CONF-FIX-010 | BLOCKED_SAFE_DESIGN | Zero product attempts; requires separately reviewed safe design and bounded packet authority |
 | Alpha 2A | CONF-LIVE-004/005/006 | WAITING_PREREQUISITES | Native probes, package handoff and trusted campaign integration |
 | Alpha 2A | CONF-LINUX-001 native AMD64 | NOT_RUN_ENV_UNAVAILABLE | Fresh real-Linux PASS gates runtime coding of CTRL-INTEGRATE-001, MODEL-001, EXEC-001 and RUN-001; ARM64 separate |
@@ -1131,7 +1159,8 @@ These checkboxes count only the named deliverable at the stated evidence level. 
 - [x] Alpha 2A · W02g-F / MET-ENFORCE-012 · Publish the independently reviewed I06 backend profile v2 closing the findings carried to W02g-F; pass required verify through the owner's App.
 - [x] Alpha 2A · W02f / MET-ENFORCE-013 · Publish the independently reviewed POLICY-ADMISSION-SEMANTICS/v2 and A2 admission allowlists; pass required verify through the owner's App.
 - [x] Alpha 2A · W02c-F / MET-ENFORCE-014 · Publish the independently reviewed I07 policy writer channel v2 closing the findings carried to W02c-F; pass required verify through the owner's App.
-- [ ] Alpha 2A · W02-ADM-F / MET-ENFORCE-015 · Publish the independently reviewed I05 v3, POLICY-ADMISSION-SEMANTICS/v3 and I07 v3 successor contracts closing W02b-F2, W02f-F and W02c-F2; pass required verify through the owner's App.
+- [x] Alpha 2A · W02-ADM-F / MET-ENFORCE-015 · Publish the independently reviewed I05 v3, POLICY-ADMISSION-SEMANTICS/v3 and I07 v3 successor contracts closing W02b-F2, W02f-F and W02c-F2; pass required verify through the owner's App.
+- [ ] Alpha 2A · W02e-F / MET-ENFORCE-016 · Publish the independently reviewed SELinux matrix v4 closing K2, K3, K4 and K6; pass required verify through the owner's App.
 - [ ] Alpha 2A · CONF-FIX-010 · Complete safe design and exact authority before any product attempt.
 - [ ] Alpha 2A · CONF-LIVE-004 · Produce the exact native-probe source implementation and separately qualify it.
 - [ ] Alpha 2A · CONF-LIVE-005 · Produce a reproducible selected package and operator handoff.

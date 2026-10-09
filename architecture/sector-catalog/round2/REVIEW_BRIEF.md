@@ -1,10 +1,10 @@
-# Independent review brief — CATALOG-BANK v2 sector catalog overlay, round 3
+# Independent review brief — CATALOG-BANK v2 sector catalog overlay, round 2
 
 The authoring agent wrote this brief. It is not a verdict.
 
 ## Subject
 
-The commit named in the review request (round 3), on branch `codex/met-sector-002-catalog-overlay`, on accepted main
+The commit named in the review request (round 2), on branch `codex/met-sector-002-catalog-overlay`, on accepted main
 `da81730` (217 packets). Read it with `git show <subject>:<path>` or `git diff da81730 <subject>`, and record the tree hash. The
 subject consists of:
 - `architecture/sector-catalog/overlay.json`, `README.md` and this brief;
@@ -34,16 +34,6 @@ reproducing the round-1 case. In particular:
 - **F4:** `regular_bytes` reads, lstat-based packet listing, unique-key YAML.
 - **F5-F6:** the consumer rule and the guard plan in the README.
 - **N3:** the carried items.
-
-## Round 2 and what changed
-
-Round 2 reviewed `ffca73b`, which is kept in `round2/`. It returned CHANGES_REQUIRED with no MAJOR findings (R2-F1 to
-R2-F3 MINOR, R2-F4 to R2-F7 NOTE), and confirmed that round-1 F1, F3 and F5 are fixed. The README's "Rounds 1-2"
-section maps each finding to its change. Reproduce the round-2 cases, in particular:
-- a resealed overlay that renames the blocker or drops the deferral;
-- a backticked DIST-004 item with the exact text placed elsewhere;
-- a symlinked, dangling or directory IND-BANK-005.yaml;
-- a stateful reader.
 
 ## Questions to answer
 

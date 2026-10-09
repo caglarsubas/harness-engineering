@@ -1,7 +1,7 @@
-# Sector catalog overlay — CATALOG-BANK v2 (MET-SECTOR-002), round 3
+# Sector catalog overlay — CATALOG-BANK v2 (MET-SECTOR-002), round 2
 
-Status: **CANDIDATE_ROUND3_AWAITING_INDEPENDENT_REVIEW**. Rounds 1 (`round1/`) and 2 (`round2/`) returned
-CHANGES_REQUIRED; see "Rounds 1-2" below. This changes the effective catalog identifiers and text, plus a notice in the R11 distribution plan.
+Status: **CANDIDATE_ROUND2_AWAITING_INDEPENDENT_REVIEW**. Round 1 (`round1/`) returned CHANGES_REQUIRED; see "Round 1"
+below. This changes the effective catalog identifiers and text, plus a notice in the R11 distribution plan.
 - No catalog byte changes.
 - No banking pack, manifest, profile installation or tenant acceptance exists.
 - Every SECTOR-D1 successor stays an unpublished proposal.
@@ -36,25 +36,14 @@ reviewed overlay.
     - that `base` equals SECTOR-001's CATALOG pins in `unchangedAuthorities`;
     - each applied entry's exact occurrence count and the absent target, then the effective digests;
     - that no white-goods term remains outside the deferred entry, and the deferred entry's count;
-    - the deferrals, derived rather than read from the record: a follow-up whose current text is the path of a
-      `REPOSITORY_PACKET` implementation stays deferred exactly while the successor that supersedes its packet
-      (from `successorProposals`) is unpublished. It is bound to that implementation and blocked by that successor,
-      and no other follow-up may be deferred. Today this is the pack manifest path, which is bound to IND-WG-005 and
-      blocked by IND-BANK-005;
-    - that the R11 notice section matches its pinned sha256 and names the proposal's predecessor;
-    - that inside the plan's `## PR packets` section, the DIST-004 list item is exactly the pinned line, once;
-    - that the proposal is backticked only inside the notice;
-    - that every published SECTOR-D1 successor cites `scripts/sector_catalog.py`.
-    Each path is read exactly once, so every check sees digest-verified bytes.
-  - Planned for the packet: the history-chain layer will pass its own `reviewed_bytes` and
-    `frozenset(historical_catalog(...))`. Later packets that publish IND-BANK-005, rebase the overlay or change a
-    catalog will then leave that layer valid through projection (review round 1, F1). The layer's authority pins the
-    reviewed sha256 of `overlay.json` and `sector_catalog.py` as new files, so a later rebase has to supply an
-    inverse.
-  - `effective_bytes(path)` and `effective_catalog(path)` serve this repository's current tree, with no root
-    override. They first run `check()` on the current files and the published packets. That is the consumer gate: it
-    refuses, for example, a published IND-BANK-005 while the overlay still defers. The task-packet listing refuses
-    any non-regular `*.yaml` entry, so a link or directory cannot hide a blocking packet.
+    - that the deferred binding is unchanged, its bound packet is published and its blocking packet is not;
+    - that the R11 notice section matches its pinned sha256, and the DIST-004 list item is exactly the pinned line.
+  - A history-chain layer passes its own `reviewed_bytes` and `historical_catalog`. Later packets that publish
+    IND-BANK-005, rebase the overlay or change a catalog therefore leave that layer valid through projection
+    (review round 1, F1).
+  - `effective_bytes(path)` and `effective_catalog(path)` serve the current tree. They first run `check()` on the
+    current files and the published packets. That is the consumer gate: it refuses, for example, a published
+    IND-BANK-005 while the overlay still defers.
   - Reads use the repository's `regular_bytes` pattern (a safe relative path, no linked ancestors, a regular
     single-link file, a size check before reading, an identity check after it). YAML is loaded with duplicate keys
     refused.
@@ -104,19 +93,14 @@ it as a declared packet. `sector-direction.json` admits only MET-SECTOR-001's ow
   historical_catalog)`. Its test simulates a later successor (one that publishes IND-BANK-005, rewrites the overlay or
   changes a catalog) and shows the layer stays valid through projection. The inverse authority gives R11 an exact
   two-hunk inverse, and the newest accepted layer (`validate_selinux_replay`) is bridged to the new layer.
-- **Guard.** The layer test's guard covers all tracked Python files, with frozen exceptions for the inert review
-  copies under `architecture/**/round*/`.
+- **Guard.** The layer test's guard covers every tracked Python file: `scripts/`, `tests/`, `ci/` and `conftest.py`.
   - It scans by AST and by bytes for the three catalog paths and their basenames, including Path joins and globs over
     `architecture/` and `docs/`.
   - Frozen allowlist of literal base readers: readiness, reuse, provider_adoption, sector_direction and zero_bill_scan,
     plus the six tests that name the paths today.
-  - Frozen set of architecture records that pin a catalog digest (39 files today, counting sector-direction.json,
-    overlay.json and the round copies), and a frozen set of records that name the three paths. Any new record of
-    either kind is refused.
-  - Consumers must import `sector_catalog` and use only `effective_bytes` or `effective_catalog`. The guard refuses
-    direct use of `check`, `_apply`, `disk_reader` or `_yaml` on the catalogs outside the module and its layer.
-  - Publication: `check()` itself refuses any published SECTOR-D1 successor packet that does not cite
-    `scripts/sector_catalog.py`.
+  - Frozen allowlist of indirect authority readers: the set of architecture records that pin a catalog digest stays
+    exactly today's 36 plus sector-direction.json and overlay.json; any new record that pins a catalog is refused.
+  - Every other reader must import `sector_catalog` and use `effective_bytes` or `effective_catalog`.
 - **Readiness semantics.** The layer test also runs readiness's catalog semantics on the effective catalogs (0 errors
   today; applying the deferred path as well gives exactly the expected IND-WG-005 coverage error).
 - **Mechanics.** A current-state page and the usual mechanics.
@@ -128,11 +112,10 @@ it as a declared packet. `sector-direction.json` admits only MET-SECTOR-001's ow
   deliverable 0. Rebase the overlay at the same time.
 - From v1 N2, for the packet build: the master plan rows.
 - From v1 R2-N1: the R11 check is now exact (section sha256 plus the list item).
-- From v1 R2-N3: the wording. The notice record cites the validator rule (`validate_sector_direction` admits only
-  MET-SECTOR-001's own files as `directionDocs`) rather than "immutable". v1 R2-N2 (the attribution of the m1
-  source) is moot: that sentence no longer exists.
+- From v1 R2-N2/N3: the wording. The deferral and notice texts cite the validator rule (`validate_sector_direction`
+  admits only MET-SECTOR-001's own files as `directionDocs`) rather than "immutable".
 
-## Rounds 1-2
+## Round 1
 
 Review round 1 (subject `0ec8039`, kept in `round1/`) returned CHANGES_REQUIRED: F1 MAJOR, F2-F6 MINOR, N1-N5 NOTE.
 - **F1:** the era check with an injected reader, and the consumer gate.
@@ -145,16 +128,3 @@ Review round 1 (subject `0ec8039`, kept in `round1/`) returned CHANGES_REQUIRED:
 - **N2:** single root.
 - **N3:** the carried items.
 - **N4:** the wording above.
-
-Review round 2 (subject `ffca73b`, kept in `round2/`) returned CHANGES_REQUIRED, with no MAJOR findings: R2-F1 to
-R2-F3 MINOR, R2-F4 to R2-F7 NOTE.
-- **R2-F1:** the deferrals are derived from `implementationOwnership` and `successorProposals`; the consumer API has
-  no root override; the layer pins the overlay and the module.
-- **R2-F2:** an anchored, whole-line DIST-004 item inside `## PR packets`; backticks only inside the notice; the
-  predecessor named in the section.
-- **R2-F3:** the packet listing refuses non-regular entries.
-- **R2-F4:** each path is read once.
-- **R2-F5:** `frozenset(historical_catalog(...))`, and the layer paragraph is worded as a plan.
-- **R2-F6:** the guard plan above.
-- **R2-F7:** the overlay's `approach` is written as a rule, `nonClaims[1]` mentions the R11 notice, and v1 R2-N2 is
-  closed as moot.

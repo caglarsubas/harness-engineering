@@ -9,9 +9,8 @@ Two entry points:
 - check(read, packets) validates one era: an overlay, its catalogs, the sector record and the R11 notice, read through
   an injected byte reader and judged against an injected packet set. A history-chain layer passes its reviewed_bytes
   and historical_catalog, so that later packets (publishing IND-BANK-005, rebasing the overlay) leave it valid.
-- effective_bytes(path) and effective_catalog(path) serve this repository's current tree (no root override). They run
-  check() on the current files and the published packets first. Consumers must read the banking-era catalogs only
-  through these two functions.
+- effective_bytes(path) and effective_catalog(path) serve the current tree. They run check() on the current files and
+  the published packets first. Consumers must read the banking-era catalogs only through these two functions.
 """
 from __future__ import annotations
 
@@ -76,16 +75,11 @@ def disk_reader(root: Path = ROOT):
 
 
 def published_packets(root: Path = ROOT) -> frozenset:
-    """The IDs of the published task packets. Any non-regular task-packets/*.yaml entry (a link, a dangling link, a
-    directory) is refused rather than skipped, so a blocking packet can never be hidden by its file type."""
+    """The IDs of the published task packets: regular files task-packets/<ID>.yaml (links are not packets)."""
     folder = root / "task-packets"
     require(stat.S_ISDIR(folder.lstat().st_mode), "task-packets directory")
-    names = []
-    for entry in folder.iterdir():
-        if entry.name.endswith(".yaml"):
-            require(stat.S_ISREG(entry.lstat().st_mode), "non-regular task packet entry: " + entry.name)
-            names.append(entry.name[:-5])
-    return frozenset(names)
+    return frozenset(entry.name[:-5] for entry in folder.iterdir()
+                     if entry.name.endswith(".yaml") and stat.S_ISREG(entry.lstat().st_mode))
 
 
 def _json(raw: bytes):
@@ -203,18 +197,28 @@ def _section(text: str, heading: str) -> str:
     return "\n".join(lines[starts[0]:end])
 
 
+def _binding(providers, key):
+    found = []
+
+    def walk(value):
+        if isinstance(value, dict):
+            if key in value and isinstance(value[key], dict):
+                found.append(value[key])
+            for child in value.values():
+                walk(child)
+        elif isinstance(value, list):
+            for child in value:
+                walk(child)
+    walk(providers)
+    require(len(found) == 1, "exactly one catalog binding: " + key)
+    return found[0]
+
+
 def check(read, packets) -> dict:
     """Validate one era: its overlay, catalogs, sector record and R11 notice (through read), against its packet set."""
     require(isinstance(packets, (set, frozenset)) and all(type(name) is str for name in packets), "packet set")
-    cache = {}
-
-    def once(path):
-        # Each path is read exactly once, so every check sees the bytes that were digest-verified.
-        if path not in cache:
-            cache[path] = read(path)
-        return cache[path]
-    overlay = record(once(OVERLAY_PATH))
-    sector_raw = once(SECTOR_PATH)
+    overlay = record(read(OVERLAY_PATH))
+    sector_raw = read(SECTOR_PATH)
     require(overlay["sectorDirection"]["sha256"] == digest(sector_raw), "sector direction pin")
     sector = _json(sector_raw)
     follow = sorted((f["path"], f["current"], f["proposed"]) for f in sector["catalogFollowUps"])
@@ -224,7 +228,7 @@ def check(read, packets) -> dict:
     require(overlay["base"] == catalogs, "the overlay base is exactly the SECTOR-001 CATALOG pins")
     pattern = re.compile(sector["detectionPattern"])
     for path in overlay["base"]:
-        raw = once(path)
+        raw = read(path)
         text = _apply(path, raw, overlay).decode("utf-8")
         base_text = raw.decode("utf-8")
         residue = text
@@ -234,59 +238,35 @@ def check(read, packets) -> dict:
                         and entry["proposed"] not in text, "deferred entry count and absence: " + entry["current"])
                 residue = residue.replace(entry["current"], "")
         require(not pattern.search(residue), "no white-goods term outside the deferred entries: " + path)
-    # The deferrals are derived, not taken from the record: a follow-up whose current text is the path of a
-    # REPOSITORY_PACKET implementation stays deferred exactly while the successor that supersedes its packet is
-    # unpublished, bound to that implementation and blocked by that successor. No other follow-up may be deferred.
-    ownership = _yaml(once(PROVIDERS_PATH))["implementationOwnership"]
-    require(type(ownership) is dict, "implementation ownership")
-    successors = {row["supersedes"]: row["id"] for row in sector["successorProposals"] if row.get("supersedes")}
-    expected = {}
-    for key, row in ownership.items():
-        if type(row) is dict and row.get("disposition") == "REPOSITORY_PACKET":
-            for entry in overlay["applied"] + overlay["deferred"]:
-                if entry["current"] == row.get("path"):
-                    blocker = successors.get(row["packetId"])
-                    require(blocker is not None, "a bound follow-up needs a superseding successor: " + key)
-                    require(blocker not in packets, "%s is published: rebase the overlay before using it" % blocker)
-                    expected[entry["current"]] = {"blockedBy": blocker, "binding": {
-                        "catalogKey": key, "packetId": row["packetId"], "deliverableIndex": row["deliverableIndex"]}}
-    deferred = {entry["current"]: {"blockedBy": entry["blockedBy"], "binding": entry["binding"]}
-                for entry in overlay["deferred"]}
-    require(deferred == expected, "the deferrals are exactly the implementation-bound follow-ups and their successors")
+    providers = _yaml(read(PROVIDERS_PATH))
     for entry in overlay["deferred"]:
-        require(entry["binding"]["packetId"] in packets, "the bound packet is published: " + entry["binding"]["packetId"])
+        require(entry["blockedBy"] not in packets, "the deferred entry waits for the unpublished " + entry["blockedBy"])
+        binding = entry["binding"]
+        require(binding["packetId"] in packets, "the bound packet is published: " + binding["packetId"])
+        require(_binding(providers, binding["catalogKey"]) == {
+            "disposition": "REPOSITORY_PACKET", "packetId": binding["packetId"], "path": entry["current"],
+            "deliverableIndex": binding["deliverableIndex"]}, "the deferred binding is unchanged: " + binding["catalogKey"])
     notice = overlay["distributionNotice"]
-    doc = once(notice["path"]).decode("utf-8")
-    section = _section(doc, notice["heading"])
-    require(digest(section.encode("utf-8")) == notice["sectionSha256"], "the R11 notice section is exactly the reviewed text")
-    require(notice["proposalPredecessor"] in section, "the notice names the proposal's predecessor")
-    plan = re.search(r"^## PR packets\s*$([\s\S]*?)(?=^## |\Z)", doc, re.MULTILINE)
-    require(plan is not None, "the plan's PR packets section")
-    items = [line for line in plan.group(1).split("\n") if line.startswith("7. `DIST-004-helm-profiles`:")]
-    require(items == [notice["listItem"]], "the DIST-004 list item is exactly the pinned line, once, in PR packets")
-    plain, ticked = notice["proposal"], "`" + notice["proposal"] + "`"
-    require(plain in notice["listItem"] and ticked not in notice["listItem"], "the DIST-004 item names the proposal plain")
-    require(doc.count(ticked) == section.count(ticked), "the proposal is backticked only inside the notice")
-    # A published SECTOR-D1 successor must cite the overlay module, the consumer rule's publication check.
-    for row in sector["successorProposals"]:
-        if row["id"] in packets:
-            require(b"scripts/sector_catalog.py" in once("task-packets/%s.yaml" % row["id"]),
-                    "a published SECTOR-D1 successor cites scripts/sector_catalog.py: " + row["id"])
+    doc = read(notice["path"]).decode("utf-8")
+    require(digest(_section(doc, notice["heading"]).encode("utf-8")) == notice["sectionSha256"],
+            "the R11 notice section is exactly the reviewed text")
+    require(doc.count(notice["listItem"] + "\n") == 1 and "`" + notice["proposal"] + "`" not in notice["listItem"],
+            "the DIST-004 list item names the proposal plain, exactly once")
     return overlay
 
 
-def effective_bytes(path: str) -> bytes:
-    """The banking-era bytes of one overlaid catalog in this repository's current tree, after the full check."""
-    read = disk_reader(ROOT)
-    overlay = check(read, published_packets(ROOT))
+def effective_bytes(path: str, root: Path = ROOT) -> bytes:
+    """The banking-era bytes of one overlaid catalog in the current tree, after the full check."""
+    read = disk_reader(root)
+    overlay = check(read, published_packets(root))
     require(path in overlay["base"], "not an overlaid catalog: " + path)
     return _apply(path, read(path), overlay)
 
 
-def effective_catalog(path: str):
+def effective_catalog(path: str, root: Path = ROOT):
     """The parsed banking-era catalog (YAML catalogs only), with duplicate keys refused."""
     require(path.endswith(".yaml"), "YAML catalogs only: " + path)
-    return _yaml(effective_bytes(path))
+    return _yaml(effective_bytes(path, root))
 
 
 if __name__ == "__main__":

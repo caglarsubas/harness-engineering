@@ -5,7 +5,7 @@
   "path": "architecture/sector-direction.json",
   "sha256": "cfc39b4adbfb2771e27cc5498d94530d5691130736a8791288ce296253fc2efe"
  },
- "approach": "The catalogs stay byte-identical: older validators read them as immutable inputs and 36 architecture records pin them. This reviewed overlay gives the banking-era view; scripts/sector_catalog.py applies it as exact, counted substring replacements and refuses any mismatch. Banking-era consumers must read the catalogs only through effective_bytes and effective_catalog.",
+ "approach": "The catalogs stay byte-identical: older validators read them as immutable inputs and many authority records pin them. This reviewed overlay gives the banking-era view; scripts/sector_catalog.py applies it as exact, counted substring replacements and refuses any mismatch. Banking-era consumers read catalogs only through it.",
  "base": {
   "architecture/providers.yaml": "9e2b43dac1ca4531dcdeb3a1b6ead8002d7384e2a0d0e6b57e972accb8631c02",
   "architecture/services.yaml": "857376b5e2b10a2a2542124a7d36b770eca531d15e463d68415416b887dd90a6",
@@ -95,7 +95,7 @@
  },
  "nonClaims": [
   "No catalog byte changes: providers.yaml, services.yaml and PROVIDER_MODULE_CATALOG.md keep their white-goods entries as the historical base.",
-  "No banking pack, manifest, profile installation or tenant acceptance exists; only the effective catalog identifiers and text change, plus the sector-direction notice in the R11 distribution plan.",
+  "No banking pack, manifest, profile installation or tenant acceptance exists; only the effective identifiers and text change.",
   "No published packet, backlog snapshot, sector-direction record or review record changes.",
   "IND-BANK-005, DIST-BANK-001 and every other SECTOR-D1 successor stay unpublished proposals."
  ]

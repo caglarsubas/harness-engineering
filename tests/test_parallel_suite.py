@@ -729,7 +729,7 @@ SUITE = _load("_met_perf_035_parallel_suite_copy", "ci/parallel_suite.py")
 def test_parallel_suite_constants_weights_and_session_loading(request):
     linux = _load("_met_perf_035_linux_conftest_copy", "tests/linux_runner/conftest.py")
     assert SUITE.WORKERS == 4
-    assert SUITE.PARENT_NODES == frozenset({linux.PREDECESSOR_PROOF_NODE})
+    assert linux.PREDECESSOR_PROOF_NODE in SUITE.PARENT_NODES and len(SUITE.PARENT_NODES) == 3
     weights = json.loads(profile.reviewed_bytes(SUITE.WEIGHTS_PATH))
     assert weights and all(type(name) is str and name.endswith(".py") and type(value) in (int, float) and value >= 0
                            for name, value in weights.items())
@@ -759,7 +759,7 @@ _SCRATCH = {
     "tests/test_b.py": "import os, time\ndef test_maybe_crash():\n    fault = os.environ.get('SCRATCH_FAULT')\n"
                        "    if fault in ('crash', 'forge') and os.environ.get('PLANEON_PARALLEL_SUITE_SERIAL'):\n"
                        "        os._exit(0)\n    if fault == 'hang':\n        open(os.environ['SCRATCH_PID'], 'w').write(str(os.getpid()))\n"
-                       "        time.sleep(60)\ndef test_after():\n    assert os.environ.get('SCRATCH_FAULT') != 'forge'\n",
+                       "        time.sleep(float(os.environ.get('SCRATCH_SLEEP', '60')))\ndef test_after():\n    assert os.environ.get('SCRATCH_FAULT') != 'forge'\n",
     "tests/test_c.py": "import os\ndef test_maybe_fail():\n    assert os.environ.get('SCRATCH_FAULT') != 'fail'\n"
                        "def test_nested_pytest_is_serial_and_never_a_worker():\n"
                        "    import ci.parallel_suite as suite\n"
@@ -775,7 +775,7 @@ _SCRATCH = {
 }
 
 
-def _scratch_run(tmp_path, fault, ini="", cli=(), serial=False, extra_env=None, wait=True):
+def _scratch_env(tmp_path, fault, ini="", serial=False, extra_env=None):
     for name, text in _SCRATCH.items():
         (tmp_path / name).parent.mkdir(parents=True, exist_ok=True)
         (tmp_path / name).write_text(text)
@@ -786,7 +786,13 @@ def _scratch_run(tmp_path, fault, ini="", cli=(), serial=False, extra_env=None, 
            if key not in (SUITE.SERIAL_ENV, SUITE.ASSIGNMENT_ENV, "PYTEST_ADDOPTS")}
     env.update(PYTHONPATH=str(profile.ROOT), SCRATCH_FAULT=fault, PYTHONDONTWRITEBYTECODE="1", TMPDIR=str(tmp_path / "tmp"),
                **({SUITE.SERIAL_ENV: "1"} if serial else {}), **(extra_env or {}))
-    argv = [_sys.executable, "-m", "pytest", *cli, "tests"]
+    (tmp_path / "args.txt").write_text("-W error::UserWarning\n--runxfail\ntests\n")
+    return env
+
+
+def _scratch_run(tmp_path, fault, ini="", cli=(), serial=False, extra_env=None, wait=True, python_flags=(), paths=("tests",)):
+    env = _scratch_env(tmp_path, fault, ini, serial, extra_env)
+    argv = [_sys.executable, *python_flags, "-m", "pytest", *cli, *paths]
     if not wait:
         return _subprocess.Popen(argv, cwd=tmp_path, env=env, stdout=_subprocess.PIPE, stderr=_subprocess.STDOUT, text=True)
     return _subprocess.run(argv, cwd=tmp_path, env=env, capture_output=True, text=True, timeout=180)
@@ -797,15 +803,20 @@ def _final(result):
     return _re.sub(r" in [0-9.]+s.*$", "", lines[-1]) if lines else None
 
 
-@pytest.mark.parametrize("fault,ini,cli", [("none", "", ()), ("none", "-ra", ()), ("none", "-vv -rs", ()), ("fail", "", ()),
-                                           ("none", "", ("-W", "error::UserWarning"))])
-def test_parallel_matches_serial_rc_and_summary(tmp_path, fault, ini, cli):
+@pytest.mark.parametrize("fault,ini,cli,flags,paths", [
+    ("none", "", (), (), ("tests",)), ("none", "-ra", (), (), ("tests",)), ("none", "-vv -rs", (), (), ("tests",)),
+    ("fail", "", (), (), ("tests",)), ("none", "", ("-W", "error::UserWarning"), (), ("tests",)),
+    # An @argument file, an interpreter flag and a node ID must not weaken or break the run.
+    ("none", "", (), (), ("@args.txt",)), ("none", "", (), ("-W", "error::UserWarning"), ("tests",)),
+    ("none", "", (), (), ("tests/test_c.py::test_maybe_fail",)),
+])
+def test_parallel_matches_serial_rc_and_summary(tmp_path, fault, ini, cli, flags, paths):
     # Skips under -ra/-vv need the report's tuple types; the warning must reach the summary; a command-line option
     # keeps the run serial.
     (tmp_path / "s").mkdir()
     (tmp_path / "p").mkdir()
-    serial = _scratch_run(tmp_path / "s", fault, ini, cli, serial=True)
-    parallel = _scratch_run(tmp_path / "p", fault, ini, cli)
+    serial = _scratch_run(tmp_path / "s", fault, ini, cli, serial=True, python_flags=flags, paths=paths)
+    parallel = _scratch_run(tmp_path / "p", fault, ini, cli, python_flags=flags, paths=paths)
     assert (parallel.returncode, _final(parallel)) == (serial.returncode, _final(serial))
     assert "INCOMPLETE" not in parallel.stdout and "INTERNALERROR" not in parallel.stdout and "Traceback" not in parallel.stdout
     assert serial.returncode in (0, 1) and _final(serial)
@@ -821,7 +832,7 @@ def test_a_worker_that_exits_early_fails_closed_without_echoing_worker_output(tm
     assert list((tmp_path / "tmp").glob("planeon-parallel-suite.*")), "the work directory stays for diagnosis"
 
 
-@pytest.mark.parametrize("fault,problem", [("forge", "for a node it does not own: tests/test_b.py::test_after"),
+@pytest.mark.parametrize("fault,problem", [("forge", "for a node it does not own: 'tests/test_b.py::test_after'"),
                                            ("garbage", "undecodable record")])
 def test_forged_or_undecodable_streams_fail_closed(tmp_path, fault, problem):
     result = _scratch_run(tmp_path, fault)
@@ -844,7 +855,8 @@ def test_sigterm_to_the_parent_kills_its_workers(tmp_path):
         _time.sleep(0.05)
     worker = int(pid_file.read_text())
     parent.send_signal(_signal.SIGTERM)
-    parent.communicate(timeout=60)
+    output, _ = parent.communicate(timeout=60)
+    assert parent.returncode != 0 and "parallel-suite-interrupted" in output
     for _ in range(100):
         try:
             os.kill(worker, 0)
@@ -856,16 +868,39 @@ def test_sigterm_to_the_parent_kills_its_workers(tmp_path):
         raise AssertionError("worker outlived its parent")
 
 
+def test_an_inherited_ignored_hangup_stays_ignored(tmp_path):
+    import signal as _signal
+    import time as _time
+    pid_file = tmp_path / "worker.pid"
+    env = _scratch_env(tmp_path, "hang", extra_env={"SCRATCH_PID": str(pid_file), "SCRATCH_SLEEP": "3"})
+    # Start the run with SIGHUP ignored, as nohup does; a hangup must then not interrupt the parent or its workers.
+    ignored = _subprocess.Popen(
+        [_sys.executable, "-c", "import os, signal, sys; signal.signal(signal.SIGHUP, signal.SIG_IGN); "
+                                "os.execv(sys.executable, [sys.executable, '-m', 'pytest', 'tests'])"],
+        cwd=tmp_path, env=env, stdout=_subprocess.PIPE, stderr=_subprocess.STDOUT, text=True)
+    for _ in range(300):
+        if pid_file.exists() and pid_file.read_text():
+            break
+        _time.sleep(0.05)
+    ignored.send_signal(_signal.SIGHUP)
+    output, _ = ignored.communicate(timeout=60)
+    assert ignored.returncode == 0 and "interrupted" not in output, output[-2000:]
+
+
 def test_deadline_fits_inside_the_verify_budget():
     # argv 1-62 take about 2 minutes, so a 600 s worker deadline fires before the local 750 s and trusted 900 s caps.
     assert SUITE.DEADLINE_SECONDS == 600
 
 
-_SESSION_ATTRIBUTES = {"session", "pluginmanager", "stats", "testscollected", "testsfailed", "terminalreporter"}
+_SESSION_ATTRIBUTES = {"session", "pluginmanager", "stats", "testscollected", "testsfailed", "terminalreporter",
+                       "listchain", "getparent", "iter_parents"}
 
 
 def _session_reads(tree):
     for node in ast.walk(tree):
+        # A hook implementation (a conftest recorder, for example) can collect session-wide results.
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name.startswith("pytest_"):
+            return True
         if isinstance(node, ast.Attribute) and (node.attr in _SESSION_ATTRIBUTES or node.attr.startswith("_planeon_")):
             return True
         if (isinstance(node, ast.Call) and getattr(node.func, "id", "") in ("getattr", "hasattr", "setattr")
@@ -895,3 +930,38 @@ SESSION_READERS = {
     # This layer's test: checks only that the parallel-suite plugin is registered.
     "tests/test_parallel_suite.py",
 }
+
+
+def _live_writers(tree):
+    """Module functions that write past output capture, directly or through a helper of the same module."""
+    functions = {node.name: node for node in tree.body if isinstance(node, ast.FunctionDef)}
+
+    def direct(function):
+        for node in ast.walk(function):
+            if isinstance(node, ast.Attribute) and node.attr == "disabled" and getattr(node.value, "id", "") in ("capsys", "capfd"):
+                return True
+            if isinstance(node, ast.Attribute) and node.attr in ("__stdout__", "__stderr__"):
+                return True
+            if (isinstance(node, ast.Call) and getattr(node.func, "attr", "") == "write"
+                    and getattr(node.func.value, "id", "") == "os" and node.args
+                    and isinstance(node.args[0], ast.Constant) and node.args[0].value in (1, 2)):
+                return True
+        return False
+
+    writers = {name for name, function in functions.items() if direct(function)}
+    while True:
+        more = {name for name, function in functions.items() if name not in writers
+                and any(isinstance(node, ast.Call) and getattr(node.func, "id", "") in writers for node in ast.walk(function))}
+        if not more:
+            return {name for name in writers if name.startswith("test_")}
+        writers |= more
+
+
+def test_every_test_that_writes_past_capture_runs_in_the_parent():
+    """Live output from a worker would land in its log; such tests, and the session reader, are exactly PARENT_NODES."""
+    writers = set()
+    for path in sorted([*(profile.ROOT / "tests").rglob("test_*.py"), *(profile.ROOT / "ci").glob("test_*.py")]):
+        rel = path.relative_to(profile.ROOT).as_posix()
+        writers |= {rel + "::" + name for name in _live_writers(ast.parse(path.read_text()))}
+    linux = _load("_met_perf_035_linux_conftest_copy2", "tests/linux_runner/conftest.py")
+    assert set(SUITE.PARENT_NODES) == writers | {linux.PREDECESSOR_PROOF_NODE}

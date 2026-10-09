@@ -432,26 +432,28 @@ def validate_w02a_agreement(matrix: dict) -> None:
             "slot values fit the W02a label patterns")
 
 
-def validate_v4_vectors(matrix: dict, vectors: dict, v3_vectors: dict) -> int:
-    """Every vector replays through the evaluator; every v3 vector keeps its identifier and, apart from S11, M34 and M45,
-    its content."""
+def check_v4_vector_keys(matrix: dict, vectors: dict, v3_vectors: dict) -> None:
     require(type(vectors) is dict and set(vectors) == {"evidenceClass", "accessChecks", "mutationChecks", "w02aSlots"}
             and vectors["evidenceClass"] == "DATA_CHECK_ONLY" and vectors["w02aSlots"] == v3_vectors["w02aSlots"]
             == model.w02a_slots(matrix), "closed matrix v4 vectors")
-    checks = 0
-    for row in vectors["accessChecks"]:
-        require(model.allowed(matrix, row["state"], row["source"], row["target"], row["class"], row["perm"]) is row["expect"],
-                "access check " + row["id"])
-        checks += 1
-    for row in vectors["mutationChecks"]:
-        mutated = model.apply_ops(matrix, row["ops"])
-        try:
-            model.check_matrix(mutated)
-            ok = row["expect"] == {"failedAssertions": model.failed_assertions(mutated)} and row["expect"]["failedAssertions"] != []
-        except ValueError as exc:
-            ok = set(row["expect"]) == {"matrixError"} and row["expect"]["matrixError"] in (str(exc), str(exc).split(":", 1)[0])
-        require(ok, "mutation check " + row["id"])
-        checks += 1
+
+
+def check_access_row(matrix: dict, row: dict) -> None:
+    require(model.allowed(matrix, row["state"], row["source"], row["target"], row["class"], row["perm"]) is row["expect"],
+            "access check " + row["id"])
+
+
+def check_mutation_row(matrix: dict, row: dict) -> None:
+    mutated = model.apply_ops(matrix, row["ops"])
+    try:
+        model.check_matrix(mutated)
+        ok = row["expect"] == {"failedAssertions": model.failed_assertions(mutated)} and row["expect"]["failedAssertions"] != []
+    except ValueError as exc:
+        ok = set(row["expect"]) == {"matrixError"} and row["expect"]["matrixError"] in (str(exc), str(exc).split(":", 1)[0])
+    require(ok, "mutation check " + row["id"])
+
+
+def check_v4_vector_inventory(vectors: dict, v3_vectors: dict) -> None:
     for key, changed in (("accessChecks", {"S11"}), ("mutationChecks", {"M34", "M45"})):
         current = {row["id"]: row for row in vectors[key]}
         require(len(current) == len(vectors[key]) and all(row["id"] in current for row in v3_vectors[key])
@@ -462,7 +464,23 @@ def validate_v4_vectors(matrix: dict, vectors: dict, v3_vectors: dict) -> int:
     require({key: s11[key] for key in ("state", "source", "target", "class", "perm", "expect")}
             == {"state": "ENROLLED_CONTAINMENT", "source": "planeon_contain_t", "target": "planeon_cgroup_slice_t", "class": "dir",
                 "perm": "create", "expect": True}, "S11 checks dir create against the parent-computed slice type (K4)")
-    return checks
+
+
+def replay_v4_vectors(matrix: dict, vectors: dict, v3_vectors: dict) -> int:
+    """The full replay: exactly the conjunction of the helpers above, in this order."""
+    check_v4_vector_keys(matrix, vectors, v3_vectors)
+    for row in vectors["accessChecks"]:
+        check_access_row(matrix, row)
+    for row in vectors["mutationChecks"]:
+        check_mutation_row(matrix, row)
+    check_v4_vector_inventory(vectors, v3_vectors)
+    return len(vectors["accessChecks"]) + len(vectors["mutationChecks"])
+
+
+def validate_v4_vectors(matrix: dict, vectors: dict, v3_vectors: dict) -> int:
+    """Every vector replays through the evaluator; every v3 vector keeps its identifier and, apart from S11, M34 and M45,
+    its content."""
+    return replay_v4_vectors(matrix, vectors, v3_vectors)
 
 
 def _round_path(number: int, path: str) -> str:
@@ -544,12 +562,12 @@ def validate() -> None:
             == record["validatorNormalizedSha256"], "SELinux matrix v4 validator drift")
     paths = sorted((ROOT / "task-packets").glob("*.yaml"))
     old = set(record["baselinePackets"])
-    require(len(paths) == 216
-            and {path.stem for path in paths} == old | {NEW_PACKET, successor.NEW_PACKET},
-            "closed 216-packet catalog retaining the 215-packet checkpoint")
+    require(len(paths) == 217
+            and {path.stem for path in paths} == old | {NEW_PACKET, successor.NEW_PACKET, successor.successor.NEW_PACKET},
+            "closed 217-packet catalog retaining the 215-packet checkpoint")
     packets = {}
     for path in paths:
-        if path.stem == successor.NEW_PACKET:
+        if path.stem in (successor.NEW_PACKET, successor.successor.NEW_PACKET):
             continue
         raw = regular_bytes("task-packets/" + path.name)
         expected = record["packetSha256"] if path.stem == NEW_PACKET else record["baselinePackets"][path.stem]
@@ -587,4 +605,4 @@ def validate() -> None:
 
 if __name__ == "__main__":
     validate()
-    print("SELinux matrix v4 contract valid: 216 current specifications; 215-packet checkpoint and exact 214-packet predecessor; DATA_CHECK_ONLY, every E01-E12 obligation open.")
+    print("SELinux matrix v4 contract valid: 217 current specifications; 215-packet checkpoint and exact 214-packet predecessor; DATA_CHECK_ONLY, every E01-E12 obligation open.")

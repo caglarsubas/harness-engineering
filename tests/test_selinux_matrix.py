@@ -46,7 +46,7 @@ def test_exact_current_source_and_complete_history_chain():
     assert profile.validate() is None
     current = packets()
     accepted = profile.historical_catalog(current)
-    assert len(current) == 216 and len(accepted) == 205
+    assert len(current) == 217 and len(accepted) == 205
     assert set(accepted) == set(current) - {profile.NEW_PACKET, profile.successor.NEW_PACKET,
                                             profile.successor.successor.NEW_PACKET,
                                             profile.successor.successor.successor.NEW_PACKET,
@@ -56,7 +56,8 @@ def test_exact_current_source_and_complete_history_chain():
                                             profile.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET,
                                             profile.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET,
                                             profile.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET,
-                                            profile.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET}
+                                            profile.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET,
+                                            profile.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET}
     assert len(wprofile.historical_catalog(current)) == 204
     assert len(rprofile.historical_catalog(current)) == 203
     assert len(gprofile.historical_catalog(current)) == 202
@@ -585,19 +586,60 @@ def _contract():
 
 
 def test_every_vector_replays_and_every_assertion_holds():
+    # PERF-SEL (name kept for test identity): the full replay of every vector runs inside validate()
+    # (test_exact_current_source_and_complete_history_chain; test_matrix_weakening_is_refused case 0 also reaches it),
+    # and test_vector_refusal_reaches_the_contract_route drives a refusal through it; here the route and the cheap
+    # inventory are pinned.
     matrix, vectors = _contract()
-    assert profile.validate_vectors(matrix, vectors) == len(vectors["accessChecks"]) + len(vectors["mutationChecks"]) + 1
-    assert profile.validate_selinux_contract() is None
+    tree = ast.parse(profile.regular_bytes(profile.VALIDATOR_PATH))
+    calls = lambda name: [n.func.id for n in ast.walk(next(f for f in tree.body if isinstance(f, ast.FunctionDef) and f.name == name))
+                          if isinstance(n, ast.Call) and isinstance(n.func, ast.Name)]
+    assert "validate_selinux_contract" in calls("validate") and "validate_vectors" in calls("validate_selinux_contract")
+    assert calls("validate_vectors") == ["replay_vectors"]
+    profile.check_vector_keys(vectors)
+    profile.check_vector_inventory(matrix, vectors)
 
 
-@pytest.mark.parametrize("key,index,field,value", [("accessChecks", 0, "expect", False), ("accessChecks", -1, "expect", True),
-                                                   ("mutationChecks", 0, "expect", {"failedAssertions": []}),
-                                                   ("mutationChecks", -1, "expect", {"matrixError": "other"})])
+# PERF-SEL: each weakened row is refused by exactly the per-row conjunct that checks it, with the same message as the full
+# replay, which is exactly the conjunction of those conjuncts (pinned below).
+WEAKENINGS = [("accessChecks", 0, "expect", False), ("accessChecks", -1, "expect", True),
+              ("mutationChecks", 0, "expect", {"failedAssertions": []}), ("mutationChecks", -1, "expect", {"matrixError": "other"})]
+
+
+@pytest.mark.parametrize("key,index,field,value", WEAKENINGS)
 def test_vectors_cannot_be_weakened(key, index, field, value):
     matrix, vectors = _contract()
-    vectors[key][index][field] = value
-    with pytest.raises(ValueError):
-        profile.validate_vectors(matrix, vectors)
+    check = {"accessChecks": profile.check_access_row, "mutationChecks": profile.check_mutation_row}[key]
+    row = vectors[key][index]
+    check(matrix, row)
+    row[field] = value
+    with pytest.raises(ValueError, match=("access check " if key == "accessChecks" else "mutation check ") + row["id"] + "$"):
+        check(matrix, row)
+
+
+def test_full_replay_is_exactly_the_conjunction_of_the_helpers():
+    tree = ast.parse(profile.regular_bytes(profile.VALIDATOR_PATH))
+    body = next(node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "replay_vectors").body
+    source = [ast.unparse(node) for node in body if not (isinstance(node, ast.Expr) and isinstance(node.value, ast.Constant))]
+    assert source == ["check_vector_keys(vectors)",
+                      "for row in vectors['accessChecks']:\n    check_access_row(matrix, row)",
+                      "for row in vectors['mutationChecks']:\n    check_mutation_row(matrix, row)",
+                      "check_vector_inventory(matrix, vectors)",
+                      "return len(vectors['accessChecks']) + len(vectors['mutationChecks']) + 1"]
+
+
+@pytest.mark.parametrize("cases", [WEAKENINGS, [case for case in WEAKENINGS if case[0] == "mutationChecks"]])
+def test_full_replay_refuses_with_the_first_weakened_rows_message(cases):
+    # The full replay with every weakening applied at once refuses with the message of the first weakened row in replay
+    # order, which is that row's per-row message; the mutation-only set reaches the mutation conjuncts.
+    matrix, vectors = _contract()
+    for key, index, field, value in cases:
+        vectors[key][index][field] = value
+    order = [row["id"] for key in ("accessChecks", "mutationChecks") for row in vectors[key]]
+    first_key, first_index = min(((key, index) for key, index, _, _ in cases), key=lambda c: order.index(vectors[c[0]][c[1]]["id"]))
+    prefix = "access check " if first_key == "accessChecks" else "mutation check "
+    with pytest.raises(ValueError, match=prefix + vectors[first_key][first_index]["id"] + "$"):
+        profile.replay_vectors(matrix, vectors)
 
 
 def _changed_json(monkeypatch, target, change):
@@ -647,3 +689,12 @@ def test_contract_status_cannot_overclaim(monkeypatch, change):
     _changed_json(monkeypatch, profile.STATUS_PATH, change)
     with pytest.raises(ValueError):
         profile.validate_selinux_status()
+
+
+def test_vector_refusal_reaches_the_contract_route(monkeypatch):
+    # PERF-SEL: a weakened vector read through the contract route is refused by the replay inside that route.
+    def flip(vectors):
+        vectors["accessChecks"][0]["expect"] = not vectors["accessChecks"][0]["expect"]
+    _changed_json(monkeypatch, profile.SUBJECT_PATHS["vectors.json"], flip)
+    with pytest.raises(ValueError, match="access check C001$"):
+        profile.validate_selinux_contract()

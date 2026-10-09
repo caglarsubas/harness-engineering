@@ -634,6 +634,7 @@ def test_every_newer_authority_is_read_exactly_once_per_route(monkeypatch, route
         assert counts == expected
 
 
+import fnmatch
 import hashlib as _hashlib
 import yaml as _yaml
 
@@ -645,6 +646,10 @@ BASE_DIGESTS = ("9e2b43dac1ca4531dcdeb3a1b6ead8002d7384e2a0d0e6b57e972accb8631c0
                 "857376b5e2b10a2a2542124a7d36b770eca531d15e463d68415416b887dd90a6",
                 "1723f1ea35ecc87529c2d680f7e51fda61923a368f1e241b7a82982b10935b1d")
 PUBLIC_API = frozenset({"effective_bytes", "effective_catalog"})
+MODULE_NAMES = ("sector_catalog", "scripts.sector_catalog")
+CATALOG_BASENAMES = ("providers.yaml", "services.yaml", "PROVIDER_MODULE_CATALOG.md")
+CATALOG_DIRS = frozenset({"architecture", "docs"})
+LISTING_FUNCTIONS = frozenset({("os", "walk"), ("os", "listdir"), ("os", "scandir"), ("glob", "glob"), ("glob", "iglob")})
 EXCLUDED_DIRS = frozenset({".git", ".venv", "venv", "node_modules", "__pycache__", ".pytest_cache"})
 LITERAL_READERS = frozenset({
     "scripts/sector_catalog.py",
@@ -660,6 +665,13 @@ LITERAL_READERS = frozenset({
     "tests/test_sector_direction.py",
     "tests/test_validator_units.py",
     "tests/test_zero_bill.py",
+})
+GLOB_READERS = frozenset({
+    "ci/lock_warm_snapshot.py",
+    "ci/measure_yaml_parsing.py",
+    "scripts/zero_bill_scan.py",
+    "tests/test_ci_performance.py",
+    "tests/test_sector_catalog.py",
 })
 ROUND_COPIES = {
     "architecture/sector-catalog/round1/sector_catalog.py": "59ed665f3ac0a17063003207f7967bb8f630d8488901fa835fcd1ff1484821d7",
@@ -831,8 +843,9 @@ def test_reviewed_bytes_is_the_only_semantic_read():
     names = {"_era_model", "validate_sector_catalog_status", "validate_sector_catalog"}
     for node in tree.body:
         if isinstance(node, ast.FunctionDef) and node.name in names:
-            called = {getattr(call.func, "id", "") for call in ast.walk(node) if isinstance(call, ast.Call)}
-            assert "regular_bytes" not in called and "open" not in called
+            used = {name.id for name in ast.walk(node) if isinstance(name, ast.Name)}
+            attributes = {attribute.attr for attribute in ast.walk(node) if isinstance(attribute, ast.Attribute)}
+            assert not used & {"regular_bytes", "open"} and not attributes & {"read_bytes", "read_text", "open"}
 
 
 def _files(suffixes, top=""):
@@ -852,6 +865,65 @@ def test_only_the_frozen_readers_name_the_catalogs():
         assert _hashlib.sha256((profile.ROOT / rel).read_bytes()).hexdigest() == expected
 
 
+def _constants(node):
+    return [item.value for item in ast.walk(node) if isinstance(item, ast.Constant) and isinstance(item.value, str)]
+
+
+def _listing(call):
+    """(receiver, recursive) of a directory listing that can yield a catalog file; None otherwise."""
+    func = call.func
+    if not isinstance(func, ast.Attribute):
+        return None
+    if isinstance(func.value, ast.Name) and (func.value.id, func.attr) in LISTING_FUNCTIONS:
+        receiver = call.args[0] if call.args else None
+        pattern = receiver if func.value.id == "glob" else None
+        recursive = func.attr == "walk" or func.value.id == "glob"
+    elif func.attr in ("glob", "rglob", "iterdir", "walk") and not (isinstance(func.value, ast.Name)
+                                                                    and func.value.id in ("ast", "os")):
+        receiver, recursive = func.value, func.attr in ("rglob", "walk")
+        pattern = call.args[0] if func.attr in ("glob", "rglob") and call.args else None
+    else:
+        return None
+    if isinstance(pattern, ast.Constant) and isinstance(pattern.value, str):
+        recursive = recursive or "**" in pattern.value
+        if not any(fnmatch.fnmatch(base, pattern.value.rsplit("/", 1)[-1]) for base in CATALOG_BASENAMES):
+            return None
+    return receiver, recursive
+
+
+def _bindings(tree):
+    """Constants a name may hold: loop and comprehension targets over literals, and simple assignments."""
+    bound = {}
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.For, ast.comprehension)) and isinstance(node.target, ast.Name):
+            bound.setdefault(node.target.id, []).extend(_constants(node.iter))
+        elif isinstance(node, ast.Assign):
+            for target in node.targets:
+                if isinstance(target, ast.Name):
+                    bound.setdefault(target.id, []).extend(_constants(node.value))
+    return bound
+
+
+def test_only_the_frozen_readers_list_the_catalog_directories():
+    readers = set()
+    for rel, path in _files({".py"}):
+        tree = ast.parse(path.read_bytes())
+        bound = _bindings(tree)
+        for call in ast.walk(tree):
+            found = _listing(call) if isinstance(call, ast.Call) else None
+            if found is None:
+                continue
+            receiver, recursive = found
+            roots = _constants(receiver) if receiver is not None else []
+            for name in ast.walk(receiver) if receiver is not None else ():
+                if isinstance(name, ast.Name):
+                    roots += bound.get(name.id, [])
+            tops = {root.strip("/").split("/")[0] if recursive else root.strip("/") for root in roots}
+            if tops & CATALOG_DIRS or (recursive and not roots):
+                readers.add(rel)
+    assert readers == GLOB_READERS
+
+
 def test_the_records_that_pin_or_name_the_catalogs_are_frozen():
     pinning, naming = set(), set()
     for rel, path in _files(None, "architecture"):
@@ -866,29 +938,41 @@ def test_the_records_that_pin_or_name_the_catalogs_are_frozen():
     assert naming == NAMING_RECORDS
 
 
+def _dotted(node):
+    if isinstance(node, ast.Name):
+        return node.id
+    if isinstance(node, ast.Attribute):
+        base = _dotted(node.value)
+        return base and base + "." + node.attr
+    return None
+
+
 def test_consumers_use_only_the_public_overlay_api():
     exempt = {"scripts/sector_catalog.py", "scripts/validate_sector_catalog.py", "tests/test_sector_catalog.py", *ROUND_COPIES}
+    module_strings = tuple(name + "." for name in MODULE_NAMES)
     for rel, path in _files({".py"}):
         if rel in exempt:
             continue
         tree = ast.parse(path.read_bytes())
-        aliases = set()
+        parents = {child: node for node in ast.walk(tree) for child in ast.iter_child_nodes(node)}
+        bound = set()
         for node in ast.walk(tree):
             if isinstance(node, ast.Import):
-                aliases |= {alias.asname or alias.name for alias in node.names
-                            if alias.name in ("sector_catalog", "scripts.sector_catalog")}
+                bound |= {alias.asname or alias.name for alias in node.names
+                          if alias.name.rsplit(".", 1)[-1] == "sector_catalog"}
             elif isinstance(node, ast.ImportFrom):
-                if node.module in ("sector_catalog", "scripts.sector_catalog"):
+                if (node.module or "").rsplit(".", 1)[-1] == "sector_catalog":
                     assert all(alias.name in PUBLIC_API for alias in node.names), rel
-                elif node.module == "scripts":
-                    aliases |= {alias.asname or alias.name for alias in node.names if alias.name == "sector_catalog"}
+                bound |= {alias.asname or alias.name for alias in node.names if alias.name == "sector_catalog"}
+            elif isinstance(node, ast.Constant) and isinstance(node.value, str):
+                assert node.value not in MODULE_NAMES and not node.value.startswith(module_strings), (rel, node.value)
+        # The module object may appear only as the receiver of a public attribute read: no other attribute, no
+        # assignment or deletion, and no passing it to setattr, getattr, vars, monkeypatch or mock.patch.object.
         for node in ast.walk(tree):
-            if isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name) and node.value.id in aliases:
-                assert node.attr in PUBLIC_API and isinstance(node.ctx, ast.Load), (rel, node.attr)
-            if isinstance(node, ast.Call) and getattr(node.func, "id", "") in ("setattr", "delattr") and node.args:
-                assert not (isinstance(node.args[0], ast.Name) and node.args[0].id in aliases), rel
-            if isinstance(node, ast.Constant) and isinstance(node.value, str):
-                assert not node.value.startswith(("scripts.sector_catalog.", "sector_catalog.")), rel
+            if isinstance(node, (ast.Name, ast.Attribute)) and _dotted(node) in bound:
+                use = parents.get(node)
+                assert (isinstance(use, ast.Attribute) and use.value is node and use.attr in PUBLIC_API
+                        and isinstance(use.ctx, ast.Load)), (rel, node.lineno)
 
 
 def _readiness_errors(monkeypatch, apply_deferred=False):

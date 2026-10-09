@@ -9,11 +9,12 @@ Two entry points:
 - check(read, packets) validates one era: an overlay, its catalogs, the sector record and the R11 notice, read through
   an injected byte reader and judged against an injected packet set. A history-chain layer passes its reviewed_bytes
   and frozenset(historical_catalog(...)), so later packets leave that layer valid through projection.
-- Publishing IND-BANK-005 (the successor that supersedes the pack manifest's bound packet) needs a reviewed revision of
-  this module and of the overlay schema, which rebinds the implementation; until then the check refuses that state.
 - effective_bytes(path) and effective_catalog(path) serve this repository's current tree (no root override). They run
   check() on the current files and the published packets first. Consumers must read the banking-era catalogs only
   through these two functions.
+
+Publishing IND-BANK-005 (the successor that supersedes the pack manifest's bound packet) needs a reviewed revision of
+this module and of the overlay schema, which rebinds the implementation; until then the check refuses that state.
 """
 from __future__ import annotations
 

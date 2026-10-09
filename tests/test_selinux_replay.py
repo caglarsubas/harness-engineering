@@ -46,7 +46,7 @@ def packets():
 
 
 def layer_packets():
-    # The newer MET-PERF-035 layer is projected away before this layer's payload checks.
+    # The newer MET-SECTOR-002 layer is projected away before this layer's payload checks.
     return profile.successor.historical_catalog(packets())
 
 
@@ -455,7 +455,7 @@ def test_normalized_validator_pin_rejects_source_mutation(monkeypatch, mutation)
         return raw
 
     monkeypatch.setattr(profile, "regular_bytes", changed_reader)
-    # The newer MET-PERF-035 layer refuses a mutated validator before this layer.
+    # The newer MET-SECTOR-002 layer refuses a mutated validator before this layer.
     with pytest.raises(ValueError, match="unreviewed current source: scripts/validate_selinux_replay.py"):
         profile.validate()
 

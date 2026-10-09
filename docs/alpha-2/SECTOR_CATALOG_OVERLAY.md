@@ -6,7 +6,8 @@
 Owner decision SECTOR-D1 made banking the first and only release sector. MET-SECTOR-001 listed eight exact catalog
 follow-ups and kept the catalogs byte-identical. The first design applied them in place and passed content review,
 but its build failed: older validators read `architecture/providers.yaml` and `architecture/services.yaml` from disk as
-immutable inputs, and 36 earlier architecture records pin them. Owner decision (via the lane monitor): an overlay.
+immutable inputs, and 37 architecture records pin them (36 earlier records and `sector-direction.json`). Owner
+decision (via the lane monitor): an overlay.
 
 - **The catalogs stay byte-identical.** Older validators keep reading the base bytes.
 - **The overlay record.** `architecture/sector-catalog/overlay.json` gives the banking-era view: seven follow-ups applied
@@ -18,7 +19,8 @@ immutable inputs, and 36 earlier architecture records pin them. Owner decision (
 - **The deferral.** It is derived from `implementationOwnership` and `successorProposals`: the pack manifest path is
   bound to the published IND-WG-005 and blocked by the unpublished IND-BANK-005. Until a reviewed revision of the
   module and the overlay schema rebinds that implementation, the consumer gate refuses a published IND-BANK-005
-  whatever the overlay contains (review round 4, note R4-N1).
+  whatever the overlay contains. Round 4's note R4-N1 asked for exactly this wording in the overlay README and the
+  module docstring; this packet applies it, and nothing else changes in the reviewed bytes.
 - **The R11 notice.** `docs/repositories/11-mas-harness-distribution.md` carries the sector-direction notice that the
   MET-SECTOR-001 review asked for. Publishing DIST-BANK-001 requires a revised notice, or one re-pointed to a
   still-unpublished successor (review round 4, note R4-N2).
@@ -27,9 +29,10 @@ immutable inputs, and 36 earlier architecture records pin them. Owner decision (
 
 The new layer `scripts/validate_sector_catalog.py` runs the reviewed module from its own era's bytes, so later packets
 keep it valid through projection. Its test guards the consumer rule:
-- only frozen readers name the catalogs;
+- only frozen readers name the catalogs, and only frozen readers list `architecture/` or `docs/`;
 - the records that pin or name them are frozen;
-- consumers use only the public API, and no module attribute is reassigned;
+- consumers use the module object only to read `effective_bytes` or `effective_catalog`: no other attribute, no
+  assignment, no `setattr`, `getattr`, `vars`, monkeypatch or `mock.patch`, and no import by string;
 - readiness's catalog semantics hold on the effective catalogs.
 
 Nothing about the banking pack, its manifest, profile installation or tenant acceptance exists yet; every SECTOR-D1

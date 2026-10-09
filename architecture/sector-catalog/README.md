@@ -98,8 +98,8 @@ catalog page. The seven applied entries cover 11 of them, and the deferred entry
 - IND-BANK-005, the successor proposal, is not published.
 - `CONTRACT_ONLY` is not admissible either, because the profile fixtures use the module.
 
-The entry changes when IND-BANK-005 is published. Until then, the consumer gate (`effective_bytes`) refuses a published
-IND-BANK-005 while the overlay still defers.
+The entry changes when IND-BANK-005 is published. Until the reviewed module and schema revision described in "Forward
+path", the consumer gate (`effective_bytes`) refuses a published IND-BANK-005 whatever the overlay contains.
 
 ## Distribution notice
 

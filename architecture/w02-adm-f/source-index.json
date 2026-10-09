@@ -1,0 +1,188 @@
+{
+ "schemaVersion": "planeon.internal.w02-adm-f-index/v1",
+ "round": 2,
+ "baseMain": "f88e7f7884de9c96a09ed8aa65d468966038bffd",
+ "baseTree": "bfa6284a9c7457d1aea0fb0922b8899d2e60dbde",
+ "subject": [
+  {
+   "path": "architecture/w02-adm-f/REVIEW_BRIEF.md",
+   "sha256": "54a33f2522be5f777f34eb00551fa562fc24fb7ed84c9037c6ba1e9906cf5edd"
+  },
+  {
+   "path": "architecture/i05-gate-channel-v3/README.md",
+   "sha256": "f82f43330125640d3ac946d2afc9a1804a21e5e60a7ac4b94e5d6cb6ed2ea3aa"
+  },
+  {
+   "path": "architecture/i05-gate-channel-v3/channel.schema.json",
+   "sha256": "3bfee13c9d32e82fe5ab908eb6f716bc11881f9d57b324f8ea4a21a3ad35356f"
+  },
+  {
+   "path": "architecture/i05-gate-channel-v3/outcome-mapping.json",
+   "sha256": "4466f379f1cc669e047cffd8afa5fa88b2cc7648a51e2d38b17f0bd5e2252a3a"
+  },
+  {
+   "path": "architecture/i05-gate-channel-v3/vectors.json",
+   "sha256": "ab75d86fe54ade7ee2695ef84b200d0473e14e4112e64e7702032593658763ed"
+  },
+  {
+   "path": "scripts/i05_gate_channel_v3.py",
+   "sha256": "2c7985b539c0ce8eb79eaabfa1f1ab7d43bdca7515defc590a76ecb1697ca959"
+  },
+  {
+   "path": "architecture/admission-semantics-v3/README.md",
+   "sha256": "c3106482b4ff79649cbef7c65797c6fcd6b64f8419e871ae7d89eecad3ff98ab"
+  },
+  {
+   "path": "architecture/admission-semantics-v3/allowlists.json",
+   "sha256": "9314cd0732880a8e6af91df562af0a392183f6ef078c12fa9b479f6953fad5d4"
+  },
+  {
+   "path": "architecture/admission-semantics-v3/admission-manifests/planeon-a2.json",
+   "sha256": "1096b3cc71c4fe6b5a17ed61e8bf8c17ee17fcf52b192503534d60aed9ce4741"
+  },
+  {
+   "path": "architecture/admission-semantics-v3/vectors.json",
+   "sha256": "a3e2dc9818742ae2188e0e83cf91bb833be836115975b3fb23d5f280f6928cc1"
+  },
+  {
+   "path": "scripts/admission_semantics_v3.py",
+   "sha256": "3db8f51ab55f49dc33cf6f028306bfb6d7aa1c5d7d96f264cfe709dae925ad22"
+  },
+  {
+   "path": "architecture/i07-policy-write-v3/README.md",
+   "sha256": "a8c51a725b99d84351aba7a326196e7078c239ba4e28d3eaec1cf09fb3dca43d"
+  },
+  {
+   "path": "architecture/i07-policy-write-v3/channel.schema.json",
+   "sha256": "c68721a1002fccc7d6e59eeee9016a0a0f4a7428fad714e5a3d90a362d30ce09"
+  },
+  {
+   "path": "architecture/i07-policy-write-v3/policy-kinds.json",
+   "sha256": "4e427204b89959cb855d8641c3fa6f95d358b0b6a6a7730bfc7776adc4a173c0"
+  },
+  {
+   "path": "architecture/i07-policy-write-v3/vectors.json",
+   "sha256": "c4c24c5ff15618aa2f0fe0f016011359bc4316220c6e40d5168f9ee24b6f736d"
+  },
+  {
+   "path": "scripts/i07_policy_write_v3.py",
+   "sha256": "6cc7ea0d3df0c7f2966184bb6d322189de3b49b5b02dfe2429911121973afe08"
+  }
+ ],
+ "predecessorInputs": [
+  {
+   "path": "architecture/i05-gate-channel-v2/README.md",
+   "sha256": "1cb07cef90b0881c42370d8bbaeea08c6abc48478bed3939286b651601d2cca3"
+  },
+  {
+   "path": "architecture/i05-gate-channel-v2/channel.schema.json",
+   "sha256": "6c33f344351b7df21472e46816616fa45899e5f81c82837f6aab3ad16241ac93"
+  },
+  {
+   "path": "architecture/i05-gate-channel-v2/outcome-mapping.json",
+   "sha256": "4466f379f1cc669e047cffd8afa5fa88b2cc7648a51e2d38b17f0bd5e2252a3a"
+  },
+  {
+   "path": "architecture/i05-gate-channel-v2/vectors.json",
+   "sha256": "6de80fad76418f104b2f20b90a0efb569a0c5e5bba2aa3da04ce2dff9eae53d9"
+  },
+  {
+   "path": "architecture/i05-gate-channel-v2/status.json",
+   "sha256": "77acc0ecb57dd6c4fefb5125012989cc607128d3067acb5499a05b2d7318adf0"
+  },
+  {
+   "path": "architecture/i05-gate-channel-v2/review-round1.json",
+   "sha256": "3c6eee315794439cb8b6759583796250d674f1a7cb6952f1111e7056dc60223f"
+  },
+  {
+   "path": "scripts/i05_gate_channel_v2.py",
+   "sha256": "2a1e0cfc5947c19c981cbe21f02fc15796bbf62d53c0a7656f889383e2b4759e"
+  },
+  {
+   "path": "architecture/admission-semantics-v2/README.md",
+   "sha256": "48e44b8d6a1c2fca5fffbad9c2fb97daf79ff5efeab221a781ec50e17ba1b9bf"
+  },
+  {
+   "path": "architecture/admission-semantics-v2/allowlists.json",
+   "sha256": "2ab837aa50b7ee7fe58a19c9bc0aae67edb49ad4a143e19f928bc42def9bb863"
+  },
+  {
+   "path": "architecture/admission-semantics-v2/admission-manifests/planeon-a2.json",
+   "sha256": "1096b3cc71c4fe6b5a17ed61e8bf8c17ee17fcf52b192503534d60aed9ce4741"
+  },
+  {
+   "path": "architecture/admission-semantics-v2/vectors.json",
+   "sha256": "4b79b1ae23993d923d24a26a9e05ae2ea7a013bd722af5e8901176e08b98b2de"
+  },
+  {
+   "path": "architecture/admission-semantics-v2/status.json",
+   "sha256": "6e58e6e957c71b6a945cdbfbcbca5bbf5d6b537b2d21a14bfe39806707692486"
+  },
+  {
+   "path": "architecture/admission-semantics-v2/review-round1.json",
+   "sha256": "d14b2a293dcb4121fe177cf4ff2906bacfb210ca8df2fdbffb18b86d86194296"
+  },
+  {
+   "path": "architecture/admission-semantics-v2/review-round2.json",
+   "sha256": "db699de93ca7103501409e5bbad2614927551cd5905d8f371aff78dd0076629b"
+  },
+  {
+   "path": "scripts/admission_semantics_v2.py",
+   "sha256": "b62a8c43a82f3e280da38b1dab5241f9b50fc0ef7ba6cf83c7a5f9b147d18d39"
+  },
+  {
+   "path": "architecture/i07-policy-write-v2/README.md",
+   "sha256": "cde20d7fee8661cd9314350849870fe5b0838b7914a60237d0eeb1f5dca39d39"
+  },
+  {
+   "path": "architecture/i07-policy-write-v2/channel.schema.json",
+   "sha256": "8ffc09d892235ccbde68d685d82407a1026baf6086b3f9d3c37bd05aad06b7eb"
+  },
+  {
+   "path": "architecture/i07-policy-write-v2/policy-kinds.json",
+   "sha256": "4e427204b89959cb855d8641c3fa6f95d358b0b6a6a7730bfc7776adc4a173c0"
+  },
+  {
+   "path": "architecture/i07-policy-write-v2/vectors.json",
+   "sha256": "ca85f62a1a147e6b98ae24aae73ae0540f13478aedaa36fafd29b88fca5096e6"
+  },
+  {
+   "path": "architecture/i07-policy-write-v2/status.json",
+   "sha256": "f8d9cff9049d5b6b7ccec03890f4bea16fdbe4a9e6e57deb777c96124b7e154f"
+  },
+  {
+   "path": "architecture/i07-policy-write-v2/review-round1.json",
+   "sha256": "38fc2d83fc07e32f6550d84ed1a8b0843c1322a31258c481b30f4c586bbb439d"
+  },
+  {
+   "path": "scripts/i07_policy_write_v2.py",
+   "sha256": "d625bbde8dd3892debb56a2ff2082c309c1c24ef4a8c48bea30c2b85218e9852"
+  },
+  {
+   "path": "architecture/i05-gate-channel/README.md",
+   "sha256": "dc9aa22017b2cdf71f886fb7890aff3f6e7095b9afc25bd37645cb0dee23b498"
+  },
+  {
+   "path": "architecture/i06-backend-profile/README.md",
+   "sha256": "ccf952d40b4f6229c0cdea79f976253cd4abb19438c1eebc5794e748a708e4b7"
+  },
+  {
+   "path": "architecture/i06-backend-profile/identity-closure.json",
+   "sha256": "0a9b82ffa2d63bf48a8850574cdf3ece02bf1913f33a72cbb96ed30a40f1f3bb"
+  },
+  {
+   "path": "architecture/i06-backend-profile-v2/criteria.json",
+   "sha256": "026206c57d3025c0f0129b6615e46c83d5a8000ddc3288f000a1fe4570050cda"
+  },
+  {
+   "path": "architecture/host-interface-inputs/resolved/HOST_INTERFACE_SPEC.md",
+   "sha256": "8a3a09bb5dbc08804dbea06dd0700a14648a9cdbc8efd62112dc64ba0b6ba1b4"
+  }
+ ],
+ "earlierRounds": [
+  {
+   "path": "architecture/w02-adm-f/review-round1.json",
+   "sha256": "acd1e7f0ce7b85eb44c4278355db88102cd3c2ca88a78e1f137376950755935c"
+  }
+ ]
+}

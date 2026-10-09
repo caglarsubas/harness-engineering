@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
-"""Validate the POLICY-ADMISSION-SEMANTICS/v2 contract (W02f) and the exact 212-to-211 projection."""
+"""Validate the MET-PERF-035 parallel-suite changes and the exact 216-to-215 projection."""
 from __future__ import annotations
 
+import ast
 import base64
 import binascii
 import copy
@@ -15,21 +16,17 @@ from typing import Any
 
 try:
     from safe_yaml import safe_load
-    import admission_semantics_v2 as model
-    import validate_i07_policy_write_v2 as successor
 except ImportError:
     from scripts.safe_yaml import safe_load
-    from scripts import admission_semantics_v2 as model
-    from scripts import validate_i07_policy_write_v2 as successor
 
 
 ROOT = Path(__file__).resolve().parents[1]
-AUTHORITY_PATH = "architecture/admission-semantics-v2-authority.json"
-AUTHORITY_SHA256 = "41468cf5ed268f573666a7fe5a18b64f5c5cfbd5bcd4168710516a5b5a624cfd"
-VALIDATOR_PATH = "scripts/validate_admission_semantics_v2.py"
-BASE_COMMIT = "4f75dedd20f1ebbe262799651abed8f5ee2fe502"
-NEW_PACKET = "MET-ENFORCE-013"
-PREVIOUS_PACKET = "MET-ENFORCE-012"
+AUTHORITY_PATH = "architecture/parallel-suite-authority.json"
+AUTHORITY_SHA256 = "86e36fd7580280cf75988e3c1474f0c671da8b77da17446e29ec73354b59012e"
+VALIDATOR_PATH = "scripts/validate_parallel_suite.py"
+BASE_COMMIT = "58e6c25305bd88bf1391554065abe247c546fe2c"
+NEW_PACKET = "MET-PERF-035"
+PREVIOUS_PACKET = "MET-ENFORCE-016"
 MAX_FILE_BYTES = 16_777_216
 # Test routes cover the top-level ci/test_ files as well as tests/.
 TEST_PREFIXES = ("tests/", "ci/test_")
@@ -53,12 +50,12 @@ def parse(raw: bytes) -> Any:
     def unique(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
         result: dict[str, Any] = {}
         for key, value in pairs:
-            require(key not in result, "duplicate admission-semantics-v2 authority member")
+            require(key not in result, "duplicate parallel-suite authority member")
             result[key] = value
         return result
 
     def no_constant(_value: str) -> Any:
-        raise ValueError("nonfinite admission-semantics-v2 authority number")
+        raise ValueError("nonfinite parallel-suite authority number")
 
     return json.loads(raw, object_pairs_hook=unique, parse_constant=no_constant)
 
@@ -96,18 +93,10 @@ _VERIFIED_AUTHORITY: tuple[str, bytes] | None = None
 
 
 def _checked_authority_raw() -> bytes:
-    """Newest first: every newer authority, then this one, each read exactly once."""
-    successor._checked_authority_raw()
-    return _checked_own_authority_raw()
-
-
-def _checked_own_authority_raw() -> bytes:
-    """Fresh complete read of this layer's authority only; callers reach newer
-    authorities through exactly one successor route per public call."""
     global _VERIFIED_AUTHORITY
     raw = regular_bytes(AUTHORITY_PATH)
     if type(raw) is not bytes or _VERIFIED_AUTHORITY != (AUTHORITY_SHA256, raw):
-        require(digest(raw) == AUTHORITY_SHA256, "admission semantics v2 history authority digest")
+        require(digest(raw) == AUTHORITY_SHA256, "parallel suite history authority digest")
         if type(raw) is bytes:
             _VERIFIED_AUTHORITY = (AUTHORITY_SHA256, raw)
     return raw
@@ -127,18 +116,18 @@ def authority() -> dict[str, Any]:
     require(type(value) is dict and set(value) == {
         "schemaVersion", "authorityPacket", "acceptedBase", "baselinePackets",
         "packetSha256", "changedFiles", "newFiles", "validatorNormalizedSha256",
-    }, "closed admission semantics v2 history authority")
-    require(value["schemaVersion"] == "harness.planeon.ai/admission-semantics-v2-authority/v1"
+    }, "closed parallel suite history authority")
+    require(value["schemaVersion"] == "harness.planeon.ai/parallel-suite-authority/v1"
             and value["authorityPacket"] == NEW_PACKET
             and value["acceptedBase"] == BASE_COMMIT
             and type(value["baselinePackets"]) is dict
-            and len(value["baselinePackets"]) == 211
+            and len(value["baselinePackets"]) == 215
             and NEW_PACKET not in value["baselinePackets"]
             and type(value["changedFiles"]) is dict
             and type(value["newFiles"]) is dict
             and _sha(value["packetSha256"])
             and _sha(value["validatorNormalizedSha256"]),
-            "accepted 211-packet base")
+            "accepted 215-packet base")
     for name, expected in value["baselinePackets"].items():
         require(type(name) is str and name and "/" not in name
                 and all(char in "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-" for char in name)
@@ -264,18 +253,10 @@ def _inverse(raw: bytes, hunks: tuple[tuple[int, bytes, bytes], ...]) -> bytes:
 
 
 def historical_bytes(path: str, raw: bytes) -> bytes:
-    """Undo the newer successor, then this step; every authority is read once."""
+    """Recheck the pinned authority and undo only this reviewed successor."""
+    _checked_authority_raw()
     _path(path)
     require(type(raw) is bytes and len(raw) <= MAX_FILE_BYTES, "bounded source bytes required")
-    rule = _PROJECTION_RULES.get(path)
-    # An exact 211-era byte string is already older than the successor layer.
-    # Every newer authority and this one are still rechecked before this fast return.
-    if rule is not None and digest(raw) == rule["beforeSha256"]:
-        _checked_authority_raw()
-        return raw
-    # The successor route freshly rechecks every newer authority exactly once.
-    raw = successor.historical_bytes(path, raw)
-    _checked_own_authority_raw()
     return _undo_this_layer(path, raw)
 
 
@@ -295,9 +276,8 @@ def _undo_this_layer(path: str, raw: bytes) -> bytes:
 
 
 def historical_test_bytes(raw: bytes) -> bytes:
+    _checked_authority_raw()
     require(type(raw) is bytes and len(raw) <= MAX_FILE_BYTES, "bounded test bytes required")
-    raw = successor.historical_test_bytes(raw)
-    _checked_own_authority_raw()
     current_sha = digest(raw)
     matches = [path for path, rule in _PROJECTION_RULES.items()
                if path.startswith(TEST_PREFIXES) and current_sha == rule["afterSha256"]]
@@ -306,26 +286,23 @@ def historical_test_bytes(raw: bytes) -> bytes:
 
 
 def current_test_bytes(before: bytes) -> bytes:
+    _checked_authority_raw()
     require(type(before) is bytes and len(before) <= MAX_FILE_BYTES, "bounded test bytes required")
     before_sha = digest(before)
     matches = [path for path, rule in _PROJECTION_RULES.items()
                if path.startswith(TEST_PREFIXES) and before_sha == rule["beforeSha256"]]
     require(len(matches) <= 1, "ambiguous predecessor test")
     if not matches:
-        current = successor.current_test_bytes(before)
-        _checked_own_authority_raw()
-        return current
-    current = successor.historical_bytes(matches[0], regular_bytes(matches[0]))
-    _checked_own_authority_raw()
+        return before
+    current = regular_bytes(matches[0])
     require(digest(current) == _PROJECTION_RULES[matches[0]]["afterSha256"],
             "current test drift")
-    return successor.current_test_bytes(current)
+    return current
 
 
 def historical_catalog(packets: dict[str, Any]) -> dict[str, Any]:
     """Remove only this layer, leaving predecessor checks to their owners."""
-    packets = successor.historical_catalog(packets)
-    _checked_own_authority_raw()
+    _checked_authority_raw()
     require(type(packets) is dict, "packet mapping")
     current_ids = set(_PACKET_BYTE_RULES)
     require(NEW_PACKET in current_ids and set(packets) == current_ids,
@@ -362,200 +339,79 @@ def validate_packet_payloads(packets: dict[str, Any]) -> None:
         require(supplied_sha == payload_sha, "changed packet payload: " + name)
 
 
-# MET-ENFORCE-013 publishes the W02f contract POLICY-ADMISSION-SEMANTICS/v2 with the A2 admission field allowlists and
-# the sealed static admission manifest directory. Repository bytes are read only through reviewed_bytes, so a later
-# bridged successor projects its own edits away first; the reference model is imported and executed, and its exact
-# bytes are bound by the review rounds below.
-CONTRACT_DIR = "architecture/admission-semantics-v2/"
-STATUS_PATH = CONTRACT_DIR + "status.json"
-MODEL_PATH = "scripts/admission_semantics_v2.py"
-MANIFEST_PATH = "admission-manifests/planeon-a2.json"
-SUBJECT_FILES = {"README.md": "README.md", "REVIEW_BRIEF.md": "REVIEW_BRIEF.md", "allowlists.json": "allowlists.json",
-                 "planeon-a2.json": MANIFEST_PATH, "vectors.json": "vectors.json"}
-SUBJECT_PATHS = dict({name: CONTRACT_DIR + relative for name, relative in SUBJECT_FILES.items()},
-                     **{"admission_semantics_v2.py": MODEL_PATH})
-V1_DOC = "docs/alpha-2/POLICY_OBSERVATION_READINESS.md"
-V1_DOC_SHA256 = "65778040919c5eb7335f2c104d983ca920b877b1b123f961556a6bcae36d232c"
-V1_SENTENCE = (b"Before committing a mutation, its immutable admission guard rechecks current\n"
-               b"namespace/UID, effective RBAC, quotas, network policy and actual post-mutation\n"
-               b"manifest under the broker's serialized admission transaction.\n")
-# The accepted policy-observation document, the W01 resolution, the W02g profile and the I05 v2 and I07 contracts stay
-# byte-identical.
-FROZEN_PATHS = (V1_DOC, "architecture/host-interface-inputs/resolved/HOST_INTERFACE_SPEC.md",
-                "architecture/i06-backend-profile/README.md", "architecture/i06-backend-profile/criteria.json",
-                "architecture/i06-backend-profile/upstream-facts-v1.37.1.json", "scripts/i06_backend_profile.py",
-                "architecture/i05-gate-channel-v2/README.md", "architecture/i05-gate-channel-v2/status.json",
-                "architecture/i07-policy-write/README.md", "architecture/i07-policy-write/status.json")
-KUBERNETES_COMMIT = "f78e722310e50bcaca9276be22276d9e91d91308"
-OBLIGATIONS = tuple("E%02d" % number for number in range(1, 13))
-FALSE_FLAGS = ("nativeAcceptance", "tenantAcceptance", "admissionConfigurationInstalled", "celCompiled",
-               "distributionSelected", "signerImplemented", "i07AdmissionWritesRemoved", "productExecution",
-               "runnerActivated", "phaseComplete")
-ROUND1_FINDINGS = ("F1", "F2", "F3", "F4", "F5", "F6", "F7")
-VECTOR_FLOORS = {"manifest": 30, "endToEnd": 17, "finalObject": 24, "objects": 9, "directoryHash": 4, "claims": 18}
+# MET-PERF-035 (roadmap PERF-035) cuts verify time without changing any validator, authority or freshness property.
+# The outer suite runs on a pinned number of worker processes inside the unchanged acceptance argv (ci/parallel_suite.py,
+# with its pinned weights table and loader, each pinned as a whole file). Two credential tests take the reviewed
+# MET-PERF-033 test-local cuts, and four input fixtures read and parse once per module with a deep copy per test.
+# Repository bytes are read only through reviewed_bytes. Every changed test region is pinned by its exact whole lines,
+# decorators included, and a helper is pinned as the function the test calls with monkeypatch.
+SOURCE_PINS = {'tests/test_credential_lifecycle.py': {'test_every_input_pin_is_enforced': '862aa79b7211ff1d71b68d59de9349462369656c276a31bdaeff617ec0ab6757'}, 'tests/test_credential_ordering.py': {'test_each_locked_input_is_checked_and_unknown_or_missing_files_refuse': 'ddd680b8ef04f64f93fc34ef52561049602935bb1f7850cf3845f4713541b0d6', 'helper called by test_each_locked_input_is_checked_and_unknown_or_missing_files_refuse': 'd597882654710657d879d8d9de9cbc206a8612692281aeafc0eb6ab1110bf7da'}, 'ci/parallel_suite.py': {'<whole file>': '7ee6d5627bab71745fca24ce733f91e9fc59ae97be4c708eb19c535f62706b02'}, 'ci/parallel_suite_weights.json': {'<whole file>': '2c1b27f6281e996accbcbc43169dec2041676f1831b0c2e02cb8e09a3395ec3f'}, 'pyproject.toml': {'<whole file>': '0e2aebc80e07cbb89ec0d5d73315a07515b89cb375544d8f126b3ccaf3007324'}, 'tests/test_linux_repair.py': {'_inputs_read_once': '0f6e97140ec714cef83a522ae5b5c463590a3a41f5466aec2a4b871b271c11a5', 'inputs': 'a78cf194ff579286ef471a934b83cf8656866071e38442f361d97450b20c8f37'}, 'tests/test_model_api_inventory.py': {'_inputs_read_once': 'a0d00d61044c57ed0af49c47b1348f9a7669c35f08786c23b88e2c3c2913a3da', 'inputs': 'a78cf194ff579286ef471a934b83cf8656866071e38442f361d97450b20c8f37'}, 'tests/test_linux_test_ownership.py': {'_inputs_read_once': '05d92d7fccff3abeb2902c8b29d057fba2cd5d7830217c2358d40c0cc7bccd86', 'inputs': 'a78cf194ff579286ef471a934b83cf8656866071e38442f361d97450b20c8f37'}, 'tests/test_model_fixture_scope.py': {'_inputs_read_once': '164076e26dfd8d6073014a413ca1cf7a29a048bf86257ceac30d24a1f9dc6e96', 'inputs': 'a78cf194ff579286ef471a934b83cf8656866071e38442f361d97450b20c8f37'}}
 
 
 def reviewed_bytes(path: str) -> bytes:
     """This packet's reviewed bytes of path; a bridged successor projects newer bytes back first."""
-    return successor.historical_bytes(path, regular_bytes(path))
+    return regular_bytes(path)
 
 
-def _json(path: str) -> Any:
-    return parse(reviewed_bytes(path))
+def _whole(raw: str, node: ast.FunctionDef) -> bytes:
+    """The exact whole lines of a definition, decorators included."""
+    lines = raw.splitlines(keepends=True)
+    first = min([node.lineno] + [decorator.lineno for decorator in node.decorator_list])
+    return "".join(lines[first - 1:node.end_lineno]).encode("utf-8")
 
 
-def _apply_ops(value: Any, ops: list) -> Any:
-    value = model.copy.deepcopy(value)
-    for op in ops:
-        require(type(op) is dict and op.get("op") in ("set", "delete") and type(op.get("path")) is list and op["path"],
-                "closed vector operation")
-        *parents, last = op["path"]
-        node = value
-        for key in parents:
-            node = node[key]
-        if op["op"] == "set":
-            node[last] = model.copy.deepcopy(op["value"])
-        else:
-            del node[last]
-    return value
+def _helper_called_by(tree: ast.Module, test: ast.FunctionDef) -> ast.FunctionDef:
+    called = {call.func.id for call in ast.walk(test) if isinstance(call, ast.Call) and isinstance(call.func, ast.Name)
+              and len(call.args) >= 2 and isinstance(call.args[0], ast.Name) and call.args[0].id == "monkeypatch"}
+    require(len(called) == 1, "one sharing helper per pinned test: " + test.name)
+    helpers = [node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name in called]
+    require(len(helpers) == 1, "the sharing helper is defined once: " + test.name)
+    return helpers[0]
 
 
-def _expect(got: str | None, expected: Any, label: str) -> None:
-    require(got == expected, label)
+def validate_parallel_suite_sources() -> None:
+    """Every pinned test, helper and fixture is exactly its reviewed text."""
+    for path, pins in SOURCE_PINS.items():
+        raw = reviewed_bytes(path).decode("utf-8")
+        tree = ast.parse(raw) if path.endswith(".py") else ast.Module(body=[], type_ignores=[])
+        functions = {}
+        for node in tree.body:
+            if isinstance(node, ast.FunctionDef):
+                require(node.name not in functions, "one definition per pinned name: " + path)
+                functions[node.name] = node
+        for name, expected in pins.items():
+            if name == "<whole file>":
+                require(digest(reviewed_bytes(path)) == expected, "unreviewed parallel-suite source: %s" % path)
+                continue
+            if name.startswith("helper called by "):
+                test = functions.get(name[len("helper called by "):])
+                require(test is not None, "pinned test present: " + name)
+                node = _helper_called_by(tree, test)
+            else:
+                node = functions.get(name)
+                require(node is not None, "pinned test region present: %s %s" % (path, name))
+            require(digest(_whole(raw, node)) == expected,
+                    "unreviewed parallel-suite source: %s %s" % (path, name))
 
 
-def validate_admission_v2_pins(manifest_raw: bytes, allowlists: dict, vectors: dict) -> None:
-    """The v1 sentence is pinned, the sealed file is the model's rendering, and its loader hash is the pinned one."""
-    v1 = reviewed_bytes(V1_DOC)
-    require(digest(v1) == V1_DOC_SHA256 and v1.count(V1_SENTENCE) == 1, "the pinned POLICY-ADMISSION-SEMANTICS/v1 sentence")
-    sealed = vectors["sealed"]
-    require(manifest_raw == model.manifest_file_bytes(sealed)
-            and model.check_a2_objects(parse(manifest_raw)["items"], sealed) is None, "the sealed file is the contract's rendering")
-    require(model.manifest_directory_hash({"planeon-a2.json": manifest_raw}) == vectors["pinned"]["manifestDirectoryHash"],
-            "the pinned static manifest directory hash")
-    require(allowlists.get("schemaVersion") == "planeon.internal.admission-allowlists/v1"
-            and allowlists.get("semantics") == model.SEMANTICS_V2
-            and allowlists.get("kubernetes", {}).get("commit") == KUBERNETES_COMMIT
-            and allowlists.get("publisherIdentity") == model.PUBLISHER_USER
-            and set(allowlists.get("kinds", {})) == set(model.KINDS), "closed allowlists")
-
-
-def validate_admission_v2_vectors(vectors: dict) -> int:
-    """Every case replays to its pinned result through the reference model."""
-    require(vectors.get("evidenceClass") == "DATA_CHECK_ONLY"
-            and all(len(vectors[key]) >= floor for key, floor in VECTOR_FLOORS.items()), "admission v2 vectors are closed")
-    ns, sealed, server, positives = vectors["sealed"]["namespace"], vectors["sealed"], vectors["server"], vectors["positives"]
-    kind_of = lambda name: "Pod" if name.startswith("Pod") else name
-    checks = 0
-    for name, manifest in positives.items():
-        require(model.check_manifest(kind_of(name), manifest, ns) is None, "positive manifest " + name)
-        checks += 1
-    for row in vectors["manifest"]:
-        _expect(model.check_manifest(row["kind"], _apply_ops(positives[row["positive"]], row["ops"]), ns), row["expect"],
-                "manifest vector " + row["id"])
-        checks += 1
-    for row in vectors["endToEnd"]:
-        manifest = _apply_ops(positives[row["positive"]], row.get("manifestOps", []))
-        final = model.final_object(row["kind"], manifest, dict(server, **row["serverFacts"]))
-        require(final == row["finalObject"], "end-to-end final object " + row["id"])
-        _expect(model.check_final(row["kind"], final, sealed, row["username"]), row["expect"], "end-to-end vector " + row["id"])
-        checks += 1
-    for row in vectors["finalObject"]:
-        _expect(model.check_final(row["kind"], row["object"], sealed, row["username"]), row["expect"], "final-object vector " + row["id"])
-        checks += 1
-    for row in vectors["objects"]:
-        _expect(model.check_a2_objects(row["objects"], sealed), row["expect"], "policy-object vector " + row["id"])
-        checks += 1
-    for row in vectors["directoryHash"]:
-        files = {name: text.encode("utf-8") for name, text in row["files"].items()}
-        _expect(model.manifest_directory_hash(files), row["expect"], "directory-hash vector " + row["id"])
-        checks += 1
-    for row in vectors["claims"]:
-        _expect(model.check_claim(row["claim"], vectors["pinned"]), row["expect"], "claim vector " + row["id"])
-        checks += 1
-    return checks
-
-
-def _round_subject(directory: str) -> dict[str, str]:
-    """Earlier rounds keep the files they reviewed under roundN/ (same relative layout)."""
-    if directory == "CURRENT":
-        return SUBJECT_PATHS
-    require(directory == CONTRACT_DIR + "round1/", "closed review subject directory")
-    return dict({name: directory + relative for name, relative in SUBJECT_FILES.items()},
-                **{"admission_semantics_v2.py": directory + "admission_semantics_v2.py"})
-
-
-def validate_admission_v2_status() -> None:
-    status = _json(STATUS_PATH)
-    require(type(status) is dict and set(status) == {
-        "schemaVersion", "semantics", "supersedes", "ownerDecisions", "reviewRounds", "closedFindings", "carriedFindings",
-        "contractState", "obligations", "independentReviewer", *FALSE_FLAGS,
-    } and status["schemaVersion"] == "planeon.internal.admission-semantics-v2-status/v1"
-            and status["semantics"] == model.SEMANTICS_V2 and status["supersedes"] == model.SEMANTICS_V1
-            and [row.get("id") for row in status["ownerDecisions"]] == ["A2-PLACEMENT"]
-            and status["obligations"] == {name: "OPEN_UNPROVEN" for name in OBLIGATIONS}
-            and status["independentReviewer"] == "SEPARATE_AGENT_NOT_AUTHOR"
-            and all(status[flag] is False for flag in FALSE_FLAGS), "closed admission semantics v2 status")
-    require(type(status["closedFindings"]) is dict and set(status["closedFindings"]) == set(ROUND1_FINDINGS),
-            "the round-1 findings are dispositioned")
-    rounds = status["reviewRounds"]
-    require(type(rounds) is list and len(rounds) == 2, "review rounds")
-    for number, row in enumerate(rounds, 1):
-        require(type(row) is dict and set(row) == {"round", "record", "recordSha256", "verdict", "subjectDirectory"}
-                and row["round"] == number and row["record"] == CONTRACT_DIR + "review-round%d.json" % number
-                and row["subjectDirectory"] == ("CURRENT" if number == len(rounds) else CONTRACT_DIR + "round%d/" % number),
-                "review round identity")
-        raw = reviewed_bytes(row["record"])
-        require(digest(raw) == row["recordSha256"], "review record drift: " + row["record"])
-        review = parse(raw)
-        require(type(review) is dict and review.get("schemaVersion") == "planeon.internal.admission-semantics-v2-review/v1"
-                and review.get("round") == number and review.get("verdict") == row["verdict"]
-                and row["verdict"] in ("PASS_FOR_SOURCE_PUBLICATION", "CHANGES_REQUIRED", "BLOCKED")
-                and type(review.get("actions")) is dict
-                and all(review["actions"][key] is False for key in review["actions"] if key != "referenceModelExecuted"),
-                "review record " + str(number))
-        require(number == len(rounds) or row["verdict"] != "PASS_FOR_SOURCE_PUBLICATION", "a passed round has no successor round")
-        subject = _round_subject(row["subjectDirectory"])
-        require(review.get("subjectSha256") == {name: digest(reviewed_bytes(path)) for name, path in subject.items()},
-                "review round " + str(number) + " is bound to its exact subject bytes")
-    final = parse(reviewed_bytes(rounds[-1]["record"]))
-    findings = final.get("findings")
-    passed = final["verdict"] == "PASS_FOR_SOURCE_PUBLICATION"
-    require(type(findings) is list and set(status["carriedFindings"]) == {row.get("id") for row in findings}
-            and (not passed or all(row.get("severity") in ("MINOR", "NOTE") for row in findings)),
-            "every final finding is carried; a pass has no blocking or major finding")
-    require(status["contractState"] == ("ADOPTED_DATA_CONTRACT" if passed else "CONTRACT_CANDIDATE"),
-            "contract state follows the final independent review")
-
-
-def validate_admission_semantics_v2() -> None:
-    """The contract is closed and replays exactly; predecessors are untouched; adoption follows the review."""
-    for path in FROZEN_PATHS:
-        require(path not in _PROJECTION_RULES, "predecessor contract bytes must stay unchanged: " + path)
-    vectors = _json(SUBJECT_PATHS["vectors.json"])
-    validate_admission_v2_pins(reviewed_bytes(SUBJECT_PATHS["planeon-a2.json"]), _json(SUBJECT_PATHS["allowlists.json"]), vectors)
-    checks = validate_admission_v2_vectors(vectors)
-    require(checks >= sum(VECTOR_FLOORS.values()), "every admission v2 vector replays")
-    validate_admission_v2_status()
+def validate_parallel_suite() -> None:
+    validate_parallel_suite_sources()
 
 
 def validate() -> None:
     record = authority()
-    validator_raw = successor.historical_bytes(VALIDATOR_PATH, regular_bytes(VALIDATOR_PATH))
+    validator_raw = regular_bytes(VALIDATOR_PATH)
     literal = b'AUTHORITY_SHA256 = "' + AUTHORITY_SHA256.encode("ascii") + b'"'
     placeholder = b'AUTHORITY_SHA256 = "TO_BE_PINNED_AFTER_SOURCE_FREEZE"'
     require(validator_raw.count(literal) == 1
             and digest(validator_raw.replace(literal, placeholder))
-            == record["validatorNormalizedSha256"], "admission semantics v2 validator drift")
+            == record["validatorNormalizedSha256"], "parallel suite validator drift")
     paths = sorted((ROOT / "task-packets").glob("*.yaml"))
     old = set(record["baselinePackets"])
-    require(len(paths) == 216
-            and {path.stem for path in paths} == old | {NEW_PACKET, successor.NEW_PACKET, successor.successor.NEW_PACKET, successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.NEW_PACKET},
-            "closed 216-packet catalog retaining the 212-packet checkpoint")
+    require(len(paths) == 216 and {path.stem for path in paths} == old | {NEW_PACKET},
+            "closed 216-packet catalog")
     packets = {}
     for path in paths:
-        if path.stem in (successor.NEW_PACKET, successor.successor.NEW_PACKET, successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.NEW_PACKET):
-            continue
         raw = regular_bytes("task-packets/" + path.name)
         expected = record["packetSha256"] if path.stem == NEW_PACKET else record["baselinePackets"][path.stem]
         require(digest(raw) == expected, "packet YAML drift: " + path.stem)
@@ -573,23 +429,22 @@ def validate() -> None:
             and len(commands) == 64
             and commands == previous["offlineAcceptanceCommands"]
             and not any(VALIDATOR_PATH in argv for argv in commands),
-            "closed source-only admission-semantics-v2 packet and inherited commands")
+            "closed source-only parallel-suite packet and inherited commands")
     require(len(packet["allowedPaths"]) == len(set(packet["allowedPaths"]))
             and set(packet["allowedPaths"]) == set(record["changedFiles"])
             | set(record["newFiles"]) | {AUTHORITY_PATH, VALIDATOR_PATH,
                                          "task-packets/" + NEW_PACKET + ".yaml"},
-            "unreviewed or omitted admission-semantics-v2 packet path")
+            "unreviewed or omitted parallel-suite packet path")
     for path, rule in record["changedFiles"].items():
-        current = successor.historical_bytes(path, regular_bytes(path))
+        current = regular_bytes(path)
         require(digest(current) == rule["afterSha256"]
                 and digest(historical_bytes(path, current)) == rule["beforeSha256"],
                 "unreviewed current source: " + path)
     for path, expected in record["newFiles"].items():
-        require(digest(successor.historical_bytes(path, regular_bytes(path))) == expected,
-                "new source drift: " + path)
-    validate_admission_semantics_v2()
+        require(digest(regular_bytes(path)) == expected, "new source drift: " + path)
+    validate_parallel_suite()
 
 
 if __name__ == "__main__":
     validate()
-    print("Admission semantics v2 contract valid: 216 current specifications; 212-packet checkpoint and exact 211-packet predecessor; DATA_CHECK_ONLY, every E01-E12 obligation open.")
+    print("Parallel suite valid: 216 current specifications; exact 215-packet predecessor; validators and freshness unchanged.")

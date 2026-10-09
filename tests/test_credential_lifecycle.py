@@ -123,7 +123,7 @@ def inventory(authority, stage=2):
 def test_exact_authority_and_all_historical_bytes(authority):
     packets, record, inputs = authority
     assert validate_credential_lifecycle(*authority) == []
-    assert len(packets) == 215 and len(record["protectedFiles"]) == 245
+    assert len(packets) == 216 and len(record["protectedFiles"]) == 245
     assert len(packets["MET-REPAIR-012"]["offlineAcceptanceCommands"]) == 20
     assert len(packets["CONF-FIX-005"]["allowedPaths"]) == 5
     assert len(packets["CONF-FIX-005"]["offlineAcceptanceCommands"]) == 8
@@ -254,6 +254,8 @@ def test_every_input_pin_is_enforced(authority, monkeypatch):
     packets, record, inputs = authority
     from scripts import validate_credential_lifecycle as lifecycle
     share_exact_projections(monkeypatch, lifecycle)
+    # The packet additions take only the unchanged packet mapping; share them per exact packets too.
+    share_exact_projections(monkeypatch, lifecycle, "validate_additions")
     assert validate_credential_lifecycle(packets, record, inputs) == []
     for path in inputs:
         changed = dict(inputs); changed[path] += b"\n"
@@ -357,7 +359,7 @@ def test_meta_reconciliation_has_no_broad_test_exemption(authority, kind):
     if kind == "before": before += b" "
     if kind == "record": record["metaReconciliation"]["currentPacketCount"] = 142
     if kind == "assertion":
-        target = b"assert len(paths) == 231"
+        target = b"assert len(paths) == 232"
         assert current[path].count(target) == 1
         current[path] = current[path].replace(target, b"assert True", 1)
     if kind == "skip": current[path] = b"import pytest\npytest.skip('fast', allow_module_level=True)\n" + current[path]

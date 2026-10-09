@@ -1,6 +1,11 @@
 # Repository Plan: `Harness-Engineering`
 
-## Current source preparation — MET-ENFORCE-016
+## Current source preparation — MET-PERF-035
+
+PERF-035 (MET-PERF-035): the outer suite runs on 4 worker processes inside the unchanged argv, fail-closed, with the
+reviewed suite-reuse cuts; validators, authorities and freshness unchanged. Alpha2 OPEN; 215 accepted plus PERF-035 only.
+
+## Historical W02e-F source preparation — MET-ENFORCE-016
 
 W02e-F: the SELinux matrix v4 (successor of the adopted v3 matrix) adds one /proc assertion per planeon
 target with exactly its peers (K2) and A66, no policy load before the seal (K3), corrects the cgroup2
@@ -994,6 +999,7 @@ Every packet uses branch `codex/<packet-id>`, changes only named paths, opens a 
 87. `MET-ENFORCE-014`: publish the W02c-F I07 policy writer channel v2 with independent review; source only.
 88. `MET-ENFORCE-015`: publish the W02-ADM-F successor contracts (I05 v3, admission semantics v3, I07 v3) with one combined independent review; source only.
 89. `MET-ENFORCE-016`: publish the W02e-F SELinux matrix v4 with independent review; source only.
+90. `MET-PERF-035`: run the outer suite on fail-closed workers inside the unchanged argv, with suite reuse; validators and freshness unchanged.
 
 ## Testing, verification, and acceptance
 

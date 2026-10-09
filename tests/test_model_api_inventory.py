@@ -21,11 +21,17 @@ REQUIRED = (
 )
 
 
-@pytest.fixture
-def inputs():
+@pytest.fixture(scope="module")
+def _inputs_read_once():
     packets = {p.stem: safe_yaml_load(p.read_text()) for p in (ROOT / "task-packets").glob("*.yaml")}
     record = json.loads((ROOT / "architecture/model-api-inventory-amendment.json").read_text())
     return packets, record, load_inventory_inputs(ROOT)
+
+
+@pytest.fixture
+def inputs(_inputs_read_once):
+    # Each test gets its own copy of the module's single read and parse (MET-PERF-035).
+    return deepcopy(_inputs_read_once)
 
 
 def candidate_pair(inputs):
@@ -42,7 +48,7 @@ def candidate_pair(inputs):
 def test_current_authority_and_preserved_failure_evidence(inputs):
     packets, record, snapshots = inputs
     assert validate_model_api_inventory(*inputs) == []
-    assert len(packets) == 215
+    assert len(packets) == 216
     assert record["historicalPacketCount"] == 122
     assert record["baseline"]["passed"] == 758
     assert record["baseline"]["failed"] == record["baseline"]["skipped"] == 0

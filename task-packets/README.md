@@ -1,6 +1,11 @@
 # Sol-High Task Packet Catalog
 
-## Current source preparation — MET-ENFORCE-016
+## Current source preparation — MET-PERF-035
+
+PERF-035 (MET-PERF-035): the outer suite runs on 4 worker processes inside the unchanged argv, fail-closed, with the
+reviewed suite-reuse cuts; validators, authorities and freshness unchanged. Alpha2 OPEN; 215 accepted plus PERF-035 only.
+
+## Historical W02e-F source preparation — MET-ENFORCE-016
 
 W02e-F: the SELinux matrix v4 (successor of the adopted v3 matrix) adds one /proc assertion per planeon
 target with exactly its peers (K2) and A66, no policy load before the seal (K3), corrects the cgroup2
@@ -1234,3 +1239,4 @@ acceptance is claimed. Alpha2 ONGOING; model-effort transition NOT_DUE.
 | 213 | `MET-ENFORCE-014` | `Harness-Engineering` | W02c-F I07 policy writer channel v2: on the I05 v2 gate, admission kinds sealed, R1-R8 closed, independently reviewed |
 | 214 | `MET-ENFORCE-015` | `Harness-Engineering` | W02-ADM-F I05 v3, POLICY-ADMISSION-SEMANTICS/v3 and I07 v3 successor contracts, one combined independent review |
 | 215 | `MET-ENFORCE-016` | `Harness-Engineering` | W02e-F SELinux matrix v4: per-target /proc assertions, no policy load before the seal, cgroup2 text, independently reviewed |
+| 216 | `MET-PERF-035` | `Harness-Engineering` | Verify headroom: the outer suite on 4 fail-closed workers inside the unchanged argv, plus suite reuse |

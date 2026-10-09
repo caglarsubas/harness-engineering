@@ -18,17 +18,23 @@ from scripts.validate_model_api_inventory import amend_model_packet as amend_inv
 ROOT = Path(__file__).resolve().parents[1]
 
 
-@pytest.fixture
-def inputs():
+@pytest.fixture(scope="module")
+def _inputs_read_once():
     packets = {p.stem: safe_yaml_load(p.read_text()) for p in (ROOT / "task-packets").glob("*.yaml")}
     record = json.loads((ROOT / "architecture/model-fixture-scope-amendment.json").read_text())
     return packets, record, load_scope_inputs(ROOT)
 
 
+@pytest.fixture
+def inputs(_inputs_read_once):
+    # Each test gets its own copy of the module's single read and parse (MET-PERF-035).
+    return deepcopy(_inputs_read_once)
+
+
 def test_current_authority_and_historical_bytes_agree(inputs):
     packets, record, snapshots = inputs
     assert validate_model_fixture_scope(*inputs) == []
-    assert len(packets) == 215
+    assert len(packets) == 216
     assert record["historicalPacketCount"] == 121
     assert record["baseline"]["passed"] == 758
     assert record["baseline"]["failed"] == record["baseline"]["skipped"] == 0

@@ -27,7 +27,7 @@ def authority():
 def test_exact_142_catalog_and_corrected_127_327_checkpoint(authority):
     packets, record, inputs = authority
     assert validate_credential_ordering(*authority) == []
-    assert len(packets) == 215
+    assert len(packets) == 216
     assert len([p for p in record["protectedFiles"] if p.startswith("task-packets/")]) == 141
     checkpoint = json.loads(inputs[CHECKPOINT_PATH])
     assert len(checkpoint["files"]) == 127
@@ -140,15 +140,39 @@ def test_authority_substitution_or_enlargement_refuses(authority, field):
     assert validate_credential_ordering(authority[0], record, authority[2])
 
 
-def test_each_locked_input_is_checked_and_unknown_or_missing_files_refuse(authority):
+def share_exact_projections(monkeypatch, module, name):
+    """Within one test, compute each projection once per exact input.
+
+    The key is each argument's type with its exact bytes (dictionaries as canonical JSON).
+    Every input the test has not seen yet, including each mutation, reaches the real
+    projection; only repeats of identical unchanged inputs are shared. The caller proves
+    the wrapper transparent with a positive validation before its loop, then undoes it
+    and ends with a fully fresh validation.
+    """
+    real, seen = getattr(module, name), {}
+
+    def projected(*args):
+        key = tuple((type(arg), arg if isinstance(arg, (bytes, str)) else canonical(arg)) for arg in args)
+        if key not in seen:
+            seen[key] = real(*args)
+        return seen[key]
+
+    monkeypatch.setattr(module, name, projected)
+
+
+def test_each_locked_input_is_checked_and_unknown_or_missing_files_refuse(authority, monkeypatch):
     packets, record, inputs = authority
+    from scripts import validate_credential_ordering as ordering
     # One independent hash comparison per input, without re-running a giant
-    # full validation for every unchanged byte of the same catalog.
+    # full validation for every unchanged byte of the same catalog. Each exact
+    # projection is computed once and shared by the pins and the validations below.
+    share_exact_projections(monkeypatch, ordering, "broker_history")
+    assert validate_credential_ordering(packets, record, inputs) == []
     pins = {**record["protectedFiles"], **record["inputFiles"],
             **{p:r["afterSha256"] for p,r in record["metaChanges"].items()}}
     assert set(pins) == set(inputs)
     for path, checksum in pins.items():
-        assert digest(broker_history(path, inputs[path])) == checksum
+        assert digest(ordering.broker_history(path, inputs[path])) == checksum
         assert digest(inputs[path] + b" ") != checksum
     for path in ("AGENTS.md", BEFORE_PATH, CHECKPOINT_PATH, SOURCE_PATH, VECTORS_PATH,
                  "task-packets/CONF-LIVE-003.yaml", "scripts/validate_readiness.py"):
@@ -160,6 +184,9 @@ def test_each_locked_input_is_checked_and_unknown_or_missing_files_refuse(author
     assert validate_credential_ordering(packets, record, changed)
     assert validate_credential_ordering(packets, record, {**inputs, "unowned": b"x"})
     assert validate_credential_ordering({k:v for k,v in packets.items() if k != "MET-REPAIR-013"}, record, inputs)
+    monkeypatch.undo()
+    assert ordering.broker_history is broker_history
+    assert validate_credential_ordering(packets, record, inputs) == []
 
 
 def test_current_and_historical_test_and_agents_bytes_are_distinct_and_checked(authority):

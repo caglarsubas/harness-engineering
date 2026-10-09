@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
-"""Validate the W01 host-interface gate resolutions and the exact 200-to-199 projection."""
+"""Validate the MET-ENFORCE-017 W02d seccomp allowlists and the exact 219-to-218 projection."""
 from __future__ import annotations
 
+import ast
 import base64
 import binascii
+import copy
 import hashlib
 import json
 import stat
+import types
 from functools import lru_cache
 from pathlib import Path
 from types import MappingProxyType
@@ -14,19 +17,17 @@ from typing import Any
 
 try:
     from safe_yaml import safe_load
-    import validate_native_profile_v2 as successor
 except ImportError:
     from scripts.safe_yaml import safe_load
-    from scripts import validate_native_profile_v2 as successor
 
 
 ROOT = Path(__file__).resolve().parents[1]
-AUTHORITY_PATH = "architecture/host-interface-resolution-authority.json"
-AUTHORITY_SHA256 = "0403a82ef8b0d8a0e4a8eee3e8f9e69206b62baa76a7e5c2878bd58faafe86cb"
-VALIDATOR_PATH = "scripts/validate_host_interface_resolution.py"
-BASE_COMMIT = "d938151907f533421accc698bc142833c0315be0"
-NEW_PACKET = "MET-ENFORCE-004"
-PREVIOUS_PACKET = "MET-VERIFY-004"
+AUTHORITY_PATH = "architecture/seccomp-allowlists-authority.json"
+AUTHORITY_SHA256 = "0a02852c5efd066f0f48a23eec02b0a070a9ed546272a526856bc649d9fd00aa"
+VALIDATOR_PATH = "scripts/validate_seccomp_allowlists.py"
+BASE_COMMIT = "984c953ad034dee9d0f8028e1ecfff4fefea98c3"
+NEW_PACKET = "MET-ENFORCE-017"
+PREVIOUS_PACKET = "MET-SECTOR-002"
 MAX_FILE_BYTES = 16_777_216
 # Test routes cover the top-level ci/test_ files as well as tests/.
 TEST_PREFIXES = ("tests/", "ci/test_")
@@ -50,12 +51,12 @@ def parse(raw: bytes) -> Any:
     def unique(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
         result: dict[str, Any] = {}
         for key, value in pairs:
-            require(key not in result, "duplicate host-interface-resolution authority member")
+            require(key not in result, "duplicate seccomp-allowlists authority member")
             result[key] = value
         return result
 
     def no_constant(_value: str) -> Any:
-        raise ValueError("nonfinite host-interface-resolution authority number")
+        raise ValueError("nonfinite seccomp-allowlists authority number")
 
     return json.loads(raw, object_pairs_hook=unique, parse_constant=no_constant)
 
@@ -93,18 +94,10 @@ _VERIFIED_AUTHORITY: tuple[str, bytes] | None = None
 
 
 def _checked_authority_raw() -> bytes:
-    """Newest first: every newer authority, then this one, each read exactly once."""
-    successor._checked_authority_raw()
-    return _checked_own_authority_raw()
-
-
-def _checked_own_authority_raw() -> bytes:
-    """Fresh complete read of this layer's authority only; callers reach newer
-    authorities through exactly one successor route per public call."""
     global _VERIFIED_AUTHORITY
     raw = regular_bytes(AUTHORITY_PATH)
     if type(raw) is not bytes or _VERIFIED_AUTHORITY != (AUTHORITY_SHA256, raw):
-        require(digest(raw) == AUTHORITY_SHA256, "host-interface resolution history authority digest")
+        require(digest(raw) == AUTHORITY_SHA256, "seccomp allowlists history authority digest")
         if type(raw) is bytes:
             _VERIFIED_AUTHORITY = (AUTHORITY_SHA256, raw)
     return raw
@@ -124,18 +117,18 @@ def authority() -> dict[str, Any]:
     require(type(value) is dict and set(value) == {
         "schemaVersion", "authorityPacket", "acceptedBase", "baselinePackets",
         "packetSha256", "changedFiles", "newFiles", "validatorNormalizedSha256",
-    }, "closed host-interface resolution history authority")
-    require(value["schemaVersion"] == "harness.planeon.ai/host-interface-resolution-authority/v1"
+    }, "closed seccomp allowlists history authority")
+    require(value["schemaVersion"] == "harness.planeon.ai/seccomp-allowlists-authority/v1"
             and value["authorityPacket"] == NEW_PACKET
             and value["acceptedBase"] == BASE_COMMIT
             and type(value["baselinePackets"]) is dict
-            and len(value["baselinePackets"]) == 199
+            and len(value["baselinePackets"]) == 218
             and NEW_PACKET not in value["baselinePackets"]
             and type(value["changedFiles"]) is dict
             and type(value["newFiles"]) is dict
             and _sha(value["packetSha256"])
             and _sha(value["validatorNormalizedSha256"]),
-            "accepted 199-packet base")
+            "accepted 218-packet base")
     for name, expected in value["baselinePackets"].items():
         require(type(name) is str and name and "/" not in name
                 and all(char in "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-" for char in name)
@@ -261,18 +254,10 @@ def _inverse(raw: bytes, hunks: tuple[tuple[int, bytes, bytes], ...]) -> bytes:
 
 
 def historical_bytes(path: str, raw: bytes) -> bytes:
-    """Undo the newer successor, then this step; every authority is read once."""
+    """Recheck the pinned authority and undo only this reviewed successor."""
+    _checked_authority_raw()
     _path(path)
     require(type(raw) is bytes and len(raw) <= MAX_FILE_BYTES, "bounded source bytes required")
-    rule = _PROJECTION_RULES.get(path)
-    # An exact 199-era byte string is already older than the successor layer.
-    # Every newer authority and this one are still rechecked before this fast return.
-    if rule is not None and digest(raw) == rule["beforeSha256"]:
-        _checked_authority_raw()
-        return raw
-    # The successor route freshly rechecks every newer authority exactly once.
-    raw = successor.historical_bytes(path, raw)
-    _checked_own_authority_raw()
     return _undo_this_layer(path, raw)
 
 
@@ -292,9 +277,8 @@ def _undo_this_layer(path: str, raw: bytes) -> bytes:
 
 
 def historical_test_bytes(raw: bytes) -> bytes:
+    _checked_authority_raw()
     require(type(raw) is bytes and len(raw) <= MAX_FILE_BYTES, "bounded test bytes required")
-    raw = successor.historical_test_bytes(raw)
-    _checked_own_authority_raw()
     current_sha = digest(raw)
     matches = [path for path, rule in _PROJECTION_RULES.items()
                if path.startswith(TEST_PREFIXES) and current_sha == rule["afterSha256"]]
@@ -303,26 +287,23 @@ def historical_test_bytes(raw: bytes) -> bytes:
 
 
 def current_test_bytes(before: bytes) -> bytes:
+    _checked_authority_raw()
     require(type(before) is bytes and len(before) <= MAX_FILE_BYTES, "bounded test bytes required")
     before_sha = digest(before)
     matches = [path for path, rule in _PROJECTION_RULES.items()
                if path.startswith(TEST_PREFIXES) and before_sha == rule["beforeSha256"]]
     require(len(matches) <= 1, "ambiguous predecessor test")
     if not matches:
-        current = successor.current_test_bytes(before)
-        _checked_own_authority_raw()
-        return current
-    current = successor.historical_bytes(matches[0], regular_bytes(matches[0]))
-    _checked_own_authority_raw()
+        return before
+    current = regular_bytes(matches[0])
     require(digest(current) == _PROJECTION_RULES[matches[0]]["afterSha256"],
             "current test drift")
-    return successor.current_test_bytes(current)
+    return current
 
 
 def historical_catalog(packets: dict[str, Any]) -> dict[str, Any]:
     """Remove only this layer, leaving predecessor checks to their owners."""
-    packets = successor.historical_catalog(packets)
-    _checked_own_authority_raw()
+    _checked_authority_raw()
     require(type(packets) is dict, "packet mapping")
     current_ids = set(_PACKET_BYTE_RULES)
     require(NEW_PACKET in current_ids and set(packets) == current_ids,
@@ -359,116 +340,162 @@ def validate_packet_payloads(packets: dict[str, Any]) -> None:
         require(supplied_sha == payload_sha, "changed packet payload: " + name)
 
 
-STATUS_PATH = "architecture/host-interface-inputs/resolution-status.json"
-RESOLVED_DIR = "architecture/host-interface-inputs/resolved/"
-SUBJECT_FILES = ("HOST_INTERFACE_SPEC.md", "REVIEW_BRIEF.md", "README.md", "scope.json", "source-index.json")
-BASE_DESIGN_SHA256 = "1b0bee7e46e3cd730b3f878179ac36d0f062ce70ed6c843788ab634aead16ef0"
-GATES = ("G04", "G05", "G06", "G07", "G09")
+# MET-ENFORCE-017 publishes the W02d per-role, per-architecture seccomp allowlists (planeon.internal.seccomp-allowlists/v1)
+# for the seven roles on x86_64 and aarch64 at Linux v6.12, under owner decisions W02d-Q1..Q3 (QA..QD are README text). Repository
+# bytes are read only through reviewed_bytes, so a later bridged successor projects its own edits away first. The
+# reference model is executed from this era's reviewed bytes, not imported, and those bytes are bound by the review
+# rounds below, so a later revision of the model cannot change how this layer judges its own era.
+CONTRACT_DIR = "architecture/seccomp-allowlists/"
+MODEL_PATH = "scripts/seccomp_allowlists.py"
+STATUS_PATH = CONTRACT_DIR + "status.json"
+SUBJECT = (CONTRACT_DIR + "README.md", CONTRACT_DIR + "REVIEW_BRIEF.md", CONTRACT_DIR + "syscalls.json",
+           CONTRACT_DIR + "allowlists.json", CONTRACT_DIR + "vectors.json", MODEL_PATH)
+ROUNDS = ((1, "CHANGES_REQUIRED"), (2, "CHANGES_REQUIRED"), (3, "PASS_FOR_SOURCE_PUBLICATION"))
+# The reviewed W01 design and the native-profile record whose digest slot W02d fills stay byte-identical.
+FROZEN_PATHS = ("architecture/host-interface-inputs/resolved/HOST_INTERFACE_SPEC.md",
+                "architecture/native-profile-v3/qualification.schema.json", "architecture/native-profile-v3/README.md",
+                "docs/alpha-2/NATIVE_QUALIFICATION_READINESS.md")
 OBLIGATIONS = tuple("E%02d" % number for number in range(1, 13))
-LATER_WORK = ("W02", "W03", "W04", "W05", "W06", "W07")
-FALSE_FLAGS = ("implementationReady", "wireSchemasAdopted", "runtimeAdoptionAuthorized",
-               "productExecution", "runnerActivated", "nativeAcceptance", "tenantAcceptance",
-               "oldAttemptsReset", "phaseComplete", "requestActionCorrelationProven")
+FALSE_FLAGS = ("nativeAcceptance", "tenantAcceptance", "filtersInstalled", "roleCodeExists", "traceValidated",
+               "distributionSelected", "productExecution", "runnerActivated", "phaseComplete")
+DECISIONS = ("W02d-Q1", "W02d-Q2", "W02d-Q3")
+FLOORS = {"decisionChecks": 2789, "workerStackChecks": 351, "policyMutations": 13}
 
 
-def _json_file(path: str) -> Any:
-    return parse(regular_bytes(path))
+def reviewed_bytes(path: str) -> bytes:
+    """This packet's reviewed bytes of path; a bridged successor projects newer bytes back first."""
+    return regular_bytes(path)
 
 
-def validate_resolution() -> None:
-    """The reviewed design state follows only from the verbatim review records."""
-    scope = _json_file(RESOLVED_DIR + "scope.json")
-    require(type(scope) is dict and scope.get("designLabel") == "HOST-INTERFACE-DRAFT-002"
-            and scope.get("baseDesignSha256") == BASE_DESIGN_SHA256
-            and scope.get("baseMain") == BASE_COMMIT
-            and scope.get("status") == "RESOLVED_CANDIDATE_AWAITING_INDEPENDENT_REVIEW"
-            and scope.get("enforcementProofsOpen") == list(OBLIGATIONS)
-            and scope.get("independentReviewCompleted") is False
-            and scope.get("w01Complete") is False
-            and all(scope.get(flag) is False for flag in FALSE_FLAGS),
-            "resolution scope overclaims or drifted")
-    index = _json_file(RESOLVED_DIR + "source-index.json")
-    require(type(index) is dict and index.get("baseMain") == BASE_COMMIT
-            and [row.get("path") for row in index.get("subject", [])]
-            == [RESOLVED_DIR + name for name in SUBJECT_FILES if name != "source-index.json"],
-            "resolution source index subject")
-    for row in index["subject"]:
-        require(digest(regular_bytes(row["path"])) == row["sha256"],
-                "resolution subject drift: " + row["path"])
-    for row in index.get("predecessorInputs", []):
-        # Newer layers are projected away first; then only this layer's inverse applies.
-        current = successor.historical_bytes(row["path"], regular_bytes(row["path"]))
-        require(digest(_undo_this_layer(row["path"], current)) == row["sha256"],
-                "resolution predecessor input drift: " + row["path"])
-    status = _json_file(STATUS_PATH)
+def _json(path: str) -> Any:
+    return parse(reviewed_bytes(path))
+
+
+def _era_model() -> types.ModuleType:
+    """The reference model of this era, executed from its reviewed bytes."""
+    module = types.ModuleType("_met_enforce_017_seccomp_allowlists")
+    module.__file__ = str(ROOT / MODEL_PATH)
+    exec(compile(reviewed_bytes(MODEL_PATH), MODEL_PATH, "exec"), module.__dict__)
+    return module
+
+
+def _round_path(number: int, path: str) -> str:
+    """Rounds 1 and 2 keep every subject file they reviewed under roundN/; round 3 reviewed the current bytes."""
+    return path if number == 3 else CONTRACT_DIR + "round%d/" % number + path
+
+
+def validate_seccomp_policy(model: types.ModuleType, table: dict, policy: dict) -> None:
+    """The table is the pinned v6.12 one, the policy is closed and refuses what W01 denies, and the owner decisions are
+    recorded."""
+    require(table.get("schemaVersion") == "planeon.internal.seccomp-syscall-table/v1"
+            and table.get("kernel") == {"tag": "v6.12", "commit": "adc218676eef25575469234709c2d87185ca223a"}
+            and table["arches"] == {"x86_64": {"auditArch": 0xC000003E, "x32Bit": 0x40000000},
+                                    "aarch64": {"auditArch": 0xC00000B7, "x32Bit": None}}, "the pinned v6.12 syscall table")
+    require(policy.get("schemaVersion") == "planeon.internal.seccomp-allowlists/v1" and policy.get("mode") == 2
+            and policy.get("defaultAction") == "KILL_PROCESS"
+            and [row.get("id") for row in policy["ownerDecisions"]] == list(DECISIONS), "closed policy and owner decisions")
+    model.check_policy(policy, table)
+
+
+def validate_seccomp_vectors(model: types.ModuleType, table: dict, policy: dict, vectors: dict) -> int:
+    """Every decision replays through both the reference decision and the compiled program; the worker's stacked
+    filters decide as its own; every mutation is refused with its stated message; the digests are the compiled ones."""
+    require(type(vectors) is dict and set(vectors) == {"evidenceClass", "filterDigests", "programLengths", "decisionChecks",
+                                                       "workerStackChecks", "policyMutations"}
+            and vectors["evidenceClass"] == "DATA_CHECK_ONLY"
+            and all(len(vectors[key]) >= floor for key, floor in FLOORS.items()), "closed seccomp vectors")
+    programs = {(role, arch): model.compile_filter(policy, table, role, arch) for role in model.ROLES for arch in model.ARCHES}
+    require(vectors["filterDigests"] == {role: {arch: "sha256:" + digest(model.program_bytes(programs[role, arch]))
+                                                for arch in model.ARCHES} for role in model.ROLES}
+            and vectors["programLengths"] == {role: {arch: len(programs[role, arch]) for arch in model.ARCHES}
+                                              for role in model.ROLES}, "the published digests are the compiled programs'")
+    checks, by_id = 0, {}
+    for row in vectors["decisionChecks"]:
+        data = model.seccomp_data(row["nr"], row["auditArch"], row["args"])
+        expect = model.action_name(model.decide(policy, table, row["role"], row["arch"], row["auditArch"], row["nr"], row["args"]))
+        require(expect == row["expect"] == model.action_name(model.run_filter(programs[row["role"], row["arch"]], data)),
+                "decision check " + row["id"])
+        by_id[row["id"]] = row
+        checks += 1
+    for row in vectors["workerStackChecks"]:
+        base = by_id[row["decision"]]
+        require(base["role"] == "WORKER" and row["expect"] == "SAME_AS_WORKER"
+                and model.decide_stack(policy, table, ["BROKER", "WORKER"], base["arch"], base["auditArch"], base["nr"], base["args"])
+                == model.decide(policy, table, "WORKER", base["arch"], base["auditArch"], base["nr"], base["args"]),
+                "worker stack check " + row["id"])
+        checks += 1
+    for row in vectors["policyMutations"]:
+        changed = copy.deepcopy(policy)
+        changed["roles"][row["role"]]["duties"].append(row["addDuty"])
+        try:
+            model.check_policy(changed, table)
+            refused = None
+        except ValueError as exc:
+            refused = str(exc)
+        require(refused is not None and refused == row["expect"], "policy mutation " + row["id"])
+        checks += 1
+    return checks
+
+
+def validate_seccomp_status() -> None:
+    status = _json(STATUS_PATH)
     require(type(status) is dict and set(status) == {
-        "schemaVersion", "designLabel", "subjectDirectory", "reviewRounds", "gateDispositions",
-        "carriedFindings", "w01State", "obligations", "laterWork", "independentReviewer", *FALSE_FLAGS,
-    } and status["schemaVersion"] == "planeon.internal.host-interface-resolution-status/v1"
-            and status["designLabel"] == "HOST-INTERFACE-DRAFT-002"
-            and status["subjectDirectory"] == RESOLVED_DIR
+        "schemaVersion", "contract", "kernel", "reviewRounds", "closedFindings", "carriedFindings", "ownerDecisions",
+        "carriedToW01", "carriedToW03", "openObligations", "contractState", "obligations", "independentReviewer", *FALSE_FLAGS}
+            and status["schemaVersion"] == "planeon.internal.seccomp-allowlists-status/v1"
+            and status["contract"] == "planeon.internal.seccomp-allowlists/v1"
+            and status["contractState"] == "ADOPTED_DATA_CONTRACT"
             and status["obligations"] == {name: "OPEN_UNPROVEN" for name in OBLIGATIONS}
-            and status["laterWork"] == {name: "WAITING_EXACT_SUCCESSOR" for name in LATER_WORK}
             and status["independentReviewer"] == "SEPARATE_AGENT_NOT_AUTHOR"
-            and all(status[flag] is False for flag in FALSE_FLAGS),
-            "closed resolution status")
+            and all(status[flag] is False for flag in FALSE_FLAGS)
+            and [row.get("id") for row in status["ownerDecisions"]] == list(DECISIONS)
+            and status["ownerDecisions"] == _json(CONTRACT_DIR + "allowlists.json")["ownerDecisions"], "closed seccomp status")
     rounds = status["reviewRounds"]
-    require(type(rounds) is list and 1 <= len(rounds) <= 4, "review rounds")
-    for number, row in enumerate(rounds, 1):
-        require(type(row) is dict and set(row) == {"round", "record", "recordSha256", "subjectDirectory", "verdict"}
-                and row["round"] == number, "review round identity")
-        raw = regular_bytes(row["record"])
-        require(digest(raw) == row["recordSha256"], "review record drift: " + row["record"])
-        review = parse(raw)
-        require(type(review) is dict
-                and review.get("schemaVersion") == "planeon.internal.host-interface-resolution-review/v1"
-                and review.get("round") == number and review.get("verdict") == row["verdict"]
-                and row["verdict"] in ("PASS_FOR_SOURCE_PUBLICATION", "CHANGES_REQUIRED", "BLOCKED")
-                and type(review.get("actions")) is dict and review["actions"]
-                and all(value is False for value in review["actions"].values()),
-                "review record " + str(number))
-        require(set(review.get("subjectSha256", {})) == set(SUBJECT_FILES)
-                and all(digest(regular_bytes(row["subjectDirectory"] + name)) == review["subjectSha256"][name]
-                        for name in SUBJECT_FILES),
-                "review subject binding " + str(number))
-        require(number == len(rounds) or row["verdict"] != "PASS_FOR_SOURCE_PUBLICATION",
-                "a passed round has no successor round")
-    final = parse(regular_bytes(rounds[-1]["record"]))
-    require(rounds[-1]["subjectDirectory"] == RESOLVED_DIR
-            and set(final.get("gateDispositions", {})) == set(GATES)
-            and status["gateDispositions"] == {gate: final["gateDispositions"][gate]["disposition"]
-                                               for gate in GATES}
-            and set(status["gateDispositions"].values()) <= {"RESOLVED_DESIGN", "OPEN"},
-            "gate dispositions come only from the final review")
-    findings = final.get("findings")
-    require(type(findings) is list
-            and status["carriedFindings"] == {row.get("id"): "W02" for row in findings}
-            and all(row.get("severity") in ("MINOR", "NOTE") for row in findings
-                    if final["verdict"] == "PASS_FOR_SOURCE_PUBLICATION"),
-            "every final review finding is carried to W02; a pass has no blocking or major finding")
-    resolved = (final["verdict"] == "PASS_FOR_SOURCE_PUBLICATION"
-                and all(value == "RESOLVED_DESIGN" for value in status["gateDispositions"].values()))
-    require(status["w01State"] == ("DESIGN_RESOLVED_REVIEWED" if resolved else "ONGOING_DESIGN"),
-            "W01 state must follow the final independent review")
+    require([(row.get("round"), row.get("verdict")) for row in rounds] == list(ROUNDS), "three review rounds")
+    for row in rounds:
+        number = row["round"]
+        require(row["record"] == CONTRACT_DIR + "review-round%d.json" % number
+                and row["subjectDirectory"] == (CONTRACT_DIR + "round%d/" % number if number < 3 else "CURRENT")
+                and row["recordSha256"] == digest(reviewed_bytes(row["record"])), "review round identity %d" % number)
+        review = _json(row["record"])
+        require(review.get("schemaVersion") == "planeon.internal.seccomp-allowlists-review/v1" and review.get("round") == number
+                and review.get("verdict") == row["verdict"]
+                and all(review["actions"][key] is False for key in review["actions"] if key != "referenceModelExecuted"),
+                "review record %d" % number)
+        require(review.get("subjectSha256") == {path: digest(reviewed_bytes(_round_path(number, path))) for path in SUBJECT},
+                "review round %d is bound to its exact subject bytes" % number)
+    final = _json(rounds[-1]["record"])
+    require(all(row["severity"] in ("MINOR", "NOTE") for row in final["findings"])
+            and {row["id"] for row in final["findings"]} <= set(status["carriedFindings"]),
+            "the final round passes; every final finding is carried")
+
+
+def validate_seccomp_allowlists() -> None:
+    """The allowlists replay exactly, the published digests are the compiled programs, and adoption follows the review."""
+    for path in FROZEN_PATHS:
+        require(path not in _PROJECTION_RULES, "predecessor contract bytes must stay unchanged: " + path)
+    model = _era_model()
+    table, policy = _json(CONTRACT_DIR + "syscalls.json"), _json(CONTRACT_DIR + "allowlists.json")
+    validate_seccomp_policy(model, table, policy)
+    checks = validate_seccomp_vectors(model, table, policy, _json(CONTRACT_DIR + "vectors.json"))
+    require(checks >= sum(FLOORS.values()), "every seccomp vector replays")
+    validate_seccomp_status()
 
 
 def validate() -> None:
     record = authority()
-    validator_raw = successor.historical_bytes(VALIDATOR_PATH, regular_bytes(VALIDATOR_PATH))
+    validator_raw = regular_bytes(VALIDATOR_PATH)
     literal = b'AUTHORITY_SHA256 = "' + AUTHORITY_SHA256.encode("ascii") + b'"'
     placeholder = b'AUTHORITY_SHA256 = "TO_BE_PINNED_AFTER_SOURCE_FREEZE"'
     require(validator_raw.count(literal) == 1
             and digest(validator_raw.replace(literal, placeholder))
-            == record["validatorNormalizedSha256"], "host-interface resolution validator drift")
+            == record["validatorNormalizedSha256"], "seccomp allowlists validator drift")
     paths = sorted((ROOT / "task-packets").glob("*.yaml"))
     old = set(record["baselinePackets"])
-    require(len(paths) == 219
-            and {path.stem for path in paths} == old | {NEW_PACKET, successor.NEW_PACKET, successor.successor.NEW_PACKET, successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET},
-            "closed 219-packet catalog retaining the 200-packet checkpoint")
+    require(len(paths) == 219 and {path.stem for path in paths} == old | {NEW_PACKET},
+            "closed 219-packet catalog")
     packets = {}
     for path in paths:
-        if path.stem in (successor.NEW_PACKET, successor.successor.NEW_PACKET, successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET):
-            continue
         raw = regular_bytes("task-packets/" + path.name)
         expected = record["packetSha256"] if path.stem == NEW_PACKET else record["baselinePackets"][path.stem]
         require(digest(raw) == expected, "packet YAML drift: " + path.stem)
@@ -478,32 +505,30 @@ def validate() -> None:
     previous = packets[PREVIOUS_PACKET]
     commands = packet["offlineAcceptanceCommands"]
     require(packet["id"] == NEW_PACKET and packet["repository"] == "Harness-Engineering"
-            and packet["predecessors"] == ["MET-ENFORCE-003", PREVIOUS_PACKET]
+            and packet["predecessors"] == [PREVIOUS_PACKET]
             and packet["warmSourceAccess"] == "PROHIBITED_DURING_IMPLEMENTATION"
             and packet["sourceReuse"] == packet["prefetchCommands"] == []
             and packet["offlineExecution"] == previous["offlineExecution"]
             and "liveCampaignExecution" not in packet
-            and len(commands) == 62
-            and commands[:-3] + commands[-2:] == previous["offlineAcceptanceCommands"]
-            and commands[-3] == ["uv", "run", "--offline", "--frozen", "--no-sync",
-                                 "python", VALIDATOR_PATH],
-            "closed source-only host-interface-resolution packet and inherited commands")
+            and len(commands) == 64
+            and commands == previous["offlineAcceptanceCommands"]
+            and not any(VALIDATOR_PATH in argv for argv in commands),
+            "closed source-only seccomp-allowlists packet and inherited commands")
     require(len(packet["allowedPaths"]) == len(set(packet["allowedPaths"]))
             and set(packet["allowedPaths"]) == set(record["changedFiles"])
             | set(record["newFiles"]) | {AUTHORITY_PATH, VALIDATOR_PATH,
                                          "task-packets/" + NEW_PACKET + ".yaml"},
-            "unreviewed or omitted host-interface-resolution packet path")
+            "unreviewed or omitted seccomp-allowlists packet path")
     for path, rule in record["changedFiles"].items():
-        current = successor.historical_bytes(path, regular_bytes(path))
+        current = regular_bytes(path)
         require(digest(current) == rule["afterSha256"]
                 and digest(historical_bytes(path, current)) == rule["beforeSha256"],
                 "unreviewed current source: " + path)
     for path, expected in record["newFiles"].items():
-        require(digest(successor.historical_bytes(path, regular_bytes(path))) == expected,
-                "new source drift: " + path)
-    validate_resolution()
+        require(digest(regular_bytes(path)) == expected, "new source drift: " + path)
+    validate_seccomp_allowlists()
 
 
 if __name__ == "__main__":
     validate()
-    print("Host-interface gate resolutions valid: 219 current specifications; 200-packet checkpoint and exact 199-packet predecessor; design only, every E01-E12 obligation open.")
+    print("Seccomp allowlists valid: 219 current specifications; exact 218-packet predecessor; DATA_CHECK_ONLY, every E01-E12 obligation open.")

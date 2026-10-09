@@ -1,6 +1,11 @@
 # Sol-High Task Packet Catalog
 
-## Current source preparation — MET-SECTOR-002
+## Current source preparation — MET-ENFORCE-017
+
+W02d (MET-ENFORCE-017): per-role, per-architecture seccomp allowlists for the seven roles at Linux v6.12, with
+the reference compiler's filter digests; DATA_CHECK_ONLY. Alpha2 OPEN; 218 accepted plus ENFORCE-017 only.
+
+## Historical CATALOG-BANK source preparation — MET-SECTOR-002
 
 CATALOG-BANK (MET-SECTOR-002): the SECTOR-D1 catalog follow-ups as a reviewed overlay; catalogs byte-identical,
 banking-era consumers read through scripts/sector_catalog.py. Alpha2 OPEN; 217 accepted plus SECTOR-002 only.
@@ -1255,3 +1260,4 @@ acceptance is claimed. Alpha2 ONGOING; model-effort transition NOT_DUE.
 | 216 | `MET-PERF-035` | `Harness-Engineering` | Verify headroom: the outer suite on 4 fail-closed workers inside the unchanged argv, plus suite reuse |
 | 217 | `MET-PERF-036` | `Harness-Engineering` | PERF-SEL: SELinux matrix replays inside validate() instead of three to five times; per-row weakening conjuncts; no cache |
 | 218 | `MET-SECTOR-002` | `Harness-Engineering` | CATALOG-BANK: the SECTOR-D1 catalog follow-ups as a reviewed overlay; catalogs byte-identical |
+| 219 | `MET-ENFORCE-017` | `Harness-Engineering` | W02d: per-role, per-architecture seccomp allowlists and filter digests; DATA_CHECK_ONLY |

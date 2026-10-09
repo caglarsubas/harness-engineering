@@ -220,7 +220,7 @@ def validate_proxy_contract(packets, record, inputs):
         errors = validate_additions(packets)
         pins = {**record["protectedFiles"], **record["inputFiles"]}
         old_ids = {Path(p).stem for p in record["protectedFiles"] if p.startswith("task-packets/")}
-        if len(old_ids) != 134 or len(record["protectedFiles"]) != 176 or set(packets) != old_ids | set(ADDITIONS) | {"MET-UNIFY-005", "MET-RUNNER-001", "MET-PERF-028", "MET-LINUX-005", "MET-VERIFY-001", "MET-PERF-029", "MET-PERF-030", "MET-LINUX-006", "MET-VERIFY-002", "MET-VERIFY-003", "MET-VERIFY-004", "MET-ENFORCE-004", "MET-ENFORCE-005", "MET-ENFORCE-006", "MET-ENFORCE-007", "MET-PERF-031", "MET-ENFORCE-008", "MET-ENFORCE-009", "MET-SECTOR-001", "MET-PERF-032", "MET-ENFORCE-010", "MET-ENFORCE-011", "MET-ENFORCE-012", "MET-ENFORCE-013", "MET-ENFORCE-014"}:
+        if len(old_ids) != 134 or len(record["protectedFiles"]) != 176 or set(packets) != old_ids | set(ADDITIONS) | {"MET-UNIFY-005", "MET-RUNNER-001", "MET-PERF-028", "MET-LINUX-005", "MET-VERIFY-001", "MET-PERF-029", "MET-PERF-030", "MET-LINUX-006", "MET-VERIFY-002", "MET-VERIFY-003", "MET-VERIFY-004", "MET-ENFORCE-004", "MET-ENFORCE-005", "MET-ENFORCE-006", "MET-ENFORCE-007", "MET-PERF-031", "MET-ENFORCE-008", "MET-ENFORCE-009", "MET-SECTOR-001", "MET-PERF-032", "MET-ENFORCE-010", "MET-ENFORCE-011", "MET-ENFORCE-012", "MET-ENFORCE-013", "MET-ENFORCE-014", "MET-ENFORCE-015"}:
             errors.append("exact historical 134 plus exact proxy, observation and custody prerequisites required")
         if set(inputs) != set(pins):
             errors.append("exact proxy authority input inventory required")
@@ -257,7 +257,7 @@ def main():
     for error in errors:
         print("ERROR: " + error)
     if not errors:
-        print("Proxy prerequisite valid: 213 packets; 176 immutable authority files; 127-file/279-ID source checkpoint; product/native NOT_RUN.")
+        print("Proxy prerequisite valid: 214 packets; 176 immutable authority files; 127-file/279-ID source checkpoint; product/native NOT_RUN.")
     return int(bool(errors))
 
 

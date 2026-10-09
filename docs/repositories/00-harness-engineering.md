@@ -1,6 +1,15 @@
 # Repository Plan: `Harness-Engineering`
 
-## Current source preparation — MET-ENFORCE-014
+## Current source preparation — MET-ENFORCE-015
+
+W02-ADM-F: one packet with three successor contracts under one combined review: I05 v3 (bounded upstream
+exchange, finer failure injection, exact residual precondition), POLICY-ADMISSION-SEMANTICS/v3 (MC39-MC41,
+modelled env and volume defaults, C12/C27 evidence) and I07 v3 (on the I05 v3 gate, four more response
+constraints, write timeout as an abort). Review rounds 1 and 2 passed. Nothing is opened or installed, and
+every E01-E12 obligation stays open. Alpha2 OPEN; 213 accepted plus ENFORCE-015 only. Native Linux,
+exact-main and tenant acceptance remain separate.
+
+## Historical W02c-F source preparation — MET-ENFORCE-014
 
 W02c-F: the I07 policy writer channel v2 (successor of the adopted v1 channel) extends the I05 v2 gate, seals the
 admission-policy kinds per W02f, splits a write's upstream outcome into its own event with aborts recorded
@@ -975,6 +984,7 @@ Every packet uses branch `codex/<packet-id>`, changes only named paths, opens a 
 85. `MET-ENFORCE-012`: publish the W02g-F I06 backend profile v2 with independent review; source only.
 86. `MET-ENFORCE-013`: publish W02f POLICY-ADMISSION-SEMANTICS/v2 and the A2 admission allowlists with independent review; source only.
 87. `MET-ENFORCE-014`: publish the W02c-F I07 policy writer channel v2 with independent review; source only.
+88. `MET-ENFORCE-015`: publish the W02-ADM-F successor contracts (I05 v3, admission semantics v3, I07 v3) with one combined independent review; source only.
 
 ## Testing, verification, and acceptance
 

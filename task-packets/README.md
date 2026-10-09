@@ -1,6 +1,15 @@
 # Sol-High Task Packet Catalog
 
-## Current source preparation — MET-ENFORCE-014
+## Current source preparation — MET-ENFORCE-015
+
+W02-ADM-F: one packet with three successor contracts under one combined review: I05 v3 (bounded upstream
+exchange, finer failure injection, exact residual precondition), POLICY-ADMISSION-SEMANTICS/v3 (MC39-MC41,
+modelled env and volume defaults, C12/C27 evidence) and I07 v3 (on the I05 v3 gate, four more response
+constraints, write timeout as an abort). Review rounds 1 and 2 passed. Nothing is opened or installed, and
+every E01-E12 obligation stays open. Alpha2 OPEN; 213 accepted plus ENFORCE-015 only. Native Linux,
+exact-main and tenant acceptance remain separate.
+
+## Historical W02c-F source preparation — MET-ENFORCE-014
 
 W02c-F: the I07 policy writer channel v2 (successor of the adopted v1 channel) extends the I05 v2 gate, seals the
 admission-policy kinds per W02f, splits a write's upstream outcome into its own event with aborts recorded
@@ -1215,3 +1224,4 @@ acceptance is claimed. Alpha2 ONGOING; model-effort transition NOT_DUE.
 | 211 | `MET-ENFORCE-012` | `Harness-Engineering` | W02g-F I06 backend profile v2: carried W02g findings N1-N3 closed, independently reviewed |
 | 212 | `MET-ENFORCE-013` | `Harness-Engineering` | W02f POLICY-ADMISSION-SEMANTICS/v2 and A2 admission allowlists in a sealed static directory, independently reviewed |
 | 213 | `MET-ENFORCE-014` | `Harness-Engineering` | W02c-F I07 policy writer channel v2: on the I05 v2 gate, admission kinds sealed, R1-R8 closed, independently reviewed |
+| 214 | `MET-ENFORCE-015` | `Harness-Engineering` | W02-ADM-F I05 v3, POLICY-ADMISSION-SEMANTICS/v3 and I07 v3 successor contracts, one combined independent review |

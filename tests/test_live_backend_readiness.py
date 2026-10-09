@@ -25,7 +25,7 @@ def inputs():
 def test_exact_catalog_and_real_source_checkpoint(inputs):
     packets, record, raw = inputs
     assert validate_live_backend_readiness(*inputs) == []
-    assert len(packets) == 213 and len(raw) == 156
+    assert len(packets) == 214 and len(raw) == 156
     assert record["historicalPacketCount"] == 123
     assert (record["repositoryCount"], record["harnessCount"]) == (13, 16)
     assert [c["passed"] for c in record["checkpoints"]] == [1295, 1175, 120]

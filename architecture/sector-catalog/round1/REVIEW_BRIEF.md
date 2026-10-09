@@ -1,11 +1,11 @@
-# Independent review brief — CATALOG-BANK v2 sector catalog overlay, round 2
+# Independent review brief — CATALOG-BANK v2 sector catalog overlay, round 1
 
 The authoring agent wrote this brief. It is not a verdict.
 
 ## Subject
 
-The commit named in the review request (round 2), on branch `codex/met-sector-002-catalog-overlay`, on accepted main
-`da81730` (217 packets). Read it with `git show <subject>:<path>` or `git diff da81730 <subject>`, and record the tree hash. The
+The commit named in the review request, on branch `codex/met-sector-002-catalog-overlay`, on accepted main `da81730`
+(217 packets). Read it with `git show <subject>:<path>` or `git diff da81730 <subject>`, and record the tree hash. The
 subject consists of:
 - `architecture/sector-catalog/overlay.json`, `README.md` and this brief;
 - `scripts/sector_catalog.py`;
@@ -21,19 +21,6 @@ subject consists of:
   the banking-era view.
 - v1's review content carries over: the follow-up mapping, the reason for the deferral and the R11 text. Re-check it
   anyway.
-
-## Round 1 and what changed
-
-Round 1 reviewed `0ec8039`, which is kept in `architecture/sector-catalog/round1/`, and returned CHANGES_REQUIRED (F1
-MAJOR, F2-F6 MINOR, N1-N5 NOTE). The README's "Round 1" section maps each finding to its change. Check each fix by
-reproducing the round-1 case. In particular:
-- **F1:** the era `check(read, packets)` with an injected reader and packet set; the consumer gate in
-  `effective_bytes` and `effective_catalog`.
-- **F2:** the R11 section sha256 and the exact DIST-004 line.
-- **F3:** the fully closed, typed record, with duplicate and NaN JSON refused and no `record` parameter.
-- **F4:** `regular_bytes` reads, lstat-based packet listing, unique-key YAML.
-- **F5-F6:** the consumer rule and the guard plan in the README.
-- **N3:** the carried items.
 
 ## Questions to answer
 

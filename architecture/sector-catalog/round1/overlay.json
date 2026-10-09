@@ -86,12 +86,10 @@
  "distributionNotice": {
   "path": "docs/repositories/11-mas-harness-distribution.md",
   "heading": "## Sector direction — MET-SECTOR-001",
-  "sectionSha256": "eecb5189ba794312145a1c6e5f560da0b01e04aa50c1bb5bff4398075a25b2e0",
-  "listItem": "7. `DIST-004-helm-profiles`: minimal ARM64/AMD64, regulated OCP, bridge/silo, and air-gap profile charts with exact selected subcharts only. Banking profile recommendations and the banking pack digest move to the unpublished proposal DIST-BANK-001 (SECTOR-D1).",
   "proposal": "DIST-BANK-001",
   "proposalPredecessor": "IND-BANK-004",
   "finding": "SECTOR-001 review round 2, m1",
-  "replacesDirectionDocsEntry": "validate_sector_direction admits only MET-SECTOR-001's own files as directionDocs of architecture/sector-direction.json; this entry records the R11 notice that m1 asked to add there"
+  "replacesDirectionDocsEntry": "sector-direction.json is MET-SECTOR-001's immutable record and admits only that packet's own files as directionDocs; this entry records the R11 notice that m1 asked to add there"
  },
  "nonClaims": [
   "No catalog byte changes: providers.yaml, services.yaml and PROVIDER_MODULE_CATALOG.md keep their white-goods entries as the historical base.",

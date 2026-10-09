@@ -1,5 +1,6 @@
-"""Exact source lineage for MET-PERF-031; test-only reuse of exact projections, validator semantics unchanged."""
+"""Exact source lineage for MET-PERF-036; the SELinux replay changes keep every validator refusal."""
 import ast
+import json
 from copy import deepcopy
 import os
 from pathlib import Path
@@ -7,7 +8,20 @@ from types import MappingProxyType
 
 import pytest
 
-from scripts import validate_projection_reuse as profile
+from scripts import validate_selinux_replay as profile
+from scripts import validate_parallel_suite as zprofile
+from scripts import validate_selinux_matrix_v2 as yprofile
+from scripts import validate_admission_channel_v3 as xprofile
+from scripts import validate_i07_policy_write_v2 as pprofile
+from scripts import validate_admission_semantics_v2 as aprofile
+from scripts import validate_i06_backend_profile_v2 as vprofile
+from scripts import validate_i05_gate_channel_v2 as cprofile
+from scripts import validate_native_profile_v3 as qprofile
+from scripts import validate_verify_headroom as hprofile
+from scripts import validate_sector_direction as dprofile
+from scripts import validate_selinux_matrix as sprofile
+from scripts import validate_i07_policy_write as wprofile
+from scripts import validate_projection_reuse as rprofile
 from scripts import validate_i05_gate_channel as gprofile
 from scripts import validate_i06_backend_profile as iprofile
 from scripts import validate_native_profile_v2 as nprofile
@@ -31,11 +45,6 @@ def packets():
             for path in (profile.ROOT / "task-packets").glob("*.yaml")}
 
 
-def layer_packets():
-    # The newer MET-ENFORCE-008 layer is projected away before this layer's payload checks.
-    return profile.successor.historical_catalog(packets())
-
-
 def changed_test():
     return next(path for path in profile._PROJECTION_RULES if path.startswith("tests/"))
 
@@ -44,20 +53,21 @@ def test_exact_current_source_and_complete_history_chain():
     assert profile.validate() is None
     current = packets()
     accepted = profile.historical_catalog(current)
-    assert len(current) == 217 and len(accepted) == 203
-    assert set(accepted) == set(current) - {profile.NEW_PACKET, profile.successor.NEW_PACKET,
-                                            profile.successor.successor.NEW_PACKET,
-                                            profile.successor.successor.successor.NEW_PACKET,
-                                            profile.successor.successor.successor.successor.NEW_PACKET,
-                                            profile.successor.successor.successor.successor.successor.NEW_PACKET,
-                                            profile.successor.successor.successor.successor.successor.successor.NEW_PACKET,
-                                            profile.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET,
-                                            profile.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET,
-                                            profile.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET,
-                                            profile.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET,
-                                            profile.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET,
-                                            profile.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET,
-                                            profile.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET}
+    assert len(current) == 217 and len(accepted) == 216
+    assert set(accepted) == set(current) - {profile.NEW_PACKET}
+    assert len(zprofile.historical_catalog(current)) == 215
+    assert len(yprofile.historical_catalog(current)) == 214
+    assert len(xprofile.historical_catalog(current)) == 213
+    assert len(pprofile.historical_catalog(current)) == 212
+    assert len(aprofile.historical_catalog(current)) == 211
+    assert len(vprofile.historical_catalog(current)) == 210
+    assert len(cprofile.historical_catalog(current)) == 209
+    assert len(qprofile.historical_catalog(current)) == 208
+    assert len(hprofile.historical_catalog(current)) == 207
+    assert len(dprofile.historical_catalog(current)) == 206
+    assert len(sprofile.historical_catalog(current)) == 205
+    assert len(wprofile.historical_catalog(current)) == 204
+    assert len(rprofile.historical_catalog(current)) == 203
     assert len(gprofile.historical_catalog(current)) == 202
     assert len(iprofile.historical_catalog(current)) == 201
     assert len(nprofile.historical_catalog(current)) == 200
@@ -76,7 +86,7 @@ def test_exact_current_source_and_complete_history_chain():
     for name, expected in profile.authority()["baselinePackets"].items():
         assert profile.digest(profile.regular_bytes("task-packets/" + name + ".yaml")) == expected
     for path, rule in profile._PROJECTION_RULES.items():
-        raw = profile.successor.historical_bytes(path, profile.regular_bytes(path))
+        raw = profile.regular_bytes(path)
         assert profile.digest(raw) == rule["afterSha256"]
         before = profile.historical_bytes(path, raw)
         assert profile.digest(before) == rule["beforeSha256"]
@@ -85,7 +95,7 @@ def test_exact_current_source_and_complete_history_chain():
 
 @pytest.mark.parametrize("fault", ["missing_new", "missing_old", "extra", "new_payload", "old_payload", "projected"])
 def test_catalog_refuses_all_packet_substitution_and_loss(fault):
-    current = deepcopy(layer_packets())
+    current = deepcopy(packets())
     if fault == "missing_new":
         current.pop(profile.NEW_PACKET)
     elif fault == "missing_old":
@@ -93,7 +103,7 @@ def test_catalog_refuses_all_packet_substitution_and_loss(fault):
     elif fault == "extra":
         current["UNREVIEWED-001"] = {}
     elif fault == "projected":
-        current = profile.historical_catalog(deepcopy(packets()))
+        current = profile.historical_catalog(current)
     else:
         name = profile.NEW_PACKET if fault == "new_payload" else "MET-001"
         current[name]["objective"] += " unreviewed"
@@ -102,7 +112,7 @@ def test_catalog_refuses_all_packet_substitution_and_loss(fault):
 
 
 def test_every_predecessor_payload_is_checked_without_a_verdict_cache():
-    current = layer_packets()
+    current = packets()
     profile.validate_packet_payloads(current)
     for name in sorted(profile.authority()["baselinePackets"]):
         original = current[name]
@@ -132,6 +142,32 @@ def test_exact_inverse_and_forward_test_round_trip_across_layers():
     assert profile.historical_test_bytes(current) == before
     assert profile.current_test_bytes(before) == current
     assert profile.current_test_bytes(before + b" ") == before + b" "
+    zprofile_before = zprofile.historical_bytes(path, current)
+    assert zprofile.current_test_bytes(zprofile_before) == current
+    yprofile_before = yprofile.historical_bytes(path, current)
+    assert yprofile.current_test_bytes(yprofile_before) == current
+    xprofile_before = xprofile.historical_bytes(path, current)
+    assert xprofile.current_test_bytes(xprofile_before) == current
+    pprofile_before = pprofile.historical_bytes(path, current)
+    assert pprofile.current_test_bytes(pprofile_before) == current
+    aprofile_before = aprofile.historical_bytes(path, current)
+    assert aprofile.current_test_bytes(aprofile_before) == current
+    vprofile_before = vprofile.historical_bytes(path, current)
+    assert vprofile.current_test_bytes(vprofile_before) == current
+    cprofile_before = cprofile.historical_bytes(path, current)
+    assert cprofile.current_test_bytes(cprofile_before) == current
+    qprofile_before = qprofile.historical_bytes(path, current)
+    assert qprofile.current_test_bytes(qprofile_before) == current
+    hprofile_before = hprofile.historical_bytes(path, current)
+    assert hprofile.current_test_bytes(hprofile_before) == current
+    dprofile_before = dprofile.historical_bytes(path, current)
+    assert dprofile.current_test_bytes(dprofile_before) == current
+    sprofile_before = sprofile.historical_bytes(path, current)
+    assert sprofile.current_test_bytes(sprofile_before) == current
+    wprofile_before = wprofile.historical_bytes(path, current)
+    assert wprofile.current_test_bytes(wprofile_before) == current
+    rprofile_before = rprofile.historical_bytes(path, current)
+    assert rprofile.current_test_bytes(rprofile_before) == current
     gprofile_before = gprofile.historical_bytes(path, current)
     assert gprofile.current_test_bytes(gprofile_before) == current
     iprofile_before = iprofile.historical_bytes(path, current)
@@ -166,14 +202,26 @@ def test_exact_inverse_and_forward_test_round_trip_across_layers():
         profile.historical_bytes(path, current + b" ")
 
 
-@pytest.mark.parametrize("route", ["authority", "changed", "old_bytes", "unchanged", "historical_test", "current_test", "catalog", "payloads", "gprofile_old", "iprofile_old", "nprofile_old", "resolution_old", "account_old", "canary_old", "isolated_old", "portable_old", "proof_old", "recheck_old", "verifier_old", "linux_old", "performance_old", "runner_old", "roadmap_old"])
+@pytest.mark.parametrize("route", ["authority", "changed", "old_bytes", "unchanged", "historical_test", "current_test", "catalog", "payloads", "zprofile_old", "yprofile_old", "xprofile_old", "pprofile_old", "aprofile_old", "vprofile_old", "cprofile_old", "qprofile_old", "hprofile_old", "dprofile_old", "sprofile_old", "wprofile_old", "rprofile_old", "gprofile_old", "iprofile_old", "nprofile_old", "resolution_old", "account_old", "canary_old", "isolated_old", "portable_old", "proof_old", "recheck_old", "verifier_old", "linux_old", "performance_old", "runner_old", "roadmap_old"])
 def test_newest_authority_is_freshly_checked_on_every_route(monkeypatch, route):
     path = changed_test()
     raw = profile.regular_bytes(path)
     before = profile.historical_bytes(path, raw) if route in ("current_test", "old_bytes") else None
-    current_packets = packets() if route == "catalog" else None
-    layer = layer_packets() if route == "payloads" else None
+    current_packets = packets() if route in ("catalog", "payloads") else None
     master_raw = roadmap.regular_bytes(roadmap.MASTER_PATH)
+    old_zprofile = zprofile.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "zprofile_old" else None
+    old_yprofile = yprofile.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "yprofile_old" else None
+    old_xprofile = xprofile.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "xprofile_old" else None
+    old_pprofile = pprofile.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "pprofile_old" else None
+    old_aprofile = aprofile.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "aprofile_old" else None
+    old_vprofile = vprofile.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "vprofile_old" else None
+    old_cprofile = cprofile.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "cprofile_old" else None
+    old_qprofile = qprofile.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "qprofile_old" else None
+    old_hprofile = hprofile.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "hprofile_old" else None
+    old_dprofile = dprofile.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "dprofile_old" else None
+    old_sprofile = sprofile.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "sprofile_old" else None
+    old_wprofile = wprofile.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "wprofile_old" else None
+    old_rprofile = rprofile.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "rprofile_old" else None
     old_gprofile = gprofile.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "gprofile_old" else None
     old_iprofile = iprofile.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "iprofile_old" else None
     old_nprofile = nprofile.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "nprofile_old" else None
@@ -197,7 +245,20 @@ def test_newest_authority_is_freshly_checked_on_every_route(monkeypatch, route):
         "historical_test": lambda: profile.historical_test_bytes(raw),
         "current_test": lambda: profile.current_test_bytes(before),
         "catalog": lambda: profile.historical_catalog(current_packets),
-        "payloads": lambda: profile.validate_packet_payloads(layer),
+        "payloads": lambda: profile.validate_packet_payloads(current_packets),
+        "zprofile_old": lambda: zprofile.historical_bytes(roadmap.MASTER_PATH, old_zprofile),
+        "yprofile_old": lambda: yprofile.historical_bytes(roadmap.MASTER_PATH, old_yprofile),
+        "xprofile_old": lambda: xprofile.historical_bytes(roadmap.MASTER_PATH, old_xprofile),
+        "pprofile_old": lambda: pprofile.historical_bytes(roadmap.MASTER_PATH, old_pprofile),
+        "aprofile_old": lambda: aprofile.historical_bytes(roadmap.MASTER_PATH, old_aprofile),
+        "vprofile_old": lambda: vprofile.historical_bytes(roadmap.MASTER_PATH, old_vprofile),
+        "cprofile_old": lambda: cprofile.historical_bytes(roadmap.MASTER_PATH, old_cprofile),
+        "qprofile_old": lambda: qprofile.historical_bytes(roadmap.MASTER_PATH, old_qprofile),
+        "hprofile_old": lambda: hprofile.historical_bytes(roadmap.MASTER_PATH, old_hprofile),
+        "dprofile_old": lambda: dprofile.historical_bytes(roadmap.MASTER_PATH, old_dprofile),
+        "sprofile_old": lambda: sprofile.historical_bytes(roadmap.MASTER_PATH, old_sprofile),
+        "wprofile_old": lambda: wprofile.historical_bytes(roadmap.MASTER_PATH, old_wprofile),
+        "rprofile_old": lambda: rprofile.historical_bytes(roadmap.MASTER_PATH, old_rprofile),
         "gprofile_old": lambda: gprofile.historical_bytes(roadmap.MASTER_PATH, old_gprofile),
         "iprofile_old": lambda: iprofile.historical_bytes(roadmap.MASTER_PATH, old_iprofile),
         "nprofile_old": lambda: nprofile.historical_bytes(roadmap.MASTER_PATH, old_nprofile),
@@ -222,12 +283,12 @@ def test_newest_authority_is_freshly_checked_on_every_route(monkeypatch, route):
         return value + b" " if relative == profile.AUTHORITY_PATH else value
 
     monkeypatch.setattr(profile, "regular_bytes", changed_reader)
-    with pytest.raises(ValueError, match="projection reuse history authority digest"):
+    with pytest.raises(ValueError, match="SELinux replay history authority digest"):
         calls[route]()
 
 
 def test_catalog_uses_only_pinned_parsed_data_and_checks_each_input_again(monkeypatch):
-    current = layer_packets()
+    current = packets()
     profile._packet_rules()
 
     def unexpected_yaml(_raw):
@@ -248,7 +309,7 @@ def test_historical_catalog_reuses_frozen_packet_pins_but_rechecks_authority(mon
 
     monkeypatch.setattr(profile, "authority", unexpected)
     monkeypatch.setattr(profile, "safe_load", unexpected)
-    assert len(profile.historical_catalog(current)) == 203
+    assert len(profile.historical_catalog(current)) == 216
 
 
 def test_historical_catalog_does_not_initialize_predecessor_packet_rules(monkeypatch):
@@ -263,7 +324,7 @@ def test_historical_catalog_does_not_initialize_predecessor_packet_rules(monkeyp
         return original(path)
 
     monkeypatch.setattr(profile, "regular_bytes", counted)
-    assert len(profile.historical_catalog(current)) == 203
+    assert len(profile.historical_catalog(current)) == 216
     assert packet_reads == ["task-packets/" + profile.NEW_PACKET + ".yaml"]
     assert profile._packet_rules_for.cache_info().currsize == 0
 
@@ -279,14 +340,14 @@ def test_full_packet_expectations_initialize_once_and_remain_immutable(monkeypat
 
     monkeypatch.setattr(profile, "safe_load", counted)
     rules = profile._packet_rules()
-    assert len(rules) == 204 and len(parsed) == 203
-    assert profile._packet_rules() is rules and len(parsed) == 203
+    assert len(rules) == 217 and len(parsed) == 216
+    assert profile._packet_rules() is rules and len(parsed) == 216
     with pytest.raises(TypeError):
         rules["MET-001"] = ("0" * 64, "0" * 64)
 
 
 def test_first_full_packet_check_refuses_changed_old_yaml(monkeypatch):
-    current = layer_packets()
+    current = packets()
     profile._packet_rules_for.cache_clear()
     original = profile.regular_bytes
 
@@ -301,7 +362,7 @@ def test_first_full_packet_check_refuses_changed_old_yaml(monkeypatch):
 
 
 def test_cached_expected_rules_do_not_cache_payload_or_authority_verdict(monkeypatch):
-    current = layer_packets()
+    current = packets()
     profile.validate_packet_payloads(current)
     current["MET-001"]["objective"] += " unreviewed"
     with pytest.raises(ValueError, match="changed packet payload: MET-001"):
@@ -313,16 +374,16 @@ def test_cached_expected_rules_do_not_cache_payload_or_authority_verdict(monkeyp
         return raw + b" " if path == profile.AUTHORITY_PATH else raw
 
     monkeypatch.setattr(profile, "regular_bytes", changed_reader)
-    with pytest.raises(ValueError, match="projection reuse history authority digest"):
+    with pytest.raises(ValueError, match="SELinux replay history authority digest"):
         profile.validate_packet_payloads(current)
 
 
 def test_cached_expected_rules_are_bound_to_source_root(tmp_path, monkeypatch):
-    current = layer_packets()
+    current = packets()
     profile.validate_packet_payloads(current)
     authority_dir = tmp_path / "architecture"
     authority_dir.mkdir()
-    (authority_dir / "projection-reuse-authority.json").write_bytes(
+    (authority_dir / "selinux-replay-authority.json").write_bytes(
         profile.regular_bytes(profile.AUTHORITY_PATH))
     (tmp_path / "task-packets").mkdir()
     monkeypatch.setattr(profile, "ROOT", tmp_path)
@@ -344,7 +405,7 @@ def test_historical_traversal_leaves_predecessor_refusal_to_its_owner(fault):
     previous = profile.historical_catalog(current)
     assert previous["MET-001"] is current["MET-001"]
     with pytest.raises(ValueError, match="changed packet payload"):
-        profile.validate_packet_payloads(profile.successor.historical_catalog(current))
+        profile.validate_packet_payloads(current)
 
 
 @pytest.mark.parametrize("fault", ["payload", "yaml"])
@@ -388,8 +449,7 @@ def test_normalized_validator_pin_rejects_source_mutation(monkeypatch, mutation)
         return raw
 
     monkeypatch.setattr(profile, "regular_bytes", changed_reader)
-    # The newer MET-ENFORCE-008 layer refuses a mutated validator before this layer.
-    with pytest.raises(ValueError, match="unreviewed current source: scripts/validate_projection_reuse.py"):
+    with pytest.raises(ValueError, match="SELinux replay validator drift"):
         profile.validate()
 
 
@@ -528,14 +588,12 @@ def test_new_projection_has_no_predecessor_validator_import():
         if isinstance(node, ast.ImportFrom):
             assert "validate_" not in (node.module or "")
         elif isinstance(node, ast.Import):
-            # Only the newer successor layer may be imported, never a predecessor.
-            assert all("validate_" not in alias.name or alias.name == "validate_i07_policy_write"
-                       for alias in node.names)
+            assert all("validate_" not in alias.name for alias in node.names)
 
 
 def _count_authority_reads(monkeypatch):
     counts = {}
-    for module in (profile.successor, profile, gprofile, iprofile, nprofile, resolution, account, canary, isolated, portable, proof, recheck, verifier, linux, performance, runner):
+    for module in (profile, zprofile, yprofile, xprofile, pprofile, aprofile, vprofile, cprofile, qprofile, hprofile, dprofile, sprofile, wprofile, rprofile, gprofile, iprofile, nprofile, resolution, account, canary, isolated, portable, proof, recheck, verifier, linux, performance, runner):
         original = module.regular_bytes
 
         def counted(relative, _module=module, _original=original):
@@ -562,7 +620,7 @@ def test_every_newer_authority_is_read_exactly_once_per_route(monkeypatch, route
         "current_test": lambda: runner.current_test_bytes(before),
     }
     calls[route]()
-    expected = {module.__name__: 1 for module in (profile.successor, profile, gprofile, iprofile, nprofile, resolution, account, canary, isolated, portable, proof, recheck, verifier, linux, performance, runner)}
+    expected = {module.__name__: 1 for module in (profile, zprofile, yprofile, xprofile, pprofile, aprofile, vprofile, cprofile, qprofile, hprofile, dprofile, sprofile, wprofile, rprofile, gprofile, iprofile, nprofile, resolution, account, canary, isolated, portable, proof, recheck, verifier, linux, performance, runner)}
     if route == "current_test":
         # The forward route reads this layer's newest bytes and then projects them forward once more.
         assert all(counts[name] >= 1 for name in expected) and set(counts) == set(expected)
@@ -570,51 +628,59 @@ def test_every_newer_authority_is_read_exactly_once_per_route(monkeypatch, route
         assert counts == expected
 
 
-REUSE_LOOPS = {"tests/test_credential_lifecycle.py": {"test_every_input_pin_is_enforced",
-                                                     "test_performance_predecessor_and_exact_twenty_commands"},
-               "tests/test_ci_performance.py": {"test_each_protected_input_rechecked_not_cached"}}
+def test_selinux_replay_sources_are_exactly_the_reviewed_text():
+    assert profile.validate_selinux_replay() is None
+    assert set(profile.SOURCE_PINS) == {"scripts/validate_selinux_matrix.py", "scripts/validate_selinux_matrix_v2.py",
+                                        "tests/test_selinux_matrix.py", "tests/test_selinux_matrix_v2.py"}
 
 
-def _validator_calls(nodes):
-    return [node for node in nodes if isinstance(node, ast.Call)
-            and (getattr(node.func, "id", "") or getattr(node.func, "attr", "")).startswith("validate_")]
+@pytest.mark.parametrize("path,old,new", [
+    ("scripts/validate_selinux_matrix_v2.py", "    for row in vectors[\"mutationChecks\"]:\n        check_mutation_row(matrix, row)\n",
+     "    for row in vectors[\"mutationChecks\"][:-1]:\n        check_mutation_row(matrix, row)\n"),
+    ("scripts/validate_selinux_matrix.py", '        ok = set(expect) == {"matrixError"}', '        ok = True or set(expect) == {"matrixError"}'),
+    ("tests/test_selinux_matrix_v2.py", '("mutationChecks", "M01", "expect", {"failedAssertions": []}, "mutation check M01$")',
+     '("mutationChecks", "M01", "expect", {"failedAssertions": []}, "mutation check")'),
+    ("tests/test_selinux_matrix.py", 'match="access check C001$"', 'match="access check"'),
+])
+def test_selinux_replay_sources_cannot_drift(monkeypatch, path, old, new):
+    original = profile.reviewed_bytes
+
+    def changed(target):
+        raw = original(target)
+        if target != path:
+            return raw
+        assert raw.count(old.encode()) == 1
+        return raw.replace(old.encode(), new.encode())
+
+    monkeypatch.setattr(profile, "reviewed_bytes", changed)
+    with pytest.raises(ValueError, match="unreviewed replay source: " + path):
+        profile.validate_selinux_replay_sources()
 
 
-@pytest.mark.parametrize("path", sorted(REUSE_LOOPS))
-def test_shared_projections_stay_in_the_reviewed_loops_and_are_undone(path):
-    """Structure only; the authority's exact byte pins remain the primary guard of these loops."""
-    assert path in profile.authority()["changedFiles"]
-    tree = ast.parse(profile.regular_bytes(path))
-    helpers = [node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "share_exact_projections"]
-    assert len(helpers) == 1
-    helper = ast.unparse(helpers[0])
-    assert helper.count("monkeypatch.setattr(module, name, projected)") == 1
-    assert ast.unparse(helpers[0].args) == "monkeypatch, module, name='historical_bytes'"
-    assert "key = tuple(((type(arg), arg if isinstance(arg, (bytes, str)) else canonical(arg)) for arg in args))" in helper
-    users = set()
+@pytest.mark.parametrize("path,old,new", [
+    ("scripts/validate_selinux_matrix_v2.py", "    validate_selinux_matrix_v2()\n", "    if False:\n        validate_selinux_matrix_v2()\n"),
+    ("scripts/validate_selinux_matrix.py", "    validate_selinux_contract()\n", "    return\n    validate_selinux_contract()\n"),
+    ("scripts/validate_selinux_matrix.py", "    validate_vectors(matrix, _json_file(SUBJECT_PATHS[\"vectors.json\"]))\n",
+     "    try:\n        validate_vectors(matrix, _json_file(SUBJECT_PATHS[\"vectors.json\"]))\n    except ValueError:\n        pass\n"),
+])
+def test_validate_reaches_the_replay_unconditionally(monkeypatch, path, old, new):
+    original = profile.reviewed_bytes
+
+    def changed(target):
+        raw = original(target)
+        if target != path:
+            return raw
+        assert raw.count(old.encode()) == 1
+        return raw.replace(old.encode(), new.encode())
+
+    monkeypatch.setattr(profile, "reviewed_bytes", changed)
+    with pytest.raises(ValueError, match="unconditional top-level route call: " + path):
+        profile.validate_selinux_replay_routes()
+
+
+def test_reviewed_bytes_is_the_only_semantic_read():
+    tree = ast.parse(profile.regular_bytes(profile.VALIDATOR_PATH))
+    semantic = {"validate_selinux_replay_sources", "validate_selinux_replay_routes", "validate_selinux_replay", "_definitions"}
     for node in tree.body:
-        if not (isinstance(node, ast.FunctionDef) and node.name.startswith("test_")):
-            continue
-        calls = [call for call in ast.walk(node) if isinstance(call, ast.Call)]
-        shares = [call.lineno for call in calls if getattr(call.func, "id", "") == "share_exact_projections"]
-        if not shares:
-            continue
-        users.add(node.name)
-        loops = [loop for loop in node.body if isinstance(loop, ast.For)]
-        undos = [call.lineno for call in calls if getattr(call.func, "attr", "") == "undo"]
-        assert len(loops) == 1 and len(undos) == 1
-        loop, undo = loops[0], undos[0]
-        # A positive validation under the wrapper precedes the loop.
-        assert any(max(shares) < call.lineno < loop.lineno for call in _validator_calls(calls))
-        # The wrapper is undone after the loop, and a fresh validation that must pass follows.
-        assert loop.end_lineno < undo
-        finals = [stmt for stmt in node.body if isinstance(stmt, ast.Assert) and stmt.lineno > undo
-                  and isinstance(stmt.test, ast.Compare) and _validator_calls(ast.walk(stmt.test))
-                  and ast.unparse(stmt.test).endswith("== []")]
-        assert finals and finals[-1] is node.body[-1]
-    assert users == REUSE_LOOPS[path]
-
-
-def test_validators_do_not_share_projections():
-    for path in sorted((profile.ROOT / "scripts").glob("*.py")):
-        assert b"share_exact_projections" not in path.read_bytes(), path.name
+        if isinstance(node, ast.FunctionDef) and node.name in semantic:
+            assert "regular_bytes" not in {n.id for n in ast.walk(node) if isinstance(n, ast.Name)}, node.name

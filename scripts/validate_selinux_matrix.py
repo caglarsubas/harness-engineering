@@ -413,31 +413,49 @@ def validate_w02a_agreement(matrix: dict) -> None:
             "slot values fit the W02a label patterns")
 
 
-def validate_vectors(matrix: dict, vectors: dict) -> int:
-    """Replay every vector through the reference evaluator; returns the number of checks."""
+def check_vector_keys(vectors: dict) -> None:
     require(type(vectors) is dict and set(vectors) == {"evidenceClass", "accessChecks", "mutationChecks", "w02aSlots"}
             and vectors["evidenceClass"] == "DATA_CHECK_ONLY", "closed selinux matrix vectors")
-    checks = 0
-    for row in vectors["accessChecks"]:
-        require(model.allowed(matrix, row["state"], row["source"], row["target"], row["class"], row["perm"]) is row["expect"],
-                "access check " + row["id"])
-        checks += 1
-    for row in vectors["mutationChecks"]:
-        mutated = model.apply_ops(matrix, row["ops"])
-        expect = row["expect"]
-        try:
-            model.check_matrix(mutated)
-            ok = expect == {"failedAssertions": model.failed_assertions(mutated)} and expect["failedAssertions"] != []
-        except ValueError as exc:
-            # The pinned refusal is the full message or the part naming the refused object.
-            ok = set(expect) == {"matrixError"} and expect["matrixError"] in (str(exc), str(exc).split(":", 1)[0])
-        require(ok, "mutation check " + row["id"])
-        checks += 1
+
+
+def check_access_row(matrix: dict, row: dict) -> None:
+    require(model.allowed(matrix, row["state"], row["source"], row["target"], row["class"], row["perm"]) is row["expect"],
+            "access check " + row["id"])
+
+
+def check_mutation_row(matrix: dict, row: dict) -> None:
+    mutated = model.apply_ops(matrix, row["ops"])
+    expect = row["expect"]
+    try:
+        model.check_matrix(mutated)
+        ok = expect == {"failedAssertions": model.failed_assertions(mutated)} and expect["failedAssertions"] != []
+    except ValueError as exc:
+        # The pinned refusal is the full message or the part naming the refused object.
+        ok = set(expect) == {"matrixError"} and expect["matrixError"] in (str(exc), str(exc).split(":", 1)[0])
+    require(ok, "mutation check " + row["id"])
+
+
+def check_vector_inventory(matrix: dict, vectors: dict) -> None:
     require(vectors["w02aSlots"] == model.w02a_slots(matrix), "W02a slot values")
     ids = [row["id"] for key in ("accessChecks", "mutationChecks") for row in vectors[key]]
     require(len(ids) == len(set(ids)) and len(vectors["accessChecks"]) >= 1716 and len(vectors["mutationChecks"]) >= 50,
             "closed vector inventory with unique identifiers")
-    return checks + 1
+
+
+def replay_vectors(matrix: dict, vectors: dict) -> int:
+    """The full replay: exactly the conjunction of the helpers above, in this order."""
+    check_vector_keys(vectors)
+    for row in vectors["accessChecks"]:
+        check_access_row(matrix, row)
+    for row in vectors["mutationChecks"]:
+        check_mutation_row(matrix, row)
+    check_vector_inventory(matrix, vectors)
+    return len(vectors["accessChecks"]) + len(vectors["mutationChecks"]) + 1
+
+
+def validate_vectors(matrix: dict, vectors: dict) -> int:
+    """Replay every vector through the reference evaluator; returns the number of checks."""
+    return replay_vectors(matrix, vectors)
 
 
 def validate_selinux_contract() -> None:
@@ -513,12 +531,12 @@ def validate() -> None:
             == record["validatorNormalizedSha256"], "selinux matrix validator drift")
     paths = sorted((ROOT / "task-packets").glob("*.yaml"))
     old = set(record["baselinePackets"])
-    require(len(paths) == 216
-            and {path.stem for path in paths} == old | {NEW_PACKET, successor.NEW_PACKET, successor.successor.NEW_PACKET, successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET},
-            "closed 216-packet catalog retaining the 206-packet checkpoint")
+    require(len(paths) == 217
+            and {path.stem for path in paths} == old | {NEW_PACKET, successor.NEW_PACKET, successor.successor.NEW_PACKET, successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET},
+            "closed 217-packet catalog retaining the 206-packet checkpoint")
     packets = {}
     for path in paths:
-        if path.stem in (successor.NEW_PACKET, successor.successor.NEW_PACKET, successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET):
+        if path.stem in (successor.NEW_PACKET, successor.successor.NEW_PACKET, successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET):
             continue
         raw = regular_bytes("task-packets/" + path.name)
         expected = record["packetSha256"] if path.stem == NEW_PACKET else record["baselinePackets"][path.stem]
@@ -556,4 +574,4 @@ def validate() -> None:
 
 if __name__ == "__main__":
     validate()
-    print("SELinux matrix contract valid: 216 current specifications; 206-packet checkpoint and exact 205-packet predecessor; DATA_CHECK_ONLY, every E01-E12 obligation open.")
+    print("SELinux matrix contract valid: 217 current specifications; 206-packet checkpoint and exact 205-packet predecessor; DATA_CHECK_ONLY, every E01-E12 obligation open.")

@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-"""Validate the I05 broker-gate channel v2 contract (W02b-F) and the exact 210-to-209 projection."""
+"""Validate the MET-PERF-036 SELinux replay changes and the exact 217-to-216 projection."""
 from __future__ import annotations
 
+import ast
 import base64
 import binascii
+import copy
 import hashlib
 import json
 import stat
@@ -14,21 +16,17 @@ from typing import Any
 
 try:
     from safe_yaml import safe_load
-    import i05_gate_channel_v2 as model
-    import validate_i06_backend_profile_v2 as successor
 except ImportError:
     from scripts.safe_yaml import safe_load
-    from scripts import i05_gate_channel_v2 as model
-    from scripts import validate_i06_backend_profile_v2 as successor
 
 
 ROOT = Path(__file__).resolve().parents[1]
-AUTHORITY_PATH = "architecture/i05-gate-channel-v2-authority.json"
-AUTHORITY_SHA256 = "62da18524bfa5e6102ec1b3e0912f3c2c94122ad87b57247dbe5c55aa326c7dd"
-VALIDATOR_PATH = "scripts/validate_i05_gate_channel_v2.py"
-BASE_COMMIT = "a29c93c7813ff71eb8179c4e8611032d972e3a36"
-NEW_PACKET = "MET-ENFORCE-011"
-PREVIOUS_PACKET = "MET-ENFORCE-010"
+AUTHORITY_PATH = "architecture/selinux-replay-authority.json"
+AUTHORITY_SHA256 = "9b713b57ea23a16aee0745a811484da30daffd8f3dee47210074aff3053b374b"
+VALIDATOR_PATH = "scripts/validate_selinux_replay.py"
+BASE_COMMIT = "1d107e4ac906fcd93c617d26d523c01b0e72bce1"
+NEW_PACKET = "MET-PERF-036"
+PREVIOUS_PACKET = "MET-PERF-035"
 MAX_FILE_BYTES = 16_777_216
 # Test routes cover the top-level ci/test_ files as well as tests/.
 TEST_PREFIXES = ("tests/", "ci/test_")
@@ -52,12 +50,12 @@ def parse(raw: bytes) -> Any:
     def unique(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
         result: dict[str, Any] = {}
         for key, value in pairs:
-            require(key not in result, "duplicate i05-gate-channel-v2 authority member")
+            require(key not in result, "duplicate selinux-replay authority member")
             result[key] = value
         return result
 
     def no_constant(_value: str) -> Any:
-        raise ValueError("nonfinite i05-gate-channel-v2 authority number")
+        raise ValueError("nonfinite selinux-replay authority number")
 
     return json.loads(raw, object_pairs_hook=unique, parse_constant=no_constant)
 
@@ -95,18 +93,10 @@ _VERIFIED_AUTHORITY: tuple[str, bytes] | None = None
 
 
 def _checked_authority_raw() -> bytes:
-    """Newest first: every newer authority, then this one, each read exactly once."""
-    successor._checked_authority_raw()
-    return _checked_own_authority_raw()
-
-
-def _checked_own_authority_raw() -> bytes:
-    """Fresh complete read of this layer's authority only; callers reach newer
-    authorities through exactly one successor route per public call."""
     global _VERIFIED_AUTHORITY
     raw = regular_bytes(AUTHORITY_PATH)
     if type(raw) is not bytes or _VERIFIED_AUTHORITY != (AUTHORITY_SHA256, raw):
-        require(digest(raw) == AUTHORITY_SHA256, "I05 channel v2 history authority digest")
+        require(digest(raw) == AUTHORITY_SHA256, "SELinux replay history authority digest")
         if type(raw) is bytes:
             _VERIFIED_AUTHORITY = (AUTHORITY_SHA256, raw)
     return raw
@@ -126,18 +116,18 @@ def authority() -> dict[str, Any]:
     require(type(value) is dict and set(value) == {
         "schemaVersion", "authorityPacket", "acceptedBase", "baselinePackets",
         "packetSha256", "changedFiles", "newFiles", "validatorNormalizedSha256",
-    }, "closed I05 channel v2 history authority")
-    require(value["schemaVersion"] == "harness.planeon.ai/i05-gate-channel-v2-authority/v1"
+    }, "closed SELinux replay history authority")
+    require(value["schemaVersion"] == "harness.planeon.ai/selinux-replay-authority/v1"
             and value["authorityPacket"] == NEW_PACKET
             and value["acceptedBase"] == BASE_COMMIT
             and type(value["baselinePackets"]) is dict
-            and len(value["baselinePackets"]) == 209
+            and len(value["baselinePackets"]) == 216
             and NEW_PACKET not in value["baselinePackets"]
             and type(value["changedFiles"]) is dict
             and type(value["newFiles"]) is dict
             and _sha(value["packetSha256"])
             and _sha(value["validatorNormalizedSha256"]),
-            "accepted 209-packet base")
+            "accepted 216-packet base")
     for name, expected in value["baselinePackets"].items():
         require(type(name) is str and name and "/" not in name
                 and all(char in "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-" for char in name)
@@ -263,18 +253,10 @@ def _inverse(raw: bytes, hunks: tuple[tuple[int, bytes, bytes], ...]) -> bytes:
 
 
 def historical_bytes(path: str, raw: bytes) -> bytes:
-    """Undo the newer successor, then this step; every authority is read once."""
+    """Recheck the pinned authority and undo only this reviewed successor."""
+    _checked_authority_raw()
     _path(path)
     require(type(raw) is bytes and len(raw) <= MAX_FILE_BYTES, "bounded source bytes required")
-    rule = _PROJECTION_RULES.get(path)
-    # An exact 209-era byte string is already older than the successor layer.
-    # Every newer authority and this one are still rechecked before this fast return.
-    if rule is not None and digest(raw) == rule["beforeSha256"]:
-        _checked_authority_raw()
-        return raw
-    # The successor route freshly rechecks every newer authority exactly once.
-    raw = successor.historical_bytes(path, raw)
-    _checked_own_authority_raw()
     return _undo_this_layer(path, raw)
 
 
@@ -294,9 +276,8 @@ def _undo_this_layer(path: str, raw: bytes) -> bytes:
 
 
 def historical_test_bytes(raw: bytes) -> bytes:
+    _checked_authority_raw()
     require(type(raw) is bytes and len(raw) <= MAX_FILE_BYTES, "bounded test bytes required")
-    raw = successor.historical_test_bytes(raw)
-    _checked_own_authority_raw()
     current_sha = digest(raw)
     matches = [path for path, rule in _PROJECTION_RULES.items()
                if path.startswith(TEST_PREFIXES) and current_sha == rule["afterSha256"]]
@@ -305,26 +286,23 @@ def historical_test_bytes(raw: bytes) -> bytes:
 
 
 def current_test_bytes(before: bytes) -> bytes:
+    _checked_authority_raw()
     require(type(before) is bytes and len(before) <= MAX_FILE_BYTES, "bounded test bytes required")
     before_sha = digest(before)
     matches = [path for path, rule in _PROJECTION_RULES.items()
                if path.startswith(TEST_PREFIXES) and before_sha == rule["beforeSha256"]]
     require(len(matches) <= 1, "ambiguous predecessor test")
     if not matches:
-        current = successor.current_test_bytes(before)
-        _checked_own_authority_raw()
-        return current
-    current = successor.historical_bytes(matches[0], regular_bytes(matches[0]))
-    _checked_own_authority_raw()
+        return before
+    current = regular_bytes(matches[0])
     require(digest(current) == _PROJECTION_RULES[matches[0]]["afterSha256"],
             "current test drift")
-    return successor.current_test_bytes(current)
+    return current
 
 
 def historical_catalog(packets: dict[str, Any]) -> dict[str, Any]:
     """Remove only this layer, leaving predecessor checks to their owners."""
-    packets = successor.historical_catalog(packets)
-    _checked_own_authority_raw()
+    _checked_authority_raw()
     require(type(packets) is dict, "packet mapping")
     current_ids = set(_PACKET_BYTE_RULES)
     require(NEW_PACKET in current_ids and set(packets) == current_ids,
@@ -361,174 +339,88 @@ def validate_packet_payloads(packets: dict[str, Any]) -> None:
         require(supplied_sha == payload_sha, "changed packet payload: " + name)
 
 
-# MET-ENFORCE-011 publishes the W02b-F successor contract planeon.internal.effect-gate-frame/v2. Repository bytes are
-# read only through reviewed_bytes, so a later bridged successor projects its own edits away first; the reference model
-# is imported and executed, and its exact bytes are bound by the review round below.
-CONTRACT_DIR = "architecture/i05-gate-channel-v2/"
-STATUS_PATH = CONTRACT_DIR + "status.json"
-MODEL_PATH = "scripts/i05_gate_channel_v2.py"
-SUBJECT_PATHS = {"README.md": CONTRACT_DIR + "README.md", "REVIEW_BRIEF.md": CONTRACT_DIR + "REVIEW_BRIEF.md",
-                 "channel.schema.json": CONTRACT_DIR + "channel.schema.json",
-                 "outcome-mapping.json": CONTRACT_DIR + "outcome-mapping.json",
-                 "vectors.json": CONTRACT_DIR + "vectors.json", "i05_gate_channel_v2.py": MODEL_PATH}
-V1_DIR = "architecture/i05-gate-channel/"
-# The adopted v1 contract and model, the I07 contract that extends the v1 model and the W01 resolution stay
-# byte-identical.
-FROZEN_PATHS = (V1_DIR + "README.md", V1_DIR + "channel.schema.json", V1_DIR + "outcome-mapping.json",
-                V1_DIR + "vectors.json", V1_DIR + "status.json", "scripts/i05_gate_channel.py",
-                "architecture/i07-policy-write/README.md", "architecture/i07-policy-write/status.json",
-                "scripts/i07_policy_write.py", "architecture/host-interface-inputs/resolved/HOST_INTERFACE_SPEC.md")
-KUBERNETES_COMMIT = "f78e722310e50bcaca9276be22276d9e91d91308"
-OBLIGATIONS = tuple("E%02d" % number for number in range(1, 13))
-FALSE_FLAGS = ("nativeAcceptance", "tenantAcceptance", "gateInstalled", "journalImplemented", "failureMarkerImplemented",
-               "substrateSelected", "distributionSelected", "i07MovedToV2", "productExecution", "runnerActivated",
-               "phaseComplete")
-CARRIED = ("P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8")
-VECTOR_FLOORS = {"transcripts": 106, "agreement": 42, "frames": 33, "byteFrames": 14, "configRefusals": 3}
-INPUT_TYPES = {"bytes": bytes, "bytearray": bytearray, "str": lambda raw: raw.decode("ascii")}
+# MET-PERF-036 (roadmap PERF-SEL) cuts the SELinux layer tests' cost without changing any validator refusal: each layer's
+# vector replay is split into per-row helpers whose conjunction, in the old order and with the old messages, is the old
+# replay; the weakening tests call the conjunct that checks the changed row; the full replay runs inside validate() and
+# no longer again in a second test, which pins that route and drives one refusal through it. Nothing is cached.
+# Repository bytes are read only through reviewed_bytes. Every changed function, test and test table is pinned by its
+# exact whole lines, and each route from validate() to the vector replay is an unconditional top-level call.
+SOURCE_PINS = {'scripts/validate_selinux_matrix.py': {'check_vector_keys': '24865e12681a71660064cb1947c2c2cba5bb808ed742d3382886cefb2672771d', 'check_access_row': '7d2f9a5e1cb16c167514c448f9aa0d8bfbd32aba6ee0c8d3873e263a20813cea', 'check_mutation_row': '4aff663580cd57a5699bbe316ad20c7ae1fb5ce4e7e252064f77ff65c8920455', 'check_vector_inventory': '8cd496549ab67d45c4c23ee63d98b95375a6423471a69def8e109e1b1c1081d6', 'replay_vectors': '7f79baef2b87a122927bfdb9e6c966ccd30ec7c5a81971618ad3b7adbe810b6f', 'validate_vectors': '055b7dd6258156e8a4199122cecc8261376f9ae603af5aebc0f22befbdcfb121'}, 'scripts/validate_selinux_matrix_v2.py': {'check_v4_vector_keys': '44bddfd2070c06a9e9e53f188d04367428f863f5140e33eaf8c369a0133ba199', 'check_access_row': '7d2f9a5e1cb16c167514c448f9aa0d8bfbd32aba6ee0c8d3873e263a20813cea', 'check_mutation_row': '477b76b42710c294383d9daad834a8ac45a3203c0a89a80a544e5d74538c45aa', 'check_v4_vector_inventory': '979a4598b1318c6637498ca116706d633954bee9ebb7a91393cc378d7cce2c57', 'replay_v4_vectors': 'f30aa782298093f6aa0aa3d392ef2e92bc10f366af806229233b27d4cf0c4182', 'validate_v4_vectors': '2f99a923d56637b8f87410e4ecced8b41820e71d8313ae45ee20be2eb3f9d697'}, 'tests/test_selinux_matrix.py': {'test_every_vector_replays_and_every_assertion_holds': 'fe7d424462b3d9b41552f1b0a2dc6cbaf27921e8e9a2077338649e5cbed2c6c8', '<assign WEAKENINGS>': '04b6e42bb50c120f6d5d99021e11bc136a1c0c1b8b0cda429c2d22d321e1126e', 'test_vectors_cannot_be_weakened': '691c804962e76d9cab3bd68b466b09cca309e3f300afecd93f900301959298ef', 'test_full_replay_is_exactly_the_conjunction_of_the_helpers': 'a05e2463e86fcdf2c16c5ceb6a1e987bc3bfa8cb6060ae814eecb97035359230', 'test_full_replay_refuses_with_the_first_weakened_rows_message': 'b42d67a56f56af955beee4c58c5b54b810768a46972cae30f53f5a533c88f007', 'test_vector_refusal_reaches_the_contract_route': '6ebed3b08d338d03c06cebfa9e2decad2850785814fa6dbc43f3c7162329abc6'}, 'tests/test_selinux_matrix_v2.py': {'test_matrix_v4_replays_and_adoption_follows_the_review': 'e7984cfc6b4bb6065323c914ec099bdf565002a0de631884de75787bd1a7330b', '<assign WEAKENINGS>': '3a9af4be0aef19e99de93920088e38e9a1e8b61b3973444e1ff8bf99f20e847d', 'test_v4_vectors_cannot_be_weakened': 'c6bad31f0061cdfb2361515ac202643f190c057f3998d3e105ff3c135e38d7fb', 'test_full_replay_is_exactly_the_conjunction_of_the_helpers': '2258be820d9a7cb70c183622e31ddd4105328e3260dec8d6876a4ba79fc43e0b', 'test_full_replay_refuses_with_the_first_weakened_rows_message': '655c94be9fe71f0ea481347ee635b0dc28e256a28850c5cdf97b882470a85e98', 'test_vector_refusal_reaches_the_contract_route': 'c4c754ab812388e634326adecd19510e265b088af0be4f1b917fdbe8b93f4dc0', 'test_reviewed_bytes_is_the_only_semantic_read': '3b1d6d090b314b951f1d8dfc326ffb2e7419e47fc48d637a3793eb2fd8d0336c'}}
+# (file, function, the call that must be an unconditional top-level statement of its body)
+ROUTE_CALLS = (("scripts/validate_selinux_matrix.py", "validate", "validate_selinux_contract"),
+               ("scripts/validate_selinux_matrix.py", "validate_selinux_contract", "validate_vectors"),
+               ("scripts/validate_selinux_matrix_v2.py", "validate", "validate_selinux_matrix_v2"),
+               ("scripts/validate_selinux_matrix_v2.py", "validate_selinux_matrix_v2", "validate_v4_vectors"))
 
 
 def reviewed_bytes(path: str) -> bytes:
     """This packet's reviewed bytes of path; a bridged successor projects newer bytes back first."""
-    return successor.historical_bytes(path, regular_bytes(path))
+    return regular_bytes(path)
 
 
-def _json(path: str) -> Any:
-    return parse(reviewed_bytes(path))
+def _whole(raw: str, node: ast.stmt) -> bytes:
+    """The exact whole lines of a definition or assignment, decorators included."""
+    lines = raw.splitlines(keepends=True)
+    first = min([node.lineno] + [decorator.lineno for decorator in getattr(node, "decorator_list", [])])
+    return "".join(lines[first - 1:node.end_lineno]).encode("utf-8")
 
 
-def validate_v2_schema(schema: dict, mapping: dict) -> None:
-    """The frame schema is the v2 version; the mapping excludes 408 from the mutation 4xx rows and pins its sources."""
-    import jsonschema
-    jsonschema.Draft202012Validator.check_schema(schema)
-    require(schema.get("$id") == "urn:planeon:internal:effect-gate-frame:v2"
-            and all(variant["properties"]["schemaVersion"] == {"const": model.FRAME_VERSION} for variant in schema["oneOf"])
-            and len(schema["oneOf"]) == 2 * len(model.OPERATIONS), "v2 frame schema version")
-    require(mapping.get("schemaVersion") == "planeon.internal.effect-gate-outcome-mapping/v2"
-            and all(type(row.get("excludeStatus")) is list for row in mapping["rows"])
-            and {(row["verb"], row["httpStatus"]): row["excludeStatus"] for row in mapping["rows"]
-                 if row["httpStatus"] == "4xx"} == {("CREATE", "4xx"): [408], ("GET", "4xx"): [], ("DELETE", "4xx"): [408]},
-            "the mutation 4xx agreement rows exclude 408")
-    source = mapping.get("upstreamSource", {})
-    require(source.get("tag") == "v1.37.1" and source.get("commit") == KUBERNETES_COMMIT
-            and len(source.get("files", [])) == 5 and all(_sha(row.get("sha256")) for row in source["files"]),
-            "pinned upstream Kubernetes sources")
+def _definitions(tree: ast.Module, path: str) -> dict:
+    named = {}
+    for node in tree.body:
+        if isinstance(node, ast.FunctionDef):
+            name = node.name
+        elif isinstance(node, ast.Assign) and len(node.targets) == 1 and isinstance(node.targets[0], ast.Name):
+            name = "<assign %s>" % node.targets[0].id
+        else:
+            continue
+        require(name not in named, "one definition per pinned name: %s %s" % (path, name))
+        named[name] = node
+    return named
 
 
-def validate_v2_vectors(schema: dict, mapping: dict, vectors: dict) -> int:
-    """Every case replays to its pinned result through the reference model."""
-    require(vectors["evidenceClass"] == "DATA_CHECK_ONLY" and set(vectors["configs"]) == {"ACTIVE", "INSPECTING", "LATER"}
-            and all(len(vectors[key]) >= floor for key, floor in VECTOR_FLOORS.items()), "v2 vectors are closed")
-    checks = 0
-    for row in vectors["transcripts"]:
-        outputs, final = model.replay(vectors["configs"][row["config"]], row["events"], schema)
-        require(outputs == row["outputs"] and final == row["final"], "transcript " + row["id"])
-        checks += 1
-    for row in vectors["agreement"]:
-        got = model.check_agreement(mapping, row["verb"], row["identity"], row["outcome"], row["resourceResult"])
-        require(got == row["expect"], "agreement " + row["id"])
-        checks += 1
-    for row in vectors["frames"]:
-        try:
-            model.check_frame(row["frame"], schema)
-            got = None
-        except ValueError as exc:
-            got = str(exc)
-        require(got == row["expect"], "frame " + row["id"])
-        checks += 1
-    for row in vectors["byteFrames"]:
-        try:
-            model.decode_frame(INPUT_TYPES[row["inputType"]](_base64(row["base64"])), schema)
-            got = None
-        except ValueError as exc:
-            got = str(exc)
-        require(got == row["expect"], "byte frame " + row["id"])
-        checks += 1
-    for row in vectors["configRefusals"]:
-        try:
-            model.Gate(dict(vectors["configs"]["ACTIVE"], **row["override"]))
-            got = None
-        except ValueError as exc:
-            got = str(exc)
-        require(got is not None and got == row["expect"], "configuration refusal " + row["id"])
-        checks += 1
-    return checks
+def validate_selinux_replay_sources() -> None:
+    """Every pinned helper, test and test table is exactly its reviewed text."""
+    for path, pins in SOURCE_PINS.items():
+        raw = reviewed_bytes(path).decode("utf-8")
+        named = _definitions(ast.parse(raw), path)
+        for name, expected in pins.items():
+            node = named.get(name)
+            require(node is not None, "pinned replay source present: %s %s" % (path, name))
+            require(digest(_whole(raw, node)) == expected, "unreviewed replay source: %s %s" % (path, name))
 
 
-def validate_v2_status() -> None:
-    status = _json(STATUS_PATH)
-    require(type(status) is dict and set(status) == {
-        "schemaVersion", "contract", "predecessorContract", "reviewRounds", "closedFindings", "carriedFindings",
-        "ownerDecisions", "contractState", "obligations", "independentReviewer", *FALSE_FLAGS,
-    } and status["schemaVersion"] == "planeon.internal.i05-gate-channel-v2-status/v1"
-            and status["contract"] == model.FRAME_VERSION
-            and status["predecessorContract"] == "planeon.internal.effect-gate-frame/v1"
-            and status["obligations"] == {name: "OPEN_UNPROVEN" for name in OBLIGATIONS}
-            and status["independentReviewer"] == "SEPARATE_AGENT_NOT_AUTHOR" and status["ownerDecisions"] == []
-            and all(status[flag] is False for flag in FALSE_FLAGS), "closed I05 v2 status")
-    require(type(status["closedFindings"]) is dict and set(status["closedFindings"]) == set(CARRIED),
-            "the carried v1 round-3 findings are dispositioned")
-    rounds = status["reviewRounds"]
-    require(type(rounds) is list and len(rounds) == 1, "review rounds")
-    row = rounds[0]
-    require(type(row) is dict and set(row) == {"round", "record", "recordSha256", "verdict", "subjectDirectory"}
-            and row["round"] == 1 and row["subjectDirectory"] == "CURRENT"
-            and row["record"] == CONTRACT_DIR + "review-round1.json", "review round identity")
-    raw = reviewed_bytes(row["record"])
-    require(digest(raw) == row["recordSha256"], "review record drift: " + row["record"])
-    review = parse(raw)
-    require(type(review) is dict and review.get("schemaVersion") == "planeon.internal.i05-gate-channel-v2-review/v1"
-            and review.get("round") == 1 and review.get("verdict") == row["verdict"]
-            and row["verdict"] in ("PASS_FOR_SOURCE_PUBLICATION", "CHANGES_REQUIRED", "BLOCKED")
-            and type(review.get("actions")) is dict
-            and all(review["actions"][key] is False for key in review["actions"] if key != "referenceModelExecuted"),
-            "review record 1")
-    subject = review.get("subjectSha256", {})
-    require(set(subject) == set(SUBJECT_PATHS)
-            and all(digest(reviewed_bytes(path)) == subject[name] for name, path in SUBJECT_PATHS.items()),
-            "review round 1 is bound to its exact subject bytes")
-    require(type(review.get("openItemStatus")) is dict
-            and all(review["openItemStatus"].get(name, {}).get("status") == "CLOSED" for name in CARRIED),
-            "the review closes every carried finding")
-    findings = review.get("findings")
-    passed = review["verdict"] == "PASS_FOR_SOURCE_PUBLICATION"
-    require(type(findings) is list and type(status["carriedFindings"]) is dict
-            and set(status["carriedFindings"]) == {finding.get("id") for finding in findings}
-            and (not passed or all(finding.get("severity") in ("MINOR", "NOTE") for finding in findings)),
-            "every final finding is carried; a pass has no blocking or major finding")
-    require(status["contractState"] == ("ADOPTED_DATA_CONTRACT" if passed else "CONTRACT_CANDIDATE"),
-            "contract state follows the final independent review")
+def validate_selinux_replay_routes() -> None:
+    """validate() reaches each layer's vector replay through unconditional top-level calls (review R3-F1)."""
+    for path, function, call in ROUTE_CALLS:
+        named = _definitions(ast.parse(reviewed_bytes(path).decode("utf-8")), path)
+        node = named.get(function)
+        require(isinstance(node, ast.FunctionDef), "route function present: %s %s" % (path, function))
+        top = [statement for statement in node.body if isinstance(statement, ast.Expr) and isinstance(statement.value, ast.Call)
+               and isinstance(statement.value.func, ast.Name) and statement.value.func.id == call]
+        require(len(top) == 1 and not any(isinstance(inner, (ast.Return, ast.Yield, ast.YieldFrom)) for inner in ast.walk(node)),
+                "unconditional top-level route call: %s %s -> %s" % (path, function, call))
 
 
-def validate_i05_gate_channel_v2() -> None:
-    """The v2 contract is closed and replays exactly; predecessors are untouched; adoption follows the review."""
-    for path in FROZEN_PATHS:
-        require(path not in _PROJECTION_RULES, "predecessor contract bytes must stay unchanged: " + path)
-    schema = _json(SUBJECT_PATHS["channel.schema.json"])
-    mapping = _json(SUBJECT_PATHS["outcome-mapping.json"])
-    validate_v2_schema(schema, mapping)
-    checks = validate_v2_vectors(schema, mapping, _json(SUBJECT_PATHS["vectors.json"]))
-    require(checks >= sum(VECTOR_FLOORS.values()), "every v2 vector replays")
-    validate_v2_status()
+def validate_selinux_replay() -> None:
+    validate_selinux_replay_sources()
+    validate_selinux_replay_routes()
 
 
 def validate() -> None:
     record = authority()
-    validator_raw = successor.historical_bytes(VALIDATOR_PATH, regular_bytes(VALIDATOR_PATH))
+    validator_raw = regular_bytes(VALIDATOR_PATH)
     literal = b'AUTHORITY_SHA256 = "' + AUTHORITY_SHA256.encode("ascii") + b'"'
     placeholder = b'AUTHORITY_SHA256 = "TO_BE_PINNED_AFTER_SOURCE_FREEZE"'
     require(validator_raw.count(literal) == 1
             and digest(validator_raw.replace(literal, placeholder))
-            == record["validatorNormalizedSha256"], "I05 channel v2 validator drift")
+            == record["validatorNormalizedSha256"], "SELinux replay validator drift")
     paths = sorted((ROOT / "task-packets").glob("*.yaml"))
     old = set(record["baselinePackets"])
-    require(len(paths) == 217
-            and {path.stem for path in paths} == old | {NEW_PACKET, successor.NEW_PACKET, successor.successor.NEW_PACKET, successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.NEW_PACKET},
-            "closed 217-packet catalog retaining the 210-packet checkpoint")
+    require(len(paths) == 217 and {path.stem for path in paths} == old | {NEW_PACKET},
+            "closed 217-packet catalog")
     packets = {}
     for path in paths:
-        if path.stem in (successor.NEW_PACKET, successor.successor.NEW_PACKET, successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.successor.successor.NEW_PACKET):
-            continue
         raw = regular_bytes("task-packets/" + path.name)
         expected = record["packetSha256"] if path.stem == NEW_PACKET else record["baselinePackets"][path.stem]
         require(digest(raw) == expected, "packet YAML drift: " + path.stem)
@@ -546,23 +438,22 @@ def validate() -> None:
             and len(commands) == 64
             and commands == previous["offlineAcceptanceCommands"]
             and not any(VALIDATOR_PATH in argv for argv in commands),
-            "closed source-only i05-gate-channel-v2 packet and inherited commands")
+            "closed source-only selinux-replay packet and inherited commands")
     require(len(packet["allowedPaths"]) == len(set(packet["allowedPaths"]))
             and set(packet["allowedPaths"]) == set(record["changedFiles"])
             | set(record["newFiles"]) | {AUTHORITY_PATH, VALIDATOR_PATH,
                                          "task-packets/" + NEW_PACKET + ".yaml"},
-            "unreviewed or omitted i05-gate-channel-v2 packet path")
+            "unreviewed or omitted selinux-replay packet path")
     for path, rule in record["changedFiles"].items():
-        current = successor.historical_bytes(path, regular_bytes(path))
+        current = regular_bytes(path)
         require(digest(current) == rule["afterSha256"]
                 and digest(historical_bytes(path, current)) == rule["beforeSha256"],
                 "unreviewed current source: " + path)
     for path, expected in record["newFiles"].items():
-        require(digest(successor.historical_bytes(path, regular_bytes(path))) == expected,
-                "new source drift: " + path)
-    validate_i05_gate_channel_v2()
+        require(digest(regular_bytes(path)) == expected, "new source drift: " + path)
+    validate_selinux_replay()
 
 
 if __name__ == "__main__":
     validate()
-    print("I05 channel v2 contract valid: 217 current specifications; 210-packet checkpoint and exact 209-packet predecessor; DATA_CHECK_ONLY, every E01-E12 obligation open.")
+    print("SELinux replay valid: 217 current specifications; exact 216-packet predecessor; validator refusals and freshness unchanged.")

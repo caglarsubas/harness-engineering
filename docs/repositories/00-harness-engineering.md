@@ -1,6 +1,13 @@
 # Repository Plan: `Harness-Engineering`
 
-## Current source preparation — MET-PERF-035
+## Current source preparation — MET-PERF-036
+
+PERF-SEL: the two SELinux matrix layer test files replay the matrix once (inside validate()) instead of three to
+five times; the weakening tests call the exact per-row conjunct of the unchanged replay. No validator refusal
+changes and nothing is cached. Alpha2 OPEN; 216 accepted plus PERF-036 only. Native Linux, exact-main and
+tenant acceptance remain separate.
+
+## Historical PERF-035 source preparation — MET-PERF-035
 
 PERF-035 (MET-PERF-035): the outer suite runs on 4 worker processes inside the unchanged argv, fail-closed, with the
 reviewed suite-reuse cuts; validators, authorities and freshness unchanged. Alpha2 OPEN; 215 accepted plus PERF-035 only.
@@ -1000,6 +1007,7 @@ Every packet uses branch `codex/<packet-id>`, changes only named paths, opens a 
 88. `MET-ENFORCE-015`: publish the W02-ADM-F successor contracts (I05 v3, admission semantics v3, I07 v3) with one combined independent review; source only.
 89. `MET-ENFORCE-016`: publish the W02e-F SELinux matrix v4 with independent review; source only.
 90. `MET-PERF-035`: run the outer suite on fail-closed workers inside the unchanged argv, with suite reuse; validators and freshness unchanged.
+91. `MET-PERF-036`: replay the SELinux matrices once per layer test file with per-row weakening conjuncts; no validator refusal changes, nothing cached.
 
 ## Testing, verification, and acceptance
 

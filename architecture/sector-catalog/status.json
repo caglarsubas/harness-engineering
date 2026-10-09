@@ -1,0 +1,125 @@
+{
+ "schemaVersion": "planeon.internal.sector-catalog-status/v1",
+ "decision": "SECTOR-D1",
+ "status": "ADOPTED_FOR_SOURCE_PUBLICATION",
+ "reviewedSubject": {
+  "commit": "7766016e7c85ebdce5669c79e28a79dc35c5269b",
+  "tree": "69dec862b86e848ef8d3c93a21b822c75b32bb9e"
+ },
+ "rounds": [
+  {
+   "round": 1,
+   "subject": "0ec8039b7e730e464a46e9f1b293a00330a5fee3",
+   "snapshot": "architecture/sector-catalog/round1/",
+   "verdict": "CHANGES_REQUIRED",
+   "findings": {
+    "MAJOR": [
+     "F1"
+    ],
+    "MINOR": [
+     "F2",
+     "F3",
+     "F4",
+     "F5",
+     "F6"
+    ],
+    "NOTE": [
+     "N1",
+     "N2",
+     "N3",
+     "N4",
+     "N5"
+    ]
+   }
+  },
+  {
+   "round": 2,
+   "subject": "ffca73b6c6013ba9665c86ca2ab5596dd3000c92",
+   "snapshot": "architecture/sector-catalog/round2/",
+   "verdict": "CHANGES_REQUIRED",
+   "findings": {
+    "MINOR": [
+     "R2-F1",
+     "R2-F2",
+     "R2-F3"
+    ],
+    "NOTE": [
+     "R2-F4",
+     "R2-F5",
+     "R2-F6",
+     "R2-F7"
+    ]
+   }
+  },
+  {
+   "round": 3,
+   "subject": "2f28e121c73d10e133112343d2a6a50da4d3f8c9",
+   "snapshot": "architecture/sector-catalog/round3/",
+   "verdict": "CHANGES_REQUIRED",
+   "findings": {
+    "MINOR": [
+     "R3-F1"
+    ],
+    "NOTE": [
+     "R3-N1",
+     "R3-N2",
+     "R3-N3",
+     "R3-N4",
+     "R3-N5"
+    ]
+   }
+  },
+  {
+   "round": 4,
+   "subject": "7766016e7c85ebdce5669c79e28a79dc35c5269b",
+   "record": "architecture/sector-catalog/review-round4.json",
+   "verdict": "PASS_FOR_SOURCE_PUBLICATION",
+   "findings": {
+    "NOTE": [
+     "R4-N1",
+     "R4-N2"
+    ]
+   }
+  }
+ ],
+ "carried": [
+  {
+   "item": "R4-N1",
+   "to": "MET-SECTOR-002 packet build",
+   "action": "README 'Why the pack manifest path is deferred' wording; module docstring 'Two entry points'"
+  },
+  {
+   "item": "R4-N2",
+   "to": "DIST-BANK-001 publication",
+   "action": "re-point the notice to a still-unpublished successor, or revise distributionNotice and the module in a reviewed packet"
+  },
+  {
+   "item": "v1 N1",
+   "to": "IND-BANK-005 publication",
+   "action": "reviewed revision of scripts/sector_catalog.py and the overlay schema; rebind artifact.platform.industry-pack to the manifest-building deliverable"
+  },
+  {
+   "item": "v1 N2",
+   "to": "MET-SECTOR-002 packet build",
+   "action": "master plan rows"
+  },
+  {
+   "item": "round-1 N1",
+   "to": "MET-SECTOR-002 packet build",
+   "action": "exact two-hunk R11 inverse (7a7bda29 -> 2ede19dd); bridge validate_selinux_replay"
+  },
+  {
+   "item": "R2-F6/R3-N3",
+   "to": "MET-SECTOR-002 packet build",
+   "action": "the layer-test guard as planned in the README"
+  },
+  {
+   "item": "round-1 N5",
+   "to": "MET-SECTOR-002 packet build",
+   "action": "readiness catalog semantics on the effective catalogs in the layer test"
+  }
+ ],
+ "nonClaims": [
+  "No packet, layer, authority or acceptance exists yet; adoption is for source publication only."
+ ]
+}

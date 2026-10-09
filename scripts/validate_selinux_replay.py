@@ -22,7 +22,7 @@ except ImportError:
 
 ROOT = Path(__file__).resolve().parents[1]
 AUTHORITY_PATH = "architecture/selinux-replay-authority.json"
-AUTHORITY_SHA256 = "9b713b57ea23a16aee0745a811484da30daffd8f3dee47210074aff3053b374b"
+AUTHORITY_SHA256 = "cdc4535db69bb9b784980ef1e1c2ed8dac2d6a80a12408ddf0bc8177001e2edf"
 VALIDATOR_PATH = "scripts/validate_selinux_replay.py"
 BASE_COMMIT = "1d107e4ac906fcd93c617d26d523c01b0e72bce1"
 NEW_PACKET = "MET-PERF-036"

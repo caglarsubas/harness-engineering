@@ -1,4 +1,4 @@
-# Alpha 2 — PERF-SEL: one SELinux matrix replay per layer test file (MET-PERF-036)
+# Alpha 2 — PERF-SEL: SELinux matrix replays inside validate() (MET-PERF-036)
 
 > Current-status page for PERF-SEL. The [unified master roadmap](../MASTER_DEVELOPMENT_PLAN.md) gives packet and phase
 > status.
@@ -15,7 +15,8 @@ MET-PERF-036 cuts the cost of the two SELinux matrix layer test files (`tests/te
 - The weakening tests call only the conjunct that checks the changed row; two combined tests per layer apply all the
   weakening cases at once and expect the full replay to refuse with the first weakened row's message.
 - The full replay runs inside `validate()`; the test that used to replay a second time now pins that route and the cheap
-  parts, and one test per layer drives a vector refusal through the contract route.
+  parts, and one test per layer drives a vector refusal through the contract route. In the v3 file one matrix-weakening
+  case (case 0 of `test_matrix_weakening_is_refused`) still reaches a full replay, so that file replays twice.
 - Nothing is cached: the first draft's in-process memo was dropped after independent review round 1.
 
 The new layer `scripts/validate_selinux_replay.py` pins every changed helper, test and test table by its exact whole lines
@@ -27,7 +28,8 @@ Round 1 CHANGES_REQUIRED (the memo could return a stale success: BLOCKING); roun
 through the contract routes); round 3 PASS_FOR_SOURCE_PUBLICATION, with R3-F1 (pin the route as unconditional calls,
 done by the new layer) and R3-F2 (wording) carried into the packet. The packet itself is reviewed again before its PR.
 
-## Expected effect
+## Measured effect
 
-About 33 s → about 13 s on the Mac for the two files (about 35 s off the serial suite). With MET-PERF-035's parallel
-suite the wall-clock gain is smaller, since the files run on workers.
+Summed test time of the two files on the same host: 35.5 s at `1d107e4` → 18.6 s with this packet, about 17 s less
+(the independent reviewer measured 20.9 s under load). With MET-PERF-035's parallel suite the wall-clock gain on verify
+is smaller, since the files run on workers.

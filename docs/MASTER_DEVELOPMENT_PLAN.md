@@ -4,13 +4,14 @@
 
 Alpha2 OPEN. MET-PERF-035 (PERF-035) passed required verify (64/64, 590 s) and merged as main
 1d107e4. MET-PERF-036 is PERF-SEL (owner decision via the lane monitor): the two SELinux matrix
-layer test files replay the matrix once, inside validate(), instead of three to five times, and
-their weakening tests call the exact per-row conjunct of the unchanged replay. No validator
+layer test files replay the matrix inside validate() (the v3 file once more for one weakening
+case) instead of three to five times, and their weakening tests call the exact per-row conjunct
+of the unchanged replay. No validator
 refusal changes and nothing is cached. MET-PERF-036 is the sole 217th specification.
 
 | Phase | ID | Status | Description / gate |
 |---|---|---|---|
-| Alpha2 | MET-PERF-036 / PERF-SEL | SOURCE_PREPARED | One SELinux replay per layer test file as the 217th packet; verify from the owner's App |
+| Alpha2 | MET-PERF-036 / PERF-SEL | SOURCE_PREPARED | SELinux replays inside validate() instead of three to five times per layer test file, as the 217th packet; verify from the owner's App |
 | Alpha2 | MET-PERF-035 / PERF-035 | VERIFY_PASSED_MERGED | Verify 590 s |
 | Alpha2 | CATALOG-BANK, IND-BANK-001 to IND-BANK-005, KN-BANK-001, CTRL-BANK-001, DIST-BANK-001, CONF-BANK-001 | WAITING_PACKET_PUBLICATION | Banking catalog follow-ups, pack, inputs and journey |
 | Alpha2A | W02d, W02a-F2, W02g-F2 | WAITING_EXACT_PACKETS | seccomp; follow-ups |
@@ -1204,7 +1205,7 @@ These checkboxes count only the named deliverable at the stated evidence level. 
 - [x] Alpha 2A · W02-ADM-F / MET-ENFORCE-015 · Publish the independently reviewed I05 v3, POLICY-ADMISSION-SEMANTICS/v3 and I07 v3 successor contracts closing W02b-F2, W02f-F and W02c-F2; pass required verify through the owner's App.
 - [x] Alpha 2A · W02e-F / MET-ENFORCE-016 · Publish the independently reviewed SELinux matrix v4 closing K2, K3, K4 and K6; pass required verify through the owner's App.
 - [x] Alpha 2 · PERF-035 / MET-PERF-035 · Run the outer suite on fail-closed workers inside the unchanged argv, with suite reuse (validators and freshness unchanged); pass required verify through the owner's App.
-- [ ] Alpha 2 · PERF-SEL / MET-PERF-036 · Replay the SELinux matrices once per layer test file with per-row weakening conjuncts (no validator refusal changes, nothing cached); pass required verify through the owner's App.
+- [ ] Alpha 2 · PERF-SEL / MET-PERF-036 · Replay the SELinux matrices inside validate() instead of three to five times per layer test file, with per-row weakening conjuncts (no validator refusal changes, nothing cached); pass required verify through the owner's App.
 - [ ] Alpha 2A · CONF-FIX-010 · Complete safe design and exact authority before any product attempt.
 - [ ] Alpha 2A · CONF-LIVE-004 · Produce the exact native-probe source implementation and separately qualify it.
 - [ ] Alpha 2A · CONF-LIVE-005 · Produce a reproducible selected package and operator handoff.

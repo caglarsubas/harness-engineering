@@ -2,8 +2,9 @@
 
 ## Current source preparation — MET-PERF-036
 
-PERF-SEL: the two SELinux matrix layer test files replay the matrix once (inside validate()) instead of three to
-five times; the weakening tests call the exact per-row conjunct of the unchanged replay. No validator refusal
+PERF-SEL: the two SELinux matrix layer test files replay the matrix inside validate() (the v3 file once more for
+one weakening case) instead of three to five times; the weakening tests call the exact per-row conjunct of the
+unchanged replay. No validator refusal
 changes and nothing is cached. Alpha2 OPEN; 216 accepted plus PERF-036 only. Native Linux, exact-main and
 tenant acceptance remain separate.
 
@@ -1247,4 +1248,4 @@ acceptance is claimed. Alpha2 ONGOING; model-effort transition NOT_DUE.
 | 214 | `MET-ENFORCE-015` | `Harness-Engineering` | W02-ADM-F I05 v3, POLICY-ADMISSION-SEMANTICS/v3 and I07 v3 successor contracts, one combined independent review |
 | 215 | `MET-ENFORCE-016` | `Harness-Engineering` | W02e-F SELinux matrix v4: per-target /proc assertions, no policy load before the seal, cgroup2 text, independently reviewed |
 | 216 | `MET-PERF-035` | `Harness-Engineering` | Verify headroom: the outer suite on 4 fail-closed workers inside the unchanged argv, plus suite reuse |
-| 217 | `MET-PERF-036` | `Harness-Engineering` | PERF-SEL: one SELinux matrix replay per layer test file; per-row weakening conjuncts; no cache |
+| 217 | `MET-PERF-036` | `Harness-Engineering` | PERF-SEL: SELinux matrix replays inside validate() instead of three to five times; per-row weakening conjuncts; no cache |

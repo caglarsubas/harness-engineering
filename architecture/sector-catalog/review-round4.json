@@ -1,0 +1,40 @@
+{
+  "schemaVersion": "harness.planeon.ai/sector-catalog-review/v1",
+  "round": 4,
+  "reviewDate": "2026-10-09",
+  "subjectCommit": "7766016e7c85ebdce5669c79e28a79dc35c5269b",
+  "subjectTree": "69dec862b86e848ef8d3c93a21b822c75b32bb9e",
+  "verdict": "PASS_FOR_SOURCE_PUBLICATION",
+  "findings": [
+    {
+      "id": "R4-N1",
+      "severity": "NOTE",
+      "location": "architecture/sector-catalog/README.md lines 101-102 ('Why the pack manifest path is deferred'); scripts/sector_catalog.py docstring line 8",
+      "finding": "One README sentence still has the round-3 conditional. It says the consumer gate 'refuses a published IND-BANK-005 while the overlay still defers', which suggests that an overlay that no longer defers would be accepted. A probe shows that a rebased overlay plus a published IND-BANK-005 is refused with the new message, as the README's 'Forward path' paragraph says. Separately, the module docstring says 'Two entry points:' but lists three bullets. The runtime message, the Forward path paragraph, the overlay deferral reason and carried N1 are all precise.",
+      "requiredChange": "No source change is needed before publication. In the packet-build README revision, reword lines 101-102 to: 'Until the reviewed module and schema revision described in \"Forward path\", the consumer gate (effective_bytes) refuses a published IND-BANK-005 whatever the overlay contains.' Change the docstring's 'Two entry points' to 'Two entry points and a forward-path rule', or move the IND-BANK-005 bullet below the list."
+    },
+    {
+      "id": "R4-N2",
+      "severity": "NOTE",
+      "location": "scripts/sector_catalog.py lines 269-282 (notice proposal checks); README 'Forward path' final sentence",
+      "finding": "Once DIST-BANK-001 is published, check() refuses with 'the R11 notice must be revised'. That is accurate as a necessary condition, and a resealed notice that re-points to another still-unpublished successor passes the unchanged module. But the natural revision, which records DIST-BANK-001 itself as the published home, needs a schema and module revision, as IND-BANK-005 does. Once all nine successors are published, no notice can pass. This fails closed and does not affect today's content.",
+      "requiredChange": "None for source publication. Optionally carry it alongside v1 N1: the DIST-BANK-001 publication either re-points the notice to a still-unpublished successor or comes with a reviewed revision of distributionNotice and the module."
+    }
+  ],
+  "roundThreeFindings": {
+    "R3-F1": "FIXED. Option (b) is implemented consistently (the refusal message, docstring, README 'Forward path', overlay deferral reason, carried N1 and consumer-gate paragraph). Reproduced in memory and on a scratch-root disk copy. One leftover README sentence is recorded as R4-N1.",
+    "R3-N1": "FIXED. Slug forms are refused; the proposal and predecessor are tied to successorProposals as a backticked token; a published DIST-BANK-001 is refused.",
+    "R3-N2": "FIXED. The citation is parsed from the YAML contracts list through the unique-key loader. The remaining substring weakness is disclosed as a minimal publication tripwire.",
+    "R3-N3": "ADDRESSED (packet-build plan). Attribute and monkeypatch refusal, exact path-to-sha256 exceptions, counts derived at build. The count of 41 was verified (37 tracked pinning files on main, plus overlay.json and the round1-3 overlay copies).",
+    "R3-N4": "FIXED. frozenset(historical_catalog(...)), 'the same bytes', and '36 earlier architecture records and sector-direction.json'.",
+    "R3-N5": "FIXED. Duplicate supersedes values and duplicate bound paths are refused; the current tree has no over-refusal."
+  },
+  "readinessForSourcePublication": "Ready. The layer, inverse, bridge, guard, readiness-semantics test and mechanics stay planned for the packet build. R4-N1 and R4-N2 are wording and carried notes that can be folded into the packet-build README revision.",
+  "actions": {
+    "filesEdited": false,
+    "githubMutated": false,
+    "fullSuiteRun": false,
+    "networkAccessed": false
+  },
+  "recordNote": "The reviewer's JSON verdict, transcribed by the author. The questionAnswers, checksRun and sourcesRead arrays (long) are in the session transcript; the verdict, findings and round-3 dispositions above are as returned."
+}

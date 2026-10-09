@@ -1,0 +1,102 @@
+{
+ "schemaVersion": "planeon.internal.sector-catalog-overlay/v1",
+ "decision": "SECTOR-D1",
+ "sectorDirection": {
+  "path": "architecture/sector-direction.json",
+  "sha256": "cfc39b4adbfb2771e27cc5498d94530d5691130736a8791288ce296253fc2efe"
+ },
+ "approach": "The catalogs stay byte-identical: older validators read them as immutable inputs and 36 architecture records pin them. This reviewed overlay gives the banking-era view; scripts/sector_catalog.py applies it as exact, counted substring replacements and refuses any mismatch. Banking-era consumers must read the catalogs only through effective_bytes and effective_catalog.",
+ "base": {
+  "architecture/providers.yaml": "9e2b43dac1ca4531dcdeb3a1b6ead8002d7384e2a0d0e6b57e972accb8631c02",
+  "architecture/services.yaml": "857376b5e2b10a2a2542124a7d36b770eca531d15e463d68415416b887dd90a6",
+  "docs/PROVIDER_MODULE_CATALOG.md": "1723f1ea35ecc87529c2d680f7e51fda61923a368f1e241b7a82982b10935b1d"
+ },
+ "applied": [
+  {
+   "path": "architecture/providers.yaml",
+   "current": "industry.white-goods",
+   "proposed": "industry.banking",
+   "occurrences": 5,
+   "disposition": "APPLIED_BY_OVERLAY"
+  },
+  {
+   "path": "architecture/providers.yaml",
+   "current": "imply.white-goods-guidance",
+   "proposed": "imply.banking-guidance",
+   "occurrences": 1,
+   "disposition": "APPLIED_BY_OVERLAY"
+  },
+  {
+   "path": "architecture/providers.yaml",
+   "current": "profile.whitegoods-readonly-amd64",
+   "proposed": "profile.banking-readonly-amd64",
+   "occurrences": 1,
+   "disposition": "APPLIED_BY_OVERLAY"
+  },
+  {
+   "path": "architecture/providers.yaml",
+   "current": "Read-only white-goods assistant",
+   "proposed": "Read-only banking assistant",
+   "occurrences": 1,
+   "disposition": "APPLIED_BY_OVERLAY"
+  },
+  {
+   "path": "architecture/services.yaml",
+   "current": "white-goods semantic vectors",
+   "proposed": "banking semantic vectors",
+   "occurrences": 1,
+   "disposition": "APPLIED_BY_OVERLAY"
+  },
+  {
+   "path": "docs/PROVIDER_MODULE_CATALOG.md",
+   "current": "profile.whitegoods-readonly-amd64",
+   "proposed": "profile.banking-readonly-amd64",
+   "occurrences": 1,
+   "disposition": "APPLIED_BY_OVERLAY"
+  },
+  {
+   "path": "docs/PROVIDER_MODULE_CATALOG.md",
+   "current": "White-goods pack",
+   "proposed": "Banking pack",
+   "occurrences": 1,
+   "disposition": "APPLIED_BY_OVERLAY"
+  }
+ ],
+ "deferred": [
+  {
+   "path": "architecture/providers.yaml",
+   "current": "packs/white-goods/manifest.json",
+   "proposed": "packs/banking/manifest.json",
+   "occurrences": 1,
+   "disposition": "DEFERRED_UNTIL_SUCCESSOR_PUBLISHED",
+   "blockedBy": "IND-BANK-005",
+   "binding": {
+    "catalogKey": "artifact.platform.industry-pack",
+    "packetId": "IND-WG-005",
+    "deliverableIndex": 0
+   },
+   "reason": "artifact.platform.industry-pack is a REPOSITORY_PACKET implementation bound to deliverable 0 of the published packet IND-WG-005, and validate_readiness requires a published task packet whose allowedPaths cover the implementation path. IND-BANK-005 is an unpublished successor proposal, so the banking manifest path cannot be bound yet. CONTRACT_ONLY is not admissible either: the profile fixtures profile.banking-readonly-amd64 (base identifier profile.whitegoods-readonly-amd64; selectedModules, expectedClosure) and profile.foundation-airgap-k3s-arm64 (expectedClosure) use the module. The entry changes when IND-BANK-005 is published."
+  }
+ ],
+ "effective": {
+  "architecture/providers.yaml": "c5fffe8776ce7f280ac8d3d763b8f70a2cc8071475750f0aed0c2f395d1ce60a",
+  "architecture/services.yaml": "f1ccfecd3fd0d716d45d0c0cd423f9de1425ed3a91f9ec4e0b64f96a836aac35",
+  "docs/PROVIDER_MODULE_CATALOG.md": "db95629a43b67b55e17206cc1d4659b6724644ab38d9dff2003a805917a0aad8"
+ },
+ "distributionNotice": {
+  "path": "docs/repositories/11-mas-harness-distribution.md",
+  "heading": "## Sector direction — MET-SECTOR-001",
+  "sectionSha256": "eecb5189ba794312145a1c6e5f560da0b01e04aa50c1bb5bff4398075a25b2e0",
+  "listItem": "7. `DIST-004-helm-profiles`: minimal ARM64/AMD64, regulated OCP, bridge/silo, and air-gap profile charts with exact selected subcharts only. Banking profile recommendations and the banking pack digest move to the unpublished proposal DIST-BANK-001 (SECTOR-D1).",
+  "proposal": "DIST-BANK-001",
+  "proposalPredecessor": "IND-BANK-004",
+  "finding": "SECTOR-001 review round 2, m1",
+  "replacesDirectionDocsEntry": "validate_sector_direction admits only MET-SECTOR-001's own files as directionDocs of architecture/sector-direction.json; this entry records the R11 notice that m1 asked to add there"
+ },
+ "nonClaims": [
+  "No catalog byte changes: providers.yaml, services.yaml and PROVIDER_MODULE_CATALOG.md keep their white-goods entries as the historical base.",
+  "No banking pack, manifest, profile installation or tenant acceptance exists; only the effective catalog identifiers and text change, plus the sector-direction notice in the R11 distribution plan.",
+  "No published packet, backlog snapshot, sector-direction record or review record changes.",
+  "IND-BANK-005, DIST-BANK-001 and every other SECTOR-D1 successor stay unpublished proposals."
+ ]
+}

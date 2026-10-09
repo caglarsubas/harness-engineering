@@ -1,6 +1,11 @@
 # Sol-High Task Packet Catalog
 
-## Current source preparation — MET-PERF-036
+## Current source preparation — MET-SECTOR-002
+
+CATALOG-BANK (MET-SECTOR-002): the SECTOR-D1 catalog follow-ups as a reviewed overlay; catalogs byte-identical,
+banking-era consumers read through scripts/sector_catalog.py. Alpha2 OPEN; 217 accepted plus SECTOR-002 only.
+
+## Historical PERF-SEL source preparation — MET-PERF-036
 
 PERF-SEL: the two SELinux matrix layer test files replay the matrix inside validate() (the v3 file once more for
 one weakening case) instead of three to five times; the weakening tests call the exact per-row conjunct of the
@@ -1249,3 +1254,4 @@ acceptance is claimed. Alpha2 ONGOING; model-effort transition NOT_DUE.
 | 215 | `MET-ENFORCE-016` | `Harness-Engineering` | W02e-F SELinux matrix v4: per-target /proc assertions, no policy load before the seal, cgroup2 text, independently reviewed |
 | 216 | `MET-PERF-035` | `Harness-Engineering` | Verify headroom: the outer suite on 4 fail-closed workers inside the unchanged argv, plus suite reuse |
 | 217 | `MET-PERF-036` | `Harness-Engineering` | PERF-SEL: SELinux matrix replays inside validate() instead of three to five times; per-row weakening conjuncts; no cache |
+| 218 | `MET-SECTOR-002` | `Harness-Engineering` | CATALOG-BANK: the SECTOR-D1 catalog follow-ups as a reviewed overlay; catalogs byte-identical |

@@ -1,6 +1,11 @@
 # Repository Plan: `Harness-Engineering`
 
-## Current source preparation — MET-PERF-036
+## Current source preparation — MET-SECTOR-002
+
+CATALOG-BANK (MET-SECTOR-002): the SECTOR-D1 catalog follow-ups as a reviewed overlay; catalogs byte-identical,
+banking-era consumers read through scripts/sector_catalog.py. Alpha2 OPEN; 217 accepted plus SECTOR-002 only.
+
+## Historical PERF-SEL source preparation — MET-PERF-036
 
 PERF-SEL: the two SELinux matrix layer test files replay the matrix inside validate() (the v3 file once more for
 one weakening case) instead of three to five times; the weakening tests call the exact per-row conjunct of the
@@ -1009,6 +1014,7 @@ Every packet uses branch `codex/<packet-id>`, changes only named paths, opens a 
 89. `MET-ENFORCE-016`: publish the W02e-F SELinux matrix v4 with independent review; source only.
 90. `MET-PERF-035`: run the outer suite on fail-closed workers inside the unchanged argv, with suite reuse; validators and freshness unchanged.
 91. `MET-PERF-036`: replay the SELinux matrices inside validate() instead of three to five times per layer test file, with per-row weakening conjuncts; no validator refusal changes, nothing cached.
+92. `MET-SECTOR-002`: publish the SECTOR-D1 catalog follow-ups as a reviewed overlay, with the catalogs byte-identical; source only.
 
 ## Testing, verification, and acceptance
 

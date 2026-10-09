@@ -1,5 +1,15 @@
 # Repository Plan: `mas-harness-distribution`
 
+## Sector direction — MET-SECTOR-001
+
+Owner decision SECTOR-D1 (October 7, 2026): banking replaces white goods as the first and only release
+sector from Alpha 2 through the first enterprise release; [sector direction](../alpha-2/SECTOR_DIRECTION.md)
+gives every disposition. The banking provider-profile recommendations in the modular Helm profiles and the
+banking pack digest binding move to the unpublished proposal `DIST-BANK-001`, which follows `IND-BANK-004`.
+The white-goods provider-profile recommendations and pack digest binding of `DIST-004` are historical; its
+modular Helm profiles are kept. This plan never named white goods; MET-SECTOR-002 adds this notice
+(SECTOR-001 review finding m1).
+
 ## Current reviewed interface candidate — MET-ENFORCE-003
 
 [W01 reviewed candidate and unresolved gates](../alpha-2/HOST_INTERFACE_PUBLICATION.md): Alpha2 ONGOING.
@@ -218,7 +228,7 @@ Public source provenance is recorded only in `architecture/reuse-map.yaml`, `arc
 4. `DIST-002-supply-chain`: SPDX SBOM, license allow/deny, offline Grype DB/scan, model custody, vulnerability disposition, and evidence references.
 5. `DIST-003-sign-promote`: offline Ed25519 Cosign ceremony, component/root signatures, public-key rotation/overlap, revocation, atomic promotion, and candidate/released separation.
 6. `DIST-AIR-001-export-import`: OCI layout archive, checksums, signatures/trust/SBOM/licenses/vulnerability DB/model manifest, physical offline verification/import, and relocation digest proof.
-7. `DIST-004-helm-profiles`: minimal ARM64/AMD64, regulated OCP, bridge/silo, and air-gap profile charts with exact selected subcharts only.
+7. `DIST-004-helm-profiles`: minimal ARM64/AMD64, regulated OCP, bridge/silo, and air-gap profile charts with exact selected subcharts only. Banking profile recommendations and the banking pack digest move to the unpublished proposal DIST-BANK-001 (SECTOR-D1).
 8. `DIST-005-repro-security`: two-clean-build digest match, corrupt/missing/extra blob denial, path traversal/archive bombs, compromised staging, and key-revocation drills.
 
 ## Testing, verification, and acceptance

@@ -11,18 +11,33 @@ evenly over about 100 test files, and every packet adds to it. Owner decisions (
 - keep every validator, authority, freshness property and refusal unchanged.
 
 - **Parallel suite.** `ci/parallel_suite.py` is loaded by the pytest `addopts` in `pyproject.toml`.
+  - Only an invocation whose own arguments are all paths runs in parallel, as acceptance argv 63 does. Any command-line
+    option keeps pytest's serial loop, because workers re-read only the ini file and the environment.
   - The parent collects as usual and assigns whole test files to 4 worker processes, by the pinned weights in
     `ci/parallel_suite_weights.json`.
-  - Each worker runs `python -m pytest <its files>` in the same checkout and sandbox, and streams pytest's own
-    serialized reports to a private file.
-  - The parent replays every report through its own hooks: terminal reporter, diagnostics and every observing plugin.
-    So the summary line, the diagnostics stream and the in-session predecessor recorder see every test.
+  - Each worker runs `python -m pytest -p ci.parallel_suite <its files>` in the same checkout and sandbox. It streams
+    pytest's own serialized reports, and the warnings recorded while its tests run, to a private file.
+  - The parent restores each report's tuple fields (JSON has none) and replays it through its own hooks: terminal
+    reporter, diagnostics and every observing plugin. It re-emits each warning, so the summary line, the diagnostics
+    stream and the in-session predecessor recorder see what a serial run shows.
+  - Worker output never reaches the parent's output.
   - The in-session predecessor proof (`tests/linux_runner/test_build_and_predecessors.py::test_full_predecessor_suites_and_validators_remain_green`)
-    reads the whole session's results, so it runs last, in the parent, after every worker has reported.
-  - Fail closed. Each worker must collect exactly its assigned node list. Every node needs exactly one setup and one
-    teardown report, and a call report if and only if its setup passed. Every worker must exit 0, or 1 with a failed
-    report of its own. Otherwise the session fails.
-  - Every pytest started by a test runs serially.
+    reads the whole session's results. It runs last, in the parent, after every worker has reported. An AST guard
+    lists every test, conftest or helper that touches session-level state.
+  - Fail closed. The session fails unless all of the following hold:
+    - each worker collected exactly its assigned node list;
+    - every report and warning came from the worker that owns its node;
+    - every node reported exactly one setup and one teardown, and a call if and only if its setup passed;
+    - every record decoded;
+    - every worker exited 0, or 1 with a failed report of its own, within 600 s.
+  - A failure names the problems and each worker's in-flight node, and adds a "parallel-suite-incomplete" count to the
+    final summary line. The exit code is the authority.
+  - SIGTERM or SIGHUP to the parent kills its workers, and a worker whose parent dies exits. A passing session removes
+    its work directory.
+  - Every pytest started by a test runs serially, provided it inherits the environment; an in-process `pytest.main`
+    inside a worker fails closed.
+  - Each worker holds a different set of co-resident test files than a serial run, which matters for process-wide
+    caches and `sys.path`. The serial-vs-parallel comparison found identical outcomes.
   - A later packet can return to the serial loop by setting `WORKERS = 1`.
 - **Suite reuse.** Two credential tests take the reviewed test-local cuts of the withdrawn MET-PERF-033. Four input
   fixtures read and parse once per module, and give each test its own deep copy.

@@ -728,7 +728,7 @@ SUITE = _load("_met_perf_035_parallel_suite_copy", "ci/parallel_suite.py")
 
 def test_parallel_suite_constants_weights_and_session_loading(request):
     linux = _load("_met_perf_035_linux_conftest_copy", "tests/linux_runner/conftest.py")
-    assert SUITE.WORKERS == 4 and SUITE.DEADLINE_SECONDS == 840
+    assert SUITE.WORKERS == 4
     assert SUITE.PARENT_NODES == frozenset({linux.PREDECESSOR_PROOF_NODE})
     weights = json.loads(profile.reviewed_bytes(SUITE.WEIGHTS_PATH))
     assert weights and all(type(name) is str and name.endswith(".py") and type(value) in (int, float) and value >= 0
@@ -752,47 +752,146 @@ def test_worker_exit_passes_only_with_its_own_failures():
 
 
 _SCRATCH = {
-    "tests/test_a.py": "import pytest\n@pytest.mark.parametrize('i', range(10))\ndef test_ok(i):\n    assert i >= 0\n"
-                       "def test_skip():\n    pytest.skip('s')\n@pytest.mark.xfail\ndef test_xfail():\n    assert False\n",
-    "tests/test_b.py": "import os\ndef test_maybe_crash():\n    if os.environ.get('SCRATCH_FAULT') == 'crash':\n"
-                       "        os._exit(0)\ndef test_after():\n    pass\n",
+    "tests/test_a.py": "import unittest, warnings, pytest\n@pytest.mark.parametrize('i', range(6))\ndef test_ok(i):\n"
+                       "    assert i >= 0\ndef test_skip():\n    pytest.skip('s')\nclass T(unittest.TestCase):\n"
+                       "    def test_unit_skip(self):\n        self.skipTest('u')\n@pytest.mark.xfail\ndef test_xfail():\n"
+                       "    assert False\ndef test_warns():\n    warnings.warn('careful', UserWarning)\n",
+    "tests/test_b.py": "import os, time\ndef test_maybe_crash():\n    fault = os.environ.get('SCRATCH_FAULT')\n"
+                       "    if fault in ('crash', 'forge') and os.environ.get('PLANEON_PARALLEL_SUITE_SERIAL'):\n"
+                       "        os._exit(0)\n    if fault == 'hang':\n        open(os.environ['SCRATCH_PID'], 'w').write(str(os.getpid()))\n"
+                       "        time.sleep(60)\ndef test_after():\n    assert os.environ.get('SCRATCH_FAULT') != 'forge'\n",
     "tests/test_c.py": "import os\ndef test_maybe_fail():\n    assert os.environ.get('SCRATCH_FAULT') != 'fail'\n"
                        "def test_nested_pytest_is_serial_and_never_a_worker():\n"
-                       "    assert os.environ.get('PLANEON_PARALLEL_SUITE_SERIAL') == '1'\n"
-                       "    assert 'PLANEON_PARALLEL_SUITE_ASSIGNMENT' not in os.environ\n",
+                       "    import ci.parallel_suite as suite\n"
+                       "    assert 'PLANEON_PARALLEL_SUITE_ASSIGNMENT' not in os.environ\n"
+                       "    if suite._sink is not None:\n"
+                       "        assert os.environ.get('PLANEON_PARALLEL_SUITE_SERIAL') == '1'\n"
+                       "def test_forge_another_workers_node():\n    if os.environ.get('SCRATCH_FAULT') not in ('forge', 'garbage'):\n"
+                       "        return\n    import ci.parallel_suite as suite\n    from _pytest.reports import TestReport\n"
+                       "    if os.environ['SCRATCH_FAULT'] == 'garbage':\n        suite._sink.write('not json\\n')\n        return\n"
+                       "    for when in ('setup', 'call', 'teardown'):\n"
+                       "        report = TestReport('tests/test_b.py::test_after', ('tests/test_b.py', 5, 'test_after'), {}, 'passed', None, when)\n"
+                       "        suite._write({'kind': 'report', 'data': suite._config.hook.pytest_report_to_serializable(config=suite._config, report=report)})\n",
 }
 
 
-def _scratch_run(tmp_path, fault):
+def _scratch_run(tmp_path, fault, ini="", cli=(), serial=False, extra_env=None, wait=True):
     for name, text in _SCRATCH.items():
         (tmp_path / name).parent.mkdir(parents=True, exist_ok=True)
         (tmp_path / name).write_text(text)
+    # The plugin is loaded from the ini, as in the repository, so that a command line of paths alone runs in parallel.
+    (tmp_path / "pytest.ini").write_text("[pytest]\naddopts = -p no:cacheprovider -p ci.parallel_suite %s\n" % ini)
+    (tmp_path / "tmp").mkdir(exist_ok=True)
     env = {key: value for key, value in os.environ.items()
            if key not in (SUITE.SERIAL_ENV, SUITE.ASSIGNMENT_ENV, "PYTEST_ADDOPTS")}
-    env.update(PYTHONPATH=str(profile.ROOT), SCRATCH_FAULT=fault, PYTHONDONTWRITEBYTECODE="1")
-    return _subprocess.run([_sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider", "-p", "ci.parallel_suite",
-                            "tests"], cwd=tmp_path, env=env, capture_output=True, text=True, timeout=180)
+    env.update(PYTHONPATH=str(profile.ROOT), SCRATCH_FAULT=fault, PYTHONDONTWRITEBYTECODE="1", TMPDIR=str(tmp_path / "tmp"),
+               **({SUITE.SERIAL_ENV: "1"} if serial else {}), **(extra_env or {}))
+    argv = [_sys.executable, "-m", "pytest", *cli, "tests"]
+    if not wait:
+        return _subprocess.Popen(argv, cwd=tmp_path, env=env, stdout=_subprocess.PIPE, stderr=_subprocess.STDOUT, text=True)
+    return _subprocess.run(argv, cwd=tmp_path, env=env, capture_output=True, text=True, timeout=180)
 
 
-@pytest.mark.parametrize("fault,code,summary", [("none", 0, "14 passed, 1 skipped, 1 xfailed"),
-                                                ("fail", 1, "1 failed, 13 passed, 1 skipped, 1 xfailed")])
-def test_parallel_outcomes_match_the_serial_rules(tmp_path, fault, code, summary):
-    result = _scratch_run(tmp_path, fault)
-    assert result.returncode == code and summary in result.stdout and "INCOMPLETE" not in result.stdout
+def _final(result):
+    lines = [line.strip("= ") for line in result.stdout.splitlines() if " in " in line and ("passed" in line or "failed" in line)]
+    return _re.sub(r" in [0-9.]+s.*$", "", lines[-1]) if lines else None
 
 
-def test_a_worker_that_exits_early_fails_closed(tmp_path):
+@pytest.mark.parametrize("fault,ini,cli", [("none", "", ()), ("none", "-ra", ()), ("none", "-vv -rs", ()), ("fail", "", ()),
+                                           ("none", "", ("-W", "error::UserWarning"))])
+def test_parallel_matches_serial_rc_and_summary(tmp_path, fault, ini, cli):
+    # Skips under -ra/-vv need the report's tuple types; the warning must reach the summary; a command-line option
+    # keeps the run serial.
+    (tmp_path / "s").mkdir()
+    (tmp_path / "p").mkdir()
+    serial = _scratch_run(tmp_path / "s", fault, ini, cli, serial=True)
+    parallel = _scratch_run(tmp_path / "p", fault, ini, cli)
+    assert (parallel.returncode, _final(parallel)) == (serial.returncode, _final(serial))
+    assert "INCOMPLETE" not in parallel.stdout and "INTERNALERROR" not in parallel.stdout and "Traceback" not in parallel.stdout
+    assert serial.returncode in (0, 1) and _final(serial)
+
+
+def test_a_worker_that_exits_early_fails_closed_without_echoing_worker_output(tmp_path):
     result = _scratch_run(tmp_path, "crash")
-    assert result.returncode == 1 and "parallel suite INCOMPLETE" in result.stdout
-    assert "tests/test_b.py::test_after reported []" in result.stdout
+    assert result.returncode == 1 and "parallel-suite-incomplete" in _final(result)
+    assert "tests/test_b.py::test_after reported []" in result.stdout and "in flight: worker" in result.stdout
+    # Only the parent's own summary line: no worker summary, diagnostics record or log tail reaches the output.
+    summaries = [line for line in result.stdout.splitlines() if _re.search(r"\d+ (passed|failed).* in [0-9.]+s", line)]
+    assert len(summaries) == 1 and "PYTEST_DIAGNOSTIC" not in result.stdout
+    assert list((tmp_path / "tmp").glob("planeon-parallel-suite.*")), "the work directory stays for diagnosis"
+
+
+@pytest.mark.parametrize("fault,problem", [("forge", "for a node it does not own: tests/test_b.py::test_after"),
+                                           ("garbage", "undecodable record")])
+def test_forged_or_undecodable_streams_fail_closed(tmp_path, fault, problem):
+    result = _scratch_run(tmp_path, fault)
+    assert result.returncode == 1 and problem in result.stdout and "parallel-suite-incomplete" in _final(result)
+
+
+def test_a_passing_session_removes_its_work_directory(tmp_path):
+    assert _scratch_run(tmp_path, "none").returncode == 0
+    assert not list((tmp_path / "tmp").glob("planeon-parallel-suite.*"))
+
+
+def test_sigterm_to_the_parent_kills_its_workers(tmp_path):
+    import signal as _signal
+    import time as _time
+    pid_file = tmp_path / "worker.pid"
+    parent = _scratch_run(tmp_path, "hang", extra_env={"SCRATCH_PID": str(pid_file)}, wait=False)
+    for _ in range(300):
+        if pid_file.exists() and pid_file.read_text():
+            break
+        _time.sleep(0.05)
+    worker = int(pid_file.read_text())
+    parent.send_signal(_signal.SIGTERM)
+    parent.communicate(timeout=60)
+    for _ in range(100):
+        try:
+            os.kill(worker, 0)
+        except ProcessLookupError:
+            break
+        _time.sleep(0.05)
+    else:
+        os.kill(worker, _signal.SIGKILL)
+        raise AssertionError("worker outlived its parent")
+
+
+def test_deadline_fits_inside_the_verify_budget():
+    # argv 1-62 take about 2 minutes, so a 600 s worker deadline fires before the local 750 s and trusted 900 s caps.
+    assert SUITE.DEADLINE_SECONDS == 600
+
+
+_SESSION_ATTRIBUTES = {"session", "pluginmanager", "stats", "testscollected", "testsfailed", "terminalreporter"}
+
+
+def _session_reads(tree):
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Attribute) and (node.attr in _SESSION_ATTRIBUTES or node.attr.startswith("_planeon_")):
+            return True
+        if (isinstance(node, ast.Call) and getattr(node.func, "id", "") in ("getattr", "hasattr", "setattr")
+                and len(node.args) > 1 and isinstance(node.args[1], ast.Constant)
+                and (node.args[1].value in _SESSION_ATTRIBUTES or str(node.args[1].value).startswith("_planeon_"))):
+            return True
+    return False
 
 
 def test_only_the_predecessor_proof_reads_the_whole_session():
-    """Any new test that reads session-wide results must join PARENT_NODES (and this list)."""
-    pattern = _re.compile(r"\.session" + r"\.items|_planeon_predecessor" + r"_outcomes|request\.session" + r"\b")
+    """Any new test, conftest or helper that reads session-wide state must be reviewed for PARENT_NODES (and listed)."""
     readers = set()
-    for path in sorted([*(profile.ROOT / "tests").rglob("test_*.py"), *(profile.ROOT / "ci").glob("test_*.py")]):
-        if pattern.search(path.read_text()):
+    for path in sorted([*(profile.ROOT / "tests").rglob("*.py"), *(profile.ROOT / "ci").glob("test_*.py"),
+                        profile.ROOT / "conftest.py"]):
+        if _session_reads(ast.parse(path.read_text())):
             readers.add(path.relative_to(profile.ROOT).as_posix())
-    # The proof itself, and its mock-based unit tests.
-    assert readers == {"tests/linux_runner/test_build_and_predecessors.py", "tests/linux_runner/test_predecessor_proof.py"}
+    assert readers == SESSION_READERS
+
+
+SESSION_READERS = {
+    # The in-session predecessor proof: runs in the parent (PARENT_NODES).
+    "tests/linux_runner/test_build_and_predecessors.py",
+    # Registers the PredecessorOutcomes recorder that the proof reads; replayed reports reach it in the parent.
+    "tests/linux_runner/conftest.py",
+    # Looks up the capture manager for the diagnostics sink; reads no session results.
+    "conftest.py",
+    # This layer's test: checks only that the parallel-suite plugin is registered.
+    "tests/test_parallel_suite.py",
+}

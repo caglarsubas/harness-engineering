@@ -1,10 +1,10 @@
-# Independent review brief — CATALOG-BANK v2 sector catalog overlay, round 4
+# Independent review brief — CATALOG-BANK v2 sector catalog overlay, round 3
 
 The authoring agent wrote this brief. It is not a verdict.
 
 ## Subject
 
-The commit named in the review request (round 4), on branch `codex/met-sector-002-catalog-overlay`, on accepted main
+The commit named in the review request (round 3), on branch `codex/met-sector-002-catalog-overlay`, on accepted main
 `da81730` (217 packets). Read it with `git show <subject>:<path>` or `git diff da81730 <subject>`, and record the tree hash. The
 subject consists of:
 - `architecture/sector-catalog/overlay.json`, `README.md` and this brief;
@@ -44,13 +44,6 @@ section maps each finding to its change. Reproduce the round-2 cases, in particu
 - a backticked DIST-004 item with the exact text placed elsewhere;
 - a symlinked, dangling or directory IND-BANK-005.yaml;
 - a stateful reader.
-
-## Round 3 and what changed
-
-Round 3 reviewed `2f28e12`, which is kept in `round3/`, and returned CHANGES_REQUIRED: R3-F1 MINOR, R3-N1 to R3-N5
-NOTE. Option (b) was taken for R3-F1: the refusal stays, and its message, the module docstring, the README "Forward
-path" paragraph, the overlay's deferral reason and the carried N1 item now state that publishing IND-BANK-005 needs a
-reviewed revision of the module and schema. Check each item in the README's "Rounds 1-3" section.
 
 ## Questions to answer
 

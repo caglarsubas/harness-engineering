@@ -8,9 +8,7 @@ gives their effective, banking-era bytes, as exact counted substring replacement
 Two entry points:
 - check(read, packets) validates one era: an overlay, its catalogs, the sector record and the R11 notice, read through
   an injected byte reader and judged against an injected packet set. A history-chain layer passes its reviewed_bytes
-  and frozenset(historical_catalog(...)), so later packets leave that layer valid through projection.
-- Publishing IND-BANK-005 (the successor that supersedes the pack manifest's bound packet) needs a reviewed revision of
-  this module and of the overlay schema, which rebinds the implementation; until then the check refuses that state.
+  and historical_catalog, so that later packets (publishing IND-BANK-005, rebasing the overlay) leave it valid.
 - effective_bytes(path) and effective_catalog(path) serve this repository's current tree (no root override). They run
   check() on the current files and the published packets first. Consumers must read the banking-era catalogs only
   through these two functions.
@@ -211,7 +209,7 @@ def check(read, packets) -> dict:
     cache = {}
 
     def once(path):
-        # Each path is read exactly once, so every check sees the same bytes.
+        # Each path is read exactly once, so every check sees the bytes that were digest-verified.
         if path not in cache:
             cache[path] = read(path)
         return cache[path]
@@ -241,10 +239,6 @@ def check(read, packets) -> dict:
     # unpublished, bound to that implementation and blocked by that successor. No other follow-up may be deferred.
     ownership = _yaml(once(PROVIDERS_PATH))["implementationOwnership"]
     require(type(ownership) is dict, "implementation ownership")
-    supersedes = [row["supersedes"] for row in sector["successorProposals"] if row.get("supersedes")]
-    require(len(supersedes) == len(set(supersedes)), "each predecessor has at most one superseding successor")
-    bound = [row.get("path") for row in ownership.values() if type(row) is dict and row.get("disposition") == "REPOSITORY_PACKET"]
-    require(len(bound) == len(set(bound)), "each implementation path is bound once")
     successors = {row["supersedes"]: row["id"] for row in sector["successorProposals"] if row.get("supersedes")}
     expected = {}
     for key, row in ownership.items():
@@ -253,8 +247,7 @@ def check(read, packets) -> dict:
                 if entry["current"] == row.get("path"):
                     blocker = successors.get(row["packetId"])
                     require(blocker is not None, "a bound follow-up needs a superseding successor: " + key)
-                    require(blocker not in packets, "%s is published: the overlay module and schema must be revised in a "
-                            "reviewed successor packet that rebinds %s" % (blocker, key))
+                    require(blocker not in packets, "%s is published: rebase the overlay before using it" % blocker)
                     expected[entry["current"]] = {"blockedBy": blocker, "binding": {
                         "catalogKey": key, "packetId": row["packetId"], "deliverableIndex": row["deliverableIndex"]}}
     deferred = {entry["current"]: {"blockedBy": entry["blockedBy"], "binding": entry["binding"]}
@@ -266,11 +259,7 @@ def check(read, packets) -> dict:
     doc = once(notice["path"]).decode("utf-8")
     section = _section(doc, notice["heading"])
     require(digest(section.encode("utf-8")) == notice["sectionSha256"], "the R11 notice section is exactly the reviewed text")
-    proposals = {row["id"]: row for row in sector["successorProposals"]}
-    require(notice["proposal"] in proposals and notice["proposalPredecessor"] in proposals[notice["proposal"]]["predecessorIds"],
-            "the notice's proposal and predecessor are a SECTOR-D1 successor and one of its predecessors")
-    require("`" + notice["proposalPredecessor"] + "`" in section, "the notice names the proposal's predecessor")
-    require(notice["proposal"] not in packets, "%s is published: the R11 notice must be revised" % notice["proposal"])
+    require(notice["proposalPredecessor"] in section, "the notice names the proposal's predecessor")
     plan = re.search(r"^## PR packets\s*$([\s\S]*?)(?=^## |\Z)", doc, re.MULTILINE)
     require(plan is not None, "the plan's PR packets section")
     items = [line for line in plan.group(1).split("\n") if line.startswith("7. `DIST-004-helm-profiles`:")]
@@ -278,16 +267,11 @@ def check(read, packets) -> dict:
     plain, ticked = notice["proposal"], "`" + notice["proposal"] + "`"
     require(plain in notice["listItem"] and ticked not in notice["listItem"], "the DIST-004 item names the proposal plain")
     require(doc.count(ticked) == section.count(ticked), "the proposal is backticked only inside the notice")
-    slug = re.compile("`" + re.escape(notice["proposal"]) + r"(?:-[A-Za-z0-9][A-Za-z0-9-]*)?`")
-    require(not slug.search(plan.group(1)), "the proposal is not declared in PR packets, in any slug form")
     # A published SECTOR-D1 successor must cite the overlay module, the consumer rule's publication check.
     for row in sector["successorProposals"]:
         if row["id"] in packets:
-            packet = _yaml(once("task-packets/%s.yaml" % row["id"]))
-            contracts = packet.get("contracts") if type(packet) is dict else None
-            require(type(contracts) is list and any(type(item) is str and "scripts/sector_catalog.py" in item
-                                                    for item in contracts),
-                    "a published SECTOR-D1 successor's contracts cite scripts/sector_catalog.py: " + row["id"])
+            require(b"scripts/sector_catalog.py" in once("task-packets/%s.yaml" % row["id"]),
+                    "a published SECTOR-D1 successor cites scripts/sector_catalog.py: " + row["id"])
     return overlay
 
 

@@ -5,7 +5,7 @@
   "path": "architecture/sector-direction.json",
   "sha256": "cfc39b4adbfb2771e27cc5498d94530d5691130736a8791288ce296253fc2efe"
  },
- "approach": "The catalogs stay byte-identical: older validators read them as immutable inputs and 36 earlier architecture records and sector-direction.json pin them. This reviewed overlay gives the banking-era view; scripts/sector_catalog.py applies it as exact, counted substring replacements and refuses any mismatch. Banking-era consumers must read the catalogs only through effective_bytes and effective_catalog.",
+ "approach": "The catalogs stay byte-identical: older validators read them as immutable inputs and 36 architecture records pin them. This reviewed overlay gives the banking-era view; scripts/sector_catalog.py applies it as exact, counted substring replacements and refuses any mismatch. Banking-era consumers must read the catalogs only through effective_bytes and effective_catalog.",
  "base": {
   "architecture/providers.yaml": "9e2b43dac1ca4531dcdeb3a1b6ead8002d7384e2a0d0e6b57e972accb8631c02",
   "architecture/services.yaml": "857376b5e2b10a2a2542124a7d36b770eca531d15e463d68415416b887dd90a6",
@@ -75,7 +75,7 @@
     "packetId": "IND-WG-005",
     "deliverableIndex": 0
    },
-   "reason": "artifact.platform.industry-pack is a REPOSITORY_PACKET implementation bound to deliverable 0 of the published packet IND-WG-005, and validate_readiness requires a published task packet whose allowedPaths cover the implementation path. IND-BANK-005 is an unpublished successor proposal, so the banking manifest path cannot be bound yet. CONTRACT_ONLY is not admissible either: the profile fixtures profile.banking-readonly-amd64 (base identifier profile.whitegoods-readonly-amd64; selectedModules, expectedClosure) and profile.foundation-airgap-k3s-arm64 (expectedClosure) use the module. Publishing IND-BANK-005 needs a reviewed revision of scripts/sector_catalog.py and of this overlay schema that rebinds the implementation (to the deliverable that builds the manifest); until then the check refuses that state."
+   "reason": "artifact.platform.industry-pack is a REPOSITORY_PACKET implementation bound to deliverable 0 of the published packet IND-WG-005, and validate_readiness requires a published task packet whose allowedPaths cover the implementation path. IND-BANK-005 is an unpublished successor proposal, so the banking manifest path cannot be bound yet. CONTRACT_ONLY is not admissible either: the profile fixtures profile.banking-readonly-amd64 (base identifier profile.whitegoods-readonly-amd64; selectedModules, expectedClosure) and profile.foundation-airgap-k3s-arm64 (expectedClosure) use the module. The entry changes when IND-BANK-005 is published."
   }
  ],
  "effective": {

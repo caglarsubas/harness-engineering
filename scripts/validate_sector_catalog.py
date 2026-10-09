@@ -23,7 +23,7 @@ except ImportError:
 
 ROOT = Path(__file__).resolve().parents[1]
 AUTHORITY_PATH = "architecture/sector-catalog-authority.json"
-AUTHORITY_SHA256 = "fc98987d9abf529f14dca15463c5b2d189fa144d7be212b51c46a3e8aed2208f"
+AUTHORITY_SHA256 = "91a970233ff15b210482bac9b3d13da65e445516c791a21f85d3e5e5e9b1f34b"
 VALIDATOR_PATH = "scripts/validate_sector_catalog.py"
 BASE_COMMIT = "da81730c8c5f8b1289e4e105922df7087582ae97"
 NEW_PACKET = "MET-SECTOR-002"

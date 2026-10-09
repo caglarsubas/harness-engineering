@@ -869,26 +869,49 @@ def _constants(node):
     return [item.value for item in ast.walk(node) if isinstance(item, ast.Constant) and isinstance(item.value, str)]
 
 
-def _listing(call):
-    """(receiver, recursive) of a directory listing that can yield a catalog file; None otherwise."""
+def _listing_names(tree):
+    """Local names of the os and glob modules and of their listing functions, through any import form."""
+    modules, functions = {}, {}
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            modules.update({alias.asname or alias.name: alias.name for alias in node.names if alias.name in ("os", "glob")})
+        elif isinstance(node, ast.ImportFrom) and node.module in ("os", "glob"):
+            functions.update({alias.asname or alias.name: (node.module, alias.name) for alias in node.names
+                              if (node.module, alias.name) in LISTING_FUNCTIONS})
+    return modules, functions
+
+
+def _listing(call, modules, functions):
+    """(receiver, pattern directory, descending) of a listing that can yield a catalog file; None otherwise."""
     func = call.func
-    if not isinstance(func, ast.Attribute):
-        return None
-    if isinstance(func.value, ast.Name) and (func.value.id, func.attr) in LISTING_FUNCTIONS:
-        receiver = call.args[0] if call.args else None
-        pattern = receiver if func.value.id == "glob" else None
-        recursive = func.attr == "walk" or func.value.id == "glob"
-    elif func.attr in ("glob", "rglob", "iterdir", "walk") and not (isinstance(func.value, ast.Name)
-                                                                    and func.value.id in ("ast", "os")):
-        receiver, recursive = func.value, func.attr in ("rglob", "walk")
-        pattern = call.args[0] if func.attr in ("glob", "rglob") and call.args else None
+    first = call.args[0] if call.args else None
+    if isinstance(func, ast.Name) and func.id in functions:
+        module, name = functions[func.id]
+    elif (isinstance(func, ast.Attribute) and isinstance(func.value, ast.Name) and func.value.id in modules
+          and (modules[func.value.id], func.attr) in LISTING_FUNCTIONS):
+        module, name = modules[func.value.id], func.attr
+    elif isinstance(func, ast.Attribute) and func.attr in ("glob", "rglob", "iterdir", "walk") and not (
+            isinstance(func.value, ast.Name) and (func.value.id == "ast" or func.value.id in modules)):
+        module, name = None, func.attr
     else:
         return None
+    if module == "glob":
+        receiver, pattern, descending = None, first, True
+    elif module == "os":
+        receiver, pattern, descending = first, None, name == "walk"
+    else:
+        receiver, descending = func.value, name in ("rglob", "walk")
+        pattern = first if name in ("glob", "rglob") else None
+    directory = None
     if isinstance(pattern, ast.Constant) and isinstance(pattern.value, str):
-        recursive = recursive or "**" in pattern.value
         if not any(fnmatch.fnmatch(base, pattern.value.rsplit("/", 1)[-1]) for base in CATALOG_BASENAMES):
             return None
-    return receiver, recursive
+        if "/" in pattern.value:
+            directory, descending = pattern.value.rsplit("/", 1)[0], True
+        descending = descending or "**" in pattern.value
+    elif module == "glob":
+        directory = ""
+    return receiver, directory, descending
 
 
 def _bindings(tree):
@@ -904,24 +927,59 @@ def _bindings(tree):
     return bound
 
 
+def _lists_a_catalog_directory(raw):
+    """A static tripwire, not a proof: a listing whose root may be architecture/ or docs/, or that descends from an
+    unknown, current or wildcard root, counts as a catalog listing."""
+    tree = ast.parse(raw)
+    modules, functions = _listing_names(tree)
+    bound = _bindings(tree)
+    for call in ast.walk(tree):
+        found = _listing(call, modules, functions) if isinstance(call, ast.Call) else None
+        if found is None:
+            continue
+        receiver, directory, descending = found
+        roots = _constants(receiver) if receiver is not None else []
+        for name in ast.walk(receiver) if receiver is not None else ():
+            if isinstance(name, ast.Name):
+                roots += bound.get(name.id, [])
+        if directory is not None:
+            roots.append(directory)
+        tops = {root.strip("/").split("/")[0] if descending else root.strip("/") for root in roots}
+        if tops & CATALOG_DIRS:
+            return True
+        if descending and (not roots or tops & {"", ".", ".."} or any(set(top) & set("*?[") for top in tops)):
+            return True
+    return False
+
+
+# The scans cover every Python file in the checkout outside EXCLUDED_DIRS, tracked or not.
 def test_only_the_frozen_readers_list_the_catalog_directories():
-    readers = set()
-    for rel, path in _files({".py"}):
-        tree = ast.parse(path.read_bytes())
-        bound = _bindings(tree)
-        for call in ast.walk(tree):
-            found = _listing(call) if isinstance(call, ast.Call) else None
-            if found is None:
-                continue
-            receiver, recursive = found
-            roots = _constants(receiver) if receiver is not None else []
-            for name in ast.walk(receiver) if receiver is not None else ():
-                if isinstance(name, ast.Name):
-                    roots += bound.get(name.id, [])
-            tops = {root.strip("/").split("/")[0] if recursive else root.strip("/") for root in roots}
-            if tops & CATALOG_DIRS or (recursive and not roots):
-                readers.add(rel)
-    assert readers == GLOB_READERS
+    assert {rel for rel, path in _files({".py"}) if _lists_a_catalog_directory(path.read_bytes())} == GLOB_READERS
+
+
+@pytest.mark.parametrize("source,lists", [
+    ("list((ROOT / 'architecture').glob('*.yaml'))", True),
+    ("list(ROOT.glob('architecture/*.yaml'))", True),
+    ("list(ROOT.glob('docs/*.md'))", True),
+    ("for folder in ('architecture', 'policies'):\n    list((ROOT / folder).rglob('*.yaml'))", True),
+    ("import os\nlist(os.walk('.'))", True),
+    ("import os\nlist(os.walk(ROOT / 'docs'))", True),
+    ("import os as o\no.listdir('architecture')", True),
+    ("from os import scandir as s\ns('docs')", True),
+    ("import glob\nglob.glob('**/*.yaml', recursive=True)", True),
+    ("from glob import glob\nglob('*/*.yaml')", True),
+    ("import glob as g\ng.iglob('architecture/*.yaml')", True),
+    ("list(Path('.').rglob('*.yaml'))", True),
+    ("list(ROOT.walk())", True),
+    ("list((ROOT / 'docs').iterdir())", True),
+    ("list((ROOT / 'architecture').glob('*.json'))", False),
+    ("list((ROOT / 'task-packets').glob('*.yaml'))", False),
+    ("list((ROOT / 'architecture/sector-catalog').glob('*.yaml'))", False),
+    ("import os\nos.listdir('task-packets')", False),
+    ("import ast\nlist(ast.walk(ast.parse('x')))", False),
+])
+def test_the_listing_tripwire_flags_the_catalog_directories(source, lists):
+    assert _lists_a_catalog_directory(source.encode()) is lists
 
 
 def test_the_records_that_pin_or_name_the_catalogs_are_frozen():
@@ -947,32 +1005,62 @@ def _dotted(node):
     return None
 
 
+def _consumer_violations(raw):
+    """Uses of the overlay module other than reads of its two public functions (a static tripwire, not a proof)."""
+    tree = ast.parse(raw)
+    module_strings = tuple(name + "." for name in MODULE_NAMES)
+    parents = {child: node for node in ast.walk(tree) for child in ast.iter_child_nodes(node)}
+    bound, violations = set(), []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            bound |= {alias.asname or alias.name for alias in node.names
+                      if alias.name.rsplit(".", 1)[-1] == "sector_catalog"}
+        elif isinstance(node, ast.ImportFrom):
+            if (node.module or "").rsplit(".", 1)[-1] == "sector_catalog":
+                violations += [node.lineno for alias in node.names if alias.name not in PUBLIC_API]
+            bound |= {alias.asname or alias.name for alias in node.names if alias.name == "sector_catalog"}
+        elif isinstance(node, ast.Constant) and isinstance(node.value, str):
+            if node.value in MODULE_NAMES or node.value.startswith(module_strings):
+                violations.append(node.lineno)
+    # The module object may appear only as the receiver of a public attribute read: no other attribute, no
+    # assignment or deletion, and no passing it to setattr, getattr, vars, monkeypatch or mock.patch.object.
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.Name, ast.Attribute)) and _dotted(node) in bound:
+            use = parents.get(node)
+            if not (isinstance(use, ast.Attribute) and use.value is node and use.attr in PUBLIC_API
+                    and isinstance(use.ctx, ast.Load)):
+                violations.append(node.lineno)
+    return violations
+
+
 def test_consumers_use_only_the_public_overlay_api():
     exempt = {"scripts/sector_catalog.py", "scripts/validate_sector_catalog.py", "tests/test_sector_catalog.py", *ROUND_COPIES}
-    module_strings = tuple(name + "." for name in MODULE_NAMES)
     for rel, path in _files({".py"}):
-        if rel in exempt:
-            continue
-        tree = ast.parse(path.read_bytes())
-        parents = {child: node for node in ast.walk(tree) for child in ast.iter_child_nodes(node)}
-        bound = set()
-        for node in ast.walk(tree):
-            if isinstance(node, ast.Import):
-                bound |= {alias.asname or alias.name for alias in node.names
-                          if alias.name.rsplit(".", 1)[-1] == "sector_catalog"}
-            elif isinstance(node, ast.ImportFrom):
-                if (node.module or "").rsplit(".", 1)[-1] == "sector_catalog":
-                    assert all(alias.name in PUBLIC_API for alias in node.names), rel
-                bound |= {alias.asname or alias.name for alias in node.names if alias.name == "sector_catalog"}
-            elif isinstance(node, ast.Constant) and isinstance(node.value, str):
-                assert node.value not in MODULE_NAMES and not node.value.startswith(module_strings), (rel, node.value)
-        # The module object may appear only as the receiver of a public attribute read: no other attribute, no
-        # assignment or deletion, and no passing it to setattr, getattr, vars, monkeypatch or mock.patch.object.
-        for node in ast.walk(tree):
-            if isinstance(node, (ast.Name, ast.Attribute)) and _dotted(node) in bound:
-                use = parents.get(node)
-                assert (isinstance(use, ast.Attribute) and use.value is node and use.attr in PUBLIC_API
-                        and isinstance(use.ctx, ast.Load)), (rel, node.lineno)
+        if rel not in exempt:
+            assert _consumer_violations(path.read_bytes()) == [], rel
+
+
+@pytest.mark.parametrize("source,allowed", [
+    ("from scripts import sector_catalog as sc\nsc.effective_bytes('architecture/services.yaml')", True),
+    ("from scripts.sector_catalog import effective_catalog\neffective_catalog('architecture/providers.yaml')", True),
+    ("import scripts.sector_catalog\nscripts.sector_catalog.effective_bytes('x')", True),
+    ("from scripts import sector_catalog as sc\ndef test(monkeypatch):\n    monkeypatch.setattr(sc, 'ROOT', None)", False),
+    ("import scripts.sector_catalog\nscripts.sector_catalog.check(None, None)", False),
+    ("from unittest import mock\nfrom scripts import sector_catalog as sc\nmock.patch.object(sc, 'ROOT', None)", False),
+    ("import importlib\nimportlib.import_module('scripts.sector_catalog').check", False),
+    ("__import__('sector_catalog')", False),
+    ("from scripts import sector_catalog as sc\ngetattr(sc, 'disk_reader')", False),
+    ("from scripts import sector_catalog as sc\nvars(sc)['ROOT'] = None", False),
+    ("from scripts import sector_catalog as sc\nsc.ROOT = None", False),
+    ("from scripts import sector_catalog as sc\nsc.effective_bytes = None", False),
+    ("from scripts import sector_catalog as sc\nalias = sc", False),
+    ("from scripts.sector_catalog import *", False),
+    ("from scripts.sector_catalog import check as effective", False),
+    ("from unittest import mock\nmock.patch('scripts.sector_catalog.ROOT', None)", False),
+    ("from . import sector_catalog\nsector_catalog.check(None, None)", False),
+])
+def test_the_consumer_tripwire_refuses_non_public_use(source, allowed):
+    assert (_consumer_violations(source.encode()) == []) is allowed
 
 
 def _readiness_errors(monkeypatch, apply_deferred=False):

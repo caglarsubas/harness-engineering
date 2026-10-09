@@ -19,8 +19,8 @@ decision (via the lane monitor): an overlay.
 - **The deferral.** It is derived from `implementationOwnership` and `successorProposals`: the pack manifest path is
   bound to the published IND-WG-005 and blocked by the unpublished IND-BANK-005. Until a reviewed revision of the
   module and the overlay schema rebinds that implementation, the consumer gate refuses a published IND-BANK-005
-  whatever the overlay contains. Round 4's note R4-N1 asked for exactly this wording in the overlay README and the
-  module docstring; this packet applies it, and nothing else changes in the reviewed bytes.
+  whatever the overlay contains. Round 4's note R4-N1 asked for that README sentence and for a structure fix in the
+  module docstring; this packet applies both, and nothing else changes in the reviewed bytes.
 - **The R11 notice.** `docs/repositories/11-mas-harness-distribution.md` carries the sector-direction notice that the
   MET-SECTOR-001 review asked for. Publishing DIST-BANK-001 requires a revised notice, or one re-pointed to a
   still-unpublished successor (review round 4, note R4-N2).

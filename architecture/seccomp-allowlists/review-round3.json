@@ -1,0 +1,96 @@
+{
+ "schemaVersion": "planeon.internal.seccomp-allowlists-review/v1",
+ "round": 3,
+ "reviewDate": "2026-10-09",
+ "verdict": "PASS_FOR_SOURCE_PUBLICATION",
+ "subjectCommit": "12df050",
+ "subjectSha256": {
+  "architecture/seccomp-allowlists/README.md": "510b41f0b13b1463f2b79651d438880c9342026aab6127da7de363df7d475139",
+  "architecture/seccomp-allowlists/REVIEW_BRIEF.md": "b3e0d15f58c1521c4f1d4ca60a1742aa1dc722428825d1eb48f815f51d9055b5",
+  "architecture/seccomp-allowlists/syscalls.json": "73c3eee52dcc9e7688e67c6d9b69cff18c8a48ea3cd9b23a354827b802ce27d2",
+  "architecture/seccomp-allowlists/allowlists.json": "9790f485f86a8d6efbf8b8165fc660afe5a16be54a4bedc863b22df1c56811f9",
+  "architecture/seccomp-allowlists/vectors.json": "d6f5fc7f28160f14943a4f56b6e53caa5bc5794c7f4b5dd52512409225a3845e",
+  "scripts/seccomp_allowlists.py": "94629cf0fa851086510524515ec34ca28e4a9ad2474a4525d9c24ee0ecde0be2"
+ },
+ "findingStatus": {
+  "F1": "RESOLVED: under the stacked worker and broker programs, the W5 execveat (AT_EMPTY_PATH) is ALLOW on both arches, and the AT_SYMLINK_NOFOLLOW variant is KILL. On x86_64, arch_prctl(ARCH_SET_FS), access, faccessat, faccessat2 and now readlink(89) are ALLOW; aarch64 uses faccessat/faccessat2/readlinkat, all ALLOW.",
+  "F2": "RESOLVED: broker covers worker. My structural check finds 0 failures, all 351 stack checks hold, and the random campaign finds 0 stack differences.",
+  "F3": "RESOLVED: clone3 is ERRNO(38) in the six non-broker programs and ALLOW for the broker; worker+broker stacked gives ERRNO(38). glibc falls back to the thread clone (0x3d0f00), which is ALLOW.",
+  "F4": "RESOLVED, no regression: the broker allows socketpair (AF_UNIX seqpacket only), FS_IOC_MEASURE_VERITY, getdents64, readlinkat, newfstatat and dup3.",
+  "F5": "RESOLVED, no regression: membarrier only for cmd 0/8/16 with flags 0 and cpu 0; cmd 1 and flags 1 are KILL.",
+  "F6": "RESOLVED (unchanged).",
+  "F7": "RESOLVED: every condition is broken on its own; 181 high-word vectors and 14 i386 vectors.",
+  "F8": "RESOLVED (unchanged).",
+  "F9": "CARRIED to W01.",
+  "F10": "CARRIED to W03.",
+  "F11": "RESOLVED.",
+  "F12": "UNCHANGED, still correct.",
+  "F13": "RESOLVED: readlink is in the table only for x86_64 (nr 89, syscall_64.tbl:101, checked against the kernel table) and in the CPYTHON_3_12 base; the broker inherits it via QD. Vectors D1952 (WORKER) and D0168/D1110 give ALLOW, the native roles give KILL, and stack check S1952 holds. The W03/T04 trace obligation is stated.",
+  "F14": "RESOLVED: the 12 non-broker clone3 checks now expect 'ERRNO(38)'. decide, run_filter, my interpreter and my own decide agree on all 2,789 checks. Stack checks S1845/S2020 cover clone3 for the worker. action_name maps the three actions. Residual docstring staleness: see F19.",
+  "F15": "RESOLVED as a stated W03 requirement: glibc >= 2.34, and no CET (0x3001) or shadow-stack (0x5001-0x5005) arch_prctl at start-up, else W02d reopens. My probes confirm those options are KILL.",
+  "F16": "RESOLVED: the QC duty cites readiness lines 90-96, 112-135 and 145-162, and SERVER, OBSERVER and BROKER now allow ioctl FS_IOC_MEASURE_VERITY (0xC0046686) while still killing FS_IOC_ENABLE_VERITY.",
+  "F17": "RESOLVED: require_covers now accepts, over a worker errno rule, only an unconditional broker grant or the identical errno rule. Probe: None and {errno:38} are accepted; a conditional broker rule, a different errno and an absent rule are refused."
+ },
+ "findings": [
+  {
+   "id": "F18",
+   "severity": "NOTE",
+   "location": "architecture/seccomp-allowlists/README.md:60-61 ('Runtime bases' table)",
+   "finding": "The CPYTHON_3_12 table row is split across two source lines: line 60 ends after '(x86_64) `readlink`', and line 61 starts with '(CPython's start-up `realpath()`...'. In GitHub-flavoured Markdown a table row cannot continue onto the next line, so the row renders cut short, and its tail becomes a separate row whose Base cell holds the rest of the calls list.",
+   "requiredChange": "Join lines 60 and 61 into one table row."
+  },
+  {
+   "id": "F19",
+   "severity": "NOTE",
+   "location": "scripts/seccomp_allowlists.py module docstring (lines 8-15)",
+   "finding": "The module docstring still describes decide as 'KILL_PROCESS ... ALLOW otherwise', with no ERRNO(n), and does not list decide_stack, action_name, require_covers or the stacking claim. The code and the decide behaviour are correct.",
+   "requiredChange": "Update the docstring to the three-action semantics and the current function list."
+  }
+ ],
+ "questionAnswers": {
+  "Q0": "Yes. QA-QD and Q1-Q3 are implemented as decided. F1-F8, F11 and F13-F17 are resolved, F9 and F10 are carried, and F12 is unchanged. Only two documentation NOTEs remain (F18, F19).",
+  "Q1": "Yes. All 129 names and table-line citations match my downloads of the two v6.12 tables (0 mismatches); readlink is 89 on x86_64 and correctly absent on aarch64. The constants are unchanged from round 2, where I checked them against the headers.",
+  "Q2": "Yes, within the owner decisions. The additions since round 2 (x86_64 readlink in the CPython base, mirrored into the broker through QD; FS_IOC_MEASURE_VERITY in the QC duty) are cited. Argument filters are unchanged and correct. The bases remain source-derived, not traced, with that obligation stated for W03/T04.",
+  "Q3": "Yes. The deny list is unchanged and complete for v6.12. All 13 mutations give exactly their stated messages, and my 9 extra mutations behave as documented.",
+  "Q4": "Yes. All 14 programs (103-326 instructions) pass my re-implementation of the kernel's acceptance rules (bpf_check_classic and seccomp_check_filter). Compilation is deterministic, the digests and lengths match vectors.json, and stacking precedence matches seccomp_run_filters.",
+  "Q5": "Yes. All 2,789 decision checks (ALLOW 1208, KILL_PROCESS 1569, ERRNO(38) 12) agree across four evaluators, all 351 stack checks hold, and all 13 mutations match. Every grant and alternative has an ALLOW vector, and every condition is broken on its own.",
+  "Q6": "The W01/W03 findings are correct, including the new libc requirement and trace obligation. I found no overclaim beyond the presentation NOTEs (F18, F19). The round-1 dispositions table's F1 'resolved' is now accurate."
+ },
+ "modelExecution": {
+  "interpreter": "UV_PROJECT_ENVIRONMENT=.../harness-onion/.venv PYTHONDONTWRITEBYTECODE=1 uv run --offline --frozen --no-sync python, run from the worktree root, one process at a time, each under 60 s",
+  "scripts": [
+   "/private/tmp/claude-501/w02d-review-r2/check_table.py (system python3; kernel tables fetched in round 1, sha256 equal to the recorded ones)",
+   "/private/tmp/claude-501/w02d-review-r3/review_check3.py (7.2 s)",
+   "/private/tmp/claude-501/w02d-review-r3/cov3.py",
+   "an inline require_covers/action_name probe"
+  ],
+  "results": {
+   "syscallNumbers": "129 x 2 arches, 0 mismatches",
+   "programs": "14/14 pass the kernel rules; digests and lengths match",
+   "decisionChecks": "2789/2789",
+   "stackChecks": "351/351",
+   "mutations": "13/13",
+   "randomCampaign": "60000 seeded cases (seed 20261010), 0 decision differences, 0 worker stack differences",
+   "x86_64WorkerStartupProbe": "stacked: execveat(AT_EMPTY_PATH), arch_prctl(SET_FS), access, faccessat, faccessat2, readlink(89), readlinkat, fstat, newfstatat, read-only openat and TCGETS are ALLOW; clone3 is ERRNO(38); arch_prctl 0x3001/0x5001, dup2(33), fork-style clone and O_RDWR openat are KILL"
+  },
+  "outputs": [
+   "/private/tmp/claude-501/w02d-review-r3/review_check3.out"
+  ]
+ },
+ "sourcesRead": [
+  "architecture/seccomp-allowlists/{README.md,REVIEW_BRIEF.md,source-index.json,syscalls.json,allowlists.json,vectors.json,review-round2.json}; round2/* (sha256 equal to the f783fd6 bytes); git diff f783fd6..12df050",
+  "scripts/seccomp_allowlists.py",
+  "Kernel, glibc and CPython sources as listed in rounds 1 and 2 (no new upstream fetches this round)"
+ ],
+ "actions": {
+  "filesEdited": false,
+  "githubMutated": false,
+  "nativeActions": false,
+  "referenceModelExecuted": true,
+  "repositoryValidatorsRun": false,
+  "runnerActivated": false,
+  "testsRun": false,
+  "warmSourcesAccessed": false
+ },
+ "reviewLimit": "Read-only DATA_CHECK_ONLY review on macOS. No filter was installed, and no CPython or loader trace was taken. The start-up probe covers the calls identified from the CPython 3.12.14 and glibc source reading, not a measured trace. That trace is the stated W03/T04 obligation, and any call it finds outside the allowlists reopens W02d. Scratch lives only in /private/tmp/claude-501/w02d-review-r3/."
+}

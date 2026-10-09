@@ -21,12 +21,18 @@ from scripts.validate_conformance_reference_measurement import validate_dispatch
 ROOT = Path(__file__).resolve().parents[1]
 
 
-@pytest.fixture
-def inputs():
+@pytest.fixture(scope="module")
+def _inputs_read_once():
     packets = {p.stem: safe_yaml_load(p.read_text()) for p in (ROOT / "task-packets").glob("*.yaml")}
     record = json.loads((ROOT / "architecture/linux-test-ownership-amendment.json").read_text())
     previous = (ROOT / "architecture/linux-readiness-amendment.json").read_bytes()
     return packets, record, previous
+
+
+@pytest.fixture
+def inputs(_inputs_read_once):
+    # Each test gets its own copy of the module's single read and parse (MET-PERF-035).
+    return deepcopy(_inputs_read_once)
 
 
 def test_current_and_historical_authorities_agree_without_rewriting_history(inputs):
@@ -36,7 +42,7 @@ def test_current_and_historical_authorities_agree_without_rewriting_history(inpu
     original = (ROOT / "architecture/linux-readiness.json").read_bytes()
     assert validate_linux_readiness(packets, json.loads(original)) == []
     assert validate_linux_repair(packets, json.loads(previous), original) == []
-    assert len(packets) == 215
+    assert len(packets) == 216
     assert json.loads(previous)["currentPacketCount"] == 120
     assert json.loads(original)["currentPacketCount"] == 118
     assert record["testChange"]["productImplementation"] == "NOT_RUN"

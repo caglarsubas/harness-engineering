@@ -20,11 +20,17 @@ from scripts.validate_linux_test_ownership import amend_linux_test_packet
 ROOT = Path(__file__).resolve().parents[1]
 
 
-@pytest.fixture
-def inputs():
+@pytest.fixture(scope="module")
+def _inputs_read_once():
     packets = {p.stem: safe_yaml_load(p.read_text()) for p in (ROOT / "task-packets").glob("*.yaml")}
     record = json.loads((ROOT / "architecture/linux-readiness-amendment.json").read_text())
     return packets, record, (ROOT / "architecture/linux-readiness.json").read_bytes()
+
+
+@pytest.fixture
+def inputs(_inputs_read_once):
+    # Each test gets its own copy of the module's single read and parse (MET-PERF-035).
+    return deepcopy(_inputs_read_once)
 
 
 def test_current_amendment_is_complete_and_historical_policy_unchanged(inputs):
@@ -32,7 +38,7 @@ def test_current_amendment_is_complete_and_historical_policy_unchanged(inputs):
     assert validate_linux_repair(packets, record, raw) == []
     assert validate_linux_readiness(packets, json.loads(raw)) == []
     assert validate_dispatch_ownership(packets) == []
-    assert len(packets) == 215
+    assert len(packets) == 216
     assert record["currentPacketCount"] == 120  # Consumed record is immutable.
     assert json.loads(raw)["currentPacketCount"] == 118
     assert record["baseline"]["reviewEvidence"] == "SOURCE_INSPECTION_ONLY"

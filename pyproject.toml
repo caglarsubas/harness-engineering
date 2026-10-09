@@ -19,5 +19,5 @@ dev = [
 package = false
 
 [tool.pytest.ini_options]
-addopts = "--strict-config --strict-markers -q -p no:cacheprovider"
+addopts = "--strict-config --strict-markers -q -p no:cacheprovider -p ci.parallel_suite"
 testpaths = ["tests"]

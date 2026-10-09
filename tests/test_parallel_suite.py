@@ -1,4 +1,4 @@
-"""Exact source lineage for MET-ENFORCE-016; the W02e-F SELinux matrix v4 contract is DATA_CHECK_ONLY."""
+"""Exact source lineage for MET-PERF-035; the parallel-suite changes keep every validator and refusal."""
 import ast
 import json
 from copy import deepcopy
@@ -8,7 +8,8 @@ from types import MappingProxyType
 
 import pytest
 
-from scripts import validate_selinux_matrix_v2 as profile
+from scripts import validate_parallel_suite as profile
+from scripts import validate_selinux_matrix_v2 as yprofile
 from scripts import validate_admission_channel_v3 as xprofile
 from scripts import validate_i07_policy_write_v2 as pprofile
 from scripts import validate_admission_semantics_v2 as aprofile
@@ -43,11 +44,6 @@ def packets():
             for path in (profile.ROOT / "task-packets").glob("*.yaml")}
 
 
-def layer_packets():
-    # The newer MET-PERF-035 layer is projected away before this layer's payload checks.
-    return profile.successor.historical_catalog(packets())
-
-
 def changed_test():
     return next(path for path in profile._PROJECTION_RULES if path.startswith("tests/"))
 
@@ -56,8 +52,9 @@ def test_exact_current_source_and_complete_history_chain():
     assert profile.validate() is None
     current = packets()
     accepted = profile.historical_catalog(current)
-    assert len(current) == 216 and len(accepted) == 214
-    assert set(accepted) == set(current) - {profile.NEW_PACKET, profile.successor.NEW_PACKET}
+    assert len(current) == 216 and len(accepted) == 215
+    assert set(accepted) == set(current) - {profile.NEW_PACKET}
+    assert len(yprofile.historical_catalog(current)) == 214
     assert len(xprofile.historical_catalog(current)) == 213
     assert len(pprofile.historical_catalog(current)) == 212
     assert len(aprofile.historical_catalog(current)) == 211
@@ -87,7 +84,7 @@ def test_exact_current_source_and_complete_history_chain():
     for name, expected in profile.authority()["baselinePackets"].items():
         assert profile.digest(profile.regular_bytes("task-packets/" + name + ".yaml")) == expected
     for path, rule in profile._PROJECTION_RULES.items():
-        raw = profile.successor.historical_bytes(path, profile.regular_bytes(path))
+        raw = profile.regular_bytes(path)
         assert profile.digest(raw) == rule["afterSha256"]
         before = profile.historical_bytes(path, raw)
         assert profile.digest(before) == rule["beforeSha256"]
@@ -96,7 +93,7 @@ def test_exact_current_source_and_complete_history_chain():
 
 @pytest.mark.parametrize("fault", ["missing_new", "missing_old", "extra", "new_payload", "old_payload", "projected"])
 def test_catalog_refuses_all_packet_substitution_and_loss(fault):
-    current = deepcopy(layer_packets())
+    current = deepcopy(packets())
     if fault == "missing_new":
         current.pop(profile.NEW_PACKET)
     elif fault == "missing_old":
@@ -104,7 +101,7 @@ def test_catalog_refuses_all_packet_substitution_and_loss(fault):
     elif fault == "extra":
         current["UNREVIEWED-001"] = {}
     elif fault == "projected":
-        current = profile.historical_catalog(deepcopy(packets()))
+        current = profile.historical_catalog(current)
     else:
         name = profile.NEW_PACKET if fault == "new_payload" else "MET-001"
         current[name]["objective"] += " unreviewed"
@@ -113,7 +110,7 @@ def test_catalog_refuses_all_packet_substitution_and_loss(fault):
 
 
 def test_every_predecessor_payload_is_checked_without_a_verdict_cache():
-    current = layer_packets()
+    current = packets()
     profile.validate_packet_payloads(current)
     for name in sorted(profile.authority()["baselinePackets"]):
         original = current[name]
@@ -143,6 +140,8 @@ def test_exact_inverse_and_forward_test_round_trip_across_layers():
     assert profile.historical_test_bytes(current) == before
     assert profile.current_test_bytes(before) == current
     assert profile.current_test_bytes(before + b" ") == before + b" "
+    yprofile_before = yprofile.historical_bytes(path, current)
+    assert yprofile.current_test_bytes(yprofile_before) == current
     xprofile_before = xprofile.historical_bytes(path, current)
     assert xprofile.current_test_bytes(xprofile_before) == current
     pprofile_before = pprofile.historical_bytes(path, current)
@@ -199,14 +198,14 @@ def test_exact_inverse_and_forward_test_round_trip_across_layers():
         profile.historical_bytes(path, current + b" ")
 
 
-@pytest.mark.parametrize("route", ["authority", "changed", "old_bytes", "unchanged", "historical_test", "current_test", "catalog", "payloads", "xprofile_old", "pprofile_old", "aprofile_old", "vprofile_old", "cprofile_old", "qprofile_old", "hprofile_old", "dprofile_old", "sprofile_old", "wprofile_old", "rprofile_old", "gprofile_old", "iprofile_old", "nprofile_old", "resolution_old", "account_old", "canary_old", "isolated_old", "portable_old", "proof_old", "recheck_old", "verifier_old", "linux_old", "performance_old", "runner_old", "roadmap_old"])
+@pytest.mark.parametrize("route", ["authority", "changed", "old_bytes", "unchanged", "historical_test", "current_test", "catalog", "payloads", "yprofile_old", "xprofile_old", "pprofile_old", "aprofile_old", "vprofile_old", "cprofile_old", "qprofile_old", "hprofile_old", "dprofile_old", "sprofile_old", "wprofile_old", "rprofile_old", "gprofile_old", "iprofile_old", "nprofile_old", "resolution_old", "account_old", "canary_old", "isolated_old", "portable_old", "proof_old", "recheck_old", "verifier_old", "linux_old", "performance_old", "runner_old", "roadmap_old"])
 def test_newest_authority_is_freshly_checked_on_every_route(monkeypatch, route):
     path = changed_test()
     raw = profile.regular_bytes(path)
     before = profile.historical_bytes(path, raw) if route in ("current_test", "old_bytes") else None
-    current_packets = packets() if route == "catalog" else None
-    layer = layer_packets() if route == "payloads" else None
+    current_packets = packets() if route in ("catalog", "payloads") else None
     master_raw = roadmap.regular_bytes(roadmap.MASTER_PATH)
+    old_yprofile = yprofile.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "yprofile_old" else None
     old_xprofile = xprofile.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "xprofile_old" else None
     old_pprofile = pprofile.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "pprofile_old" else None
     old_aprofile = aprofile.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "aprofile_old" else None
@@ -241,7 +240,8 @@ def test_newest_authority_is_freshly_checked_on_every_route(monkeypatch, route):
         "historical_test": lambda: profile.historical_test_bytes(raw),
         "current_test": lambda: profile.current_test_bytes(before),
         "catalog": lambda: profile.historical_catalog(current_packets),
-        "payloads": lambda: profile.validate_packet_payloads(layer),
+        "payloads": lambda: profile.validate_packet_payloads(current_packets),
+        "yprofile_old": lambda: yprofile.historical_bytes(roadmap.MASTER_PATH, old_yprofile),
         "xprofile_old": lambda: xprofile.historical_bytes(roadmap.MASTER_PATH, old_xprofile),
         "pprofile_old": lambda: pprofile.historical_bytes(roadmap.MASTER_PATH, old_pprofile),
         "aprofile_old": lambda: aprofile.historical_bytes(roadmap.MASTER_PATH, old_aprofile),
@@ -277,12 +277,12 @@ def test_newest_authority_is_freshly_checked_on_every_route(monkeypatch, route):
         return value + b" " if relative == profile.AUTHORITY_PATH else value
 
     monkeypatch.setattr(profile, "regular_bytes", changed_reader)
-    with pytest.raises(ValueError, match="SELinux matrix v4 history authority digest"):
+    with pytest.raises(ValueError, match="parallel suite history authority digest"):
         calls[route]()
 
 
 def test_catalog_uses_only_pinned_parsed_data_and_checks_each_input_again(monkeypatch):
-    current = layer_packets()
+    current = packets()
     profile._packet_rules()
 
     def unexpected_yaml(_raw):
@@ -303,7 +303,7 @@ def test_historical_catalog_reuses_frozen_packet_pins_but_rechecks_authority(mon
 
     monkeypatch.setattr(profile, "authority", unexpected)
     monkeypatch.setattr(profile, "safe_load", unexpected)
-    assert len(profile.historical_catalog(current)) == 214
+    assert len(profile.historical_catalog(current)) == 215
 
 
 def test_historical_catalog_does_not_initialize_predecessor_packet_rules(monkeypatch):
@@ -318,7 +318,7 @@ def test_historical_catalog_does_not_initialize_predecessor_packet_rules(monkeyp
         return original(path)
 
     monkeypatch.setattr(profile, "regular_bytes", counted)
-    assert len(profile.historical_catalog(current)) == 214
+    assert len(profile.historical_catalog(current)) == 215
     assert packet_reads == ["task-packets/" + profile.NEW_PACKET + ".yaml"]
     assert profile._packet_rules_for.cache_info().currsize == 0
 
@@ -334,14 +334,14 @@ def test_full_packet_expectations_initialize_once_and_remain_immutable(monkeypat
 
     monkeypatch.setattr(profile, "safe_load", counted)
     rules = profile._packet_rules()
-    assert len(rules) == 215 and len(parsed) == 214
-    assert profile._packet_rules() is rules and len(parsed) == 214
+    assert len(rules) == 216 and len(parsed) == 215
+    assert profile._packet_rules() is rules and len(parsed) == 215
     with pytest.raises(TypeError):
         rules["MET-001"] = ("0" * 64, "0" * 64)
 
 
 def test_first_full_packet_check_refuses_changed_old_yaml(monkeypatch):
-    current = layer_packets()
+    current = packets()
     profile._packet_rules_for.cache_clear()
     original = profile.regular_bytes
 
@@ -356,7 +356,7 @@ def test_first_full_packet_check_refuses_changed_old_yaml(monkeypatch):
 
 
 def test_cached_expected_rules_do_not_cache_payload_or_authority_verdict(monkeypatch):
-    current = layer_packets()
+    current = packets()
     profile.validate_packet_payloads(current)
     current["MET-001"]["objective"] += " unreviewed"
     with pytest.raises(ValueError, match="changed packet payload: MET-001"):
@@ -368,16 +368,16 @@ def test_cached_expected_rules_do_not_cache_payload_or_authority_verdict(monkeyp
         return raw + b" " if path == profile.AUTHORITY_PATH else raw
 
     monkeypatch.setattr(profile, "regular_bytes", changed_reader)
-    with pytest.raises(ValueError, match="SELinux matrix v4 history authority digest"):
+    with pytest.raises(ValueError, match="parallel suite history authority digest"):
         profile.validate_packet_payloads(current)
 
 
 def test_cached_expected_rules_are_bound_to_source_root(tmp_path, monkeypatch):
-    current = layer_packets()
+    current = packets()
     profile.validate_packet_payloads(current)
     authority_dir = tmp_path / "architecture"
     authority_dir.mkdir()
-    (authority_dir / "selinux-matrix-v2-authority.json").write_bytes(
+    (authority_dir / "parallel-suite-authority.json").write_bytes(
         profile.regular_bytes(profile.AUTHORITY_PATH))
     (tmp_path / "task-packets").mkdir()
     monkeypatch.setattr(profile, "ROOT", tmp_path)
@@ -399,7 +399,7 @@ def test_historical_traversal_leaves_predecessor_refusal_to_its_owner(fault):
     previous = profile.historical_catalog(current)
     assert previous["MET-001"] is current["MET-001"]
     with pytest.raises(ValueError, match="changed packet payload"):
-        profile.validate_packet_payloads(profile.successor.historical_catalog(current))
+        profile.validate_packet_payloads(current)
 
 
 @pytest.mark.parametrize("fault", ["payload", "yaml"])
@@ -443,8 +443,7 @@ def test_normalized_validator_pin_rejects_source_mutation(monkeypatch, mutation)
         return raw
 
     monkeypatch.setattr(profile, "regular_bytes", changed_reader)
-    # The newer MET-PERF-035 layer refuses a mutated validator before this layer.
-    with pytest.raises(ValueError, match="unreviewed current source: scripts/validate_selinux_matrix_v2.py"):
+    with pytest.raises(ValueError, match="parallel suite validator drift"):
         profile.validate()
 
 
@@ -583,14 +582,12 @@ def test_new_projection_has_no_predecessor_validator_import():
         if isinstance(node, ast.ImportFrom):
             assert "validate_" not in (node.module or "")
         elif isinstance(node, ast.Import):
-            # Only the newer successor layer may be imported, never a predecessor.
-            assert all("validate_" not in alias.name or alias.name == "validate_parallel_suite"
-                       for alias in node.names)
+            assert all("validate_" not in alias.name for alias in node.names)
 
 
 def _count_authority_reads(monkeypatch):
     counts = {}
-    for module in (profile.successor, profile, xprofile, pprofile, aprofile, vprofile, cprofile, qprofile, hprofile, dprofile, sprofile, wprofile, rprofile, gprofile, iprofile, nprofile, resolution, account, canary, isolated, portable, proof, recheck, verifier, linux, performance, runner):
+    for module in (profile, yprofile, xprofile, pprofile, aprofile, vprofile, cprofile, qprofile, hprofile, dprofile, sprofile, wprofile, rprofile, gprofile, iprofile, nprofile, resolution, account, canary, isolated, portable, proof, recheck, verifier, linux, performance, runner):
         original = module.regular_bytes
 
         def counted(relative, _module=module, _original=original):
@@ -617,7 +614,7 @@ def test_every_newer_authority_is_read_exactly_once_per_route(monkeypatch, route
         "current_test": lambda: runner.current_test_bytes(before),
     }
     calls[route]()
-    expected = {module.__name__: 1 for module in (profile.successor, profile, xprofile, pprofile, aprofile, vprofile, cprofile, qprofile, hprofile, dprofile, sprofile, wprofile, rprofile, gprofile, iprofile, nprofile, resolution, account, canary, isolated, portable, proof, recheck, verifier, linux, performance, runner)}
+    expected = {module.__name__: 1 for module in (profile, yprofile, xprofile, pprofile, aprofile, vprofile, cprofile, qprofile, hprofile, dprofile, sprofile, wprofile, rprofile, gprofile, iprofile, nprofile, resolution, account, canary, isolated, portable, proof, recheck, verifier, linux, performance, runner)}
     if route == "current_test":
         # The forward route reads this layer's newest bytes and then projects them forward once more.
         assert all(counts[name] >= 1 for name in expected) and set(counts) == set(expected)
@@ -625,96 +622,346 @@ def test_every_newer_authority_is_read_exactly_once_per_route(monkeypatch, route
         assert counts == expected
 
 
-def _contract():
-    d, v3 = profile.CONTRACT_DIR, profile.V3_DIR
-    return (profile._json(d + "matrix.json"), profile._json(d + "vectors.json"), profile._json(v3 + "matrix.json"),
-            profile._json(v3 + "vectors.json"))
+SHARED_TESTS = {"tests/test_credential_lifecycle.py": ("test_every_input_pin_is_enforced",
+                                                       {"historical_bytes", "validate_additions"}),
+                "tests/test_credential_ordering.py": ("test_each_locked_input_is_checked_and_unknown_or_missing_files_refuse",
+                                                      {"broker_history"})}
+PARALLEL_FILES = ("ci/parallel_suite.py", "ci/parallel_suite_weights.json")
+LOADER = next(path for path, pins in profile.SOURCE_PINS.items() if set(pins) == {"<whole file>"} and path not in PARALLEL_FILES)
+SCOPED_FIXTURES = ("tests/test_linux_repair.py", "tests/test_model_api_inventory.py", "tests/test_linux_test_ownership.py",
+                   "tests/test_model_fixture_scope.py")
 
 
-def test_matrix_v4_replays_and_adoption_follows_the_review():
-    assert profile.validate_selinux_matrix_v2() is None
+def test_parallel_suite_sources_are_exactly_the_reviewed_text():
+    assert profile.validate_parallel_suite() is None
+    assert set(profile.SOURCE_PINS) == set(SHARED_TESTS) | set(SCOPED_FIXTURES) | set(PARALLEL_FILES) | {LOADER}
+    record = profile.authority()
+    assert set(profile.SOURCE_PINS) <= set(record["changedFiles"]) | set(record["newFiles"])
 
 
-@pytest.mark.parametrize("path", profile.FROZEN_PATHS)
-def test_predecessor_contract_bytes_are_frozen(monkeypatch, path):
-    monkeypatch.setattr(profile, "_PROJECTION_RULES", {**profile._PROJECTION_RULES, path: {}})
-    with pytest.raises(ValueError, match="predecessor contract bytes must stay unchanged"):
-        profile.validate_frozen()
-
-
-@pytest.mark.parametrize("change,message", [
-    (lambda m: m["assertions"].remove(next(a for a in m["assertions"] if a["id"] == "A01")), "every v3 assertion is kept"),
-    (lambda m: next(a for a in m["assertions"] if a["id"] == "A59.planeon_server_t")["allow"].append("planeon_gate_t"), "exactly its peers"),
-    (lambda m: m["assertions"].remove(next(a for a in m["assertions"] if a["id"] == "A59.planeon_maint_t")), "exactly its peers"),
-    (lambda m: next(a for a in m["assertions"] if a["id"] == "A66")["states"].append("ENROLLED_SEALED"), "no policy load before the seal"),
-    (lambda m: next(a for a in m["assertions"] if a["id"] == "A21").update(states=[]), "every v3 assertion is kept"),
-    (lambda m: m["ports"][0]["connect"].append({"domain": "planeon_admin_t"}), "v4 changes only"),
+@pytest.mark.parametrize("path,old,new", [
+    ("tests/test_credential_lifecycle.py", b'    share_exact_projections(monkeypatch, lifecycle, "validate_additions")\n', b""),
+    ("tests/test_credential_lifecycle.py", b"    monkeypatch.undo()\n    assert lifecycle.historical_bytes",
+     b"    assert lifecycle.historical_bytes"),
+    ("tests/test_credential_ordering.py", b"    monkeypatch.undo()\n    assert ordering.broker_history",
+     b"    assert ordering.broker_history"),
+    ("tests/test_credential_ordering.py", b"        if key not in seen:\n", b"        if key not in seen or True:\n"),
+    ("tests/test_linux_repair.py", b"    return deepcopy(_inputs_read_once)\n", b"    return _inputs_read_once\n"),
+    ("tests/test_model_fixture_scope.py", b'@pytest.fixture(scope="module")\ndef _inputs_read_once',
+     b'@pytest.fixture(scope="session")\ndef _inputs_read_once'),
+    ("ci/parallel_suite.py", b"WORKERS = 4\n", b"WORKERS = 8\n"),
+    ("ci/parallel_suite.py", b"        if whens != expected:\n", b"        if whens != expected and False:\n"),
+    ("ci/parallel_suite_weights.json", b'"tests/test_credential_lifecycle.py": ', b'"tests/test_credential_lifecycle.py": 1e-9 + '),
 ])
-def test_v4_is_v3_plus_the_disclosed_changes(change, message):
-    matrix, _, v3, _ = _contract()
-    change(matrix)
-    with pytest.raises(ValueError, match=message):
-        profile.validate_v4_successor(matrix, v3)
-
-
-@pytest.mark.parametrize("key,ident,field,value,message", [
-    ("accessChecks", "S11", "target", "planeon_cgroup_gate_t", "S11 checks dir create"),
-    ("accessChecks", "C001", "expect", False, "access check C001"),
-    ("mutationChecks", "M51", "expect", {"failedAssertions": ["A59"]}, "mutation check M51"),
-])
-def test_v4_vectors_cannot_be_weakened(key, ident, field, value, message):
-    matrix, vectors, _, v3_vectors = _contract()
-    next(row for row in vectors[key] if row["id"] == ident)[field] = value
-    with pytest.raises(ValueError, match=message):
-        profile.validate_v4_vectors(matrix, vectors, v3_vectors)
-
-
-def _reader(monkeypatch, path, change):
+def test_parallel_suite_sources_cannot_drift(monkeypatch, path, old, new):
     original = profile.reviewed_bytes
 
     def changed(target):
         raw = original(target)
         if target != path:
             return raw
-        value = profile.parse(raw)
-        change(value)
-        return profile.canonical(value)
+        assert raw.count(old) == 1
+        return raw.replace(old, new)
 
     monkeypatch.setattr(profile, "reviewed_bytes", changed)
+    with pytest.raises(ValueError, match="unreviewed parallel-suite source"):
+        profile.validate_parallel_suite()
 
 
-@pytest.mark.parametrize("change", [
-    lambda s: s.update(contractState="CONTRACT_CANDIDATE"),
-    lambda s: s["obligations"].update(E04="CLOSED"),
-    lambda s: s.update(policyLoaded=True),
-    lambda s: s["closedFindings"].pop("K2"),
-    lambda s: s["carriedFindings"].pop("G1"),
-    lambda s: s["carriedElsewhere"].pop("K5"),
-    lambda s: s.update(ownerDecisions=s["ownerDecisions"][1:]),
-    lambda s: s["reviewRounds"][1].update(recordSha256="0" * 64),
-    lambda s: s["reviewRounds"][0].update(subjectDirectory="CURRENT"),
+def _validator_calls(nodes):
+    return [node for node in nodes if isinstance(node, ast.Call)
+            and (getattr(node.func, "id", "") or getattr(node.func, "attr", "")).startswith("validate_")]
+
+
+@pytest.mark.parametrize("path", sorted(SHARED_TESTS))
+def test_shared_projections_are_proven_first_and_undone_before_a_fresh_validation(path):
+    """Structure only; the exact pins above remain the primary guard of these two tests."""
+    name, shared = SHARED_TESTS[path]
+    tree = ast.parse(profile.reviewed_bytes(path))
+    users = {node.name for node in tree.body if isinstance(node, ast.FunctionDef) and node.name.startswith("test_")
+             and any(getattr(call.func, "id", "") == "share_exact_projections"
+                     for call in ast.walk(node) if isinstance(call, ast.Call))}
+    assert name in users
+    node = [node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == name][0]
+    calls = [call for call in ast.walk(node) if isinstance(call, ast.Call)]
+    shares = [call for call in calls if getattr(call.func, "id", "") == "share_exact_projections"]
+    undos = [call for call in calls if getattr(call.func, "attr", "") == "undo"]
+    assert len(undos) == 1 and all(call.args and ast.unparse(call.args[0]) == "monkeypatch" for call in shares)
+    assert {ast.literal_eval(call.args[2]) if len(call.args) > 2 else "historical_bytes" for call in shares} == shared
+    # The first validation runs under the wrapper and must pass before any refusal is asserted.
+    asserts = [stmt for stmt in node.body if isinstance(stmt, ast.Assert) and _validator_calls(ast.walk(stmt.test))]
+    first = asserts[0]
+    assert max(call.lineno for call in shares) < first.lineno == min(call.lineno for call in _validator_calls(calls))
+    assert ast.unparse(first.test).endswith("== []")
+    # The wrapper is undone once, and the test ends with a fresh validation that must pass.
+    assert all(call.lineno < undos[0].lineno for call in shares)
+    assert asserts[-1] is node.body[-1] and asserts[-1].lineno > undos[0].lineno
+    assert ast.unparse(asserts[-1].test).endswith("== []")
+
+
+def test_scoped_fixtures_hand_each_test_its_own_copy():
+    for path in SCOPED_FIXTURES:
+        tree = ast.parse(profile.reviewed_bytes(path))
+        fixtures = {node.name: node for node in tree.body if isinstance(node, ast.FunctionDef)}
+        once, each = fixtures["_inputs_read_once"], fixtures["inputs"]
+        assert [ast.unparse(d) for d in once.decorator_list] == ["pytest.fixture(scope='module')"]
+        assert [ast.unparse(d) for d in each.decorator_list] == ["pytest.fixture"]
+        assert ast.unparse(each.args) == "_inputs_read_once"
+        assert ast.unparse(each.body[-1]) == "return deepcopy(_inputs_read_once)"
+
+
+import importlib.util as _importlib_util
+import re as _re
+import subprocess as _subprocess
+import sys as _sys
+
+
+def _load(name, path):
+    spec = _importlib_util.spec_from_file_location(name, profile.ROOT / path)
+    module = _importlib_util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+SUITE = _load("_met_perf_035_parallel_suite_copy", "ci/parallel_suite.py")
+
+
+def test_parallel_suite_constants_weights_and_session_loading(request):
+    linux = _load("_met_perf_035_linux_conftest_copy", "tests/linux_runner/conftest.py")
+    assert SUITE.WORKERS == 4
+    assert linux.PREDECESSOR_PROOF_NODE in SUITE.PARENT_NODES and len(SUITE.PARENT_NODES) == 3
+    weights = json.loads(profile.reviewed_bytes(SUITE.WEIGHTS_PATH))
+    assert weights and all(type(name) is str and name.endswith(".py") and type(value) in (int, float) and value >= 0
+                           for name, value in weights.items())
+    assert request.config.pluginmanager.get_plugin("ci.parallel_suite") is not None
+
+
+def test_accounting_refuses_partial_duplicate_or_misordered_phases():
+    passed = [("setup", "passed"), ("call", "passed"), ("teardown", "passed")]
+    assert SUITE.account({"a": passed, "b": [("setup", "skipped"), ("teardown", "passed")]}) == []
+    for forged in ([], passed[:1], passed[:2], passed + passed[2:], passed[:2] + passed[1:],
+                   [("setup", "failed"), ("call", "passed"), ("teardown", "passed")],
+                   [("teardown", "passed"), ("setup", "passed"), ("call", "passed")], [("setup", "skipped")]):
+        assert SUITE.account({"a": passed, "b": forged}) == ["node b reported %s" % [when for when, _ in forged]]
+
+
+def test_worker_exit_passes_only_with_its_own_failures():
+    assert SUITE.worker_exit_problem("w", 0, 0) is None and SUITE.worker_exit_problem("w", 1, 2) is None
+    for code, failed in ((1, 0), (2, 0), (3, 0), (4, 1), (5, 0), (-9, 0), (-15, 3)):
+        assert SUITE.worker_exit_problem("w", code, failed) is not None
+
+
+_SCRATCH = {
+    "tests/test_a.py": "import unittest, warnings, pytest\n@pytest.mark.parametrize('i', range(6))\ndef test_ok(i):\n"
+                       "    assert i >= 0\ndef test_skip():\n    pytest.skip('s')\nclass T(unittest.TestCase):\n"
+                       "    def test_unit_skip(self):\n        self.skipTest('u')\n@pytest.mark.xfail\ndef test_xfail():\n"
+                       "    assert False\ndef test_warns():\n    warnings.warn('careful', UserWarning)\n",
+    "tests/test_b.py": "import os, time\ndef test_maybe_crash():\n    fault = os.environ.get('SCRATCH_FAULT')\n"
+                       "    if fault in ('crash', 'forge') and os.environ.get('PLANEON_PARALLEL_SUITE_SERIAL'):\n"
+                       "        os._exit(0)\n    if fault == 'hang':\n        open(os.environ['SCRATCH_PID'], 'w').write(str(os.getpid()))\n"
+                       "        time.sleep(float(os.environ.get('SCRATCH_SLEEP', '60')))\ndef test_after():\n    assert os.environ.get('SCRATCH_FAULT') != 'forge'\n",
+    "tests/test_c.py": "import os\ndef test_maybe_fail():\n    assert os.environ.get('SCRATCH_FAULT') != 'fail'\n"
+                       "def test_nested_pytest_is_serial_and_never_a_worker():\n"
+                       "    import ci.parallel_suite as suite\n"
+                       "    assert 'PLANEON_PARALLEL_SUITE_ASSIGNMENT' not in os.environ\n"
+                       "    if suite._sink is not None:\n"
+                       "        assert os.environ.get('PLANEON_PARALLEL_SUITE_SERIAL') == '1'\n"
+                       "def test_forge_another_workers_node():\n    if os.environ.get('SCRATCH_FAULT') not in ('forge', 'garbage'):\n"
+                       "        return\n    import ci.parallel_suite as suite\n    from _pytest.reports import TestReport\n"
+                       "    if os.environ['SCRATCH_FAULT'] == 'garbage':\n        suite._sink.write('not json\\n')\n        return\n"
+                       "    for when in ('setup', 'call', 'teardown'):\n"
+                       "        report = TestReport('tests/test_b.py::test_after', ('tests/test_b.py', 5, 'test_after'), {}, 'passed', None, when)\n"
+                       "        suite._write({'kind': 'report', 'data': suite._config.hook.pytest_report_to_serializable(config=suite._config, report=report)})\n",
+}
+
+
+def _scratch_env(tmp_path, fault, ini="", serial=False, extra_env=None):
+    for name, text in _SCRATCH.items():
+        (tmp_path / name).parent.mkdir(parents=True, exist_ok=True)
+        (tmp_path / name).write_text(text)
+    # The plugin is loaded from the ini, as in the repository, so that a command line of paths alone runs in parallel.
+    (tmp_path / "pytest.ini").write_text("[pytest]\naddopts = -p no:cacheprovider -p ci.parallel_suite %s\n" % ini)
+    (tmp_path / "tmp").mkdir(exist_ok=True)
+    env = {key: value for key, value in os.environ.items()
+           if key not in (SUITE.SERIAL_ENV, SUITE.ASSIGNMENT_ENV, "PYTEST_ADDOPTS")}
+    env.update(PYTHONPATH=str(profile.ROOT), SCRATCH_FAULT=fault, PYTHONDONTWRITEBYTECODE="1", TMPDIR=str(tmp_path / "tmp"),
+               **({SUITE.SERIAL_ENV: "1"} if serial else {}), **(extra_env or {}))
+    (tmp_path / "args.txt").write_text("-W error::UserWarning\n--runxfail\ntests\n")
+    return env
+
+
+def _scratch_run(tmp_path, fault, ini="", cli=(), serial=False, extra_env=None, wait=True, python_flags=(), paths=("tests",)):
+    env = _scratch_env(tmp_path, fault, ini, serial, extra_env)
+    argv = [_sys.executable, *python_flags, "-m", "pytest", *cli, *paths]
+    if not wait:
+        return _subprocess.Popen(argv, cwd=tmp_path, env=env, stdout=_subprocess.PIPE, stderr=_subprocess.STDOUT, text=True)
+    return _subprocess.run(argv, cwd=tmp_path, env=env, capture_output=True, text=True, timeout=180)
+
+
+def _final(result):
+    lines = [line.strip("= ") for line in result.stdout.splitlines() if " in " in line and ("passed" in line or "failed" in line)]
+    return _re.sub(r" in [0-9.]+s.*$", "", lines[-1]) if lines else None
+
+
+@pytest.mark.parametrize("fault,ini,cli,flags,paths", [
+    ("none", "", (), (), ("tests",)), ("none", "-ra", (), (), ("tests",)), ("none", "-vv -rs", (), (), ("tests",)),
+    ("fail", "", (), (), ("tests",)), ("none", "", ("-W", "error::UserWarning"), (), ("tests",)),
+    # An @argument file, an interpreter flag and a node ID must not weaken or break the run.
+    ("none", "", (), (), ("@args.txt",)), ("none", "", (), ("-W", "error::UserWarning"), ("tests",)),
+    ("none", "", (), (), ("tests/test_c.py::test_maybe_fail",)),
 ])
-def test_contract_status_cannot_overclaim(monkeypatch, change):
-    _reader(monkeypatch, profile.STATUS_PATH, change)
-    with pytest.raises(ValueError):
-        profile.validate_v4_status()
+def test_parallel_matches_serial_rc_and_summary(tmp_path, fault, ini, cli, flags, paths):
+    # Skips under -ra/-vv need the report's tuple types; the warning must reach the summary; a command-line option
+    # keeps the run serial.
+    (tmp_path / "s").mkdir()
+    (tmp_path / "p").mkdir()
+    serial = _scratch_run(tmp_path / "s", fault, ini, cli, serial=True, python_flags=flags, paths=paths)
+    parallel = _scratch_run(tmp_path / "p", fault, ini, cli, python_flags=flags, paths=paths)
+    assert (parallel.returncode, _final(parallel)) == (serial.returncode, _final(serial))
+    assert "INCOMPLETE" not in parallel.stdout and "INTERNALERROR" not in parallel.stdout and "Traceback" not in parallel.stdout
+    assert serial.returncode in (0, 1) and _final(serial)
 
 
-@pytest.mark.parametrize("record,change,message", [
-    ("review-round2.json", lambda r: r.update(verdict="CHANGES_REQUIRED"), "review record drift"),
-    ("review-round2.json", lambda r: r["findings"][0].update(severity="MAJOR"), "review record drift"),
-    ("review-round1.json", lambda r: r["subjectSha256"].update({"scripts/selinux_matrix_v2.py": "0" * 64}), "review record drift"),
-])
-def test_review_records_are_bound_by_digest(monkeypatch, record, change, message):
-    _reader(monkeypatch, profile.CONTRACT_DIR + record, change)
-    with pytest.raises(ValueError, match=message):
-        profile.validate_v4_status()
+def test_a_worker_that_exits_early_fails_closed_without_echoing_worker_output(tmp_path):
+    result = _scratch_run(tmp_path, "crash")
+    assert result.returncode == 1 and "parallel-suite-incomplete" in _final(result)
+    assert "tests/test_b.py::test_after reported []" in result.stdout and "in flight: worker" in result.stdout
+    # Only the parent's own summary line: no worker summary, diagnostics record or log tail reaches the output.
+    summaries = [line for line in result.stdout.splitlines() if _re.search(r"\d+ (passed|failed).* in [0-9.]+s", line)]
+    assert len(summaries) == 1 and "PYTEST_DIAGNOSTIC" not in result.stdout
+    assert list((tmp_path / "tmp").glob("planeon-parallel-suite.*")), "the work directory stays for diagnosis"
 
 
-def test_reviewed_bytes_is_the_only_semantic_read():
-    tree = ast.parse(profile.regular_bytes(profile.VALIDATOR_PATH))
-    semantic = {"validate_v4_successor", "validate_w02a_agreement", "validate_v4_vectors", "validate_v4_status",
-                "validate_selinux_matrix_v2", "_json"}
-    for node in tree.body:
-        if isinstance(node, ast.FunctionDef) and node.name in semantic:
-            assert "regular_bytes" not in {n.id for n in ast.walk(node) if isinstance(n, ast.Name)}, node.name
+@pytest.mark.parametrize("fault,problem", [("forge", "for a node it does not own: 'tests/test_b.py::test_after'"),
+                                           ("garbage", "undecodable record")])
+def test_forged_or_undecodable_streams_fail_closed(tmp_path, fault, problem):
+    result = _scratch_run(tmp_path, fault)
+    assert result.returncode == 1 and problem in result.stdout and "parallel-suite-incomplete" in _final(result)
+
+
+def test_a_passing_session_removes_its_work_directory(tmp_path):
+    assert _scratch_run(tmp_path, "none").returncode == 0
+    assert not list((tmp_path / "tmp").glob("planeon-parallel-suite.*"))
+
+
+def test_sigterm_to_the_parent_kills_its_workers(tmp_path):
+    import signal as _signal
+    import time as _time
+    pid_file = tmp_path / "worker.pid"
+    parent = _scratch_run(tmp_path, "hang", extra_env={"SCRATCH_PID": str(pid_file)}, wait=False)
+    for _ in range(300):
+        if pid_file.exists() and pid_file.read_text():
+            break
+        _time.sleep(0.05)
+    worker = int(pid_file.read_text())
+    parent.send_signal(_signal.SIGTERM)
+    output, _ = parent.communicate(timeout=60)
+    assert parent.returncode != 0 and "parallel-suite-interrupted" in output
+    for _ in range(100):
+        try:
+            os.kill(worker, 0)
+        except ProcessLookupError:
+            break
+        _time.sleep(0.05)
+    else:
+        os.kill(worker, _signal.SIGKILL)
+        raise AssertionError("worker outlived its parent")
+
+
+def test_an_inherited_ignored_hangup_stays_ignored(tmp_path):
+    import signal as _signal
+    import time as _time
+    pid_file = tmp_path / "worker.pid"
+    env = _scratch_env(tmp_path, "hang", extra_env={"SCRATCH_PID": str(pid_file), "SCRATCH_SLEEP": "3"})
+    # Start the run with SIGHUP ignored, as nohup does; a hangup must then not interrupt the parent or its workers.
+    ignored = _subprocess.Popen(
+        [_sys.executable, "-c", "import os, signal, sys; signal.signal(signal.SIGHUP, signal.SIG_IGN); "
+                                "os.execv(sys.executable, [sys.executable, '-m', 'pytest', 'tests'])"],
+        cwd=tmp_path, env=env, stdout=_subprocess.PIPE, stderr=_subprocess.STDOUT, text=True)
+    for _ in range(300):
+        if pid_file.exists() and pid_file.read_text():
+            break
+        _time.sleep(0.05)
+    ignored.send_signal(_signal.SIGHUP)
+    output, _ = ignored.communicate(timeout=60)
+    assert ignored.returncode == 0 and "interrupted" not in output, output[-2000:]
+
+
+def test_deadline_fits_inside_the_verify_budget():
+    # argv 1-62 take about 2 minutes, so a 600 s worker deadline fires before the local 750 s and trusted 900 s caps.
+    assert SUITE.DEADLINE_SECONDS == 600
+
+
+_SESSION_ATTRIBUTES = {"session", "pluginmanager", "stats", "testscollected", "testsfailed", "terminalreporter",
+                       "listchain", "getparent", "iter_parents"}
+
+
+def _session_reads(tree):
+    for node in ast.walk(tree):
+        # A hook implementation (a conftest recorder, for example) can collect session-wide results.
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name.startswith("pytest_"):
+            return True
+        if isinstance(node, ast.Attribute) and (node.attr in _SESSION_ATTRIBUTES or node.attr.startswith("_planeon_")):
+            return True
+        if (isinstance(node, ast.Call) and getattr(node.func, "id", "") in ("getattr", "hasattr", "setattr")
+                and len(node.args) > 1 and isinstance(node.args[1], ast.Constant)
+                and (node.args[1].value in _SESSION_ATTRIBUTES or str(node.args[1].value).startswith("_planeon_"))):
+            return True
+    return False
+
+
+def test_only_the_predecessor_proof_reads_the_whole_session():
+    """Any new test, conftest or helper that reads session-wide state must be reviewed for PARENT_NODES (and listed)."""
+    readers = set()
+    for path in sorted([*(profile.ROOT / "tests").rglob("*.py"), *(profile.ROOT / "ci").glob("test_*.py"),
+                        profile.ROOT / "conftest.py"]):
+        if _session_reads(ast.parse(path.read_text())):
+            readers.add(path.relative_to(profile.ROOT).as_posix())
+    assert readers == SESSION_READERS
+
+
+SESSION_READERS = {
+    # The in-session predecessor proof: runs in the parent (PARENT_NODES).
+    "tests/linux_runner/test_build_and_predecessors.py",
+    # Registers the PredecessorOutcomes recorder that the proof reads; replayed reports reach it in the parent.
+    "tests/linux_runner/conftest.py",
+    # Looks up the capture manager for the diagnostics sink; reads no session results.
+    "conftest.py",
+    # This layer's test: checks only that the parallel-suite plugin is registered.
+    "tests/test_parallel_suite.py",
+}
+
+
+def _live_writers(tree):
+    """Module functions that write past output capture, directly or through a helper of the same module."""
+    functions = {node.name: node for node in tree.body if isinstance(node, ast.FunctionDef)}
+
+    def direct(function):
+        for node in ast.walk(function):
+            if isinstance(node, ast.Attribute) and node.attr == "disabled" and getattr(node.value, "id", "") in ("capsys", "capfd"):
+                return True
+            if isinstance(node, ast.Attribute) and node.attr in ("__stdout__", "__stderr__"):
+                return True
+            if (isinstance(node, ast.Call) and getattr(node.func, "attr", "") == "write"
+                    and getattr(node.func.value, "id", "") == "os" and node.args
+                    and isinstance(node.args[0], ast.Constant) and node.args[0].value in (1, 2)):
+                return True
+        return False
+
+    writers = {name for name, function in functions.items() if direct(function)}
+    while True:
+        more = {name for name, function in functions.items() if name not in writers
+                and any(isinstance(node, ast.Call) and getattr(node.func, "id", "") in writers for node in ast.walk(function))}
+        if not more:
+            return {name for name in writers if name.startswith("test_")}
+        writers |= more
+
+
+def test_every_test_that_writes_past_capture_runs_in_the_parent():
+    """Live output from a worker would land in its log; such tests, and the session reader, are exactly PARENT_NODES."""
+    writers = set()
+    for path in sorted([*(profile.ROOT / "tests").rglob("test_*.py"), *(profile.ROOT / "ci").glob("test_*.py")]):
+        rel = path.relative_to(profile.ROOT).as_posix()
+        writers |= {rel + "::" + name for name in _live_writers(ast.parse(path.read_text()))}
+    linux = _load("_met_perf_035_linux_conftest_copy2", "tests/linux_runner/conftest.py")
+    assert set(SUITE.PARENT_NODES) == writers | {linux.PREDECESSOR_PROOF_NODE}

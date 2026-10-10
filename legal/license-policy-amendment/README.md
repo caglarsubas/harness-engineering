@@ -1,6 +1,6 @@
 # License-policy amendment LIC-HOST-A1 (DATA_CHECK_ONLY)
 
-Status: **CONTRACT_CANDIDATE_ROUND4_AWAITING_INDEPENDENT_REVIEW**. Rounds 1 to 3 (`review-round1.json` to `review-round3.json`, bytes in `round1/` to `round3/`) returned CHANGES_REQUIRED; each finding is answered below.
+Status: **ADOPTED_FOR_SOURCE_PUBLICATION** (review round 4 PASS on `c12fa44`; `status.json`). Before that: Rounds 1 to 3 (`review-round1.json` to `review-round3.json`, bytes in `round1/` to `round3/`) returned CHANGES_REQUIRED; each finding is answered below.
 
 The owner decided three questions for the W03 backend distribution (`architecture/backend-distribution/`, W03-0). All
 three were decided on 2026-10-10, via the lane monitor:

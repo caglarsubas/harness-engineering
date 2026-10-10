@@ -1,0 +1,88 @@
+{
+ "schemaVersion": "planeon.internal.license-policy-amendment-status/v1",
+ "workItem": "LIC-HOST",
+ "amendmentId": "LIC-HOST-A1",
+ "status": "ADOPTED_FOR_SOURCE_PUBLICATION",
+ "reviewedSubject": {
+  "commit": "c12fa44ccdc07b3ed1df5f0611359d49f2fa2f9f",
+  "tree": "f2f4b2d1d0ea9f7c4e7296595be66a66ff315a75"
+ },
+ "rounds": [
+  {
+   "round": 1,
+   "subject": "0082017d9014494ea46faea75e57c77ea6b4ddf6",
+   "subjectTree": "03d5e1cc5fd2289084192d40d373e854e441e064",
+   "verdict": "CHANGES_REQUIRED",
+   "record": "legal/license-policy-amendment/review-round1.json",
+   "snapshot": "legal/license-policy-amendment/round1/",
+   "severities": [
+    "MAJOR",
+    "MINOR",
+    "NOTE"
+   ]
+  },
+  {
+   "round": 2,
+   "subject": "14c7e3e14523e33260bb5b99b3c5a2ad19082243",
+   "subjectTree": "f8310ba27daeb9d4344d59d1a354876d12d95830",
+   "verdict": "CHANGES_REQUIRED",
+   "record": "legal/license-policy-amendment/review-round2.json",
+   "snapshot": "legal/license-policy-amendment/round2/",
+   "severities": [
+    "MAJOR",
+    "MINOR",
+    "NOTE"
+   ]
+  },
+  {
+   "round": 3,
+   "subject": "6c4cba474ac738c02a3cb021748a09f2c7f071ea",
+   "subjectTree": "621fe8539286469993c631213bda4e9c97d1c0e1",
+   "verdict": "CHANGES_REQUIRED",
+   "record": "legal/license-policy-amendment/review-round3.json",
+   "snapshot": "legal/license-policy-amendment/round3/",
+   "severities": [
+    "MAJOR",
+    "NOTE"
+   ]
+  },
+  {
+   "round": 4,
+   "subject": "c12fa44ccdc07b3ed1df5f0611359d49f2fa2f9f",
+   "subjectTree": "f2f4b2d1d0ea9f7c4e7296595be66a66ff315a75",
+   "verdict": "PASS_FOR_SOURCE_PUBLICATION",
+   "record": "legal/license-policy-amendment/review-round4.json",
+   "snapshot": null,
+   "severities": [
+    "NOTE"
+   ]
+  }
+ ],
+ "carried": [
+  {
+   "item": "R4 L20 (NOTE)",
+   "to": "HE-001",
+   "action": "check the crt objects of the pinned Rust commit's musl target; GCC crtbegin/crtend objects, if present, come out OUT_OF_SCOPE and need an owner decision before the gate passes"
+  },
+  {
+   "item": "R3 L19 (3), R4 L20",
+   "to": "HE-008",
+   "action": "a reviewed mapping or purl identity from SBOM package names to the amendment's component names"
+  },
+  {
+   "item": "R4 L21, R3 L19 (7)",
+   "to": "LIC-HOST packet authority",
+   "action": "pin the amendment record by digest, covering the text fields the classifier does not read"
+  },
+  {
+   "item": "SC13 single-license check",
+   "to": "W02G-F2",
+   "action": "refer to this closure"
+  }
+ ],
+ "nonClaims": [
+  "The base policy is byte-identical and keeps its outcomes.",
+  "No artifact is released.",
+  "Not legal advice; the owner's decisions are the approving authority."
+ ]
+}

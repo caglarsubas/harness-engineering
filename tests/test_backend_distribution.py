@@ -1,4 +1,4 @@
-"""Exact source lineage for MET-PERF-032; verify-time changes with unchanged refusals and freshness."""
+"""Exact source lineage for MET-ENFORCE-019; the W03-0 backend distribution selection and plan are DATA_CHECK_ONLY."""
 import ast
 import json
 from copy import deepcopy
@@ -8,7 +8,20 @@ from types import MappingProxyType
 
 import pytest
 
-from scripts import validate_verify_headroom as profile
+from scripts import validate_backend_distribution as profile
+from scripts import validate_w01_amendment as uprofile
+from scripts import validate_seccomp_allowlists as jprofile
+from scripts import validate_sector_catalog as kprofile
+from scripts import validate_selinux_replay as tprofile
+from scripts import validate_parallel_suite as zprofile
+from scripts import validate_selinux_matrix_v2 as yprofile
+from scripts import validate_admission_channel_v3 as xprofile
+from scripts import validate_i07_policy_write_v2 as pprofile
+from scripts import validate_admission_semantics_v2 as aprofile
+from scripts import validate_i06_backend_profile_v2 as vprofile
+from scripts import validate_i05_gate_channel_v2 as cprofile
+from scripts import validate_native_profile_v3 as qprofile
+from scripts import validate_verify_headroom as hprofile
 from scripts import validate_sector_direction as dprofile
 from scripts import validate_selinux_matrix as sprofile
 from scripts import validate_i07_policy_write as wprofile
@@ -36,11 +49,6 @@ def packets():
             for path in (profile.ROOT / "task-packets").glob("*.yaml")}
 
 
-def layer_packets():
-    # The newer MET-ENFORCE-010 layer is projected away before this layer's payload checks.
-    return profile.successor.historical_catalog(packets())
-
-
 def changed_test():
     return next(path for path in profile._PROJECTION_RULES if path.startswith("tests/"))
 
@@ -49,20 +57,21 @@ def test_exact_current_source_and_complete_history_chain():
     assert profile.validate() is None
     current = packets()
     accepted = profile.historical_catalog(current)
-    assert len(current) == 221 and len(accepted) == 207
-    assert set(accepted) == set(current) - {profile.NEW_PACKET, profile.successor.NEW_PACKET,
-                                            profile.successor.successor.NEW_PACKET,
-                                            profile.successor.successor.successor.NEW_PACKET,
-                                            profile.successor.successor.successor.successor.NEW_PACKET,
-                                            profile.successor.successor.successor.successor.successor.NEW_PACKET,
-                                            profile.successor.successor.successor.successor.successor.successor.NEW_PACKET,
-                                            profile.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET,
-                                            profile.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET,
-                                            profile.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET,
-                                            profile.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET,
-                                            profile.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET,
-                                            profile.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET,
-                                            profile.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET}
+    assert len(current) == 221 and len(accepted) == 220
+    assert set(accepted) == set(current) - {profile.NEW_PACKET}
+    assert len(uprofile.historical_catalog(current)) == 219
+    assert len(jprofile.historical_catalog(current)) == 218
+    assert len(kprofile.historical_catalog(current)) == 217
+    assert len(tprofile.historical_catalog(current)) == 216
+    assert len(zprofile.historical_catalog(current)) == 215
+    assert len(yprofile.historical_catalog(current)) == 214
+    assert len(xprofile.historical_catalog(current)) == 213
+    assert len(pprofile.historical_catalog(current)) == 212
+    assert len(aprofile.historical_catalog(current)) == 211
+    assert len(vprofile.historical_catalog(current)) == 210
+    assert len(cprofile.historical_catalog(current)) == 209
+    assert len(qprofile.historical_catalog(current)) == 208
+    assert len(hprofile.historical_catalog(current)) == 207
     assert len(dprofile.historical_catalog(current)) == 206
     assert len(sprofile.historical_catalog(current)) == 205
     assert len(wprofile.historical_catalog(current)) == 204
@@ -85,7 +94,7 @@ def test_exact_current_source_and_complete_history_chain():
     for name, expected in profile.authority()["baselinePackets"].items():
         assert profile.digest(profile.regular_bytes("task-packets/" + name + ".yaml")) == expected
     for path, rule in profile._PROJECTION_RULES.items():
-        raw = profile.successor.historical_bytes(path, profile.regular_bytes(path))
+        raw = profile.regular_bytes(path)
         assert profile.digest(raw) == rule["afterSha256"]
         before = profile.historical_bytes(path, raw)
         assert profile.digest(before) == rule["beforeSha256"]
@@ -94,7 +103,7 @@ def test_exact_current_source_and_complete_history_chain():
 
 @pytest.mark.parametrize("fault", ["missing_new", "missing_old", "extra", "new_payload", "old_payload", "projected"])
 def test_catalog_refuses_all_packet_substitution_and_loss(fault):
-    current = deepcopy(layer_packets())
+    current = deepcopy(packets())
     if fault == "missing_new":
         current.pop(profile.NEW_PACKET)
     elif fault == "missing_old":
@@ -102,7 +111,7 @@ def test_catalog_refuses_all_packet_substitution_and_loss(fault):
     elif fault == "extra":
         current["UNREVIEWED-001"] = {}
     elif fault == "projected":
-        current = profile.historical_catalog(deepcopy(packets()))
+        current = profile.historical_catalog(current)
     else:
         name = profile.NEW_PACKET if fault == "new_payload" else "MET-001"
         current[name]["objective"] += " unreviewed"
@@ -111,7 +120,7 @@ def test_catalog_refuses_all_packet_substitution_and_loss(fault):
 
 
 def test_every_predecessor_payload_is_checked_without_a_verdict_cache():
-    current = layer_packets()
+    current = packets()
     profile.validate_packet_payloads(current)
     for name in sorted(profile.authority()["baselinePackets"]):
         original = current[name]
@@ -141,6 +150,32 @@ def test_exact_inverse_and_forward_test_round_trip_across_layers():
     assert profile.historical_test_bytes(current) == before
     assert profile.current_test_bytes(before) == current
     assert profile.current_test_bytes(before + b" ") == before + b" "
+    uprofile_before = uprofile.historical_bytes(path, current)
+    assert uprofile.current_test_bytes(uprofile_before) == current
+    jprofile_before = jprofile.historical_bytes(path, current)
+    assert jprofile.current_test_bytes(jprofile_before) == current
+    kprofile_before = kprofile.historical_bytes(path, current)
+    assert kprofile.current_test_bytes(kprofile_before) == current
+    tprofile_before = tprofile.historical_bytes(path, current)
+    assert tprofile.current_test_bytes(tprofile_before) == current
+    zprofile_before = zprofile.historical_bytes(path, current)
+    assert zprofile.current_test_bytes(zprofile_before) == current
+    yprofile_before = yprofile.historical_bytes(path, current)
+    assert yprofile.current_test_bytes(yprofile_before) == current
+    xprofile_before = xprofile.historical_bytes(path, current)
+    assert xprofile.current_test_bytes(xprofile_before) == current
+    pprofile_before = pprofile.historical_bytes(path, current)
+    assert pprofile.current_test_bytes(pprofile_before) == current
+    aprofile_before = aprofile.historical_bytes(path, current)
+    assert aprofile.current_test_bytes(aprofile_before) == current
+    vprofile_before = vprofile.historical_bytes(path, current)
+    assert vprofile.current_test_bytes(vprofile_before) == current
+    cprofile_before = cprofile.historical_bytes(path, current)
+    assert cprofile.current_test_bytes(cprofile_before) == current
+    qprofile_before = qprofile.historical_bytes(path, current)
+    assert qprofile.current_test_bytes(qprofile_before) == current
+    hprofile_before = hprofile.historical_bytes(path, current)
+    assert hprofile.current_test_bytes(hprofile_before) == current
     dprofile_before = dprofile.historical_bytes(path, current)
     assert dprofile.current_test_bytes(dprofile_before) == current
     sprofile_before = sprofile.historical_bytes(path, current)
@@ -183,14 +218,26 @@ def test_exact_inverse_and_forward_test_round_trip_across_layers():
         profile.historical_bytes(path, current + b" ")
 
 
-@pytest.mark.parametrize("route", ["authority", "changed", "old_bytes", "unchanged", "historical_test", "current_test", "catalog", "payloads", "dprofile_old", "sprofile_old", "wprofile_old", "rprofile_old", "gprofile_old", "iprofile_old", "nprofile_old", "resolution_old", "account_old", "canary_old", "isolated_old", "portable_old", "proof_old", "recheck_old", "verifier_old", "linux_old", "performance_old", "runner_old", "roadmap_old"])
+@pytest.mark.parametrize("route", ["authority", "changed", "old_bytes", "unchanged", "historical_test", "current_test", "catalog", "payloads", "uprofile_old", "jprofile_old", "kprofile_old", "tprofile_old", "zprofile_old", "yprofile_old", "xprofile_old", "pprofile_old", "aprofile_old", "vprofile_old", "cprofile_old", "qprofile_old", "hprofile_old", "dprofile_old", "sprofile_old", "wprofile_old", "rprofile_old", "gprofile_old", "iprofile_old", "nprofile_old", "resolution_old", "account_old", "canary_old", "isolated_old", "portable_old", "proof_old", "recheck_old", "verifier_old", "linux_old", "performance_old", "runner_old", "roadmap_old"])
 def test_newest_authority_is_freshly_checked_on_every_route(monkeypatch, route):
     path = changed_test()
     raw = profile.regular_bytes(path)
     before = profile.historical_bytes(path, raw) if route in ("current_test", "old_bytes") else None
-    current_packets = packets() if route == "catalog" else None
-    layer = layer_packets() if route == "payloads" else None
+    current_packets = packets() if route in ("catalog", "payloads") else None
     master_raw = roadmap.regular_bytes(roadmap.MASTER_PATH)
+    old_uprofile = uprofile.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "uprofile_old" else None
+    old_jprofile = jprofile.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "jprofile_old" else None
+    old_kprofile = kprofile.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "kprofile_old" else None
+    old_tprofile = tprofile.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "tprofile_old" else None
+    old_zprofile = zprofile.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "zprofile_old" else None
+    old_yprofile = yprofile.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "yprofile_old" else None
+    old_xprofile = xprofile.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "xprofile_old" else None
+    old_pprofile = pprofile.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "pprofile_old" else None
+    old_aprofile = aprofile.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "aprofile_old" else None
+    old_vprofile = vprofile.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "vprofile_old" else None
+    old_cprofile = cprofile.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "cprofile_old" else None
+    old_qprofile = qprofile.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "qprofile_old" else None
+    old_hprofile = hprofile.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "hprofile_old" else None
     old_dprofile = dprofile.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "dprofile_old" else None
     old_sprofile = sprofile.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "sprofile_old" else None
     old_wprofile = wprofile.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "wprofile_old" else None
@@ -218,7 +265,20 @@ def test_newest_authority_is_freshly_checked_on_every_route(monkeypatch, route):
         "historical_test": lambda: profile.historical_test_bytes(raw),
         "current_test": lambda: profile.current_test_bytes(before),
         "catalog": lambda: profile.historical_catalog(current_packets),
-        "payloads": lambda: profile.validate_packet_payloads(layer),
+        "payloads": lambda: profile.validate_packet_payloads(current_packets),
+        "uprofile_old": lambda: uprofile.historical_bytes(roadmap.MASTER_PATH, old_uprofile),
+        "jprofile_old": lambda: jprofile.historical_bytes(roadmap.MASTER_PATH, old_jprofile),
+        "kprofile_old": lambda: kprofile.historical_bytes(roadmap.MASTER_PATH, old_kprofile),
+        "tprofile_old": lambda: tprofile.historical_bytes(roadmap.MASTER_PATH, old_tprofile),
+        "zprofile_old": lambda: zprofile.historical_bytes(roadmap.MASTER_PATH, old_zprofile),
+        "yprofile_old": lambda: yprofile.historical_bytes(roadmap.MASTER_PATH, old_yprofile),
+        "xprofile_old": lambda: xprofile.historical_bytes(roadmap.MASTER_PATH, old_xprofile),
+        "pprofile_old": lambda: pprofile.historical_bytes(roadmap.MASTER_PATH, old_pprofile),
+        "aprofile_old": lambda: aprofile.historical_bytes(roadmap.MASTER_PATH, old_aprofile),
+        "vprofile_old": lambda: vprofile.historical_bytes(roadmap.MASTER_PATH, old_vprofile),
+        "cprofile_old": lambda: cprofile.historical_bytes(roadmap.MASTER_PATH, old_cprofile),
+        "qprofile_old": lambda: qprofile.historical_bytes(roadmap.MASTER_PATH, old_qprofile),
+        "hprofile_old": lambda: hprofile.historical_bytes(roadmap.MASTER_PATH, old_hprofile),
         "dprofile_old": lambda: dprofile.historical_bytes(roadmap.MASTER_PATH, old_dprofile),
         "sprofile_old": lambda: sprofile.historical_bytes(roadmap.MASTER_PATH, old_sprofile),
         "wprofile_old": lambda: wprofile.historical_bytes(roadmap.MASTER_PATH, old_wprofile),
@@ -247,12 +307,12 @@ def test_newest_authority_is_freshly_checked_on_every_route(monkeypatch, route):
         return value + b" " if relative == profile.AUTHORITY_PATH else value
 
     monkeypatch.setattr(profile, "regular_bytes", changed_reader)
-    with pytest.raises(ValueError, match="verify headroom history authority digest"):
+    with pytest.raises(ValueError, match="backend distribution history authority digest"):
         calls[route]()
 
 
 def test_catalog_uses_only_pinned_parsed_data_and_checks_each_input_again(monkeypatch):
-    current = layer_packets()
+    current = packets()
     profile._packet_rules()
 
     def unexpected_yaml(_raw):
@@ -273,7 +333,7 @@ def test_historical_catalog_reuses_frozen_packet_pins_but_rechecks_authority(mon
 
     monkeypatch.setattr(profile, "authority", unexpected)
     monkeypatch.setattr(profile, "safe_load", unexpected)
-    assert len(profile.historical_catalog(current)) == 207
+    assert len(profile.historical_catalog(current)) == 220
 
 
 def test_historical_catalog_does_not_initialize_predecessor_packet_rules(monkeypatch):
@@ -288,7 +348,7 @@ def test_historical_catalog_does_not_initialize_predecessor_packet_rules(monkeyp
         return original(path)
 
     monkeypatch.setattr(profile, "regular_bytes", counted)
-    assert len(profile.historical_catalog(current)) == 207
+    assert len(profile.historical_catalog(current)) == 220
     assert packet_reads == ["task-packets/" + profile.NEW_PACKET + ".yaml"]
     assert profile._packet_rules_for.cache_info().currsize == 0
 
@@ -304,14 +364,14 @@ def test_full_packet_expectations_initialize_once_and_remain_immutable(monkeypat
 
     monkeypatch.setattr(profile, "safe_load", counted)
     rules = profile._packet_rules()
-    assert len(rules) == 208 and len(parsed) == 207
-    assert profile._packet_rules() is rules and len(parsed) == 207
+    assert len(rules) == 221 and len(parsed) == 220
+    assert profile._packet_rules() is rules and len(parsed) == 220
     with pytest.raises(TypeError):
         rules["MET-001"] = ("0" * 64, "0" * 64)
 
 
 def test_first_full_packet_check_refuses_changed_old_yaml(monkeypatch):
-    current = layer_packets()
+    current = packets()
     profile._packet_rules_for.cache_clear()
     original = profile.regular_bytes
 
@@ -326,7 +386,7 @@ def test_first_full_packet_check_refuses_changed_old_yaml(monkeypatch):
 
 
 def test_cached_expected_rules_do_not_cache_payload_or_authority_verdict(monkeypatch):
-    current = layer_packets()
+    current = packets()
     profile.validate_packet_payloads(current)
     current["MET-001"]["objective"] += " unreviewed"
     with pytest.raises(ValueError, match="changed packet payload: MET-001"):
@@ -338,16 +398,16 @@ def test_cached_expected_rules_do_not_cache_payload_or_authority_verdict(monkeyp
         return raw + b" " if path == profile.AUTHORITY_PATH else raw
 
     monkeypatch.setattr(profile, "regular_bytes", changed_reader)
-    with pytest.raises(ValueError, match="verify headroom history authority digest"):
+    with pytest.raises(ValueError, match="backend distribution history authority digest"):
         profile.validate_packet_payloads(current)
 
 
 def test_cached_expected_rules_are_bound_to_source_root(tmp_path, monkeypatch):
-    current = layer_packets()
+    current = packets()
     profile.validate_packet_payloads(current)
     authority_dir = tmp_path / "architecture"
     authority_dir.mkdir()
-    (authority_dir / "verify-headroom-authority.json").write_bytes(
+    (authority_dir / "backend-distribution-authority.json").write_bytes(
         profile.regular_bytes(profile.AUTHORITY_PATH))
     (tmp_path / "task-packets").mkdir()
     monkeypatch.setattr(profile, "ROOT", tmp_path)
@@ -369,7 +429,7 @@ def test_historical_traversal_leaves_predecessor_refusal_to_its_owner(fault):
     previous = profile.historical_catalog(current)
     assert previous["MET-001"] is current["MET-001"]
     with pytest.raises(ValueError, match="changed packet payload"):
-        profile.validate_packet_payloads(profile.successor.historical_catalog(current))
+        profile.validate_packet_payloads(current)
 
 
 @pytest.mark.parametrize("fault", ["payload", "yaml"])
@@ -413,8 +473,7 @@ def test_normalized_validator_pin_rejects_source_mutation(monkeypatch, mutation)
         return raw
 
     monkeypatch.setattr(profile, "regular_bytes", changed_reader)
-    # The newer MET-ENFORCE-010 layer refuses a mutated validator before this layer.
-    with pytest.raises(ValueError, match="unreviewed current source: scripts/validate_verify_headroom.py"):
+    with pytest.raises(ValueError, match="backend distribution validator drift"):
         profile.validate()
 
 
@@ -553,14 +612,12 @@ def test_new_projection_has_no_predecessor_validator_import():
         if isinstance(node, ast.ImportFrom):
             assert "validate_" not in (node.module or "")
         elif isinstance(node, ast.Import):
-            # Only the newer successor layer may be imported, never a predecessor.
-            assert all("validate_" not in alias.name or alias.name == "validate_native_profile_v3"
-                       for alias in node.names)
+            assert all("validate_" not in alias.name for alias in node.names)
 
 
 def _count_authority_reads(monkeypatch):
     counts = {}
-    for module in (profile.successor, profile, dprofile, sprofile, wprofile, rprofile, gprofile, iprofile, nprofile, resolution, account, canary, isolated, portable, proof, recheck, verifier, linux, performance, runner):
+    for module in (profile, uprofile, jprofile, kprofile, tprofile, zprofile, yprofile, xprofile, pprofile, aprofile, vprofile, cprofile, qprofile, hprofile, dprofile, sprofile, wprofile, rprofile, gprofile, iprofile, nprofile, resolution, account, canary, isolated, portable, proof, recheck, verifier, linux, performance, runner):
         original = module.regular_bytes
 
         def counted(relative, _module=module, _original=original):
@@ -587,7 +644,7 @@ def test_every_newer_authority_is_read_exactly_once_per_route(monkeypatch, route
         "current_test": lambda: runner.current_test_bytes(before),
     }
     calls[route]()
-    expected = {module.__name__: 1 for module in (profile.successor, profile, dprofile, sprofile, wprofile, rprofile, gprofile, iprofile, nprofile, resolution, account, canary, isolated, portable, proof, recheck, verifier, linux, performance, runner)}
+    expected = {module.__name__: 1 for module in (profile, uprofile, jprofile, kprofile, tprofile, zprofile, yprofile, xprofile, pprofile, aprofile, vprofile, cprofile, qprofile, hprofile, dprofile, sprofile, wprofile, rprofile, gprofile, iprofile, nprofile, resolution, account, canary, isolated, portable, proof, recheck, verifier, linux, performance, runner)}
     if route == "current_test":
         # The forward route reads this layer's newest bytes and then projects them forward once more.
         assert all(counts[name] >= 1 for name in expected) and set(counts) == set(expected)
@@ -595,169 +652,92 @@ def test_every_newer_authority_is_read_exactly_once_per_route(monkeypatch, route
         assert counts == expected
 
 
-def _route_source(path="tests/test_selinux_matrix.py"):
-    return profile.reviewed_bytes(path).decode("utf-8")
+def test_the_selection_and_plan_hold_for_this_era():
+    assert profile.validate_backend_distribution() is None
 
 
-def test_every_route_test_computes_only_its_own_inputs():
-    counts = {path: profile.validate_route_locality(path, profile.reviewed_bytes(path))
-              for path in profile.ROUTE_TEST_PATHS}
-    assert len(counts) == 17 and min(counts.values()) >= 6
-    assert profile.VALIDATOR_PATH.replace("scripts/validate_", "tests/test_") in counts
-
-
-@pytest.mark.parametrize("change,message", [
-    (lambda s: s.replace(' if route == "wprofile_old" else None', "", 1), "route-local setup old_wprofile"),
-    (lambda s: s.replace('if route == "wprofile_old" else None', 'if route == "rprofile_old" else None', 1),
-     "route-local setup old_wprofile"),
-    (lambda s: s.replace('if route in ("current_test", "old_bytes") else None', 'if route == "old_bytes" else None', 1),
-     "route-local setup before"),
-    (lambda s: s.replace("    calls[route]()\n", "    calls[route]()\n    assert before is not None or route\n", 1),
-     "route refusal tail"),
-    (lambda s: s.replace('    calls = {\n        "authority": profile.authority,\n', '    calls = {\n', 1),
-     "route table matches the parameters"),
-    (lambda s: s.replace('lambda: wprofile.historical_bytes(roadmap.MASTER_PATH, old_wprofile)',
-                         'lambda: wprofile.historical_bytes(roadmap.MASTER_PATH, '
-                         'wprofile.historical_bytes(roadmap.MASTER_PATH, master_raw))', 1),
-     "route call computes nothing itself"),
-    (lambda s: s.replace('    with pytest.raises(ValueError, match="selinux matrix history authority digest"):\n'
-                         '        calls[route]()\n', '    calls[route]()\n', 1), "route refusal tail"),
-    (lambda s: s.replace('match="selinux matrix history authority digest"', 'match="digest"', 1), "route refusal tail"),
-    (lambda s: s.replace('match="selinux matrix history authority digest"', 'match="| history authority digest"', 1),
-     "route refusal tail"),
-    (lambda s: s.replace("original = profile.regular_bytes", "original = linux.regular_bytes", 1)
-     .replace("relative == profile.AUTHORITY_PATH", "relative == linux.AUTHORITY_PATH", 1)
-     .replace('monkeypatch.setattr(profile, "regular_bytes"', 'monkeypatch.setattr(linux, "regular_bytes"', 1),
-     "route refusal tail"),
-    (lambda s: s.replace('    before = profile.historical_bytes(path, raw) if route in ("current_test", "old_bytes") else None',
-                         '    before = (lambda: profile.historical_bytes(path, raw)) if route in ("current_test", "old_bytes") '
-                         'else None', 1), "route setup defers no computation"),
-])
-def test_eager_or_misrouted_setup_is_refused(change, message):
-    source = _route_source()
-    changed = change(source)
-    assert changed != source
-    with pytest.raises(ValueError, match=message):
-        profile.validate_route_locality("tests/test_selinux_matrix.py", changed.encode("utf-8"))
-
-
-def test_status_mutations_stub_only_a_replay_that_reads_no_status():
-    test_raw = profile.reviewed_bytes(profile.STATUS_TEST_PATH)
-    validator_raw = profile.reviewed_bytes(profile.STATUS_VALIDATOR_PATH)
-    model_raw = profile.reviewed_bytes(profile.STATUS_MODEL_PATH)
-    assert profile.validate_status_stub(test_raw, validator_raw, model_raw) is None
-    without_control = test_raw.replace(b"    assert profile.validate_native_profile() is None and len(replays) == 1\n", b"", 1)
-    with pytest.raises(ValueError, match="stub only the vector replay"):
-        profile.validate_status_stub(without_control, validator_raw, model_raw)
-    for changed_model in (model_raw.replace(b"import hashlib\n", b"import hashlib\nimport pathlib\n", 1),
-                          model_raw + b"\n\ndef _peek(path):\n    return path.read_bytes()\n",
-                          model_raw + b"\n\ndef _peek(url):\n    from jsonschema.validators import urlopen\n    return urlopen(url)\n",
-                          model_raw + b"\n\ndef _peek(path):\n    return __import__('o' + 's').listdir(path)\n",
-                          model_raw + b"\n\ndef _peek(path):\n    return __builtins__['open'](path)\n"):
-        assert changed_model != model_raw
-        with pytest.raises(ValueError, match="reads no status bytes"):
-            profile.validate_status_stub(test_raw, validator_raw, changed_model)
-    head = b"def validate_vectors(schema: dict, vectors: dict, v1_schema: dict, v1_vectors: dict) -> int:\n"
-    reading = validator_raw.replace(head, head + b"    _json_file(STATUS_PATH)\n", 1)
-    assert reading != validator_raw
-    with pytest.raises(ValueError, match="reads no status bytes"):
-        profile.validate_status_stub(test_raw, reading, model_raw)
-
-
-@pytest.mark.parametrize("old,new", [
-    (b"    return dict(_PROJECTED[key])\n", b"    return _PROJECTED[key]\n"),
-    (b"    key = tuple(sorted(inputs.items()))\n", b"    key = tuple(sorted(inputs))\n"),
-    (b"    inputs = projected_inputs(inputs)\n",
-     b"    from scripts.validate_credential_ordering import historical_bytes\n"
-     b"    inputs = {path: historical_bytes(path, raw) for path, raw in projected_inputs(inputs).items()}\n"),
-])
-def test_inventory_shares_only_exact_projections(old, new):
-    raw = profile.reviewed_bytes(profile.LIFECYCLE_TEST_PATH)
-    assert profile.validate_inventory_projection(raw) is None
-    assert raw.count(old) == 1
-    with pytest.raises(ValueError, match="shares only exact projections"):
-        profile.validate_inventory_projection(raw.replace(old, new, 1))
-
-
-def _unique_sources():
-    return profile.reviewed_bytes(profile.READINESS_PATH), profile.reviewed_bytes(profile.UNIQUE_PATH)
-
-
-def test_grouped_unique_items_matches_jsonschema_on_the_fixed_corpus():
-    assert profile.validate_schema_unique(*_unique_sources()) == 4028
-
-
-@pytest.mark.parametrize("old,new,message", [
-    (b"        bucket.append(item)\n", b"        pass\n", "uniqueItems answer differs"),
-    (b"    if not plain_and_shallow(container):\n        return _utils.uniq(container)\n", b"",
-     "uniqueItems answer differs"),
-    (b"MAX_GROUPED_DEPTH = 100\n", b"MAX_GROUPED_DEPTH = 1000\n", "reaches every comparison path"),
-    (b"            if id(value) in seen:\n                return False\n", b"", "reaches every comparison path"),
-    (b'{"uniqueItems": unique_items}', b'{"uniqueItems": unique_items, "minItems": unique_items}',
-     "only uniqueItems differs"),
-    (b'JSONSCHEMA_VERSION = "4.24.0"', b'JSONSCHEMA_VERSION = "4.25.0"', "only uniqueItems differs"),
-])
-def test_a_changed_grouped_check_is_refused(old, new, message):
-    readiness, unique = _unique_sources()
-    assert unique.count(old) == 1
-    changed = unique.replace(old, new)
-    with pytest.raises(ValueError, match="reviewed schema_unique bytes"):
-        profile.validate_schema_unique(readiness, changed)
-    # Beyond the byte pin, the behavioural check refuses each change on its own.
-    with pytest.raises(ValueError, match=message):
-        profile.check_grouped_module(profile.reviewed_module(changed))
-
-
-def test_the_grouped_module_cannot_rebind_its_oracle():
-    unique = _unique_sources()[1]
-    rebinding = unique + b"\n_utils.uniq = unique\n"
-    from jsonschema import _utils
-    original = _utils.uniq
-    try:
-        with pytest.raises(ValueError, match="leaves jsonschema unchanged"):
-            profile.reviewed_module(rebinding)
-    finally:
-        _utils.uniq = original
-
-
-def test_the_reviewed_module_is_the_one_under_test(monkeypatch):
-    from scripts import schema_unique
-    monkeypatch.setattr(schema_unique, "unique", lambda container: True)
-    assert profile.validate_schema_unique(*_unique_sources()) == 4028
-
-
-def test_readiness_must_build_the_grouped_validator():
-    raw, unique = _unique_sources()
-    old = b"    validator = SchemaInstanceValidator(schema, format_checker=SCHEMA_FORMAT_CHECKER)\n"
-    assert raw.count(old) == 1
-    changed = raw.replace(old, b"    validator = jsonschema.Draft202012Validator(schema, format_checker=SCHEMA_FORMAT_CHECKER)\n")
-    with pytest.raises(ValueError, match="use SchemaInstanceValidator"):
-        profile.validate_schema_unique(changed, unique)
-
-
-def test_grouped_validator_reports_exactly_draft_2020_12_errors():
-    import jsonschema
-    from scripts import schema_unique
-    schema = {"type": "array", "uniqueItems": True,
-              "items": {"type": "object", "properties": {"paths": {"type": "array", "uniqueItems": True}}}}
-    rows = [{"paths": [{"a": 1}, {"a": 1.0}]}, {"paths": [{"a": 1}, {"a": True}]}, {"paths": [[1], [1]]},
-            {"paths": ["x", "y"]}, {"paths": [{"a": 1}, {"a": True}]}]
-    for instance in (rows, rows[:3], [rows[0], json.loads(json.dumps(rows[0]))], []):
-        expected = [(list(e.absolute_path), e.message) for e in jsonschema.Draft202012Validator(schema).iter_errors(instance)]
-        got = [(list(e.absolute_path), e.message) for e in schema_unique.SchemaInstanceValidator(schema).iter_errors(instance)]
-        assert got == expected
-    assert any(expected for expected in [list(jsonschema.Draft202012Validator(schema).iter_errors(rows))])
-
-
-def test_reviewed_bytes_is_the_only_semantic_read(monkeypatch):
-    seen = []
+@pytest.mark.parametrize("path", ["scripts/backend_distribution.py", "scripts/w03_plan.py"])
+def test_the_era_models_are_executed_from_reviewed_bytes(monkeypatch, path):
     original = profile.reviewed_bytes
 
-    def recorded(path):
-        seen.append(path)
-        return original(path)
+    def changed(target):
+        raw = original(target)
+        return raw + b"\nraise ValueError('era model executed')\n" if target == path else raw
 
-    monkeypatch.setattr(profile, "reviewed_bytes", recorded)
-    profile.validate_verify_headroom()
-    assert seen == [*profile.ROUTE_TEST_PATHS, profile.STATUS_TEST_PATH, profile.STATUS_VALIDATOR_PATH,
-                    profile.STATUS_MODEL_PATH, profile.LIFECYCLE_TEST_PATH, profile.READINESS_PATH, profile.UNIQUE_PATH]
+    monkeypatch.setattr(profile, "reviewed_bytes", changed)
+    with pytest.raises(ValueError, match="era model executed"):
+        profile.validate_backend_distribution()
+
+
+def test_the_review_binding_is_checked_before_any_model_runs(monkeypatch):
+    original = profile.reviewed_bytes
+    executed = []
+
+    def changed(target):
+        raw = original(target)
+        if target == profile.STATUS_PATH:
+            return raw.replace(b'"ADOPTED_FOR_SOURCE_PUBLICATION"', b'"CANDIDATE"', 1)
+        if target in (profile.SELECTION_MODEL, profile.PLAN_MODEL):
+            executed.append(target)
+        return raw
+
+    monkeypatch.setattr(profile, "reviewed_bytes", changed)
+    with pytest.raises(ValueError, match="adopted W03-0 status"):
+        profile.validate_backend_distribution()
+    assert executed == []
+
+
+@pytest.mark.parametrize("path,old,new", [
+    ("architecture/backend-distribution/status.json", b'"104b11529b6448a2c208450e5fbbd677e5dd8069"',
+     b'"add1b45f062c85b6b0a618f5e3388b0f920d13ae"'),
+    ("architecture/backend-distribution/review-round5.json", b'"verdict": "PASS_FOR_SOURCE_PUBLICATION"',
+     b'"verdict": "CHANGES_REQUIRED"'),
+    ("architecture/backend-distribution/review-round5.json", b'"severity": "NOTE"', b'"severity": "MINOR"'),
+    ("architecture/backend-distribution/review-round4.json", b'"verdict": "CHANGES_REQUIRED"',
+     b'"verdict": "PASS_FOR_SOURCE_PUBLICATION"'),
+    ("architecture/backend-distribution/selection.json", b'"selected": "L-a"', b'"selected": "L-b"'),
+    ("architecture/w03-plan/plan.json", b'"selected": "S-b"', b'"selected": "S-a"'),
+])
+def test_the_adoption_and_decision_records_bind(monkeypatch, path, old, new):
+    original = profile.reviewed_bytes
+
+    def changed(target):
+        raw = original(target)
+        if target != path:
+            return raw
+        assert old in raw
+        return raw.replace(old, new, 1)
+
+    monkeypatch.setattr(profile, "reviewed_bytes", changed)
+    with pytest.raises(ValueError):
+        profile.validate_backend_distribution()
+
+
+def test_a_later_successor_leaves_this_era_valid_through_projection(monkeypatch):
+    original = profile.regular_bytes
+    era = {path: original(path) for path in ("architecture/backend-distribution/selection.json",
+                                             "architecture/seccomp-allowlists-v2/status.json")}
+    later = {"architecture/backend-distribution/selection.json":
+             era["architecture/backend-distribution/selection.json"].replace(b'"v3.7.2"', b'"v3.7.3"', 1),
+             "architecture/seccomp-allowlists-v2/status.json":
+             era["architecture/seccomp-allowlists-v2/status.json"] + b"\n"}
+    # The later tree on disk: a revised selection and a changed W02d v2 record (for example by W02d v3).
+    monkeypatch.setattr(profile, "regular_bytes", lambda path: later.get(path) or original(path))
+    with pytest.raises(ValueError):
+        profile.validate_backend_distribution()
+    # A bridged successor projects its own edits away first.
+    monkeypatch.setattr(profile, "reviewed_bytes", lambda path: era[path] if path in later else original(path))
+    assert profile.validate_backend_distribution() is None
+
+
+def test_reviewed_bytes_is_the_only_semantic_read():
+    tree = ast.parse(profile.regular_bytes(profile.VALIDATOR_PATH))
+    names = {"_era_model", "validate_backend_distribution_status", "validate_backend_distribution"}
+    seen = set()
+    for node in tree.body:
+        if isinstance(node, ast.FunctionDef) and node.name in names:
+            seen.add(node.name)
+            used = {name.id for name in ast.walk(node) if isinstance(name, ast.Name)}
+            attributes = {attribute.attr for attribute in ast.walk(node) if isinstance(attribute, ast.Attribute)}
+            assert not used & {"regular_bytes", "open"} and not attributes & {"read_bytes", "read_text", "open"}
+    assert seen == names

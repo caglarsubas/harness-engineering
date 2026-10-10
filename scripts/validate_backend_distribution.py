@@ -5,6 +5,7 @@ from __future__ import annotations
 import ast
 import base64
 import binascii
+import builtins
 import copy
 import hashlib
 import json
@@ -23,7 +24,7 @@ except ImportError:
 
 ROOT = Path(__file__).resolve().parents[1]
 AUTHORITY_PATH = "architecture/backend-distribution-authority.json"
-AUTHORITY_SHA256 = "ce3904469879ccbb77952fa8517061cee6bc9615155e383fe724feb09afaec3a"
+AUTHORITY_SHA256 = "8300bd32f701040cdce3c3f403df05d1870114d9823e6d7149b51502ce63d6e4"
 VALIDATOR_PATH = "scripts/validate_backend_distribution.py"
 BASE_COMMIT = "195c4c98e7142a08ab34a62ceaf7c07a2f2da687"
 NEW_PACKET = "MET-ENFORCE-019"
@@ -342,14 +343,71 @@ def validate_packet_payloads(packets: dict[str, Any]) -> None:
 
 # MET-ENFORCE-019 (roadmap W03-0) publishes the W03 backend distribution selection and the W03 plan (owner decisions Q1,
 # Q2, Q3, Q4, Q5, Q-L, Q-L2, Q-L3, Q-E, Q-N and Q-S, via the lane monitor). Repository bytes are read only through
-# reviewed_bytes, so a later bridged successor projects its own edits away first. Both reference modules are executed
-# from this era's reviewed bytes, not imported, so a later revision of either cannot change how this layer judges its era.
+# reviewed_bytes, so a later bridged successor projects its own edits away first. Every reviewed file of this era is bound
+# by digest before anything is parsed, and both reference modules are executed from this era's reviewed bytes, not
+# imported, together with this era's safe_yaml, so a later revision of any of them cannot change how this layer judges
+# its era.
 CONTRACT_DIR = "architecture/backend-distribution/"
+PLAN_DIR = "architecture/w03-plan/"
 SELECTION_MODEL = "scripts/backend_distribution.py"
 PLAN_MODEL = "scripts/w03_plan.py"
+SAFE_YAML = "scripts/safe_yaml.py"
 STATUS_PATH = CONTRACT_DIR + "status.json"
 REVIEWED_SUBJECT = {"commit": "104b11529b6448a2c208450e5fbbd677e5dd8069", "tree": "a73a213b495910117d58cdf600a107c9e53a1b8f"}
-REVIEW_ROUNDS = 5
+ROUNDS = ((1, "CHANGES_REQUIRED"), (2, "CHANGES_REQUIRED"), (3, "CHANGES_REQUIRED"), (4, "CHANGES_REQUIRED"),
+          (5, "PASS_FOR_SOURCE_PUBLICATION"))
+LAST_ROUND = len(ROUNDS)
+REVIEW_SCHEMA = "harness.planeon.ai/w03-selection-review/v1"
+STATUS_KEYS = ("schemaVersion", "workItem", "status", "reviewedSubject", "rebase", "rounds", "carried", "nonClaims")
+ROW_KEYS = ("round", "subject", "subjectTree", "verdict", "record", "snapshot", "severities")
+SEVERITIES = ("MAJOR", "MINOR", "NOTE")
+NON_CLAIMS = ["No artifact is installed or executed.", "No I06 evidence record exists.", "E01-E12 stay OPEN_UNPROVEN.",
+              "Not native or tenant acceptance."]
+SELECTION_DECISIONS = {"Q4": "a", "Q-L": "L-a", "Q-L2": "L2-a", "Q-L3": "L3-a", "Q-E": "E-a", "Q-N": "N-a"}
+PLAN_DECISIONS = {"Q1": "a", "Q2": "a", "Q3": "a", "Q5": "a", "Q-L3": "L3-a", "Q-S": "S-b"}
+# The adopted bytes (f38487e) of every reviewed file, round copy and review record, the status record, both reference
+# modules, and the safe_yaml the selection module imports.
+ERA_SHA256 = MappingProxyType({
+    "architecture/backend-distribution/README.md": "86a44a8d56bfa93098e233f90516c180966314eecbe0906dbffb9bf9fe2b7a81",
+    "architecture/backend-distribution/REVIEW_BRIEF.md": "07392779790aa3657acc17770ba75662bf10dde54cf9b5b57297d19fdf7c9bf6",
+    "architecture/backend-distribution/review-round1.json": "7121854c36005edaf3120de42e2ec6c51acfdc2ed314d7d471e6ea61d99df547",
+    "architecture/backend-distribution/review-round2.json": "2d58ad8885952adbf816bbffb4adfcdce9ffee84f11129b7ac1bb209feb5e1f7",
+    "architecture/backend-distribution/review-round3.json": "9a4c6a78ccc206b27e2d18fdcd5d5ebec785bee7011f2c7ad711a2cfdae38bf8",
+    "architecture/backend-distribution/review-round4.json": "77e40813c9914c45ceaf397d0fef6ba890732faf2d9c5e5adb90987e5bdfe403",
+    "architecture/backend-distribution/review-round5.json": "277c45930217b8d870393dcbc84e0be4e41809275dff769e8292327ab8842cc8",
+    "architecture/backend-distribution/round1/README.md": "ef9f72e73f7c75dd00704d533c6255b7d01373def1ebb72cb1be1fc91b91a74c",
+    "architecture/backend-distribution/round1/REVIEW_BRIEF.md": "349ae57cc05fa7c965a2776bdee4a781d3b3906790a42cfc750c081194538509",
+    "architecture/backend-distribution/round1/scripts/backend_distribution.py": "510b003fbfe822f5e161ba83255653083a024a466e681a2c8744def44b1ee171",
+    "architecture/backend-distribution/round1/selection.json": "69d2d563b29fe03565f0d005396a1fedce2ea52fb925bc5d9fd15711e510e06a",
+    "architecture/backend-distribution/round2/README.md": "c9f9c34905b60f1853b617d9249f2ae0ae56cb775891bec849d959f32dfbd8fd",
+    "architecture/backend-distribution/round2/REVIEW_BRIEF.md": "ef9c8160432f57882c2e57655f2f3f05c868fbc99f597ba759ccad32faafdca7",
+    "architecture/backend-distribution/round2/scripts/backend_distribution.py": "90cf6a7f2227a45c15f02a51c7412df9e4a2b5cef1aff3f413fcf2e8b4dbcc7b",
+    "architecture/backend-distribution/round2/scripts/w03_plan.py": "89bc276bcb74f481a697e513dcda66e9b5584e03d2d16ffde785ee01464c33c7",
+    "architecture/backend-distribution/round2/selection.json": "45e8e092e09c04c93517b54ce6f37102e8ca84511011f81f08132b950cc8a5cc",
+    "architecture/backend-distribution/round2/w03-plan/README.md": "835fe2b5d1a3fde71da02c3ddaf05a333733c483d378c5acdd5ce67d7f0c5039",
+    "architecture/backend-distribution/round2/w03-plan/plan.json": "e5e180ef580b2ebc62bf83f542fd98a6726363b5098df4494f5c39e0a16bc3b7",
+    "architecture/backend-distribution/round3/README.md": "64c41a3f7e3ac12b4ec6db115ae755e5407c724f2a37a26c9efec20e358c48d3",
+    "architecture/backend-distribution/round3/REVIEW_BRIEF.md": "f66bab18e5c2af7a6eeb4842d5ab112571a71fa6b8b5b1b8698aa443f043417e",
+    "architecture/backend-distribution/round3/scripts/backend_distribution.py": "fb7ee7268e471f3687e03196760f41e61204390995a72cf3730b04075d1226ae",
+    "architecture/backend-distribution/round3/scripts/w03_plan.py": "7e1b7fd39b9767ee6dd13a4bdeb47284aa73941e743a6c52b5896a171b7a3636",
+    "architecture/backend-distribution/round3/selection.json": "c08ba6a6123f552d1dd98a5269e0e0fed4bd8bbcb9166c3145dccf73c020bf05",
+    "architecture/backend-distribution/round3/w03-plan/README.md": "b4eb2bf9ed84e41e619d12821b081328c75b0632f23d0ab58eca2b8127c3f999",
+    "architecture/backend-distribution/round3/w03-plan/plan.json": "a1512984adb6f93e2636359e68098ca7e6988725540bf1ff7b62df6522f24a34",
+    "architecture/backend-distribution/round4/README.md": "4dae0d3af3ec023c9d42b5cdacf8aef54ee7332c66d3171caeba582b93404eb9",
+    "architecture/backend-distribution/round4/REVIEW_BRIEF.md": "0aedcc276cf151a95dc535c9c4b8308d7561033cebfc0ca23c5980c5a3c5ebdb",
+    "architecture/backend-distribution/round4/scripts/backend_distribution.py": "a2aa0580ba93d5fa836cf715a0da16f4642cd65236aae07f6fb436490fa037fa",
+    "architecture/backend-distribution/round4/scripts/w03_plan.py": "23b91b2743ae0a0efb70d84d4a06b8ca4117dadb63e1f9ca94c118a8336911bf",
+    "architecture/backend-distribution/round4/selection.json": "e5c550cf15621d079d93fe85ec306f7e00bf0128aaff055d9e00b66fa5ac9891",
+    "architecture/backend-distribution/round4/w03-plan/README.md": "92825e183ade9a7ee772f6223cc359a42f73b63e6567471c5577e44242029f66",
+    "architecture/backend-distribution/round4/w03-plan/plan.json": "5043ba7e5c84b6ee4ebc368e44e419bbb772600b911ef07abda8cb7b743d1948",
+    "architecture/backend-distribution/selection.json": "e6750f20a56f76486c24e35114b9e0b204357e51e3f97e560a34c544bf238952",
+    "architecture/backend-distribution/status.json": "e46244543ec10024ccf2cc59f31e512e417d632b1d1cbad8011cd3538680e395",
+    "architecture/w03-plan/README.md": "bfc7d685de013f7f65d83009b3ef8e8fcd589289dde3fb207870db220d919915",
+    "architecture/w03-plan/plan.json": "40b501f48fe0eb13d64d2e0cf7fa542817f0fa3034d86058c233d1a3accaff9a",
+    "scripts/backend_distribution.py": "bcdceb73de739a34462a1dcfa6fa3ac2799d8aaaafe69d255739d39d20dc0b47",
+    "scripts/safe_yaml.py": "99c673560e65e58cdc1abe86e53472feaf93e546dd76cb9f3ba051beef5c49d7",
+    "scripts/w03_plan.py": "357b8e568bfe7e0821a4875a1e4c5f6b50a744a3898a3b6cfac4a8dc7ec71c29"
+})
 
 
 def reviewed_bytes(path: str) -> bytes:
@@ -357,42 +415,102 @@ def reviewed_bytes(path: str) -> bytes:
     return regular_bytes(path)
 
 
-def _era_model(path: str, name: str) -> types.ModuleType:
-    """A reference module of this era, executed from its reviewed bytes."""
+def _json(path: str) -> Any:
+    return parse(reviewed_bytes(path))
+
+
+def _bound(check: Any, message: str) -> None:
+    """A structural check over a module's result; a malformed result is refused, not raised."""
+    try:
+        holds = check()
+    except (KeyError, TypeError, AttributeError, IndexError):
+        holds = False
+    require(holds is True, message)
+
+
+def _era_import(era: dict) -> Any:
+    """An import function that resolves the named modules to this era's executed copies and everything else normally."""
+    def era_import(name, globals=None, locals=None, fromlist=(), level=0):
+        if level == 0 and name in era:
+            return era[name]
+        return builtins.__import__(name, globals, locals, fromlist, level)
+    return era_import
+
+
+def _era_model(path: str, name: str, imports: dict | None = None) -> types.ModuleType:
+    """A reference module of this era, executed from its reviewed bytes; named imports resolve to this era's copies."""
     module = types.ModuleType(name)
     module.__file__ = str(ROOT / path)
+    if imports:
+        namespace = dict(vars(builtins))
+        namespace["__import__"] = _era_import(imports)
+        module.__dict__["__builtins__"] = namespace
     exec(compile(reviewed_bytes(path), path, "exec"), module.__dict__)
     return module
 
 
+def validate_era_bytes() -> None:
+    """Every reviewed file of this era is bound by digest before anything is parsed or executed."""
+    for path, expected in ERA_SHA256.items():
+        require(digest(reviewed_bytes(path)) == expected, "W03-0 reviewed bytes are bound: " + path)
+
+
 def validate_backend_distribution_status() -> None:
-    """Adopted after five independent review rounds, the last a pass on the reviewed subject."""
-    status = parse(reviewed_bytes(STATUS_PATH))
-    require(type(status) is dict and status.get("schemaVersion") == "planeon.internal.backend-distribution-status/v1"
-            and status.get("workItem") == "W03-0" and status.get("status") == "ADOPTED_FOR_SOURCE_PUBLICATION"
-            and status.get("reviewedSubject") == REVIEWED_SUBJECT, "adopted W03-0 status")
-    rounds = status.get("rounds")
-    require(type(rounds) is list and [row.get("round") for row in rounds if type(row) is dict]
-            == list(range(1, REVIEW_ROUNDS + 1)), "five review rounds in order")
+    """Adopted after five independent review rounds, each bound to its record, the last a pass on the reviewed subject."""
+    status = _json(STATUS_PATH)
+    require(type(status) is dict and set(status) == set(STATUS_KEYS)
+            and status["schemaVersion"] == "planeon.internal.backend-distribution-status/v1"
+            and status["workItem"] == "W03-0" and status["status"] == "ADOPTED_FOR_SOURCE_PUBLICATION"
+            and status["reviewedSubject"] == REVIEWED_SUBJECT and status["nonClaims"] == NON_CLAIMS
+            and type(status["carried"]) is list and len(status["carried"]) > 0
+            and all(type(row) is dict and set(row) == {"item", "to", "action"} for row in status["carried"]),
+            "adopted W03-0 status")
+    rounds = status["rounds"]
+    require(type(rounds) is list and all(type(row) is dict for row in rounds)
+            and [(row.get("round"), row.get("verdict")) for row in rounds] == list(ROUNDS), "five review rounds in order")
     for row in rounds:
-        record = parse(reviewed_bytes(row["record"]))
-        require(type(record) is dict and record.get("round") == row["round"]
+        number = row["round"]
+        require(set(row) == set(ROW_KEYS) and row["record"] == CONTRACT_DIR + "review-round%d.json" % number
+                and row["snapshot"] == (CONTRACT_DIR + "round%d/" % number if number < LAST_ROUND else None),
+                "review round %d row" % number)
+        record = _json(row["record"])
+        require(type(record) is dict and record.get("schemaVersion") == REVIEW_SCHEMA and record.get("round") == number
                 and record.get("subjectCommit") == row["subject"] and record.get("subjectTree") == row["subjectTree"]
-                and record.get("verdict") == row["verdict"], "review round %d identity" % row["round"])
-        last = row["round"] == REVIEW_ROUNDS
-        require(row["verdict"] == ("PASS_FOR_SOURCE_PUBLICATION" if last else "CHANGES_REQUIRED"),
-                "review round %d verdict" % row["round"])
-        if last:
-            require(row["subject"] == REVIEWED_SUBJECT["commit"] and row["subjectTree"] == REVIEWED_SUBJECT["tree"]
-                    and all(type(f) is dict and f.get("severity") == "NOTE" for f in record.get("findings", [None])),
-                    "the passing round reviewed this subject and left notes only")
+                and record.get("verdict") == row["verdict"], "review round %d identity" % number)
+        actions = record.get("actions")
+        require(type(actions) is dict and actions.get("filesEdited") is False and actions.get("largeDownloads") == [],
+                "review round %d edited nothing" % number)
+        findings = record.get("findings")
+        require(type(findings) is list and all(type(item) is dict and item.get("severity") in SEVERITIES for item in findings)
+                and row["severities"] == sorted({item["severity"] for item in findings}),
+                "review round %d severities" % number)
+    final = rounds[-1]
+    require(final["subject"] == REVIEWED_SUBJECT["commit"] and final["subjectTree"] == REVIEWED_SUBJECT["tree"]
+            and final["severities"] == ["NOTE"], "the passing round reviewed this subject and left notes only")
 
 
 def validate_backend_distribution() -> None:
-    """The selection, the W03 plan and their adoption record hold for this era."""
+    """Every reviewed byte and the adoption record first; then both reference modules from this era's reviewed bytes,
+    whose results must carry the owner's decisions."""
+    validate_era_bytes()
     validate_backend_distribution_status()
-    _era_model(SELECTION_MODEL, "_met_enforce_019_backend_distribution").check(reviewed_bytes)
-    _era_model(PLAN_MODEL, "_met_enforce_019_w03_plan").check(reviewed_bytes)
+    safe_yaml = _era_model(SAFE_YAML, "_met_enforce_019_safe_yaml")
+    selection = _era_model(SELECTION_MODEL, "_met_enforce_019_backend_distribution",
+                           {"safe_yaml": safe_yaml, "scripts.safe_yaml": safe_yaml}).check(reviewed_bytes)
+
+    def agents() -> list:
+        return [part for component in selection["components"] if component["role"] == "NETWORK_POLICY_AGENT"
+                for part in component["parts"]]
+
+    _bound(lambda: [(row["id"], row["selected"]) for row in selection["ownerDecisions"]] == list(SELECTION_DECISIONS.items())
+           and len(selection["licenseReviews"]) > 0
+           and all(row["status"] == "OWNER_APPROVED" for row in selection["licenseReviews"])
+           and len(agents()) > 0 and all(len(part["artifacts"]) > 0 for part in agents())
+           and all(artifact["kind"] == "SOURCE_BUILD" for part in agents() for artifact in part["artifacts"]),
+           "the selection carries the owner's decisions")
+    plan = _era_model(PLAN_MODEL, "_met_enforce_019_w03_plan").check(reviewed_bytes)
+    _bound(lambda: [(row["id"], row["selected"]) for row in plan["ownerDecisions"]] == list(PLAN_DECISIONS.items()),
+           "the plan carries the owner's decisions")
 
 
 def validate() -> None:

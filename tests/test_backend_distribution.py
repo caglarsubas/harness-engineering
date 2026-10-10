@@ -652,36 +652,188 @@ def test_every_newer_authority_is_read_exactly_once_per_route(monkeypatch, route
         assert counts == expected
 
 
+def _rebind(monkeypatch, path, changed):
+    """Serve changed bytes for path and re-pin its digest, so the checks behind the digest binding are exercised."""
+    original = profile.reviewed_bytes
+    pins = dict(profile.ERA_SHA256)
+    if path in pins:
+        pins[path] = profile.digest(changed)
+    monkeypatch.setattr(profile, "ERA_SHA256", MappingProxyType(pins))
+    monkeypatch.setattr(profile, "reviewed_bytes", lambda target: changed if target == path else original(target))
+
+
+def _rebind_json(monkeypatch, path, mutate):
+    value = json.loads(profile.reviewed_bytes(path))
+    mutate(value)
+    _rebind(monkeypatch, path, (json.dumps(value, indent=1, ensure_ascii=False) + "\n").encode("utf-8"))
+
+
 def test_the_selection_and_plan_hold_for_this_era():
     assert profile.validate_backend_distribution() is None
 
 
-@pytest.mark.parametrize("path", ["scripts/backend_distribution.py", "scripts/w03_plan.py"])
-def test_the_era_models_are_executed_from_reviewed_bytes(monkeypatch, path):
-    original = profile.reviewed_bytes
+def test_every_reviewed_file_is_pinned():
+    pinned = set(profile.ERA_SHA256)
+    assert {profile.STATUS_PATH, profile.SELECTION_MODEL, profile.PLAN_MODEL, profile.SAFE_YAML} <= pinned
+    assert {profile.CONTRACT_DIR + "review-round%d.json" % number for number in range(1, 6)} <= pinned
+    assert {profile.CONTRACT_DIR + name for name in ("selection.json", "README.md", "REVIEW_BRIEF.md")} <= pinned
+    assert {profile.PLAN_DIR + name for name in ("plan.json", "README.md")} <= pinned
+    for number in range(1, 5):
+        assert any(path.startswith(profile.CONTRACT_DIR + "round%d/" % number) for path in pinned)
+    for path, expected in profile.ERA_SHA256.items():
+        assert profile.digest(profile.regular_bytes(path)) == expected
 
-    def changed(target):
-        raw = original(target)
-        return raw + b"\nraise ValueError('era model executed')\n" if target == path else raw
 
-    monkeypatch.setattr(profile, "reviewed_bytes", changed)
-    with pytest.raises(ValueError, match="era model executed"):
-        profile.validate_backend_distribution()
-
-
-def test_the_review_binding_is_checked_before_any_model_runs(monkeypatch):
+@pytest.mark.parametrize("path,old,new", [
+    ("scripts/backend_distribution.py", b"def _check(read) -> dict:\n", b"def _check(read) -> dict:\n    return {}\n"),
+    ("scripts/w03_plan.py", b"def _check(read) -> dict:\n", b"def _check(read) -> dict:\n    return {}\n"),
+    ("architecture/backend-distribution/review-round3.json", b'"severity": "MAJOR"', b'"severity": "NOTE"'),
+    ("architecture/backend-distribution/status.json", b'"No artifact is installed or executed."', b'"installed"'),
+    ("architecture/backend-distribution/round2/selection.json", b'"v3.', b'"v4.'),
+    ("scripts/safe_yaml.py", b"import yaml\n", b"import yaml\nyaml = None\n"),
+])
+def test_a_changed_reviewed_byte_is_refused_before_anything_runs(monkeypatch, path, old, new):
     original = profile.reviewed_bytes
     executed = []
 
     def changed(target):
         raw = original(target)
-        if target == profile.STATUS_PATH:
-            return raw.replace(b'"ADOPTED_FOR_SOURCE_PUBLICATION"', b'"CANDIDATE"', 1)
-        if target in (profile.SELECTION_MODEL, profile.PLAN_MODEL):
-            executed.append(target)
-        return raw
+        if target != path:
+            return raw
+        assert old in raw
+        return raw.replace(old, new, 1)
 
     monkeypatch.setattr(profile, "reviewed_bytes", changed)
+    monkeypatch.setattr(profile, "_era_model", lambda *args: executed.append(args[0]))
+    with pytest.raises(ValueError, match="W03-0 reviewed bytes are bound: " + path):
+        profile.validate_backend_distribution()
+    assert executed == []
+
+
+@pytest.mark.parametrize("path", ["scripts/backend_distribution.py", "scripts/w03_plan.py", "scripts/safe_yaml.py"])
+def test_the_era_modules_are_executed_from_reviewed_bytes(monkeypatch, path):
+    _rebind(monkeypatch, path, profile.reviewed_bytes(path) + b"\nraise ValueError('era module executed')\n")
+    with pytest.raises(ValueError, match="era module executed"):
+        profile.validate_backend_distribution()
+
+
+def test_the_current_safe_yaml_module_is_not_used(monkeypatch):
+    from scripts import safe_yaml
+
+    class Broken:
+        def __init__(self, *args, **kwargs):
+            raise AssertionError("current safe_yaml used")
+
+    monkeypatch.setattr(safe_yaml, "SafeLoader", Broken)
+    assert profile.validate_backend_distribution() is None
+
+
+@pytest.mark.parametrize("model", ["scripts/backend_distribution.py", "scripts/w03_plan.py"])
+def test_an_early_return_model_is_refused_by_the_decision_binding(monkeypatch, model):
+    raw = profile.reviewed_bytes(model)
+    _rebind(monkeypatch, model, raw.replace(b"def _check(read) -> dict:\n", b"def _check(read) -> dict:\n    return {}\n", 1))
+    with pytest.raises(ValueError, match="carries the owner's decisions"):
+        profile.validate_backend_distribution()
+
+
+def _round(number):
+    return lambda value: value["rounds"][number - 1]
+
+
+@pytest.mark.parametrize("mutate,message", [
+    (lambda value: value.update(nonClaims=[]), "adopted W03-0 status"),
+    (lambda value: value.update(carried=[]), "adopted W03-0 status"),
+    (lambda value: value.update(installed=True), "adopted W03-0 status"),
+    (lambda value: value.update(status="CANDIDATE"), "adopted W03-0 status"),
+    (lambda value: value["rounds"].append("round 6"), "five review rounds in order"),
+    (lambda value: value["rounds"].pop(), "five review rounds in order"),
+    (lambda value: _round(1)(value).update(severities=["NOTE"]), "review round 1 severities"),
+    (lambda value: _round(4)(value).update(snapshot=None), "review round 4 row"),
+    (lambda value: _round(2)(value).update(record="architecture/backend-distribution/review-round3.json"), "review round 2 row"),
+    (lambda value: _round(3)(value).update(subject="0" * 40), "review round 3 identity"),
+    (lambda value: _round(5)(value).update(extra=1), "review round 5 row"),
+])
+def test_the_status_record_is_closed(monkeypatch, mutate, message):
+    _rebind_json(monkeypatch, profile.STATUS_PATH, mutate)
+    with pytest.raises(ValueError, match=message):
+        profile.validate_backend_distribution()
+
+
+@pytest.mark.parametrize("number,mutate,message", [
+    (3, lambda value: value["findings"][0].update(severity="NOTE"), "review round 3 severities"),
+    (5, lambda value: value["actions"].update(filesEdited=True), "review round 5 edited nothing"),
+    (5, lambda value: value["actions"].update(largeDownloads=["x"]), "review round 5 edited nothing"),
+    (5, lambda value: value.update(schemaVersion="other"), "review round 5 identity"),
+    (5, lambda value: value["findings"].append({"id": "F9", "severity": "MINOR"}), "review round 5 severities"),
+    (4, lambda value: value.update(verdict="PASS_FOR_SOURCE_PUBLICATION"), "review round 4 identity"),
+])
+def test_each_review_record_is_bound(monkeypatch, number, mutate, message):
+    _rebind_json(monkeypatch, profile.CONTRACT_DIR + "review-round%d.json" % number, mutate)
+    with pytest.raises(ValueError, match=message):
+        profile.validate_backend_distribution()
+
+
+def _agent_parts(value):
+    return [part for component in value["components"] if component["role"] == "NETWORK_POLICY_AGENT" for part in component["parts"]]
+
+
+def _decision(question, selected):
+    def change(value):
+        for row in value["ownerDecisions"]:
+            if row["id"] == question:
+                row["selected"] = selected
+        return value
+    return change
+
+
+def _release_binary(value):
+    for part in _agent_parts(value):
+        for artifact in part["artifacts"]:
+            artifact["kind"] = "RELEASE_BINARY"
+    return value
+
+
+def _no_agent(value):
+    value["components"] = [component for component in value["components"] if component["role"] != "NETWORK_POLICY_AGENT"]
+    return value
+
+
+def _pending_review(value):
+    value["licenseReviews"][0]["status"] = "PENDING"
+    return value
+
+
+@pytest.mark.parametrize("model,change,message", [
+    ("scripts/backend_distribution.py", _decision("Q-E", "PENDING"), "the selection carries the owner's decisions"),
+    ("scripts/backend_distribution.py", _decision("Q-N", "PENDING"), "the selection carries the owner's decisions"),
+    ("scripts/backend_distribution.py", _decision("Q-L3", "PENDING"), "the selection carries the owner's decisions"),
+    ("scripts/backend_distribution.py", _release_binary, "the selection carries the owner's decisions"),
+    ("scripts/backend_distribution.py", _no_agent, "the selection carries the owner's decisions"),
+    ("scripts/backend_distribution.py", _pending_review, "the selection carries the owner's decisions"),
+    ("scripts/backend_distribution.py", lambda value: None, "the selection carries the owner's decisions"),
+    ("scripts/w03_plan.py", _decision("Q-S", "S-a"), "the plan carries the owner's decisions"),
+    ("scripts/w03_plan.py", lambda value: value.update(ownerDecisions=value["ownerDecisions"][:-1]) or value,
+     "the plan carries the owner's decisions"),
+])
+def test_the_module_results_carry_the_owner_decisions(monkeypatch, model, change, message):
+    original = profile._era_model
+
+    def patched(path, name, imports=None):
+        module = original(path, name, imports)
+        if path == model:
+            check = module.check
+            module.check = lambda read: change(deepcopy(check(read)))
+        return module
+
+    monkeypatch.setattr(profile, "_era_model", patched)
+    with pytest.raises(ValueError, match=message):
+        profile.validate_backend_distribution()
+
+
+def test_the_review_binding_is_checked_before_any_model_runs(monkeypatch):
+    _rebind_json(monkeypatch, profile.STATUS_PATH, lambda value: value.update(status="CANDIDATE"))
+    executed = []
+    monkeypatch.setattr(profile, "_era_model", lambda *args: executed.append(args[0]))
     with pytest.raises(ValueError, match="adopted W03-0 status"):
         profile.validate_backend_distribution()
     assert executed == []
@@ -699,29 +851,30 @@ def test_the_review_binding_is_checked_before_any_model_runs(monkeypatch):
     ("architecture/w03-plan/plan.json", b'"selected": "S-b"', b'"selected": "S-a"'),
 ])
 def test_the_adoption_and_decision_records_bind(monkeypatch, path, old, new):
-    original = profile.reviewed_bytes
-
-    def changed(target):
-        raw = original(target)
-        if target != path:
-            return raw
-        assert old in raw
-        return raw.replace(old, new, 1)
-
-    monkeypatch.setattr(profile, "reviewed_bytes", changed)
-    with pytest.raises(ValueError):
-        profile.validate_backend_distribution()
+    raw = profile.reviewed_bytes(path)
+    assert old in raw
+    for rebound in (False, True):
+        with monkeypatch.context() as patch:
+            if rebound:
+                _rebind(patch, path, raw.replace(old, new, 1))
+            else:
+                original = profile.reviewed_bytes
+                patch.setattr(profile, "reviewed_bytes",
+                              lambda target: raw.replace(old, new, 1) if target == path else original(target))
+            with pytest.raises(ValueError):
+                profile.validate_backend_distribution()
 
 
 def test_a_later_successor_leaves_this_era_valid_through_projection(monkeypatch):
     original = profile.regular_bytes
     era = {path: original(path) for path in ("architecture/backend-distribution/selection.json",
-                                             "architecture/seccomp-allowlists-v2/status.json")}
+                                             "architecture/seccomp-allowlists-v2/status.json", "scripts/safe_yaml.py")}
     later = {"architecture/backend-distribution/selection.json":
              era["architecture/backend-distribution/selection.json"].replace(b'"v3.7.2"', b'"v3.7.3"', 1),
              "architecture/seccomp-allowlists-v2/status.json":
-             era["architecture/seccomp-allowlists-v2/status.json"] + b"\n"}
-    # The later tree on disk: a revised selection and a changed W02d v2 record (for example by W02d v3).
+             era["architecture/seccomp-allowlists-v2/status.json"] + b"\n",
+             "scripts/safe_yaml.py": era["scripts/safe_yaml.py"] + b"\nraise ValueError('later safe_yaml')\n"}
+    # The later tree on disk: a revised selection, a changed W02d v2 record (for example by W02d v3) and a changed safe_yaml.
     monkeypatch.setattr(profile, "regular_bytes", lambda path: later.get(path) or original(path))
     with pytest.raises(ValueError):
         profile.validate_backend_distribution()
@@ -732,7 +885,8 @@ def test_a_later_successor_leaves_this_era_valid_through_projection(monkeypatch)
 
 def test_reviewed_bytes_is_the_only_semantic_read():
     tree = ast.parse(profile.regular_bytes(profile.VALIDATOR_PATH))
-    names = {"_era_model", "validate_backend_distribution_status", "validate_backend_distribution"}
+    names = {"_json", "_bound", "_era_import", "_era_model", "validate_era_bytes", "validate_backend_distribution_status",
+             "validate_backend_distribution"}
     seen = set()
     for node in tree.body:
         if isinstance(node, ast.FunctionDef) and node.name in names:

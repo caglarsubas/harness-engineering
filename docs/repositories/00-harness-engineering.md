@@ -1,6 +1,11 @@
 # Repository Plan: `Harness-Engineering`
 
-## Current source preparation — MET-ENFORCE-020
+## Current source preparation — MET-ENFORCE-021
+
+LIC-HOST (MET-ENFORCE-021): license-policy amendment LIC-HOST-A1 as a reviewed overlay on the byte-identical
+base policy; DATA_CHECK_ONLY. Alpha2 OPEN; 222 accepted plus ENFORCE-021 only.
+
+## Historical W02d-V3 source preparation — MET-ENFORCE-020
 
 W02d-V3 (MET-ENFORCE-020): seccomp allowlists v3, three narrow NATIVE_STATIC rules for the Rust+musl roles;
 DATA_CHECK_ONLY. Alpha2 OPEN; 221 accepted plus ENFORCE-020 only.
@@ -1039,6 +1044,7 @@ Every packet uses branch `codex/<packet-id>`, changes only named paths, opens a 
 94. `MET-ENFORCE-018`: publish W01 amendment W02D and the W02d successor seccomp-allowlists-v2 as reviewed data; source only.
 95. `MET-ENFORCE-019`: publish the W03 backend distribution selection and the W03 plan as reviewed data; source only.
 96. `MET-ENFORCE-020`: publish the W02d successor seccomp-allowlists-v3 (Rust+musl NATIVE_STATIC rules) as reviewed data; source only.
+97. `MET-ENFORCE-021`: publish license-policy amendment LIC-HOST-A1 as a reviewed overlay on the byte-identical base policy; source only.
 
 ## Testing, verification, and acceptance
 

@@ -1,0 +1,1163 @@
+{
+ "schemaVersion": "planeon.internal.license-policy-amendment-vectors/v2",
+ "cases": [
+  {
+   "expression": "LGPL-2.1-or-later",
+   "component": {
+    "name": "libmnl",
+    "kind": "HOST_OS_LIBRARY",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": null
+   },
+   "outcome": "HOST_OS_SYSTEM_LIBRARY",
+   "elections": [],
+   "note": "libmnl (host-OS class)"
+  },
+  {
+   "expression": "LGPL-2.1-or-later",
+   "component": {
+    "name": "glibc",
+    "kind": "STATIC_SYSTEM_LIBRARY",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": {
+     "name": "runc",
+     "custody": "UPSTREAM_PINNED"
+    }
+   },
+   "outcome": "HOST_OS_SYSTEM_LIBRARY",
+   "elections": [],
+   "note": "glibc statically linked into a pinned binary"
+  },
+  {
+   "expression": "LGPL-2.1-only",
+   "component": {
+    "name": "libseccomp",
+    "kind": "STATIC_SYSTEM_LIBRARY",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": {
+     "name": "runc",
+     "custody": "UPSTREAM_PINNED"
+    }
+   },
+   "outcome": "HOST_OS_SYSTEM_LIBRARY",
+   "elections": [],
+   "note": "libseccomp"
+  },
+  {
+   "expression": "GPL-3.0-or-later WITH GCC-exception-3.1",
+   "component": {
+    "name": "libgcc",
+    "kind": "STATIC_SYSTEM_LIBRARY",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": {
+     "name": "runc",
+     "custody": "UPSTREAM_PINNED"
+    }
+   },
+   "outcome": "HOST_OS_SYSTEM_LIBRARY",
+   "elections": [],
+   "note": "GCC runtime"
+  },
+  {
+   "expression": "GPL-2.0-or-later",
+   "component": {
+    "name": "libnftnl",
+    "kind": "HOST_OS_LIBRARY",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": null
+   },
+   "outcome": "HOST_OS_SYSTEM_LIBRARY",
+   "elections": [],
+   "note": "libnftnl"
+  },
+  {
+   "expression": "LGPL-2.1-or-later",
+   "component": {
+    "name": "some-crate",
+    "kind": "CRATE",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": null
+   },
+   "outcome": "OUT_OF_SCOPE",
+   "elections": [],
+   "note": "the class is not for crates"
+  },
+  {
+   "expression": "GPL-2.0-or-later",
+   "component": {
+    "name": "planeon-module",
+    "kind": "PLANEON_SOURCE",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": null
+   },
+   "outcome": "OUT_OF_SCOPE",
+   "elections": [],
+   "note": "never for planeon source"
+  },
+  {
+   "expression": "LGPL-2.1-only",
+   "component": {
+    "name": "glibc",
+    "kind": "STATIC_SYSTEM_LIBRARY",
+    "custody": "REPOSITORY_BUILT",
+    "crateField": false,
+    "linkedInto": {
+     "name": "runc",
+     "custody": "UPSTREAM_PINNED"
+    }
+   },
+   "outcome": "OUT_OF_SCOPE",
+   "elections": [],
+   "note": "upstream-pinned custody only"
+  },
+  {
+   "expression": "GPL-2.0-only",
+   "component": {
+    "name": "nft",
+    "kind": "HOST_OS_PROGRAM",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": null
+   },
+   "outcome": "OPTIONAL_EXPLICIT_REVIEW_APPROVED",
+   "elections": [],
+   "note": "nft (decision record)"
+  },
+  {
+   "expression": "GPL-2.0-only",
+   "component": {
+    "name": "libnftables",
+    "kind": "HOST_OS_LIBRARY",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": null
+   },
+   "outcome": "OPTIONAL_EXPLICIT_REVIEW_APPROVED",
+   "elections": [],
+   "note": "libnftables"
+  },
+  {
+   "expression": "GPL-2.0-only",
+   "component": {
+    "name": "other-program",
+    "kind": "HOST_OS_PROGRAM",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": null
+   },
+   "outcome": "OPTIONAL_EXPLICIT_REVIEW",
+   "elections": [],
+   "note": "approval scoped to its subjects"
+  },
+  {
+   "expression": "LGPL-3.0-or-later",
+   "component": {
+    "name": "gmp",
+    "kind": "HOST_OS_LIBRARY",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": null
+   },
+   "outcome": "OPTIONAL_EXPLICIT_REVIEW_APPROVED",
+   "elections": [],
+   "note": "gmp alone"
+  },
+  {
+   "expression": "LGPL-3.0-or-later",
+   "component": {
+    "name": "some-crate",
+    "kind": "CRATE",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": null
+   },
+   "outcome": "OPTIONAL_EXPLICIT_REVIEW",
+   "elections": [],
+   "note": "the gmp approval does not reach other components"
+  },
+  {
+   "expression": "GPL-3.0-only",
+   "component": {
+    "name": "libmnl",
+    "kind": "HOST_OS_LIBRARY",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": null
+   },
+   "outcome": "OPTIONAL_EXPLICIT_REVIEW",
+   "elections": [],
+   "note": "no decision record"
+  },
+  {
+   "expression": "MIT",
+   "component": {
+    "name": "some-crate",
+    "kind": "CRATE",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": null
+   },
+   "outcome": "DEFAULT_ALLOWED",
+   "elections": [],
+   "note": "default-allowed"
+  },
+  {
+   "expression": "Apache-2.0 WITH LLVM-exception",
+   "component": {
+    "name": "some-crate",
+    "kind": "CRATE",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": null
+   },
+   "outcome": "ALLOWED_EXCEPTION_EXPRESSION",
+   "elections": [],
+   "note": "allowed exception"
+  },
+  {
+   "expression": "CC-BY-4.0",
+   "component": {
+    "name": "dataset",
+    "kind": "ARTIFACT",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": null
+   },
+   "outcome": "OPEN_CONTENT",
+   "elections": [],
+   "note": "open content for an artifact"
+  },
+  {
+   "expression": "CC-BY-4.0",
+   "component": {
+    "name": "some-crate",
+    "kind": "CRATE",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": null
+   },
+   "outcome": "OUT_OF_SCOPE",
+   "elections": [],
+   "note": "open content never for code"
+  },
+  {
+   "expression": "SSPL-1.0",
+   "component": {
+    "name": "some-crate",
+    "kind": "CRATE",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": null
+   },
+   "outcome": "DENIED",
+   "elections": [],
+   "note": "denied"
+  },
+  {
+   "expression": "WTFPL",
+   "component": {
+    "name": "some-crate",
+    "kind": "CRATE",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": null
+   },
+   "outcome": "UNKNOWN",
+   "elections": [],
+   "note": "unknown"
+  },
+  {
+   "expression": "NOASSERTION",
+   "component": {
+    "name": "some-crate",
+    "kind": "CRATE",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": null
+   },
+   "outcome": "PLANNED_UNRESOLVED",
+   "elections": [],
+   "note": "placeholder"
+  },
+  {
+   "expression": "MIT OR Apache-2.0",
+   "component": {
+    "name": "some-crate",
+    "kind": "CRATE",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": null
+   },
+   "outcome": "ACCEPTED_OR",
+   "elections": [
+    {
+     "group": "Apache-2.0 OR MIT",
+     "elected": "Apache-2.0"
+    }
+   ],
+   "note": "Rust core and std, many crates"
+  },
+  {
+   "expression": "Apache-2.0 OR MIT",
+   "component": {
+    "name": "some-crate",
+    "kind": "CRATE",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": null
+   },
+   "outcome": "ACCEPTED_OR",
+   "elections": [
+    {
+     "group": "Apache-2.0 OR MIT",
+     "elected": "Apache-2.0"
+    }
+   ],
+   "note": "order-independent"
+  },
+  {
+   "expression": "Unlicense OR MIT",
+   "component": {
+    "name": "memchr",
+    "kind": "CRATE",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": null
+   },
+   "outcome": "ACCEPTED_OR",
+   "elections": [
+    {
+     "group": "MIT OR Unlicense",
+     "elected": "MIT"
+    }
+   ],
+   "note": "memchr"
+  },
+  {
+   "expression": "Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT",
+   "component": {
+    "name": "rustix",
+    "kind": "CRATE",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": null
+   },
+   "outcome": "ACCEPTED_OR",
+   "elections": [
+    {
+     "group": "Apache-2.0 OR Apache-2.0 WITH LLVM-exception OR MIT",
+     "elected": "Apache-2.0"
+    }
+   ],
+   "note": "rustix, linux-raw-sys"
+  },
+  {
+   "expression": "0BSD OR MIT OR Apache-2.0",
+   "component": {
+    "name": "adler2",
+    "kind": "CRATE",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": null
+   },
+   "outcome": "ACCEPTED_OR",
+   "elections": [
+    {
+     "group": "0BSD OR Apache-2.0 OR MIT",
+     "elected": "Apache-2.0"
+    }
+   ],
+   "note": "adler2"
+  },
+  {
+   "expression": "MIT OR Zlib OR Apache-2.0",
+   "component": {
+    "name": "miniz_oxide",
+    "kind": "CRATE",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": null
+   },
+   "outcome": "ACCEPTED_OR",
+   "elections": [
+    {
+     "group": "Apache-2.0 OR MIT OR Zlib",
+     "elected": "Apache-2.0"
+    }
+   ],
+   "note": "miniz_oxide"
+  },
+  {
+   "expression": "MPL-2.0 OR LGPL-3.0-or-later",
+   "component": {
+    "name": "libpathrs",
+    "kind": "STATIC_SYSTEM_LIBRARY",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": {
+     "name": "runc",
+     "custody": "UPSTREAM_PINNED"
+    }
+   },
+   "outcome": "ACCEPTED_OR",
+   "elections": [
+    {
+     "group": "LGPL-3.0-or-later OR MPL-2.0",
+     "elected": "MPL-2.0"
+    }
+   ],
+   "note": "libpathrs: the owner's election"
+  },
+  {
+   "expression": "LGPL-3.0-or-later OR MPL-2.0",
+   "component": {
+    "name": "libpathrs",
+    "kind": "STATIC_SYSTEM_LIBRARY",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": {
+     "name": "runc",
+     "custody": "UPSTREAM_PINNED"
+    }
+   },
+   "outcome": "ACCEPTED_OR",
+   "elections": [
+    {
+     "group": "LGPL-3.0-or-later OR MPL-2.0",
+     "elected": "MPL-2.0"
+    }
+   ],
+   "note": "libpathrs reversed"
+  },
+  {
+   "expression": "LGPL-3.0-or-later OR GPL-2.0-or-later",
+   "component": {
+    "name": "gmp",
+    "kind": "HOST_OS_LIBRARY",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": null
+   },
+   "outcome": "ACCEPTED_OR",
+   "elections": [
+    {
+     "group": "GPL-2.0-or-later OR LGPL-3.0-or-later",
+     "elected": "LGPL-3.0-or-later"
+    }
+   ],
+   "note": "gmp: the owner's election"
+  },
+  {
+   "expression": "GPL-2.0-or-later OR LGPL-3.0-or-later",
+   "component": {
+    "name": "gmp",
+    "kind": "HOST_OS_LIBRARY",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": null
+   },
+   "outcome": "ACCEPTED_OR",
+   "elections": [
+    {
+     "group": "GPL-2.0-or-later OR LGPL-3.0-or-later",
+     "elected": "LGPL-3.0-or-later"
+    }
+   ],
+   "note": "gmp reversed"
+  },
+  {
+   "expression": "GPL-2.0-or-later OR MIT",
+   "component": {
+    "name": "libfoo",
+    "kind": "HOST_OS_LIBRARY",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": null
+   },
+   "outcome": "ACCEPTED_OR",
+   "elections": [
+    {
+     "group": "GPL-2.0-or-later OR MIT",
+     "elected": "MIT"
+    }
+   ],
+   "note": "an allowed alternative outranks the class"
+  },
+  {
+   "expression": "CC-BY-4.0 OR MIT",
+   "component": {
+    "name": "dataset",
+    "kind": "ARTIFACT",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": null
+   },
+   "outcome": "ACCEPTED_OR",
+   "elections": [
+    {
+     "group": "CC-BY-4.0 OR MIT",
+     "elected": "MIT"
+    }
+   ],
+   "note": "default-allowed outranks open content"
+  },
+  {
+   "expression": "MIT AND Apache-2.0 WITH LLVM-exception AND (MIT OR Apache-2.0)",
+   "component": {
+    "name": "compiler_builtins",
+    "kind": "CRATE",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": null
+   },
+   "outcome": "ACCEPTED_AND",
+   "elections": [
+    {
+     "group": "Apache-2.0 OR MIT",
+     "elected": "Apache-2.0"
+    }
+   ],
+   "note": "compiler_builtins"
+  },
+  {
+   "expression": "MIT/Apache-2.0",
+   "component": {
+    "name": "rustc-demangle",
+    "kind": "CRATE",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": true,
+    "linkedInto": null
+   },
+   "outcome": "ACCEPTED_OR",
+   "elections": [
+    {
+     "group": "Apache-2.0 OR MIT",
+     "elected": "Apache-2.0"
+    }
+   ],
+   "note": "legacy crate field"
+  },
+  {
+   "expression": "GPL-2.0-or-later/MIT",
+   "component": {
+    "name": "odd-crate",
+    "kind": "CRATE",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": true,
+    "linkedInto": null
+   },
+   "outcome": "ACCEPTED_OR",
+   "elections": [
+    {
+     "group": "GPL-2.0-or-later OR MIT",
+     "elected": "MIT"
+    }
+   ],
+   "note": "legacy field; the class term is out of scope for a crate"
+  },
+  {
+   "expression": "MIT AND GPL-2.0-or-later",
+   "component": {
+    "name": "some-crate",
+    "kind": "CRATE",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": null
+   },
+   "outcome": "OUT_OF_SCOPE",
+   "elections": [],
+   "note": "a scoped term inside AND stays scoped"
+  },
+  {
+   "expression": "MIT AND LGPL-3.0-or-later",
+   "component": {
+    "name": "some-crate",
+    "kind": "CRATE",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": null
+   },
+   "outcome": "OPTIONAL_EXPLICIT_REVIEW",
+   "elections": [],
+   "note": "an approval does not leak through AND"
+  },
+  {
+   "expression": "MIT AND CC-BY-4.0",
+   "component": {
+    "name": "some-crate",
+    "kind": "CRATE",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": null
+   },
+   "outcome": "OUT_OF_SCOPE",
+   "elections": [],
+   "note": "open content inside AND for code"
+  },
+  {
+   "expression": "MIT AND SSPL-1.0",
+   "component": {
+    "name": "some-crate",
+    "kind": "CRATE",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": null
+   },
+   "outcome": "DENIED",
+   "elections": [],
+   "note": "denied term blocks"
+  },
+  {
+   "expression": "GPL-3.0-only AND SSPL-1.0",
+   "component": {
+    "name": "some-crate",
+    "kind": "CRATE",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": null
+   },
+   "outcome": "DENIED",
+   "elections": [],
+   "note": "most restrictive blocking outcome"
+  },
+  {
+   "expression": "SSPL-1.0 AND GPL-3.0-only",
+   "component": {
+    "name": "some-crate",
+    "kind": "CRATE",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": null
+   },
+   "outcome": "DENIED",
+   "elections": [],
+   "note": "the same, reversed"
+  },
+  {
+   "expression": "WTFPL AND SSPL-1.0",
+   "component": {
+    "name": "some-crate",
+    "kind": "CRATE",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": null
+   },
+   "outcome": "DENIED",
+   "elections": [],
+   "note": "denied outranks unknown"
+  },
+  {
+   "expression": "GPL-3.0-only AND WTFPL",
+   "component": {
+    "name": "some-crate",
+    "kind": "CRATE",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": null
+   },
+   "outcome": "UNKNOWN",
+   "elections": [],
+   "note": "unknown outranks review"
+  },
+  {
+   "expression": "SSPL-1.0 OR WTFPL",
+   "component": {
+    "name": "some-crate",
+    "kind": "CRATE",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": null
+   },
+   "outcome": "UNKNOWN",
+   "elections": [],
+   "note": "no accepted alternative: least restrictive"
+  },
+  {
+   "expression": "WTFPL OR SSPL-1.0",
+   "component": {
+    "name": "some-crate",
+    "kind": "CRATE",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": null
+   },
+   "outcome": "UNKNOWN",
+   "elections": [],
+   "note": "the same, reversed"
+  },
+  {
+   "expression": "GPL-3.0-only OR SSPL-1.0",
+   "component": {
+    "name": "some-crate",
+    "kind": "CRATE",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": null
+   },
+   "outcome": "OPTIONAL_EXPLICIT_REVIEW",
+   "elections": [],
+   "note": "no accepted alternative: the reviewable one"
+  },
+  {
+   "expression": "MIT OR SSPL-1.0",
+   "component": {
+    "name": "some-crate",
+    "kind": "CRATE",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": null
+   },
+   "outcome": "ACCEPTED_OR",
+   "elections": [
+    {
+     "group": "MIT OR SSPL-1.0",
+     "elected": "MIT"
+    }
+   ],
+   "note": "accepted only by electing MIT"
+  },
+  {
+   "expression": "Apache-2.0 OR BSD-2-Clause",
+   "component": {
+    "name": "some-crate",
+    "kind": "CRATE",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": null
+   },
+   "outcome": "ALLOWED_EXCEPTION_EXPRESSION",
+   "elections": [],
+   "note": "exact base exception"
+  },
+  {
+   "expression": "BSD-2-Clause OR Apache-2.0",
+   "component": {
+    "name": "some-crate",
+    "kind": "CRATE",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": null
+   },
+   "outcome": "ALLOWED_EXCEPTION_EXPRESSION",
+   "elections": [],
+   "note": "the same in canonical form"
+  },
+  {
+   "expression": "Apache-2.0 AND LGPL-3.0-or-later",
+   "component": {
+    "name": "some-crate",
+    "kind": "CRATE",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": null
+   },
+   "outcome": "OPTIONAL_EXPLICIT_REVIEW",
+   "elections": [],
+   "note": "exact base entry keeps its outcome"
+  },
+  {
+   "expression": "LGPL-3.0-or-later AND Apache-2.0",
+   "component": {
+    "name": "gmp",
+    "kind": "HOST_OS_LIBRARY",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": null
+   },
+   "outcome": "OPTIONAL_EXPLICIT_REVIEW",
+   "elections": [],
+   "note": "reordered base entry, even for gmp, whose approval covers only LGPL-3.0-or-later"
+  },
+  {
+   "expression": "(Apache-2.0 AND LGPL-3.0-or-later)",
+   "component": {
+    "name": "some-crate",
+    "kind": "CRATE",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": null
+   },
+   "outcome": "OPTIONAL_EXPLICIT_REVIEW",
+   "elections": [],
+   "note": "parenthesised base entry"
+  },
+  {
+   "expression": "Apache-2.0 AND (LGPL-3.0-or-later AND MIT)",
+   "component": {
+    "name": "some-crate",
+    "kind": "CRATE",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": null
+   },
+   "outcome": "OPTIONAL_EXPLICIT_REVIEW",
+   "elections": [],
+   "note": "nested base entry"
+  },
+  {
+   "expression": "MIT AND Apache-2.0 AND LGPL-3.0-or-later",
+   "component": {
+    "name": "some-crate",
+    "kind": "CRATE",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": null
+   },
+   "outcome": "OPTIONAL_EXPLICIT_REVIEW",
+   "elections": [],
+   "note": "flattened base entry"
+  },
+  {
+   "expression": "MIT OR +",
+   "component": {
+    "name": "some-crate",
+    "kind": "CRATE",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": null
+   },
+   "outcome": "REFUSED",
+   "elections": [],
+   "note": "a lone plus is not a license id"
+  },
+  {
+   "expression": "MIT OR and",
+   "component": {
+    "name": "some-crate",
+    "kind": "CRATE",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": null
+   },
+   "outcome": "REFUSED",
+   "elections": [],
+   "note": "an operator word in any case is not a license id"
+  },
+  {
+   "expression": "MIT or Apache-2.0",
+   "component": {
+    "name": "some-crate",
+    "kind": "CRATE",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": null
+   },
+   "outcome": "REFUSED",
+   "elections": [],
+   "note": "lowercase operator"
+  },
+  {
+   "expression": "MIT\tOR Apache-2.0",
+   "component": {
+    "name": "some-crate",
+    "kind": "CRATE",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": null
+   },
+   "outcome": "REFUSED",
+   "elections": [],
+   "note": "only ASCII spaces separate"
+  },
+  {
+   "expression": "(MIT",
+   "component": {
+    "name": "some-crate",
+    "kind": "CRATE",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": null
+   },
+   "outcome": "REFUSED",
+   "elections": [],
+   "note": "unbalanced parenthesis"
+  },
+  {
+   "expression": "MIT AND",
+   "component": {
+    "name": "some-crate",
+    "kind": "CRATE",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": null
+   },
+   "outcome": "REFUSED",
+   "elections": [],
+   "note": "trailing operator"
+  },
+  {
+   "expression": "((((((((((((((((((((MIT))))))))))))))))))))",
+   "component": {
+    "name": "some-crate",
+    "kind": "CRATE",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": null
+   },
+   "outcome": "REFUSED",
+   "elections": [],
+   "note": "nesting deeper than 16"
+  },
+  {
+   "expression": "GPL-2.0+",
+   "component": {
+    "name": "some-crate",
+    "kind": "CRATE",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": null
+   },
+   "outcome": "UNKNOWN",
+   "elections": [],
+   "note": "a trailing plus is a valid id; unclassified"
+  },
+  {
+   "expression": "LGPL-2.1-or-later",
+   "component": {
+    "name": "glibc",
+    "kind": "STATIC_SYSTEM_LIBRARY",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": {
+     "name": "containerd",
+     "custody": "UPSTREAM_PINNED"
+    }
+   },
+   "outcome": "HOST_OS_SYSTEM_LIBRARY",
+   "elections": [],
+   "note": "glibc in the official containerd static binary"
+  },
+  {
+   "expression": "LGPL-2.1-or-later",
+   "component": {
+    "name": "glibc",
+    "kind": "STATIC_SYSTEM_LIBRARY",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": {
+     "name": "planeon-broker",
+     "custody": "REPOSITORY_BUILT"
+    }
+   },
+   "outcome": "OUT_OF_SCOPE",
+   "elections": [],
+   "note": "glibc statically linked into a planeon binary is not decided"
+  },
+  {
+   "expression": "GPL-3.0-or-later WITH GCC-exception-3.1",
+   "component": {
+    "name": "libgcc_eh",
+    "kind": "STATIC_SYSTEM_LIBRARY",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": {
+     "name": "planeon-gate",
+     "custody": "REPOSITORY_BUILT"
+    }
+   },
+   "outcome": "OUT_OF_SCOPE",
+   "elections": [],
+   "note": "libgcc_eh in a planeon binary"
+  },
+  {
+   "expression": "GPL-2.0-or-later",
+   "component": {
+    "name": "libfoo",
+    "kind": "HOST_OS_LIBRARY",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": null
+   },
+   "outcome": "OUT_OF_SCOPE",
+   "elections": [],
+   "note": "an unnamed host library"
+  },
+  {
+   "expression": "GPL-2.0-or-later OR LGPL-2.1-only",
+   "component": {
+    "name": "libfoo",
+    "kind": "HOST_OS_LIBRARY",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": null
+   },
+   "outcome": "OUT_OF_SCOPE",
+   "elections": [],
+   "note": "no alternative in scope"
+  },
+  {
+   "expression": "GPL-2.0-only",
+   "component": {
+    "name": "libxtables",
+    "kind": "HOST_OS_LIBRARY",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": null
+   },
+   "outcome": "OPTIONAL_EXPLICIT_REVIEW",
+   "elections": [],
+   "note": "an undecided closure member"
+  },
+  {
+   "expression": "GPL-2.0-only",
+   "component": {
+    "name": "nft",
+    "kind": "CRATE",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": null
+   },
+   "outcome": "OPTIONAL_EXPLICIT_REVIEW",
+   "elections": [],
+   "note": "the nft approval is for the host program"
+  },
+  {
+   "expression": "GPL-2.0-only",
+   "component": {
+    "name": "nft",
+    "kind": "PLANEON_SOURCE",
+    "custody": "REPOSITORY_BUILT",
+    "crateField": false,
+    "linkedInto": null
+   },
+   "outcome": "OPTIONAL_EXPLICIT_REVIEW",
+   "elections": [],
+   "note": "never planeon source"
+  },
+  {
+   "expression": "GPL-2.0-only",
+   "component": {
+    "name": "libnftables",
+    "kind": "STATIC_SYSTEM_LIBRARY",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": {
+     "name": "runc",
+     "custody": "UPSTREAM_PINNED"
+    }
+   },
+   "outcome": "OPTIONAL_EXPLICIT_REVIEW",
+   "elections": [],
+   "note": "never statically linked"
+  },
+  {
+   "expression": "MIT AND GPL-2.0-only",
+   "component": {
+    "name": "nft",
+    "kind": "CRATE",
+    "custody": "REPOSITORY_BUILT",
+    "crateField": false,
+    "linkedInto": null
+   },
+   "outcome": "OPTIONAL_EXPLICIT_REVIEW",
+   "elections": [],
+   "note": "not through AND either"
+  },
+  {
+   "expression": "LGPL-3.0-or-later",
+   "component": {
+    "name": "gmp",
+    "kind": "CRATE",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": null
+   },
+   "outcome": "OPTIONAL_EXPLICIT_REVIEW",
+   "elections": [],
+   "note": "the gmp approval is for the host library"
+  },
+  {
+   "expression": "LGPL-3.0-or-later",
+   "component": {
+    "name": "gmp",
+    "kind": "STATIC_SYSTEM_LIBRARY",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": {
+     "name": "runc",
+     "custody": "UPSTREAM_PINNED"
+    }
+   },
+   "outcome": "OPTIONAL_EXPLICIT_REVIEW",
+   "elections": [],
+   "note": "gmp dynamically linked only"
+  },
+  {
+   "expression": "LGPL-3.0-or-later",
+   "component": {
+    "name": "gmp",
+    "kind": "HOST_OS_LIBRARY",
+    "custody": "REPOSITORY_BUILT",
+    "crateField": false,
+    "linkedInto": null
+   },
+   "outcome": "OPTIONAL_EXPLICIT_REVIEW",
+   "elections": [],
+   "note": "upstream-pinned only"
+  },
+  {
+   "expression": "LGPL-3.0-or-later OR GPL-2.0-or-later",
+   "component": {
+    "name": "gmp",
+    "kind": "CRATE",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": null
+   },
+   "outcome": "OPTIONAL_EXPLICIT_REVIEW",
+   "elections": [],
+   "note": "the gmp election does not reach a gmp crate"
+  },
+  {
+   "expression": "NOASSERTION OR SSPL-1.0",
+   "component": {
+    "name": "some-crate",
+    "kind": "CRATE",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": null
+   },
+   "outcome": "REFUSED",
+   "elections": [],
+   "note": "NOASSERTION is a whole-field value"
+  },
+  {
+   "expression": "MIT AND (SSPL-1.0 OR NOASSERTION)",
+   "component": {
+    "name": "some-crate",
+    "kind": "CRATE",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": false,
+    "linkedInto": null
+   },
+   "outcome": "REFUSED",
+   "elections": [],
+   "note": "NOASSERTION inside an expression"
+  },
+  {
+   "expression": "MIT / Apache-2.0",
+   "component": {
+    "name": "spaced-crate",
+    "kind": "CRATE",
+    "custody": "UPSTREAM_PINNED",
+    "crateField": true,
+    "linkedInto": null
+   },
+   "outcome": "ACCEPTED_OR",
+   "elections": [
+    {
+     "group": "Apache-2.0 OR MIT",
+     "elected": "Apache-2.0"
+    }
+   ],
+   "note": "a legacy field with spaces"
+  }
+ ]
+}

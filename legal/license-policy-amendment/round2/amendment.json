@@ -1,0 +1,132 @@
+{
+ "schemaVersion": "planeon.internal.license-policy-amendment/v1",
+ "amendmentId": "LIC-HOST-A1",
+ "base": {
+  "path": "legal/third-party-license-policy.yaml",
+  "sha256": "fa3a4398acafc3960eaaae9f5396d4e96d91e6ff252b83f6c53e1f5f0d8a40d0",
+  "policyVersion": "0.3.0"
+ },
+ "ownerDecisions": [
+  {
+   "id": "Q-L",
+   "selected": "L-a",
+   "date": "2026-10-10",
+   "via": "owner (via the lane monitor)",
+   "summary": "Keep the official upstream binaries, pinned; a reviewed class for host-OS and statically linked system libraries with exact entries (glibc LGPL-2.1-or-later, libseccomp LGPL-2.1-only, libpathrs MPL-2.0 OR LGPL-3.0-or-later electing MPL-2.0, nft GPL-2.0-only as a separately executed host program); source offers from the pinned tags."
+  },
+  {
+   "id": "Q-L2",
+   "selected": "L2-a",
+   "date": "2026-10-10",
+   "via": "owner (via the lane monitor)",
+   "summary": "An OR-choice rule (an \"A OR B\" expression with an allowed alternative is accepted, electing it, recorded per component) and exact entries for GPL-3.0-or-later WITH GCC-exception-3.1 and the nft library closure in the host-OS class; gmp elects LGPL-3.0-or-later."
+  },
+  {
+   "id": "Q-L3",
+   "selected": "L3-a",
+   "date": "2026-10-10",
+   "via": "owner (via the lane monitor)",
+   "summary": "An AND-term rule (a compound is accepted when every AND term is allowed, an allowed exception, reviewed or OR-resolved) and legacy \"A/B\" crate strings read as \"A OR B\" with the normalisation recorded; the build-time license gate and SBOM produce the crate list and elections."
+  }
+ ],
+ "hostOsSystemLibraryClass": {
+  "outcome": "HOST_OS_SYSTEM_LIBRARY",
+  "expressions": [
+   "GPL-2.0-or-later",
+   "GPL-3.0-or-later WITH GCC-exception-3.1",
+   "LGPL-2.1-only",
+   "LGPL-2.1-or-later"
+  ],
+  "allowedKinds": [
+   "HOST_OS_PROGRAM",
+   "HOST_OS_LIBRARY",
+   "STATIC_SYSTEM_LIBRARY"
+  ],
+  "allowedCustody": [
+   "UPSTREAM_PINNED"
+  ],
+  "neverFor": [
+   "planeon-authored source or modules",
+   "code copied into a planeon repository",
+   "a container runtime or other component that owner decisions do not name"
+  ],
+  "releaseOutcome": "ALLOW_ONLY_WITH_PINNED_CORRESPONDING_SOURCE_OFFER_LICENSE_TEXT_SBOM_AND_NOTICE",
+  "decidedBy": [
+   "Q-L",
+   "Q-L2"
+  ]
+ },
+ "ownerElections": [
+  {
+   "group": "LGPL-3.0-or-later OR MPL-2.0",
+   "elects": "MPL-2.0",
+   "decidedBy": "Q-L",
+   "component": "libpathrs"
+  },
+  {
+   "group": "GPL-2.0-or-later OR LGPL-3.0-or-later",
+   "elects": "LGPL-3.0-or-later",
+   "decidedBy": "Q-L2",
+   "component": "gmp"
+  }
+ ],
+ "rules": {
+  "orChoice": {
+   "rule": "An expression \"A OR B ...\" is accepted when at least one alternative is accepted on its own for the component. The election ranks the accepted alternatives: Apache-2.0, then default-allowed, then an allowed exception, then open content (artifacts only), then the host-OS class, then an approved explicit-review license, ties broken by the canonical text; an owner-named election (ownerElections) applies to its named component whatever the term order. Each election is recorded per component as its canonical OR group and the elected alternative.",
+   "decidedBy": "Q-L2"
+  },
+  "andTerms": {
+   "rule": "A compound \"A AND B ...\" is accepted when every AND term, after resolving parenthesised OR terms, is accepted on its own; the obligations are the union of the terms' obligations.",
+   "decidedBy": "Q-L3"
+  },
+  "legacySlash": {
+   "rule": "A Cargo crate license field written \"A/B\" (legacy crates.io syntax) is read as \"A OR B\"; the normalisation is recorded in the SBOM. It applies to crate metadata only.",
+   "decidedBy": "Q-L3"
+  },
+  "scope": {
+   "rule": "A host-OS class term is accepted only for a component of kind HOST_OS_PROGRAM, HOST_OS_LIBRARY or STATIC_SYSTEM_LIBRARY in UPSTREAM_PINNED custody; an explicit-review approval only for its named subjects; an open-content term only for an ARTIFACT. Elsewhere such a term is OUT_OF_SCOPE, which ranks with UNKNOWN. The scope applies inside AND and OR compounds too.",
+   "decidedBy": "Q-L"
+  },
+  "precedence": "Expressions are compared in canonical form (nested operators flattened, operands sorted, single spaces), and a compound listed exactly in the base policy keeps its base outcome however it is spelled. An AND compound with a blocking term takes the most restrictive blocking outcome under the base evaluation.precedence (DENIED, then UNKNOWN or OUT_OF_SCOPE, then PLANNED_UNRESOLVED, then OPTIONAL_EXPLICIT_REVIEW); an OR expression with no accepted alternative takes its least restrictive alternative's outcome. No rule weakens the base deniedRule."
+ },
+ "releaseAdmission": {
+  "HOST_OS_SYSTEM_LIBRARY": "ALLOW_ONLY_WITH_PINNED_CORRESPONDING_SOURCE_OFFER_LICENSE_TEXT_SBOM_AND_NOTICE",
+  "OPTIONAL_EXPLICIT_REVIEW_APPROVED": "ALLOW_UNDER_THE_DECISION_RECORD_WITH_SOURCE_OFFER_LICENSE_TEXT_SBOM_AND_NOTICE",
+  "ACCEPTED_AND": "ALLOW_WITH_THE_UNION_OF_EVERY_LEAF'S_OBLIGATIONS",
+  "ACCEPTED_OR": "ALLOW_WITH_THE_ELECTED_ALTERNATIVES'_OBLIGATIONS_AND_THE_RECORDED_ELECTIONS"
+ },
+ "explicitReviewDecisions": [
+  {
+   "expression": "GPL-2.0-only",
+   "approvedUseAndDistributionMode": "A separately executed host program and its library in the host image (nft and libnftables, executed by kube-proxy); never linked into planeon code.",
+   "sourceOfferOrCorrespondingSourceDisposition": "Corresponding source offered from the pinned host-OS package source of the shipped version.",
+   "networkCopyleftDisposition": "NOT_APPLICABLE: no network copyleft term; the program or library is not offered as a network service",
+   "noticeAndAttributionDisposition": "License text and attribution in the host image's NOTICE and SBOM.",
+   "approvingAuthority": "owner (R00), via the lane monitor, decision Q-L (L-a), 2026-10-10",
+   "decisionDigest": "sha256:3a2141673e154dec8e6e6f9892182054e72bc01ec07fd127db77d646bd181f36",
+   "subjects": [
+    "libnftables",
+    "nft"
+   ],
+   "decidedBy": "Q-L"
+  },
+  {
+   "expression": "LGPL-3.0-or-later",
+   "approvedUseAndDistributionMode": "gmp, a shared library of the host's nft, elected from LGPL-3.0-or-later OR GPL-2.0-or-later; dynamically linked, never into planeon code.",
+   "sourceOfferOrCorrespondingSourceDisposition": "Corresponding source offered from the pinned host-OS package source of the shipped version.",
+   "networkCopyleftDisposition": "NOT_APPLICABLE: no network copyleft term; the program or library is not offered as a network service",
+   "noticeAndAttributionDisposition": "License text and attribution in the host image's NOTICE and SBOM.",
+   "approvingAuthority": "owner (R00), via the lane monitor, decision Q-L2 (L2-a), 2026-10-10",
+   "decisionDigest": "sha256:bb80f849a01163ba093aa936eab80f59ddec4dd13c5609df4861a83fb642befc",
+   "subjects": [
+    "gmp"
+   ],
+   "decidedBy": "Q-L2"
+  }
+ ],
+ "notClaimed": [
+  "The base policy is unchanged and keeps its outcomes for every expression it lists.",
+  "No artifact is released by this record; release still needs the SBOM, NOTICE and source offers.",
+  "Not legal advice; the owner's decisions are the approving authority."
+ ]
+}

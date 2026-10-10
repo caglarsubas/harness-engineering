@@ -1,0 +1,60 @@
+{
+ "schemaVersion": "harness.planeon.ai/license-amendment-review/v1",
+ "kind": "license-amendment-review",
+ "round": 4,
+ "reviewDate": "2026-10-10",
+ "subjectCommit": "c12fa44ccdc07b3ed1df5f0611359d49f2fa2f9f",
+ "subjectTree": "f2f4b2d1d0ea9f7c4e7296595be66a66ff315a75",
+ "verdict": "PASS_FOR_SOURCE_PUBLICATION",
+ "findings": [
+  {
+   "id": "L20",
+   "severity": "NOTE",
+   "location": "legal/license-policy-amendment/README.md, consumer limits ('The native modules are fully static musl builds (Q3), so no glibc or GCC runtime is linked into planeon binaries')",
+   "finding": "The musl choice itself is supported: the W03 plan records Q3 'musl, fully static', and W01-AMEND-QW4 says the same. But the claim that no GCC runtime is linked may not hold. In rustc_target's crt_objects, Rust's self-contained *-linux-musl linking adds crtbegin.o/crtbeginS.o and crtend.o/crtendS.o next to musl's crt1/crti/crtn. Those objects come from the GCC toolchain and are under GPL-3.0-or-later WITH GCC-exception-3.1. I could not confirm this offline: no local musl target, and no network read was made. If it holds, HE-001's gate enumeration of the self-contained objects would classify those objects as OUT_OF_SCOPE, because the class names only libgcc and libgcc_eh in containerd, pause and runc. That fails closed, but HE-001 would then need a further owner decision. The classifier's behaviour is correct either way; only the README sentence is affected.",
+   "requiredChange": "None for this packet. Before HE-001, check the crt objects of the pinned Rust commit's musl target. Then either reword the sentence (for example, 'no glibc; GCC crt objects, if present, are OUT_OF_SCOPE pending an owner decision') or confirm it."
+  },
+  {
+   "id": "L21",
+   "severity": "NOTE",
+   "location": "vectors.json / scripts/license_amendment.py coverage check",
+   "finding": "Carried items, all non-blocking. Round-3 L19 (1) to (2) and (7) to (8) are acknowledged in the README. Text fields the classifier does not read remain unpinned until the packet authority's digest pin. The vector check requires outcome-level coverage only, so dropping the specific libseccomp OUT_OF_SCOPE vectors still passes. This does not weaken anything, because the decided content is pinned in the code constants and in the record, and the record check refuses every behaviour-relevant mutation tried.",
+   "requiredChange": "None required."
+  }
+ ],
+ "roundThreeFindings": {
+  "L18": {
+   "status": "FIXED",
+   "reason": "Each class component is now bound to one decided term, its kinds and, for a static library, its decided binaries. CLASS_COMPONENTS, the record and check() pin all three. I re-ran the round-3 L18 probes. glibc static with GPL-2.0-or-later, LGPL-2.1-only or the GCC runtime term: OUT_OF_SCOPE. glibc host with 'GPL-2.0-or-later OR LGPL-2.1-only': OUT_OF_SCOPE. libnftnl with LGPL-2.1-or-later: OUT_OF_SCOPE. libseccomp in containerd or pause: OUT_OF_SCOPE. 'LGPL-2.1-or-later AND GPL-2.0-or-later' for glibc static: OUT_OF_SCOPE. 'LGPL-2.1-or-later OR GPL-2.0-or-later' for glibc elects the decided LGPL-2.1-or-later. The libpathrs election is bound to runc; in containerd the ranking still elects MPL-2.0. A full matrix of 768 probes covered 8 names, 3 kinds, 5 link targets, both custodies, both link custodies and the 4 class terms. Exactly the 13 decided tuples come out HOST_OS_SYSTEM_LIBRARY: glibc LGPL-2.1-or-later as host library, or static in containerd, pause and runc; libseccomp LGPL-2.1-only static in runc; libgcc and libgcc_eh GCC runtime static in containerd, pause and runc; libnftnl GPL-2.0-or-later and libmnl LGPL-2.1-or-later as host libraries. All 13 mutations of class components and election binaries were refused."
+  },
+  "L19": {
+   "status": "ADDRESSED",
+   "reason": "(6) HOST_OS_PROGRAM is removed from the class kinds; adding it back is refused. (5) The README now states that glibc as a host library is read as part of Q-L2's nft library closure. (3) and (4) are stated as consumer limits: the name-to-SBOM mapping is the host-image packet's job, and a mismatch fails closed. The musl claim is supported by Q3, but see the GCC crt-object caveat in L20. (1), (2), (7) and (8) are acknowledged and carried (L21)."
+  }
+ },
+ "checksRun": [
+  "git rev-parse: HEAD c12fa44 and tree f2f4b2d1 confirmed; git diff 6c4cba4..c12fa44 touches only legal/license-policy-amendment/ and scripts/license_amendment.py; round1/, round2/, review-round1.json and review-round2.json untouched; base policy unchanged (sha256 fa3a4398...a40d0 verified by check)",
+  "round3/ copies compared byte for byte with 6c4cba4's README, REVIEW_BRIEF, amendment.json, vectors.json and scripts/license_amendment.py: all identical",
+  "pyw -B scripts/license_amendment.py: valid; 88 vectors (matches the README)",
+  "768-probe class matrix plus 47 targeted probes: the round-3 L18 set, approvals and elections, the W03-0 selection expressions, and base non-weakening (denied, exact base compounds, NOASSERTION refusal, open-content scope) (/private/tmp/claude-501/lichost-review-r4/probe.py)",
+  "15 mutation probes on the new record content: component term, kinds and binaries, an added component, the legacy upstreamBinaries key, and election binaries. 13 refused; the 2 accepted were the baseline and a vector-subset removal (/private/tmp/claude-501/lichost-review-r4/mutate.py)",
+  "Comparison of the decided tuples with Q-L and Q-L2 and with W03-0 D-LIC-GLIBC, D-LIC-LIBSECCOMP, D-LIC-LIBGCC, D-LIC-LIBNFTNL, D-LIC-LIBMNL, D-LIC-NFT, D-LIC-GMP and D-LIC-LIBPATHRS: nothing broader, nothing missing",
+  "W03 plan Q3 checked on codex/w03-0-backend-distribution (architecture/w03-plan/plan.json: 'musl, fully static')",
+  "Worktree clean after review (git status --ignored empty; no .venv created)"
+ ],
+ "sourcesRead": [
+  "legal/license-policy-amendment/REVIEW_BRIEF.md (round 4)",
+  "legal/license-policy-amendment/README.md (round 4, including the round-3 dispositions)",
+  "legal/license-policy-amendment/amendment.json (git diff 6c4cba4..c12fa44)",
+  "legal/license-policy-amendment/vectors.json (88 cases; additions reviewed)",
+  "legal/license-policy-amendment/round3/ (cmp only)",
+  "scripts/license_amendment.py (git diff 6c4cba4..c12fa44)",
+  "codex/w03-0-backend-distribution:architecture/w03-plan/plan.json (Q3)",
+  "git grep 'musl' on codex/w03-0-backend-distribution and HEAD (W01-AMEND-QW4 context)"
+ ],
+ "actions": {
+  "filesEdited": false,
+  "networkAccessed": "none",
+  "personalDataSent": false
+ }
+}

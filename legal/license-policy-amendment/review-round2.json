@@ -1,0 +1,127 @@
+{
+ "schemaVersion": "harness.planeon.ai/license-amendment-review/v1",
+ "round": 2,
+ "reviewDate": "2026-10-10",
+ "subjectCommit": "14c7e3e14523e33260bb5b99b3c5a2ad19082243",
+ "subjectTree": "f8310ba27daeb9d4344d59d1a354876d12d95830",
+ "verdict": "CHANGES_REQUIRED",
+ "findings": [
+  {
+   "id": "L11",
+   "severity": "MAJOR",
+   "location": "scripts/license_amendment.py DECISIONS, OWNER_ELECTIONS, Policy.leaf (component[\"name\"] in DECISIONS[term]), Policy.resolve (owner election); amendment.json explicitReviewDecisions[].approvedUseAndDistributionMode",
+   "finding": "The two explicit-review approvals and the owner elections check only the component's bare name. They ignore its kind, custody and how it is linked, so they reach uses the decision records exclude. The GPL-2.0-only record says 'a separately executed host program and its library in the host image ... never linked into planeon code'. The gmp record says 'dynamically linked, never into planeon code'. Probes: GPL-2.0-only for {nft, CRATE, REPOSITORY_BUILT} gives OPTIONAL_EXPLICIT_REVIEW_APPROVED, and 'MIT AND GPL-2.0-only' for the same component gives ACCEPTED_AND. GPL-2.0-only for {nft, PLANEON_SOURCE, REPOSITORY_BUILT} is approved. GPL-2.0-only for {libnftables, STATIC_SYSTEM_LIBRARY, UPSTREAM_PINNED} is approved, which means GPL-2.0-only statically linked into a binary. LGPL-3.0-or-later for {gmp, CRATE} and for {gmp, STATIC_SYSTEM_LIBRARY, REPOSITORY_BUILT} is approved. The gmp owner election also applies to a gmp CRATE. Bare names are not namespaced, and the classifier ignores the use mode the owner approved. So this is broader than Q-L and Q-L2, and it carries forward the round-1 L1 scope finding.",
+   "requiredChange": "Bind each approval to its subjects and also to its decided use mode. nft and libnftables: kind HOST_OS_PROGRAM or HOST_OS_LIBRARY, custody UPSTREAM_PINNED. gmp: HOST_OS_LIBRARY, UPSTREAM_PINNED. Anything else (CRATE, PLANEON_SOURCE, STATIC_SYSTEM_LIBRARY, UPSTREAM_BINARY, or another custody) stays OPTIONAL_EXPLICIT_REVIEW. Apply the same binding to the owner elections. Pin it in DECISIONS, OWNER_ELECTIONS and the record. Consider a namespaced component identity (for example a package URL) instead of a bare name. Add vectors for: nft as CRATE and as PLANEON_SOURCE, libnftables static, gmp as CRATE, static, and REPOSITORY_BUILT, and gmp's OR group for a gmp CRATE."
+  },
+  {
+   "id": "L12",
+   "severity": "MAJOR",
+   "location": "amendment.json hostOsSystemLibraryClass.allowedKinds (SYSTEM_LIBRARY_STATICALLY_LINKED_INTO_A_PINNED_UPSTREAM_BINARY renamed STATIC_SYSTEM_LIBRARY) and neverFor; README 'HOST_OS_SYSTEM_LIBRARY class'; scripts/license_amendment.py CLASS_KINDS, Policy.leaf",
+   "finding": "Round 2 broadened the class scope without a disposition. (a) In round 1 the kind itself carried the restriction 'statically linked into a pinned upstream binary', and the README said so. Round 2 renamed the kind STATIC_SYSTEM_LIBRARY and removed that README sentence. The component model has no field for the binary a library is linked into, so the classifier cannot tell the official containerd, runc or pause binaries apart from a planeon-built binary. Any static glibc, libseccomp or libgcc (UPSTREAM_PINNED) now gets HOST_OS_SYSTEM_LIBRARY, including glibc or libgcc_eh linked into an HE-001 Rust module. Q-L decided the license closure of the official upstream binaries; its alternatives were dynamic builds (L-b) and an Apache-only closure (L-c). It did not decide LGPL static linking into planeon binaries. (b) neverFor still says the class never covers 'a container runtime or other component that owner decisions do not name', yet the classifier accepts the class for any component name. Probe: {libfoo, HOST_OS_LIBRARY, UPSTREAM_PINNED} with 'GPL-2.0-or-later OR LGPL-2.1-only' gives ACCEPTED_OR, electing the class term GPL-2.0-or-later. The same would apply to undecided closure members such as libxtables (W03-0 D-LIC-CLOSURE).",
+   "requiredChange": "Pick one option. (i) Restore the round-1 restriction. A STATIC_SYSTEM_LIBRARY is accepted only when the component records the binary it is linked into, and that binary is a pinned official upstream binary (for example a linkedInto {name, custody: UPSTREAM_PINNED} field). Class acceptance is limited to the components the owner decisions name (glibc, libseccomp, the GCC runtime libgcc/libgcc_eh, libnftnl, libmnl), as neverFor says. (ii) If the class is meant to cover any host-OS library and any static system library, including those linked into planeon-built binaries, remove the contradicting neverFor clause and get the owner's explicit confirmation through the lane monitor. Either way, add vectors for static glibc and libgcc linked into a planeon binary and for an unnamed host library."
+  },
+  {
+   "id": "L13",
+   "severity": "MINOR",
+   "location": "scripts/license_amendment.py Policy.resolve (OR with no accepted alternative: least restrictive); IDSTRING accepts NOASSERTION/NONE inside compounds",
+   "finding": "The least-restrictive rule for a blocked OR is order-independent and documented. But it can label an expression the base classifies UNKNOWN (DENY_UNKNOWN_LICENSE, an unlisted compound) as PLANNED_UNRESOLVED, which the base catalog accepts as a placeholder for PLANNED modules. This happens even when the other alternative is denied. Probes: 'NOASSERTION OR SSPL-1.0' and 'MIT AND (SSPL-1.0 OR NOASSERTION)' both give PLANNED_UNRESOLVED. In round 1 the latter was DENIED. Release is still denied, but at catalog level a blocked compound with a denied term comes out weaker than the base. In SPDX 2.3, NOASSERTION and NONE are values for a whole field, not license ids usable inside an expression.",
+   "requiredChange": "Refuse NOASSERTION and NONE inside compound expressions, as SPDX 2.3 does. Otherwise, never let a blocked compound come out weaker than UNKNOWN when the least-restrictive alternative is a placeholder. Add vectors for both cases."
+  },
+  {
+   "id": "L14",
+   "severity": "MINOR",
+   "location": "amendment.json releaseAdmission.ACCEPTED_AND / ACCEPTED_OR; scripts/license_amendment.py classify 'leaves'",
+   "finding": "releaseAdmission.ACCEPTED_AND reads 'ALLOW_WITH_THE_UNION_OF_EVERY_LEAF'S_OBLIGATIONS'. But leaves also lists alternatives that were not elected, and nothing marks which leaves are in effect. Probe: 'MIT AND (Apache-2.0 OR SSPL-1.0)' gives ACCEPTED_AND, and its leaves include {SSPL-1.0, DENIED}. Read literally, the union then contains a denied term's obligations. Separately, exact base compounds return leaves [], so a consumer has no per-leaf categories for them.",
+   "requiredChange": "Either mark each leaf as effective or not elected, or return only the effective leaves: the AND terms, plus each OR group's elected alternative. Define the ACCEPTED_AND and ACCEPTED_OR obligations over the effective leaves only. For exact base compounds, return the leaves or state that the base entry's releaseOutcome applies."
+  },
+  {
+   "id": "L15",
+   "severity": "MINOR",
+   "location": "scripts/license_amendment.py effective_policy (check(read) then base_categories(read(BASE_PATH)))",
+   "finding": "effective_policy reads the base policy twice. check() verifies the sha256 of the first read, but the Policy is built from the second, unchecked read. Probe: an injected reader that returned the verified bytes first, then a copy without SSPL-1.0, produced a policy that classifies SSPL-1.0 as UNKNOWN instead of DENIED. A second read that adds terms to defaultAllowedSpdx would be accepted in the same way. This is the only constructor consumers use, so the digest pin can be bypassed by a file changing between the two reads.",
+   "requiredChange": "Read the base once. Have _check return the verified base bytes (or categories) and build the Policy from them."
+  },
+  {
+   "id": "L16",
+   "severity": "MINOR",
+   "location": "legal/license-policy-amendment/README.md 'Files' table",
+   "finding": "The Files table still describes vectors.json as '24 classification cases with expected outcomes and elections'. The text and the file have 63 v2 cases with a component argument.",
+   "requiredChange": "Update the row to 63 cases (vectors schema v2, with component, expected outcome and elections, refusal included)."
+  },
+  {
+   "id": "L17",
+   "severity": "NOTE",
+   "location": "scripts/license_amendment.py record()/_check(); vectors.json",
+   "finding": "Remaining items, none blocking. (1) check() still accepts edits to text-only fields that the classifier does not read: neverFor, the class releaseOutcome (for example 'ALLOW'), the releaseAdmission texts, the rule texts, the owner-decision summaries, notClaimed, and decision text fields such as approvedUseAndDistributionMode rewritten to 'linked into planeon code' with a recomputed digest. decisionDigest is a hash the record computes over itself, not a binding by an authority. Pin amendment.json by digest when it becomes its own history-projected packet. (2) A REFUSED vector passes when the component is invalid, not only when the expression is malformed. (3) When alternatives tie on category, the canonical text decides. 'GPL-2.0-or-later OR LGPL-2.1-only' elects GPL-2.0-or-later. 'MIT OR (Apache-2.0 AND BSD-3-Clause)' elects the two-license AND group over MIT. (4) The gmp owner election matches only the exact two-term group. 'LGPL-3.0-or-later OR GPL-2.0-or-later OR GPL-3.0-or-later' for gmp elects GPL-2.0-or-later. (5) Legacy crate fields with spaces, such as 'MIT / Apache-2.0', are now refused. That fails closed, but such fields exist on crates.io. (6) For gmp only, a superset of a base review compound ('BSD-3-Clause AND Apache-2.0 AND LGPL-3.0-or-later') is accepted, while the exact base compound stays OPTIONAL_EXPLICIT_REVIEW. (7) Open content is limited by kind but not by the base allowedScopes. (8) libnftables' shipped-package license check appears only in the disposition table.",
+   "requiredChange": "None required. Consider (1) and (5) for the next round."
+  }
+ ],
+ "roundOneFindings": {
+  "L1": {
+   "status": "ADDRESSED",
+   "reason": "classify takes the component. Class terms are scoped to kind and custody, and open content to ARTIFACT, inside compounds too. Approvals are scoped to their subjects. Leaves and their categories are returned. subjects and decidedBy are inside the decision digest (recomputed independently). Probes: 'MIT AND GPL-2.0-or-later', 'MIT AND CC-BY-4.0' and 'MIT AND LGPL-3.0-or-later' for a crate now block. Two residual scope gaps are raised as L11 (approvals by bare name) and L12 (static linkage and unnamed components)."
+  },
+  "L2": {
+   "status": "FIXED",
+   "reason": "Exact lookup now uses the canonical form (flattened, deduplicated, sorted, single spaces). Reordered, parenthesised, nested, flattened, double-space and duplicate-operand variants of both base review compounds give OPTIONAL_EXPLICIT_REVIEW for a crate, and for gmp the reordered one does too. Tab and no-break space are refused. 'BSD-2-Clause OR Apache-2.0' keeps ALLOWED_EXCEPTION_EXPRESSION."
+  },
+  "L3": {
+   "status": "FIXED",
+   "reason": "AND takes the most restrictive blocking outcome under base precedence. 'GPL-3.0-only AND SSPL-1.0' and 'NOASSERTION AND SSPL-1.0' give DENIED, and 'NOASSERTION AND WTFPL' gives UNKNOWN. A blocked OR takes the least restrictive outcome and is order-independent through canonical sorting. Both orders are in the vectors. A placeholder edge case is raised as L13."
+  },
+  "L4": {
+   "status": "FIXED",
+   "reason": "The election is ranked: Apache-2.0, then default-allowed, then allowed exception, open content, class, approved review. 'GPL-2.0-or-later OR MIT', 'LGPL-3.0-or-later OR MIT' and 'CC-BY-4.0 OR MIT' elect MIT. The owner elections are pinned in canonical form and hold in either order: libpathrs elects MPL-2.0, gmp elects LGPL-3.0-or-later. Elections are structured as group plus elected. The bare-name binding is raised as L11."
+  },
+  "L5": {
+   "status": "ADDRESSED",
+   "reason": "check() pins the class expressions, kinds, custody and decidedBy, plus each decision's expression, subjects, question and count, and the owner elections exactly. 39 of 56 mutation probes are refused. Every accepted mutation edits text the classifier does not read, or the unchanged baseline (see L17)."
+  },
+  "L6": {
+   "status": "FIXED",
+   "reason": "Ids now follow SPDX Annex D, with an optional trailing '+'. Operator words in any case are refused as ids, only ASCII spaces separate tokens, expressions are capped at 512 characters, and nesting deeper than 16 is refused with a ValueError (RecursionError is also caught in check). 'MIT OR +', 'MIT OR .', 'MIT OR -', 'MIT OR and', 'MIT OR With', '+MIT', 'MIT+Apache-2.0', DocumentRef, tabs and no-break spaces are all refused. Refusal vectors exist."
+  },
+  "L7": {
+   "status": "FIXED",
+   "reason": "There are 63 vectors. The coverage check requires every classifier outcome plus REFUSED, at least one crateField vector, and unique (expression, component) pairs. crateField must be a bool. Every W03-0 selection expression is covered, plus reversed elections and multi-blocker cases. The README count is stale (L16)."
+  },
+  "L8": {
+   "status": "FIXED",
+   "reason": "OPTIONAL_EXPLICIT_REVIEW_APPROVED now uses the base's name. releaseAdmission covers HOST_OS_SYSTEM_LIBRARY, the approved outcome, ACCEPTED_AND and ACCEPTED_OR. The obligation wording is ambiguous (L14)."
+  },
+  "L9": {
+   "status": "FIXED",
+   "reason": "The README now says 32 architecture files and gives the git grep command, which reproduces 32 at 14c7e3e."
+  },
+  "L10": {
+   "status": "ADDRESSED",
+   "reason": "The README explains why GPL-2.0-only is a decision record rather than a class entry (no overlap with base categories; W03-0's wording put nft in the class). The libnftables shipped-package check is mentioned only in the disposition table (L17)."
+  }
+ },
+ "checksRun": [
+  "git rev-parse: HEAD 14c7e3e1 and tree f8310ba2 confirmed; git diff 0082017..14c7e3e and 195c4c9..14c7e3e touch only legal/license-policy-amendment/ and scripts/license_amendment.py; the base policy is unchanged and its sha256 is fa3a4398...a40d0",
+  "round1/ copies compared byte for byte with 0082017's README, REVIEW_BRIEF, amendment.json, vectors.json and scripts/license_amendment.py: all identical; review-round1.json spot-checked against the round-1 verdict, findings, severities and text",
+  "python3 -B scripts/license_amendment.py (system python3, PyYAML 6.0.3): valid",
+  "Decision digests recomputed independently over the 6 required fields plus subjects and decidedBy (canonical JSON): both match",
+  "Comparison with Q-L, Q-L2 and Q-L3 (amendment ownerDecisions and the caller's texts) and with the W03-0 licenseReviews, D-POLICY-AMEND and D-LIC-CLOSURE",
+  "142 scratch classification probes across crate, host-library, static, planeon, gmp, nft, libnftables, libpathrs, artifact, REPOSITORY_BUILT and UPSTREAM_BINARY components; 16 legacy crate-field probes; 4 component-validation probes; structure of leaves and elections (/private/tmp/claude-501/lichost-review-r2/probe.py)",
+  "56 scratch mutation probes of check() through a fake read() (39 refused, 17 accepted including the baseline), plus a probe of effective_policy's double read of the base (/private/tmp/claude-501/lichost-review-r2/mutate.py)",
+  "Worktree clean after review (git status --ignored empty)"
+ ],
+ "sourcesRead": [
+  "legal/license-policy-amendment/REVIEW_BRIEF.md (round 2)",
+  "legal/license-policy-amendment/README.md (round 2)",
+  "legal/license-policy-amendment/amendment.json (and git diff 0082017..14c7e3e)",
+  "legal/license-policy-amendment/vectors.json (63 cases)",
+  "legal/license-policy-amendment/review-round1.json",
+  "legal/license-policy-amendment/round1/ (cmp only)",
+  "scripts/license_amendment.py (round 2)",
+  "legal/third-party-license-policy.yaml (digest)",
+  "W03-0 selection.json licenseReviews and openItems (from round 1, branch codex/w03-0-backend-distribution)"
+ ],
+ "actions": {
+  "filesEdited": false,
+  "networkAccessed": "none",
+  "personalDataSent": false
+ }
+}

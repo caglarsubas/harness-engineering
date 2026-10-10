@@ -1,0 +1,115 @@
+{
+ "schemaVersion": "planeon.internal.seccomp-allowlists-review/v1",
+ "round": 2,
+ "reviewDate": "2026-10-09",
+ "verdict": "CHANGES_REQUIRED",
+ "subjectSha256": {
+  "architecture/seccomp-allowlists/README.md": "0072a4ee5a61cb8574ef7ec096259f40bed3ba4dea68685bd3f817052543c905",
+  "architecture/seccomp-allowlists/REVIEW_BRIEF.md": "d309295aedcecc914ae7d2d39092212c8fe0aae7e4dfce3798c9709851be5b12",
+  "architecture/seccomp-allowlists/syscalls.json": "a597313bd7ce66854af7e6a55754101a5baf5da55e2ff4022dc75a00a3048599",
+  "architecture/seccomp-allowlists/allowlists.json": "70a3a2fa7ad5c09ce767325242cb2f1613151cef3c239dbc60d38d723db8a914",
+  "architecture/seccomp-allowlists/vectors.json": "e0ce315a1305a063ce4195e7f3b56de1171f0f32e77227a7ca60792b4b8faf0b",
+  "scripts/seccomp_allowlists.py": "a35023b732f18ddc95138e34d24f819e6f5b67964c090b3ccea45f6fde92ee82"
+ },
+ "subjectCommit": "f783fd6",
+ "roundOneStatus": {
+  "F1": "PARTLY_RESOLVED: W5 execveat (AT_EMPTY_PATH) is now ALLOW under the stacked broker and worker filters on both arches, and so are arch_prctl(ARCH_SET_FS), access, faccessat and faccessat2. Not resolved: CPython 3.12's own startup on x86_64 issues readlink (89), which both filters kill; see F13. Conditional loader cases are in F15.",
+  "F2": "RESOLVED: W02d-QD. My independent structural check found the broker covering the worker on both arches. All 350 workerStackChecks hold under my stacked interpreter, which uses the kernel's min-by-signed-action rule. The 60,000-case random campaign found 0 worker stack differences. M11 refuses as stated. A latent looseness in require_covers is noted in F17.",
+  "F3": "RESOLVED in the model and programs: W02d-QB. clone3 returns ERRNO(38) (0x00050026) in the six non-broker programs and ALLOW for the broker. Stacked broker+worker gives ERRNO, since ERRNO is more restrictive than ALLOW. The glibc-2.39 clone_internal code falls back to clone after ENOSYS, and the fallback thread flags (0x3d0f00) are ALLOW. M04 and M13 refuse as stated. The vectors are wrong for exactly these cases; see F14.",
+  "F4": "RESOLVED: the broker program now allows socketpair (AF_UNIX, SOCK_SEQPACKET[|CLOEXEC|NONBLOCK], 0) and refuses STREAM, and allows ioctl FS_IOC_MEASURE_VERITY (0xC0046686, which I recomputed from fsverity.h:30-35,99), getdents64, readlinkat, newfstatat, and dup3 (through QD), each with its W3/W5 citation.",
+  "F5": "RESOLVED as decided (W02d-QC): membarrier is limited to cmd {0, 8, 16} with flags 0 and cpu 0. Cmd 1 and flags 1 are KILL. check_policy refuses an unconditional grant and a partial flags mask, and M12 refuses as stated. The scope is narrower than the inspection ABI; see F16.",
+  "F6": "RESOLVED: no xattr call is needed. The cited W02e matrix README ('Cgroup creation and labels', architecture/selinux-matrix-v2/README.md:131-144) labels the planeon cgroups by genfscon path rules, and nothing relabels them.",
+  "F7": "RESOLVED: every condition of every alternative is broken on its own by a KILL vector. 177 vectors carry high-word arguments and 14 use the i386 audit arch. The remaining low/high-mask-bit gaps (bpf, ioctl, openat bit 0) are flips onto another allowed alternative, so they are correctly ALLOW and not a gap.",
+  "F8": "RESOLVED: the INET stream alternatives require protocol 0 or IPPROTO_TCP (6, in.h:38), and AF_UNIX requires 0.",
+  "F9": "CARRIED to W01 as a finding (README).",
+  "F10": "CARRIED to W03 as a finding (README).",
+  "F11": "RESOLVED (stated in the dispositions).",
+  "F12": "UNCHANGED, still correct: the deny list is identical to round 1."
+ },
+ "findings": [
+  {
+   "id": "F13",
+   "severity": "BLOCKING",
+   "location": "allowlists.json runtimeBases.CPYTHON_3_12 (and the BROKER QD duty that mirrors it); README 'Runtime bases', 'Round-1 findings and dispositions' F1",
+   "finding": "After W5, the worker is CPython 3.12.14 running under the worker filter and the inherited broker filter. CPython's path calculation always calls realpath on the executable: Modules/getpath.py:410 at v3.12.14 runs 'real_executable = realpath(real_executable)'. getpath_realpath (Modules/getpath.c:441) calls _Py_wreadlink, which calls readlink() (Python/fileutils.c:2071). On x86_64, glibc's readlink() issues the readlink syscall (89) whenever __NR_readlink exists (glibc-2.39 sysdeps/unix/sysv/linux/readlink.c). readlink is not in the 128-name table, and nr 89 evaluates to KILL_PROCESS under both the worker and the broker x86_64 programs (checked by running both compiled programs). So the x86_64 worker is still killed during interpreter start-up, after W5 now succeeds. aarch64 is not affected: there readlink() maps to readlinkat, which is granted.",
+   "requiredChange": "Add readlink to the table and to the CPYTHON_3_12 base on x86_64; the broker then covers it through QD and require_covers. Re-derive the post-exec start-up set from a CPython 3.12.14 start-up trace or a source audit on both arches, rather than adding calls one at a time, and add vectors for it, including a stacked worker vector for readlink."
+  },
+  {
+   "id": "F14",
+   "severity": "MAJOR",
+   "location": "vectors.json decisionChecks D0033, D0267, D0503, D0721, D1475, D1649, D1825, D1999, D2175, D2317, D2485, D2647; README 'Rules' ('every decision check runs through both and they agree'); scripts/seccomp_allowlists.py docstrings",
+   "finding": "The 12 clone3 decision checks for the six non-broker roles say expect 'KILL_PROCESS'. decide, compile_filter with run_filter, and my own interpreter and decide all return ERRNO(ENOSYS) (0x00050026) for them, as W02d-QB requires. So the stated results contradict the owner decision and the model, and vectors.json has no way to express an ERRNO expectation; its 'expect' values are only ALLOW and KILL_PROCESS. No vector shows the ENOSYS outcome QB depends on, and the README's claim that the vectors agree with the model is false for these 12. The module and decide docstrings also still describe only ALLOW and KILL_PROCESS.",
+   "requiredChange": "Give these vectors the expectation 'ERRNO(38)' (or the exact return value), extend the expectation vocabulary, add a stacked worker vector for clone3 that gives ERRNO, regenerate the counts, and update the docstrings."
+  },
+  {
+   "id": "F15",
+   "severity": "MINOR",
+   "location": "allowlists.json runtimeBases (arch_prctl only ARCH_SET_FS); README 'Runtime bases'",
+   "finding": "Limiting arch_prctl to ARCH_SET_FS is right for upstream glibc 2.39 without shadow stack, but not for every loader the bases claim to cover. glibc 2.28-2.38 built with CET_ENABLED (--enable-cet) calls arch_prctl(ARCH_CET_STATUS = 0x3001) on every start-up (glibc-2.38 sysdeps/unix/sysv/linux/x86/cpu-features.c:24-27, called from sysdeps/x86/cpu-features.c:1079-1086). glibc 2.39 and later, with shadow stack enabled, uses ARCH_SHSTK_* (0x5001-0x5005, arch/x86/include/uapi/asm/prctl.h:33-37). Both are KILL under the worker and broker programs. On older glibc (< 2.33), stat and lstat are the x86_64 stat (4) and lstat (6) syscalls, not newfstatat. This matters only where the filter is active at exec, i.e. for the worker.",
+   "requiredChange": "Record the libc version and build constraints (CET or shadow-stack configuration, glibc >= 2.33) as an explicit W03 requirement on the worker's loader, or extend the arch_prctl alternatives to the options the chosen loader issues."
+  },
+  {
+   "id": "F16",
+   "severity": "MINOR",
+   "location": "allowlists.json SERVER/OBSERVER/BROKER 'inspection reads' duty (W02d-QC), sourced from docs/alpha-2/NATIVE_QUALIFICATION_READINESS.md:112-135",
+   "finding": "The QC duty cites lines 112-135, but it also includes fstatfs, which comes from lines 90-93 ('Trusted kernel views'). The same inspection ABI's 'Actual code and mappings' section (lines 145-160) requires FS_IOC_MEASURE_VERITY (0xc0046686) on retained descriptors and /proc/<pid>/maps reads. SERVER and OBSERVER have no MEASURE_VERITY ioctl; only BROKER has it, through W5. If that measurement runs under these filters, it is killed.",
+   "requiredChange": "Cite the lines the duty actually draws on, and state whether the code-and-mappings measurement runs under the SERVER and OBSERVER filters. If it does, add ioctl FS_IOC_MEASURE_VERITY to the QC duty (carried with the W01 row amendment)."
+  },
+  {
+   "id": "F17",
+   "severity": "NOTE",
+   "location": "scripts/seccomp_allowlists.py require_covers",
+   "finding": "For a worker errno rule, require_covers accepts a conditional broker rule (type(held) is list). When the broker's conditions fail, that combination would give KILL_PROCESS where the worker gives ERRNO, which contradicts the function's own docstring ('do not kill what the worker fails with an errno'). It cannot happen today: check_policy requires the broker's clone3 to be unconditional, and only clone3 may carry an errno rule.",
+   "requiredChange": "Accept only held is None, or held equal to the same errno rule."
+  }
+ ],
+ "questionAnswers": {
+  "Q0": "Partly. QA, QB, QC and QD are implemented in the data and the model as decided, and Q1-Q3 still hold. F2, F4-F8, F11 and F12 are resolved, and F9 and F10 are carried. F1 is only partly resolved: on x86_64 the worker is still killed at interpreter start-up by readlink (F13). F3 is resolved in the model, but its vectors state KILL_PROCESS where the model gives ERRNO (F14).",
+  "Q1": "Yes. All 128 numbers and table-line citations match my own downloads of the two kernel tables (0 mismatches). The 5 new names (access, arch_prctl, faccessat, faccessat2, fstatfs) are present only where the ABI has them: access and arch_prctl are x86_64-only. New constants all match the v6.12 headers: ENOSYS 38 (asm-generic/errno.h:18), ARCH_SET_FS 0x1002 (x86 uapi prctl.h:6), IPPROTO_IP 0 and IPPROTO_TCP 6 (in.h:30,38), FS_IOC_MEASURE_VERITY = _IOWR('f',134,4) = 0xC0046686 (fsverity.h). arch_prctl's option is int arg0 (arch/x86/kernel/process_64.c:983). The round-1 constants are unchanged.",
+  "Q2": "Mostly. The QA-QD additions match their decisions, and argument positions and masks are right. Missing: x86_64 readlink for the worker after exec (F13); loader-configuration-dependent arch_prctl options (F15); MEASURE_VERITY scope for QC (F16). Nothing in the bases is forbidden by a row. The QC and QD additions are owner-decided, not row-derived, and are carried as W01 amendments.",
+  "Q3": "Yes. The deny list is unchanged and complete for v6.12. check_policy refuses execveat outside BROKER and WORKER, and any form other than exact AT_EMPTY_PATH (my extra mutations: an unconditional worker execveat and a SERVER AT_EMPTY_PATH execveat are both refused). It refuses clone3 other than the broker's grant and ENOSYS elsewhere, any other errno rule, non-thread clone, membarrier other than the three per-process commands, mount for SERVER, kexec_file_load for containment, and worker socketpair. All 13 mutations give exactly their stated messages. socketpair is not refused for other roles, which W01 does not deny.",
+  "Q4": "Yes. All 14 programs (103-324 instructions) pass my re-implemented bpf_check_classic and seccomp_check_filter rules. RET|K with ERRNO|38 is a permitted instruction, and the errno is within MAX_ERRNO. Compilation is deterministic, and the digests and lengths match vectors.json. decide_stack's precedence (lowest signed ACTION_ONLY wins) matches kernel/seccomp.c seccomp_run_filters. The digest definition is unchanged and sound.",
+  "Q5": "No for 12 checks (F14): the clone3 vectors for the non-broker roles state KILL_PROCESS, but the model gives ERRNO(38). All other 2,754 decision checks agree across decide, run_filter, my interpreter and my own decide. All 350 stack checks hold, and all 13 mutations match. Coverage: every grant and alternative has an ALLOW vector, every condition is broken on its own, and the vectors include high words and i386.",
+  "Q6": "The W6 CAP_KILL and setgroups findings are unchanged and correct, and the new W01/W03 notes (memfd, systemd filter options) are accurate. The two-filter statement now holds for every worker decision check. Overclaims: 'every decision check runs through both and they agree' (F14), and the dispositions table's 'F1 resolved' with the CPython base described as covering start-up (F13)."
+ },
+ "modelExecution": {
+  "interpreter": "UV_PROJECT_ENVIRONMENT=.../harness-onion/.venv PYTHONDONTWRITEBYTECODE=1 uv run --offline --frozen --no-sync python, run from the worktree root, one process at a time, each under 60 s",
+  "scripts": [
+   "/private/tmp/claude-501/w02d-review-r2/check_table.py (system python3)",
+   "/private/tmp/claude-501/w02d-review-r2/review_check2.py (6.6 s)",
+   "/private/tmp/claude-501/w02d-review-r2/cov3.py",
+   "an inline clone3 vector check"
+  ],
+  "results": {
+   "syscallNumbers": "128 x 2 arches, 0 mismatches",
+   "programs": "14/14 pass the kernel rules; digests and lengths match; deterministic",
+   "decisionChecks": "2754/2766 agree with their stated expectation; the 12 clone3 non-broker checks state KILL_PROCESS while all four evaluators give ERRNO(38)",
+   "stackChecks": "350/350",
+   "mutations": "13/13, plus 9 reviewer mutations behaving as documented",
+   "randomCampaign": "60000 seeded cases (seed 20261010), 0 decision differences, 0 worker stack differences",
+   "probes": "x86_64 worker+broker stack: execveat AT_EMPTY_PATH ALLOW, AT_EMPTY_PATH|AT_SYMLINK_NOFOLLOW KILL; arch_prctl SET_FS ALLOW, 0x3001 and 0x5001 KILL; access/faccessat/faccessat2 ALLOW; clone3 ERRNO(38); readlink(89) KILL"
+  },
+  "outputs": [
+   "/private/tmp/claude-501/w02d-review-r2/review_check2.out"
+  ]
+ },
+ "sourcesRead": [
+  "architecture/seccomp-allowlists/{README.md,REVIEW_BRIEF.md,source-index.json,syscalls.json,allowlists.json,vectors.json,review-round1.json}, round1/* (sha256 equal to the 917aba4 bytes)",
+  "scripts/seccomp_allowlists.py (and the diff from 917aba4)",
+  "architecture/native-profile-v3/README.md:55-75; architecture/selinux-matrix-v2/README.md:29-44,131-144; docs/alpha-2/NATIVE_QUALIFICATION_READINESS.md (headings and lines 90-160)",
+  "torvalds/linux@adc218676eef25575469234709c2d87185ca223a: round-1 set plus include/uapi/asm-generic/errno.h, arch/x86/include/uapi/asm/prctl.h, include/uapi/linux/in.h, include/uapi/linux/fsverity.h, arch/x86/kernel/process_64.c (fetched by the reviewer)",
+  "glibc: 2.39 sysdeps/unix/sysv/linux/{clone-internal.c,readlink.c,access.c}, nptl/pthread_create.c, elf/rtld.c, sysdeps/x86/cpu-features.c; 2.38 sysdeps/unix/sysv/linux/x86/cpu-features.c, sysdeps/x86/cpu-features.c, sysdeps/unix/sysv/linux/x86/include/asm/prctl.h (github.com/bminor/glibc mirror)",
+  "CPython v3.12.14 Modules/getpath.py and getpath.c; v3.12.7 Python/fileutils.c (_Py_wreadlink)"
+ ],
+ "actions": {
+  "filesEdited": false,
+  "githubMutated": false,
+  "nativeActions": false,
+  "referenceModelExecuted": true,
+  "repositoryValidatorsRun": false,
+  "runnerActivated": false,
+  "testsRun": false,
+  "warmSourcesAccessed": false
+ },
+ "reviewLimit": "Read-only DATA_CHECK_ONLY review on macOS. No filter was installed and no CPython or loader trace was taken. F13 and F15 rest on reading the CPython 3.12.14, glibc 2.38/2.39 and kernel sources: I did not observe which libc or build the target host uses, and I did not check musl. I read fileutils.c at v3.12.7, not 3.12.14. Round-2 kernel files were fetched independently; the author's research copies were not used this round. Scratch lives only in /private/tmp/claude-501/w02d-review-r2/."
+}

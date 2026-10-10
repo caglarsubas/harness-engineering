@@ -1,6 +1,26 @@
 # Harness-Onion — unified development roadmap
 
-## Current checkpoint — MET-SECTOR-002 source preparation, October 9, 2026
+## Current checkpoint — MET-ENFORCE-017 source preparation, October 10, 2026
+
+Alpha2 OPEN. MET-SECTOR-002 (CATALOG-BANK) passed required verify (64/64, 415 s) and merged as main 984c953. Owner
+decision (via the lane monitor): W02d takes slot 219. MET-ENFORCE-017 publishes the W02d per-role, per-architecture
+seccomp allowlists for the seven roles at Linux v6.12 (independent review round 3, PASS_FOR_SOURCE_PUBLICATION), with the
+reference compiler's filter digests. DATA_CHECK_ONLY. MET-ENFORCE-017 is the sole 219th specification.
+
+| Phase | ID | Status | Description / gate |
+|---|---|---|---|
+| Alpha2A | MET-ENFORCE-017 / W02d | SOURCE_PREPARED | Seccomp allowlists as the 219th packet; verify from the owner's App |
+| Alpha2 | MET-SECTOR-002 / CATALOG-BANK | VERIFY_PASSED_MERGED | Verify 415 s |
+| Alpha2 | IND-BANK-001 to IND-BANK-005, KN-BANK-001, CTRL-BANK-001, DIST-BANK-001, CONF-BANK-001 | WAITING_PACKET_PUBLICATION | Banking pack, inputs and journey |
+| Alpha2A | W02a-F2, W02g-F2, W01 amendments from W02d | WAITING_EXACT_PACKETS | follow-ups |
+| Alpha2 qualification | CONF-LINUX-001 / CONF-A2-001 | WAITING_PREREQUISITES | Linux verification only when mandatory |
+
+Keep the inherited 64 argv unchanged (the installed activation cap and the verifier's inheritance rule; the new
+layer validator adds no argv and runs inside the outer pytest), 420/750/900 s/15 min and 32 MiB. No cloud, runner registration,
+live/native/tenant or model-effort changes. Phase-end effort transition NOT_DUE.
+Prior checkpoints below are history only.
+
+## Historical CATALOG-BANK source checkpoint — MET-SECTOR-002 source preparation, October 9, 2026
 
 Alpha2 OPEN. MET-PERF-036 (PERF-SEL) passed required verify (64/64, 399 s) and merged as main da81730. Owner rule
 (via the lane monitor): slot 218 goes to the first contract packet that passes review. MET-SECTOR-002 is CATALOG-BANK:
@@ -1227,7 +1247,8 @@ These checkboxes count only the named deliverable at the stated evidence level. 
 - [x] Alpha 2A · W02e-F / MET-ENFORCE-016 · Publish the independently reviewed SELinux matrix v4 closing K2, K3, K4 and K6; pass required verify through the owner's App.
 - [x] Alpha 2 · PERF-035 / MET-PERF-035 · Run the outer suite on fail-closed workers inside the unchanged argv, with suite reuse (validators and freshness unchanged); pass required verify through the owner's App.
 - [x] Alpha 2 · PERF-SEL / MET-PERF-036 · Replay the SELinux matrices inside validate() instead of three to five times per layer test file, with per-row weakening conjuncts (no validator refusal changes, nothing cached); pass required verify through the owner's App.
-- [ ] Alpha 2 · CATALOG-BANK / MET-SECTOR-002 · Publish the SECTOR-D1 catalog follow-ups as a reviewed overlay with the catalogs byte-identical; pass required verify through the owner's App.
+- [x] Alpha 2 · CATALOG-BANK / MET-SECTOR-002 · Publish the SECTOR-D1 catalog follow-ups as a reviewed overlay with the catalogs byte-identical; pass required verify through the owner's App.
+- [ ] Alpha 2A · W02d / MET-ENFORCE-017 · Publish the per-role, per-architecture seccomp allowlists and filter digests as reviewed data; pass required verify through the owner's App.
 - [ ] Alpha 2A · CONF-FIX-010 · Complete safe design and exact authority before any product attempt.
 - [ ] Alpha 2A · CONF-LIVE-004 · Produce the exact native-probe source implementation and separately qualify it.
 - [ ] Alpha 2A · CONF-LIVE-005 · Produce a reproducible selected package and operator handoff.

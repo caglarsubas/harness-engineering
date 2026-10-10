@@ -793,6 +793,7 @@ def test_the_current_modules_are_not_used(monkeypatch):
     ("scripts/contract_errata.py", "check_errata", lambda f: lambda *a: {}, "replace exactly their five files"),
     ("scripts/perf032_followup.py", "check_unique_oracle", lambda f: lambda *a: 0, "the PERF-032-F checks hold"),
     ("scripts/perf032_followup.py", "validate_perf032_followup", lambda f: lambda *a: 0, "the PERF-032-F checks hold"),
+    ("scripts/perf032_followup.py", "validate_perf032_followup", lambda f: lambda *a: f(*a) - 1, "the PERF-032-F checks hold"),
 ])
 def test_each_module_result_is_bound(monkeypatch, path, attribute, wrap, message):
     _patched_module(monkeypatch, path, attribute, wrap)
@@ -872,6 +873,34 @@ def test_each_review_record_is_bound(monkeypatch, number, mutate, message):
     status["reviewRounds"][number - 1]["recordSha256"] = profile.digest(profile.reviewed_bytes(path))
     _rebind(monkeypatch, profile.STATUS_PATH, (json.dumps(status, indent=1, ensure_ascii=False) + "\n").encode("utf-8"))
     with pytest.raises(ValueError, match=message):
+        profile.validate_w02_notes_errata()
+
+
+@pytest.mark.parametrize("number,mutate", [
+    (6, lambda subject: {"scripts/contract_errata.py": subject["scripts/contract_errata.py"]}),
+    (6, lambda subject: {path: sha for path, sha in subject.items() if path != "scripts/perf032_followup.py"}),
+    (6, lambda subject: dict(subject, **{"architecture/native-profile-v3/vectors.json": "0" * 64})),
+    (2, lambda subject: dict(subject, **{"docs/MASTER_DEVELOPMENT_PLAN.md": "0" * 64})),
+    (5, lambda subject: dict(subject, **{"scripts/validate_verify_headroom.py": "0" * 64})),
+])
+def test_each_round_binds_its_exact_subject_list_and_shared_copies(monkeypatch, number, mutate):
+    path = profile.ERRATA_DIR + "review-round%d.json" % number
+    _rebind_json(monkeypatch, path, lambda value: value.update(subjectSha256=mutate(value["subjectSha256"])))
+    status = json.loads(profile.reviewed_bytes(profile.STATUS_PATH))
+    status["reviewRounds"][number - 1]["recordSha256"] = profile.digest(profile.reviewed_bytes(path))
+    _rebind(monkeypatch, profile.STATUS_PATH, (json.dumps(status, indent=1, ensure_ascii=False) + "\n").encode("utf-8"))
+    with pytest.raises(ValueError, match="review round %d is bound to its exact subject bytes" % number):
+        profile.validate_w02_notes_errata()
+
+
+@pytest.mark.parametrize("path", sorted(profile.SHARED_SUBJECT))
+def test_the_replaced_f13_wording_must_be_gone(monkeypatch, path):
+    removed = [edit for edit, count in profile.SHARED_SUBJECT[path] if count == 0]
+    assert removed
+    original = profile.reviewed_bytes
+    monkeypatch.setattr(profile, "reviewed_bytes",
+                        lambda target: original(target) + b"\n" + removed[0].encode("utf-8") if target == path else original(target))
+    with pytest.raises(ValueError, match="(F13 wording present|W02 notes errata reviewed bytes are bound): " + path):
         profile.validate_w02_notes_errata()
 
 

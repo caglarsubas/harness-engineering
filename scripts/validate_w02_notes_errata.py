@@ -23,7 +23,7 @@ except ImportError:
 
 ROOT = Path(__file__).resolve().parents[1]
 AUTHORITY_PATH = "architecture/w02-notes-errata-authority.json"
-AUTHORITY_SHA256 = "a49ba3494dd4d1f5e8e1921342fbd619a41fde4c5e3d51007c5d7fb91dabab75"
+AUTHORITY_SHA256 = "ef4a2ba55e88d9596817f8b9f3946cf1b19531bef3abb143bf63b1daba54c9ee"
 VALIDATOR_PATH = "scripts/validate_w02_notes_errata.py"
 BASE_COMMIT = "4cb451018989885f2a014718854a2f5b4db5955f"
 NEW_PACKET = "MET-ENFORCE-023"
@@ -365,15 +365,128 @@ ANSWERS = {"W02a-F2": ["R6-1", "R6-2", "R6-3"], "W02g-F2": ["R2-4", "R3-1", "R3-
            "PERF-032-F": ["F12", "F13", "F14", "F15"]}
 VECTOR_CASES = 39
 UNIQUE_CORPUS = 773
-# The reviewed subject outside the errata directory that later chain mechanics keep changing (the PERF-032 validator
-# and test, the master plan and the repository catalogue): each review round binds its exact bytes, which this layer
-# cannot re-read after its own mechanical edits, so here each F13 wording edit must be present, as often as it was
-# written, instead.
+ROUTE_CALLS = 935
+# Each review round's exact subject paths (round 1 predates the catalogue edit, C1-11).
+SUBJECTS = MappingProxyType({
+    1: (
+        "architecture/w02-notes-errata/README.md",
+        "architecture/w02-notes-errata/REVIEW_BRIEF.md",
+        "architecture/w02-notes-errata/effective/i06-backend-profile-v2/README.md",
+        "architecture/w02-notes-errata/effective/i06-backend-profile-v2/REVIEW_BRIEF.md",
+        "architecture/w02-notes-errata/effective/i06-backend-profile-v2/criteria.json",
+        "architecture/w02-notes-errata/effective/native-profile-v3/README.md",
+        "architecture/w02-notes-errata/i06-backend-profile-v2-errata.json",
+        "architecture/w02-notes-errata/native-profile-v3-errata.json",
+        "architecture/w02-notes-errata/native-profile-v3-r6-3-vectors.json",
+        "docs/MASTER_DEVELOPMENT_PLAN.md",
+        "scripts/contract_errata.py",
+        "scripts/perf032_followup.py",
+        "scripts/schema_unique.py",
+        "scripts/validate_verify_headroom.py",
+        "tests/test_verify_headroom.py",
+    ),
+    2: (
+        "architecture/w02-notes-errata/README.md",
+        "architecture/w02-notes-errata/REVIEW_BRIEF.md",
+        "architecture/w02-notes-errata/effective/i06-backend-profile-v2/README.md",
+        "architecture/w02-notes-errata/effective/i06-backend-profile-v2/REVIEW_BRIEF.md",
+        "architecture/w02-notes-errata/effective/i06-backend-profile-v2/criteria.json",
+        "architecture/w02-notes-errata/effective/native-profile-v3/README.md",
+        "architecture/w02-notes-errata/i06-backend-profile-v2-errata.json",
+        "architecture/w02-notes-errata/native-profile-v3-errata.json",
+        "architecture/w02-notes-errata/native-profile-v3-r6-3-vectors.json",
+        "docs/MASTER_DEVELOPMENT_PLAN.md",
+        "docs/repositories/00-harness-engineering.md",
+        "scripts/contract_errata.py",
+        "scripts/perf032_followup.py",
+        "scripts/schema_unique.py",
+        "scripts/validate_verify_headroom.py",
+        "tests/test_verify_headroom.py",
+    ),
+    3: (
+        "architecture/w02-notes-errata/README.md",
+        "architecture/w02-notes-errata/REVIEW_BRIEF.md",
+        "architecture/w02-notes-errata/effective/i06-backend-profile-v2/README.md",
+        "architecture/w02-notes-errata/effective/i06-backend-profile-v2/REVIEW_BRIEF.md",
+        "architecture/w02-notes-errata/effective/i06-backend-profile-v2/criteria.json",
+        "architecture/w02-notes-errata/effective/native-profile-v3/README.md",
+        "architecture/w02-notes-errata/i06-backend-profile-v2-errata.json",
+        "architecture/w02-notes-errata/native-profile-v3-errata.json",
+        "architecture/w02-notes-errata/native-profile-v3-r6-3-vectors.json",
+        "docs/MASTER_DEVELOPMENT_PLAN.md",
+        "docs/repositories/00-harness-engineering.md",
+        "scripts/contract_errata.py",
+        "scripts/perf032_followup.py",
+        "scripts/schema_unique.py",
+        "scripts/validate_verify_headroom.py",
+        "tests/test_verify_headroom.py",
+    ),
+    4: (
+        "architecture/w02-notes-errata/README.md",
+        "architecture/w02-notes-errata/REVIEW_BRIEF.md",
+        "architecture/w02-notes-errata/effective/i06-backend-profile-v2/README.md",
+        "architecture/w02-notes-errata/effective/i06-backend-profile-v2/REVIEW_BRIEF.md",
+        "architecture/w02-notes-errata/effective/i06-backend-profile-v2/criteria.json",
+        "architecture/w02-notes-errata/effective/native-profile-v3/README.md",
+        "architecture/w02-notes-errata/i06-backend-profile-v2-errata.json",
+        "architecture/w02-notes-errata/native-profile-v3-errata.json",
+        "architecture/w02-notes-errata/native-profile-v3-r6-3-vectors.json",
+        "docs/MASTER_DEVELOPMENT_PLAN.md",
+        "docs/repositories/00-harness-engineering.md",
+        "scripts/contract_errata.py",
+        "scripts/perf032_followup.py",
+        "scripts/schema_unique.py",
+        "scripts/validate_verify_headroom.py",
+        "tests/test_verify_headroom.py",
+    ),
+    5: (
+        "architecture/w02-notes-errata/README.md",
+        "architecture/w02-notes-errata/REVIEW_BRIEF.md",
+        "architecture/w02-notes-errata/effective/i06-backend-profile-v2/README.md",
+        "architecture/w02-notes-errata/effective/i06-backend-profile-v2/REVIEW_BRIEF.md",
+        "architecture/w02-notes-errata/effective/i06-backend-profile-v2/criteria.json",
+        "architecture/w02-notes-errata/effective/native-profile-v3/README.md",
+        "architecture/w02-notes-errata/i06-backend-profile-v2-errata.json",
+        "architecture/w02-notes-errata/native-profile-v3-errata.json",
+        "architecture/w02-notes-errata/native-profile-v3-r6-3-vectors.json",
+        "docs/MASTER_DEVELOPMENT_PLAN.md",
+        "docs/repositories/00-harness-engineering.md",
+        "scripts/contract_errata.py",
+        "scripts/perf032_followup.py",
+        "scripts/schema_unique.py",
+        "scripts/validate_verify_headroom.py",
+        "tests/test_verify_headroom.py",
+    ),
+    6: (
+        "architecture/w02-notes-errata/README.md",
+        "architecture/w02-notes-errata/REVIEW_BRIEF.md",
+        "architecture/w02-notes-errata/effective/i06-backend-profile-v2/README.md",
+        "architecture/w02-notes-errata/effective/i06-backend-profile-v2/REVIEW_BRIEF.md",
+        "architecture/w02-notes-errata/effective/i06-backend-profile-v2/criteria.json",
+        "architecture/w02-notes-errata/effective/native-profile-v3/README.md",
+        "architecture/w02-notes-errata/i06-backend-profile-v2-errata.json",
+        "architecture/w02-notes-errata/native-profile-v3-errata.json",
+        "architecture/w02-notes-errata/native-profile-v3-r6-3-vectors.json",
+        "docs/MASTER_DEVELOPMENT_PLAN.md",
+        "docs/repositories/00-harness-engineering.md",
+        "scripts/contract_errata.py",
+        "scripts/perf032_followup.py",
+        "scripts/schema_unique.py",
+        "scripts/validate_verify_headroom.py",
+        "tests/test_verify_headroom.py",
+    )
+})
+# The reviewed subject outside the errata directory that chain mechanics keep changing (the PERF-032 validator and test,
+# the master plan and the repository catalogue). Rounds 1 to 5 bind them to their kept round copies. Round 6 reviewed them
+# on base 5fab673; on this packet's base they also carry the mechanical edits of MET-ENFORCE-021 and MET-ENFORCE-022 and
+# this packet's own, so their round-6 digests cannot be re-checked here (the F13 hunks were transplanted byte-identically,
+# confirmed by the packet review). Instead each F13 wording edit must be present as often as it was written, and each
+# replaced wording must be gone (count 0); the authority's after-digests pin their exact current bytes.
 SHARED_SUBJECT = MappingProxyType({
-    "scripts/validate_verify_headroom.py": (("corpus array, reaching the sorted, grouped and kept paths; the RecursionError fallback is pinned by bytes only.", 1), ("\"the corpus reaches the sorted, grouped and kept paths\")", 1),),
-    "tests/test_verify_headroom.py": (("verify-time changes with unchanged refusals (apart from inputs within one\nstack frame of the recursion limit)", 1), ("\"reaches the sorted, grouped and kept paths\"", 2),),
-    "docs/MASTER_DEVELOPMENT_PLAN.md": (("with unchanged refusals (apart from inputs within one stack frame of the recursion limit);", 1),),
-    "docs/repositories/00-harness-engineering.md": (("with unchanged refusals (apart from inputs within one stack frame of the recursion limit); source only.", 1),)
+    "scripts/validate_verify_headroom.py": (("corpus array, reaching the sorted, grouped and kept paths; the RecursionError fallback is pinned by bytes only.", 1), ("\"the corpus reaches the sorted, grouped and kept paths\")", 1), ("every comparison path", 0),),
+    "tests/test_verify_headroom.py": (("verify-time changes with unchanged refusals (apart from inputs within one\nstack frame of the recursion limit)", 1), ("\"reaches the sorted, grouped and kept paths\"", 2), ("every comparison path", 0), ("verify-time changes with unchanged refusals and freshness", 0),),
+    "docs/MASTER_DEVELOPMENT_PLAN.md": (("with unchanged refusals (apart from inputs within one stack frame of the recursion limit);", 1), ("computations with unchanged refusals;", 0),),
+    "docs/repositories/00-harness-engineering.md": (("with unchanged refusals (apart from inputs within one stack frame of the recursion limit); source only.", 1), ("computations with unchanged refusals; source only.", 0),)
 })
 # The route tests F12 covers, as at this era (a later layer's new route test is that layer's own concern).
 ROUTE_TESTS = (
@@ -566,7 +679,7 @@ ERA_SHA256 = MappingProxyType({
     "tests/test_selinux_replay.py": "ba234d32ea80cbc9b35d8d4af84190a793cc28a83d5cd448b490fb8980fd2941",
     "tests/test_verify_headroom.py": "c264d816010e76d6d4e36154bcf6813761531d67060fb1256e4456500a77109f",
     "tests/test_w01_amendment.py": "25f431dbe9473e1f813c6467e5c49bbfead5baca18d7cb308a5f596d23e6cca2",
-    "tests/test_w02_notes_errata.py": "8f444fb3a6201d3cf7b1027ec69c7ad11d33ec442350411999f680f2cebd2646"
+    "tests/test_w02_notes_errata.py": "c005da839f3b513cc32b5b18bfeb20ee7caa36b3595fe6db4902f53bb63e81ce"
 })
 
 
@@ -635,10 +748,11 @@ def validate_errata_status() -> dict:
                 and review.get("verdict") == row["verdict"] and review.get("subjectCommit") == row["subjectCommit"]
                 and type(review.get("subjectSha256")) is dict and type(review.get("findings")) is list,
                 "review record %d" % number)
-        own = {path: sha for path, sha in review["subjectSha256"].items() if path not in SHARED_SUBJECT}
-        require(set(review["subjectSha256"]) - set(own) <= set(SHARED_SUBJECT) and ERRATA_MODEL in own
-                and all(_subject_path(number, path) in ERA_SHA256 for path in own)
-                and all(digest(_verified(_subject_path(number, path))) == sha for path, sha in own.items()),
+        subject = review["subjectSha256"]
+        bound = {path: sha for path, sha in subject.items() if number < LAST_ROUND or path not in SHARED_SUBJECT}
+        require(tuple(sorted(subject)) == SUBJECTS[number]
+                and all(_subject_path(number, path) in ERA_SHA256 for path in bound)
+                and all(digest(_verified(_subject_path(number, path))) == sha for path, sha in bound.items()),
                 "review round %d is bound to its exact subject bytes" % number)
     final = _json(rounds[-1]["record"])
     require(all(type(row) is dict and row.get("severity") == "NOTE" for row in final["findings"])
@@ -660,7 +774,7 @@ def validate_w02_notes_errata() -> None:
     require(len(effective) == 5, "both errata records replace exactly their five files")
     require(errata.replay_vectors(_json(VECTORS_PATH), _verified) == VECTOR_CASES, "every R6-3 vector replays")
     require(followup.check_unique_oracle(_verified(followup.UNIQUE_PATH)) == UNIQUE_CORPUS
-            and followup.validate_perf032_followup(_verified, list(ROUTE_TESTS)) > 0, "the PERF-032-F checks hold")
+            and followup.validate_perf032_followup(_verified, list(ROUTE_TESTS)) == ROUTE_CALLS, "the PERF-032-F checks hold")
 
 
 def validate() -> None:

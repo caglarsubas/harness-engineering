@@ -21,5 +21,9 @@ rule, vector or model change:
   tripwire for named changes, not a proof; the PERF-032 layer's byte pin stays the guard.
 
 Review: six independent rounds, the sixth PASS_FOR_SOURCE_PUBLICATION with two notes, carried; by owner decision round 6
-is final. The new layer `scripts/validate_w02_notes_errata.py` binds every reviewed file and checked input by digest,
-checks the six rounds, then runs both modules from this era's reviewed bytes. DATA_CHECK_ONLY.
+is final. The new layer `scripts/validate_w02_notes_errata.py` binds every reviewed file and checked input by digest and
+checks each round's exact subject list, binding rounds 1 to 5 to their kept copies. Four shared files (the PERF-032
+validator and test, the master plan and this catalogue) were reviewed in round 6 on base 5fab673 and here also carry the
+mechanical edits of MET-ENFORCE-021, MET-ENFORCE-022 and this packet, so for them the layer requires each F13 edit to be
+present and each replaced wording to be gone; the authority pins their exact bytes. It then runs both modules from this
+era's reviewed bytes. DATA_CHECK_ONLY.

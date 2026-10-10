@@ -23,7 +23,7 @@ except ImportError:
 
 ROOT = Path(__file__).resolve().parents[1]
 AUTHORITY_PATH = "architecture/seccomp-allowlists-authority.json"
-AUTHORITY_SHA256 = "0a02852c5efd066f0f48a23eec02b0a070a9ed546272a526856bc649d9fd00aa"
+AUTHORITY_SHA256 = "e49f62504ba408226fb27f4ca258da44ddf5447a64067cbd1c28fd702113e087"
 VALIDATOR_PATH = "scripts/validate_seccomp_allowlists.py"
 BASE_COMMIT = "984c953ad034dee9d0f8028e1ecfff4fefea98c3"
 NEW_PACKET = "MET-ENFORCE-017"
@@ -359,6 +359,9 @@ OBLIGATIONS = tuple("E%02d" % number for number in range(1, 13))
 FALSE_FLAGS = ("nativeAcceptance", "tenantAcceptance", "filtersInstalled", "roleCodeExists", "traceValidated",
                "distributionSelected", "productExecution", "runnerActivated", "phaseComplete")
 DECISIONS = ("W02d-Q1", "W02d-Q2", "W02d-Q3")
+# A reviewer reads (round 1 also the pinned upstream kernel sources) and executes the reference model; it never edits,
+# runs repository validators or tests, mutates GitHub, activates a runner or takes a native action.
+REVIEW_ACTIONS = ("filesEdited", "githubMutated", "nativeActions", "repositoryValidatorsRun", "runnerActivated", "testsRun")
 FLOORS = {"decisionChecks": 2789, "workerStackChecks": 351, "policyMutations": 13}
 
 
@@ -460,7 +463,8 @@ def validate_seccomp_status() -> None:
         review = _json(row["record"])
         require(review.get("schemaVersion") == "planeon.internal.seccomp-allowlists-review/v1" and review.get("round") == number
                 and review.get("verdict") == row["verdict"]
-                and all(review["actions"][key] is False for key in review["actions"] if key != "referenceModelExecuted"),
+                and set(review["actions"]) == set(REVIEW_ACTIONS) | {"referenceModelExecuted", "warmSourcesAccessed"}
+                and all(review["actions"][key] is False for key in REVIEW_ACTIONS),
                 "review record %d" % number)
         require(review.get("subjectSha256") == {path: digest(reviewed_bytes(_round_path(number, path))) for path in SUBJECT},
                 "review round %d is bound to its exact subject bytes" % number)

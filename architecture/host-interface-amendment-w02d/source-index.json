@@ -1,0 +1,96 @@
+{
+ "schemaVersion": "planeon.internal.w01-amendment-index/v1",
+ "round": 4,
+ "baseMain": "b8ce77baad727e03bc14930521f2a062fd59d97a",
+ "baseTree": "7b6e4ab8c77db72e3b0d4a22eb4ff170abadff38",
+ "subject": [
+  {
+   "path": "architecture/host-interface-amendment-w02d/amendment.json",
+   "sha256": "8c20ccc25ae504073d89d052b1618c21ab53108dcc44af26f747024709e8f6f9"
+  },
+  {
+   "path": "architecture/host-interface-amendment-w02d/HOST_INTERFACE_SPEC.md",
+   "sha256": "2ac2751cbddd7fae20ee92a93a8fc18c7988dd0c96853d1ccb2d08cb3753f83b"
+  },
+  {
+   "path": "architecture/host-interface-amendment-w02d/README.md",
+   "sha256": "ce4fc1fa8de08ffb3a7dc7698f4d9d6d55009d3cb776375beb05b4fa7383fe3e"
+  },
+  {
+   "path": "architecture/host-interface-amendment-w02d/REVIEW_BRIEF.md",
+   "sha256": "72fff4821a0a7ce1129e6e48c28099f106caa2f099aaa5d5c840057977fef540"
+  },
+  {
+   "path": "scripts/host_interface_amendment.py",
+   "sha256": "cc7e3fd22aaf5dff057184c9aff47ee358b27b2c65afbfc527c8f3d19d78262b"
+  },
+  {
+   "path": "architecture/seccomp-allowlists-v2/README.md",
+   "sha256": "6d5df8c3fbe9a7acfa330d005d289c693f99f6a2b5aa88a101b7c561ac839eae"
+  },
+  {
+   "path": "architecture/seccomp-allowlists-v2/syscalls.json",
+   "sha256": "343176d6518530ba9a4d71c36eec7f6e5a98a87198e5e08d53ac0d68d746ad67"
+  },
+  {
+   "path": "architecture/seccomp-allowlists-v2/allowlists.json",
+   "sha256": "c041263a9526a3526e1fa10bf7e73d1d26cba70931c9329f31cfce2d9ce74344"
+  },
+  {
+   "path": "architecture/seccomp-allowlists-v2/vectors.json",
+   "sha256": "7aec409b0b6520d11beec0a89a8600ab87c3a5083cfd3860e2b1550c0f25eb47"
+  },
+  {
+   "path": "scripts/seccomp_allowlists_v2.py",
+   "sha256": "12845115589add9e1b0562c6f764decda7685b32a63c9f11872f847af2a54caf"
+  }
+ ],
+ "predecessorInputs": [
+  {
+   "path": "architecture/host-interface-inputs/resolved/HOST_INTERFACE_SPEC.md",
+   "sha256": "8a3a09bb5dbc08804dbea06dd0700a14648a9cdbc8efd62112dc64ba0b6ba1b4"
+  },
+  {
+   "path": "architecture/seccomp-allowlists/status.json",
+   "sha256": "08a541be25eb126d541a56242091eb953c8c7ec1c7fda8136ec47505fd0a6c0a"
+  },
+  {
+   "path": "architecture/seccomp-allowlists/README.md",
+   "sha256": "510b41f0b13b1463f2b79651d438880c9342026aab6127da7de363df7d475139"
+  },
+  {
+   "path": "architecture/seccomp-allowlists/syscalls.json",
+   "sha256": "73c3eee52dcc9e7688e67c6d9b69cff18c8a48ea3cd9b23a354827b802ce27d2"
+  },
+  {
+   "path": "architecture/seccomp-allowlists/allowlists.json",
+   "sha256": "9790f485f86a8d6efbf8b8165fc660afe5a16be54a4bedc863b22df1c56811f9"
+  },
+  {
+   "path": "architecture/seccomp-allowlists/vectors.json",
+   "sha256": "d6f5fc7f28160f14943a4f56b6e53caa5bc5794c7f4b5dd52512409225a3845e"
+  },
+  {
+   "path": "scripts/seccomp_allowlists.py",
+   "sha256": "94629cf0fa851086510524515ec34ca28e4a9ad2474a4525d9c24ee0ecde0be2"
+  }
+ ],
+ "kernelSources": {
+  "tag": "v6.12",
+  "commit": "adc218676eef25575469234709c2d87185ca223a"
+ },
+ "earlierRounds": [
+  {
+   "path": "architecture/host-interface-amendment-w02d/review-round1.json",
+   "sha256": "5f32cb233e2ff865c60a716e918974c8f12bc522dd50e068650080279036f967"
+  },
+  {
+   "path": "architecture/host-interface-amendment-w02d/review-round2.json",
+   "sha256": "322fd998ca4c359e072ec8ccfc67d332945f8325d4eb68161b1ca34df2508d86"
+  },
+  {
+   "path": "architecture/host-interface-amendment-w02d/review-round3.json",
+   "sha256": "d8aeecb0e82f4c10ca02debf9ac592e51d9289809cc0f56a84570cc70ce2ff51"
+  }
+ ]
+}

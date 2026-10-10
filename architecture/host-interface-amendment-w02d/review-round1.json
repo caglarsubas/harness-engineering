@@ -1,0 +1,127 @@
+{
+ "schemaVersion": "planeon.internal.w01-amendment-review/v1",
+ "round": 1,
+ "reviewDate": "2026-10-10",
+ "verdict": "CHANGES_REQUIRED",
+ "subjectCommit": "5c9c250571d4849d9103b00ffe56a15760ac8f03",
+ "subjectSha256": {
+  "architecture/host-interface-amendment-w02d/amendment.json": "4b05a02d8a42d31f7f55753edb52202c121377e6d9f214ee1d1c267444dfd74f",
+  "architecture/host-interface-amendment-w02d/HOST_INTERFACE_SPEC.md": "7f589e4cfa1067e003d23296c969adeecf544e35dfec91f108f3a788320a32af",
+  "architecture/host-interface-amendment-w02d/README.md": "be67291c88599ba27187c70b47685b61824ce193524a862720685856f7eb5eba",
+  "architecture/host-interface-amendment-w02d/REVIEW_BRIEF.md": "b15de264355e00717a420e96d9176321d785e55934fed83edf9671c1e758283b",
+  "scripts/host_interface_amendment.py": "7d9b4600588e9a59ac1485cbcc3651ef27f0ea6b60960435df8120cb97cfb603",
+  "architecture/seccomp-allowlists-v2/README.md": "0b03d2d4d5c25479029ebabd51b156d120c94ff6c3eeac34fa56d8305192bb91",
+  "architecture/seccomp-allowlists-v2/syscalls.json": "da44cbf779ada9e5ecbb0a8037f4c1b769ebef0b7730ff5e1caba2447962cccd",
+  "architecture/seccomp-allowlists-v2/allowlists.json": "09d70a64dc4d637a26dff4092b80eea3459b7c4ec248534de5b0fff47f0c03f3",
+  "architecture/seccomp-allowlists-v2/vectors.json": "004f226740da99482aeb39291650dc138c4aee6fd3835dab83e84f5d80b052e9",
+  "scripts/seccomp_allowlists_v2.py": "33dbdfe1f92bf173003365a98856c60afd8a487c399bbff05b124e19e0df2011"
+ },
+ "findings": [
+  {
+   "id": "R1-1",
+   "severity": "MAJOR",
+   "location": "amendment.json item A5; HOST_INTERFACE_SPEC.md (amended) line 402; README.md 'What stays open'",
+   "finding": "A5 keeps the words 'flags limited to the existing sealed-credential path' but changes the flags to MFD_CLOEXEC, MFD_NOEXEC_SEAL. The existing sealed-credential path does not use those flags. Its only implementation in the repository, the CONF-LIVE-002 supervisor source (tls_memfd, captured in architecture/credential-ordering-inputs/source-before.json and the conformance-*-inputs/product-before.json snapshots under docs/live-backend/linux-boundary.md), calls os.memfd_create('planeon-client-credential', os.MFD_CLOEXEC | os.MFD_ALLOW_SEALING) = 3. Its unit rig also patches MFD_ALLOW_SEALING=2. Under the v2 SERVER/OBSERVER/BROKER filters, flags 3 is KILL_PROCESS (confirmed with v2 decide() on both architectures). The amended row therefore states something false about the existing path. The code change that QW3 needs (the credential path must pass MFD_NOEXEC_SEAL, 0x8) is not carried anywhere: it is not in the record's notAmended list and not in either README's open items. The amendment README says only 'nothing goes to W02a-F2'.",
+   "requiredChange": "Reword A5 so it no longer claims the existing path already uses these flags. For example: 'memfd_create only for the sealed-credential path, whose call uses exactly MFD_CLOEXEC | MFD_NOEXEC_SEAL (the existing MFD_ALLOW_SEALING call changes) ...'. Record the obligation explicitly, for example in notAmended and in README 'What stays open': the SERVER credential code (tls_memfd) and its unit rig must switch to MFD_CLOEXEC | MFD_NOEXEC_SEAL, defining 0x8 if the runtime's os module lacks the constant, before any v2 filter is installed. Carry it to W03 next to the other runtime requirements."
+  },
+  {
+   "id": "R1-2",
+   "severity": "MINOR",
+   "location": "amendment.json items A3/A4; HOST_INTERFACE_SPEC.md lines 402-408 (POLICY_WRITER, HOST_CONTAINMENT rows)",
+   "finding": "A3's stated reason is to state the refusal action the allowlists use, which W04's tests must expect. On that basis A3 and A4 amend SERVER (and OBSERVER, which inherits it), EFFECT_GATE and, through A1, WORKER to say clone3 fails with ENOSYS. The POLICY_WRITER and HOST_CONTAINMENT rows are left unchanged, yet the v2 data gives them clone3 = ERRNO(38) too (W02d-QB covers all six non-broker roles). Read against the effective spec's header 'default KILL_PROCESS', those two rows still imply KILL_PROCESS for clone3. QB-derived coverage is therefore partial: A3/A4 go beyond the six carriedToW01 items but do not finish the job.",
+   "requiredChange": "Either add the ENOSYS clause to the POLICY_WRITER and HOST_CONTAINMENT rows (citing W02d-QB), or state once, for example in the 5.3 table preamble, that clone3 fails with ENOSYS in every non-broker role and drop the per-row clauses."
+  },
+  {
+   "id": "R1-3",
+   "severity": "MINOR",
+   "location": "amendment.json item A1 (decisions) and notAmended[0]",
+   "finding": "A1's proposed WORKER text ends with 'The broker's filter, inherited and still installed, covers it'. That is owner decision W02d-QD. A1 cites only W02d-Q1, QA and QB, and the record's notAmended says QD is not amended because the BROKER row already states it. The record contradicts itself, and A1 says more than its cited decisions.",
+   "requiredChange": "Either drop the sentence from A1, or add W02d-QD (2026-10-09, as worded in architecture/seccomp-allowlists/README.md) to ownerDecisions, cite it in A1 and update notAmended."
+  },
+  {
+   "id": "R1-4",
+   "severity": "MINOR",
+   "location": "amendment.json item A2; HOST_INTERFACE_SPEC.md line 402",
+   "finding": "A2 says the inspection reads are 'read-only opens and reads of selinuxfs status and policy, cgroup and /proc files'. The seccomp rule (openat with the OPEN_READ_ONLY_MASK flags condition) cannot see paths, so it allows a read-only open of any path. For OBSERVER and BROKER this grant is new: the NATIVE_STATIC base has no file access. W01 rows are what W04's tests are built from, and the wording suggests seccomp scopes the paths.",
+   "requiredChange": "State that seccomp limits only the open flags (read-only, no create/truncate/tmpfile) and the listed calls, and that the path scope (selinuxfs, cgroup, /proc) is enforced by the SELinux domain."
+  },
+  {
+   "id": "R1-5",
+   "severity": "MINOR",
+   "location": "scripts/seccomp_allowlists_v2.py check_policy; architecture/seccomp-allowlists-v2/vectors.json; build_v2.py SAMPLED",
+   "finding": "QW1 is carried only by pidfd_send_signal being absent from the closed table. Restoring the table entry and adding a BROKER grant `pidfd_send_signal` with arg1 == SIGKILL passes v2 check_policy (tested in scratch), so the model does not enforce QW1. Because syscall 424 has left the table, no v2 decision vector shows pidfd_send_signal being KILL_PROCESS for any role (v1 had 14 such zero-argument vectors). Likewise, no decision vector shows the v1 memfd flags (3) being KILL_PROCESS under v2; only mutation M09 covers it, at the policy level. The A6 claim 'neither filter allows setgroups' also holds only because the name is absent from the table, and no guard backs it.",
+   "requiredChange": "Add pidfd_send_signal (and setgroups) to the sampled names so the vectors show KILL_PROCESS for every role on both architectures. Add a decision vector for memfd_create with flags 3 per memfd role. Optionally add check_policy guards and mutations: no pidfd_send_signal grant for any role (QW1), and no setgroups for BROKER/WORKER (QW2/A6)."
+  },
+  {
+   "id": "R1-6",
+   "severity": "MINOR",
+   "location": "scripts/host_interface_amendment.py effective_spec",
+   "finding": "Items are applied in sequence, and each item's proposed-text count is checked only straight after its own replacement. A later item can rewrite an earlier item's proposed text and the record still passes. In scratch, an A8 that turns A5's 'MFD_NOEXEC_SEAL: the kernel' back into 'MFD_ALLOW_SEALING: the kernel', with the effective file re-pinned, is accepted, and A5's amendment is no longer in the effective spec. The current record is unaffected: every proposed text occurs exactly once in the final file.",
+   "requiredChange": "After applying all items, require that each item's proposed text occurs exactly `occurrences` times in the final text, or require that no item's current text overlaps another item's proposed text."
+  },
+  {
+   "id": "R1-7",
+   "severity": "NOTE",
+   "location": "scripts/host_interface_amendment.py check_record/check",
+   "finding": "The model refuses the five cases Q3 names (verified in scratch). Its record checks are loose in other ways. A non-dict base gives AttributeError and a non-string decision id gives TypeError, not ValueError. section, baseLines, source, why, date and decision text are not type- or content-checked: an empty why, an integer source, a garbage date and a wrong baseLines are all accepted. Unused decided decisions are accepted. The base and effective digests are trusted from the record itself, so a coordinated change of the base, the record pins and the effective file passes. Dropping a carried item (for example A7) and re-pinning passes too, because completeness against status.json carriedToW01 is not checked. A6's baseLines '433-434' is slightly off: W3 spans 432-434 and the current text is on 434.",
+   "requiredChange": "Optional hardening: type-check every item and decision field, pin BASE_SHA256 as a model constant (the base is frozen), and optionally check that baseLines contains the line of the current text. Rely on the history-chain pin of the record bytes for completeness, and say so in the docstring."
+  },
+  {
+   "id": "R1-8",
+   "severity": "NOTE",
+   "location": "HOST_INTERFACE_SPEC.md line 434 (A6)",
+   "finding": "With no supplementary groups, v6.12 fs/proc/array.c:199-206 writes 'Groups:\\t ' (tab, then a trailing space the kernel always adds). The line is not literally empty. A W3 check that compares it to 'Groups:\\t' or an empty value fails.",
+   "requiredChange": "Word the check as 'lists no group ids (the kernel writes Groups:\\t followed by a single space)', or state that whitespace is stripped."
+  },
+  {
+   "id": "R1-9",
+   "severity": "NOTE",
+   "location": "architecture/seccomp-allowlists-v2/syscalls.json constants/constantCitations; README.md files",
+   "finding": "(a) The SIGKILL constant and its signal.h:20 citation remain in the v2 table, but no rule uses them any more: only the dropped pidfd_send_signal rule did. (b) The v2 README says the v1 README's rules 'apply unchanged', but the v1 README's role table still lists pidfd_send_signal for BROKER, MFD_ALLOW_SEALING and 129 syscalls. The change table above it overrides those rows, but nothing says so. (c) The amendment README renders proposed texts with backticks turned into single quotes, so it is not byte-exact with amendment.json. (d) Decision ids differ: 'QW1'/'QW3' in amendment.json, 'W01-AMEND-QW1'/'W01-AMEND-QW3' in v2 allowlists.json. (e) v2 has no status record. v1's status.json (frozen) still says ADOPTED_DATA_CONTRACT with carriedToW01 open, and only prose says v2's digests are the ones T04/W02a-F must prove.",
+   "requiredChange": "Drop or annotate the unused SIGKILL constant. Say that the v1 README's role-table rows for BROKER pidfd_send_signal and memfd are superseded. Align the decision ids or map them. At adoption, add a v2 status record that names v1 as superseded and pins the v2 digests for T04/W02a-F."
+  },
+  {
+   "id": "R1-10",
+   "severity": "NOTE",
+   "location": "amendment.json QW3/A5 why; v2 README; syscalls.json memfd citation",
+   "finding": "The kernel claims check out at v6.12. mm/memfd.c:313-317: an explicit MFD_NOEXEC_SEAL skips the sysctl default, and line 320 never refuses it. mm/memfd.c:401-410: i_mode &= ~0111, F_SEAL_SEAL is cleared and F_SEAL_EXEC is set. include/uapi/linux/memfd.h:8,12 match. kernel/signal.c:814-824 (kill_ok_by_cred) and 846-860 apply to pidfd_send_signal through kill_pid_info_type/group_send_sig_info. kernel/pid_sysctl.h:15-31 lets a writer in the init pid namespace lower the value to parent_scope = 0. Two caveats on wording. 'Any CAP_SYS_ADMIN holder' leaves out the other requirements: the writer must be in the init pid namespace, hold CAP_SYS_ADMIN in that namespace's user namespace, and have DAC/SELinux write access to /proc/sys/vm/memfd_noexec. The pidns_memfd_noexec_scope helper (include/linux/pid_namespace.h) that makes parent_scope 0 for the init namespace is not among the provided sources, and the pid_sysctl.h citation gives no line numbers.",
+   "requiredChange": "Optional: cite kernel/pid_sysctl.h:15-31 and the helper, and qualify 'any CAP_SYS_ADMIN holder in the init pid namespace with write access to the sysctl'."
+  }
+ ],
+ "questionAnswers": {
+  "Q0": "Mostly, with exceptions. All six carriedToW01 items are covered: Q1 and QA by A1, QC by A2, the W6 pidfd kill by A7, setgroups by A6, F9 by A5. Each item is an exact single replacement at the stated line, verified against the base (base sha256 8a3a09bb... unchanged, resolved spec byte-identical at 5c9c250). A1-A7 agree with their owner decisions, with these exceptions. A5 still calls the path 'existing' although the existing tls_memfd code uses MFD_ALLOW_SEALING, and the code change is not carried (R1-1, MAJOR). A1 adds W02d-QD text without citing QD, which contradicts notAmended (R1-3). A3/A4 apply QB to only some rows and leave POLICY_WRITER and HOST_CONTAINMENT implicitly KILL (R1-2). A2's path wording suggests seccomp path scoping (R1-4). Internal consistency: the BROKER row (no CAP_KILL, cgroup.kill) now agrees with W6 (A7). The SERVER row matches the v2 allowlists: memfd flags 9, inspection-reads duty, membarrier 0/8/16 with flags 0 and cpu 0, clone3 ENOSYS. pidfd_send_signal is in no role. W3 (A6) is consistent with W4 and QW2: setresgid/setresuid do not touch group_info, and setgroups is in neither the BROKER nor the WORKER filter (it is absent from the table, so KILL_PROCESS).",
+  "Q1": "Yes. At v6.12, an explicit MFD_NOEXEC_SEAL bypasses the sysctl default and is never refused by it (mm/memfd.c:313-325). It clears the mode's exec bits, clears F_SEAL_SEAL (further seals stay possible) and sets F_SEAL_EXEC (mm/memfd.c:401-410). MFD_CLOEXEC|MFD_ALLOW_SEALING without MFD_NOEXEC_SEAL becomes MFD_EXEC when vm.memfd_noexec is 0 (line 317). pidfd_send_signal reaches check_kill_permission. kill_ok_by_cred (kernel/signal.c:814-824) fails for a uid 0 sender against a worker whose uid, euid and suid are the signed uid unless the sender has CAP_KILL, and -EPERM follows for SIGKILL (846-860). The init-namespace sysctl can be lowered: pid_sysctl.h:15-31 needs ns_capable(CAP_SYS_ADMIN), and the minimum is the parent scope, which is 0 for the init namespace. Wording caveats are in R1-10.",
+  "Q2": "Yes, apart from the gaps noted. v2 is exactly v1 plus the two changes. The syscall table drops pidfd_send_signal (129 to 128), the constant MFD_CLOEXEC_ALLOW_SEALING=3 becomes MFD_CLOEXEC_NOEXEC_SEAL=9, and the memfd citations and schema versions change. The allowlists change the memfd eq from 3 to 9 in SERVER, OBSERVER and BROKER (row, source), drop the BROKER W6 pidfd duty, add two decisions and change the schema. The models differ only in the docstring and the memfd check. Rebuilding with build_v2.py into scratch reproduces all three data files byte-for-byte. The vector diff against v1 is exactly 46 removed and 24 changed: 14 pidfd zero-argument checks, 8 BROKER pidfd alternative checks, and 24 memfd checks with eq 3 to 9. That gives 2789 to 2767 decisions and 351 to 349 stack checks. All 2767 v2 vectors replay with decide == run_filter(compile_filter) == expect. All 349 stack checks equal the worker alone. All 14 digests and lengths match the compiled programs: BROKER, OBSERVER and SERVER digests changed, BROKER length -5. All 13 mutations are refused with exactly the recorded messages. M09 now tries flags 3 with the message 'memfd_create only with MFD_CLOEXEC | MFD_NOEXEC_SEAL: SERVER', which is correct. Gaps: QW1 and setgroups are not enforced by the model and have no negative vectors (R1-5), and SIGKILL is left unused (R1-9).",
+  "Q3": "Yes for the five named cases, all verified in scratch with ValueError. A changed base fails 'pinned W01 base bytes'. A missing current text fails 'item A1 current text count'. A doubled current text fails the base pin, and the count check covers it otherwise. An undecided decision fails 'every owner decision is decided'. An unknown decision fails 'item A7 cites decided owner decisions'. A differing published effective file fails 'published effective specification'. Duplicate keys and NaN are also refused. Weaknesses: a later item can undo an earlier item's text (R1-6). Malformed shapes raise non-ValueError exceptions, several fields are unchecked, and the digests are trusted from the record (R1-7).",
+  "Q4": "No material overclaim. Both READMEs say DATA_CHECK_ONLY / candidate awaiting review, no filter, sysctl or unit, E01-E12 OPEN_UNPROVEN, and the T04/W02a-F digest proof still open. The v2 README's counts (128 syscalls, 2767/349/13, digests changing only for BROKER, OBSERVER and SERVER, length only for BROKER) are all verified. The amendment README's 'nothing goes to W02a-F2' is correct but incomplete: the credential code change is missing (R1-1). The v2 README's 'v1 README rules apply unchanged' is slightly loose (R1-9)."
+ },
+ "sourcesRead": [
+  "architecture/host-interface-amendment-w02d/REVIEW_BRIEF.md",
+  "architecture/host-interface-amendment-w02d/source-index.json",
+  "architecture/host-interface-amendment-w02d/amendment.json",
+  "architecture/host-interface-amendment-w02d/README.md",
+  "architecture/host-interface-amendment-w02d/HOST_INTERFACE_SPEC.md (word diff against base)",
+  "architecture/host-interface-inputs/resolved/HOST_INTERFACE_SPEC.md (lines 395-450, 413)",
+  "scripts/host_interface_amendment.py",
+  "scripts/seccomp_allowlists.py (diff)",
+  "scripts/seccomp_allowlists_v2.py",
+  "architecture/seccomp-allowlists/{status.json, README.md, syscalls.json, allowlists.json, vectors.json}",
+  "architecture/seccomp-allowlists-v2/{README.md, syscalls.json, allowlists.json, vectors.json}",
+  "docs/alpha-2/NATIVE_QUALIFICATION_READINESS.md:112-135",
+  "architecture/credential-ordering-inputs/source-before.json and conformance-*-inputs/product-before.json (tls_memfd excerpts only)",
+  "~/.local/state/harness-onion-ci/tools/w01amend/{make_v2.py, build_v2.py, owner_answers.json}",
+  "~/.local/state/harness-onion-ci/tools/w02d/build_w02d.py (diff against build_v2.py)",
+  "linux v6.12: mm/memfd.c:180-275,305-425; include/uapi/linux/memfd.h; kernel/signal.c:805-864,3908-3984; kernel/pid_sysctl.h; fs/proc/array.c:160-215"
+ ],
+ "actions": {
+  "filesEdited": false,
+  "githubMutated": false,
+  "nativeActions": false,
+  "referenceModelExecuted": true,
+  "repositoryValidatorsRun": false,
+  "runnerActivated": false,
+  "testsRun": false,
+  "warmSourcesAccessed": false
+ },
+ "reviewLimit": "Read-only, one process at a time, each under 60 s, scratch only in /private/tmp/claude-501/w01amend-review-r1/. The two models were imported, and build_v2.py was rerun against a scratch copy of the v2 model (HERE pointed at the read-only w02d research directory, output written to scratch only). No repository tests or validators, runner, native, cloud or GitHub actions. No other worktree was opened. tools/w01amend/build.py, build_amend.py and write_docs.py were not read: the published amendment bytes were verified through the model instead. Kernel claims were checked only against the provided v6.12 subset. include/linux/pid_namespace.h (pidns_memfd_noexec_scope) is not provided and was checked from knowledge. The live SERVER credential code exists in the repository only as historical snapshots, so R1-1 rests on those snapshots."
+}

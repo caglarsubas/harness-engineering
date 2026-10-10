@@ -1,6 +1,11 @@
 # Repository Plan: `Harness-Engineering`
 
-## Current source preparation — MET-ENFORCE-017
+## Current source preparation — MET-ENFORCE-018
+
+W01-AMEND (MET-ENFORCE-018): W01 amendment W02D (W02d's carried items) and the W02d successor seccomp-allowlists-v2;
+DATA_CHECK_ONLY. Alpha2 OPEN; 219 accepted plus ENFORCE-018 only.
+
+## Historical W02d source preparation — MET-ENFORCE-017
 
 W02d (MET-ENFORCE-017): per-role, per-architecture seccomp allowlists for the seven roles at Linux v6.12, with
 the reference compiler's filter digests; DATA_CHECK_ONLY. Alpha2 OPEN; 218 accepted plus ENFORCE-017 only.
@@ -1021,6 +1026,7 @@ Every packet uses branch `codex/<packet-id>`, changes only named paths, opens a 
 91. `MET-PERF-036`: replay the SELinux matrices inside validate() instead of three to five times per layer test file, with per-row weakening conjuncts; no validator refusal changes, nothing cached.
 92. `MET-SECTOR-002`: publish the SECTOR-D1 catalog follow-ups as a reviewed overlay, with the catalogs byte-identical; source only.
 93. `MET-ENFORCE-017`: publish the W02d per-role, per-architecture seccomp allowlists and filter digests as reviewed data; source only.
+94. `MET-ENFORCE-018`: publish W01 amendment W02D and the W02d successor seccomp-allowlists-v2 as reviewed data; source only.
 
 ## Testing, verification, and acceptance
 

@@ -1,0 +1,61 @@
+{
+ "schemaVersion": "planeon.internal.w01-amendment-review/v1",
+ "round": 4,
+ "reviewDate": "2026-10-10",
+ "verdict": "PASS_FOR_SOURCE_PUBLICATION",
+ "subjectCommit": "769fe8ec28d816a3d33d8e5d5b744fa146b93e9c",
+ "subjectSha256": {
+  "architecture/host-interface-amendment-w02d/amendment.json": "8c20ccc25ae504073d89d052b1618c21ab53108dcc44af26f747024709e8f6f9",
+  "architecture/host-interface-amendment-w02d/HOST_INTERFACE_SPEC.md": "2ac2751cbddd7fae20ee92a93a8fc18c7988dd0c96853d1ccb2d08cb3753f83b",
+  "architecture/host-interface-amendment-w02d/README.md": "ce4fc1fa8de08ffb3a7dc7698f4d9d6d55009d3cb776375beb05b4fa7383fe3e",
+  "architecture/host-interface-amendment-w02d/REVIEW_BRIEF.md": "72fff4821a0a7ce1129e6e48c28099f106caa2f099aaa5d5c840057977fef540",
+  "scripts/host_interface_amendment.py": "cc7e3fd22aaf5dff057184c9aff47ee358b27b2c65afbfc527c8f3d19d78262b",
+  "architecture/seccomp-allowlists-v2/README.md": "6d5df8c3fbe9a7acfa330d005d289c693f99f6a2b5aa88a101b7c561ac839eae",
+  "architecture/seccomp-allowlists-v2/syscalls.json": "343176d6518530ba9a4d71c36eec7f6e5a98a87198e5e08d53ac0d68d746ad67",
+  "architecture/seccomp-allowlists-v2/allowlists.json": "c041263a9526a3526e1fa10bf7e73d1d26cba70931c9329f31cfce2d9ce74344",
+  "architecture/seccomp-allowlists-v2/vectors.json": "7aec409b0b6520d11beec0a89a8600ab87c3a5083cfd3860e2b1550c0f25eb47",
+  "scripts/seccomp_allowlists_v2.py": "12845115589add9e1b0562c6f764decda7685b32a63c9f11872f847af2a54caf"
+ },
+ "findings": [
+  {
+   "id": "R4-1",
+   "severity": "NOTE",
+   "location": "W01-AMEND-QW4 (amendment.json ownerDecisions; v2 allowlists.json NATIVE_STATIC and decision; v2 README); W03 carried requirements",
+   "finding": "The QW4 analysis is correct for what it covers. Rust std start-up (sanitize_standard_fds poll, the SIGPIPE/SIGSEGV/SIGBUS rt_sigaction calls, the sigaltstack mmap/mprotect) fits NATIVE_STATIC plus poll; on musl, install_main_guard_linux_musl returns None (stack_overflow-1.90.0.rs:425-431), so musl's main-thread pthread_getattr_np mremap loop is never reached. Unnamed musl threads also fit: clone with the pthread_create.c:243-245 flags is ALLOWed by the thread-only rule in all five native roles on both architectures, and clone3 gets ERRNO(38). It does not cover several Rust/musl paths that would be KILL_PROCESS under NATIVE_STATIC. These come from upstream sources outside the provided subset (Rust library/std/src/sys/pal/unix/thread.rs; musl src/thread/pthread_setname_np.c, synccall.c, raise.c), so they are stated from knowledge:\n- (a) A named thread (thread::Builder::name, or tokio's default 'tokio-runtime-worker' workers) calls pthread_setname_np on itself. musl issues that as prctl(PR_SET_NAME), and NATIVE_STATIC has no prctl.\n- (b) musl's setresuid/setresgid wrappers go through __synccall, which signals the process's other threads with SYS_tkill when the process is threaded. NATIVE_STATIC grants tgkill, not tkill. The broker's W4 code in its raw-clone3 child should issue setresgid/setresuid as raw syscalls.\n- (c) std::thread::available_parallelism reads cgroup and /proc files with openat; POLICY_WRITER has no openat.\n- (d) If any of fds 0-2 is closed at start-up, Rust std reopens it with open(\"/dev/null\") (mod-1.90.0.rs:105-116). On x86_64, musl issues that as SYS_open, which is sampled and KILLed. W03 units must start the native roles with fds 0-2 open.\n- (e) abort()/raise use SYS_tkill, so an abort ends in a seccomp KILL rather than SIGABRT. This is harmless but changes the signal.\nW02d-Q2 ('W03's language and libc must fit inside it or W02d reopens') and the W03 trace requirement already carried in W02d status make W03 responsible for these. The record should name them so W03 does not rediscover them by a KILL.",
+   "requiredChange": "When regenerating the status records, add to the W03 carried requirements: no thread names, or a reviewed PR_SET_NAME grant (tokio thread_name must be handled); raw setresgid/setresuid in the broker child; no available_parallelism without file access; stdio fds 0-2 open at start; abort ends in SIGSYS. Can be carried; no change to this subject is required."
+  },
+  {
+   "id": "R4-2",
+   "severity": "NOTE",
+   "location": "scripts/host_interface_amendment.py; architecture/host-interface-amendment-w02d/source-index.json; v2 README",
+   "finding": "Smaller points:\n- (a) The model checks obligation ids named in item text, but not owner-decision ids. In scratch, removing W01-AMEND-QW4 from ownerDecisions and A9's decisions, while A9's published text still cites '(W01-AMEND-QW4)', was accepted.\n- (b) The QW4 evidence (musl 1.2.5 and Rust 1.90.0 files under tools/w01amend/research/) is outside the repository and has no digest in source-index.json. Only the kernel sources have a pin (tag and commit).\n- (c) The v2 README's 'what changes' list now lists OBSERVER only under 'both architectures (QW1, QW3)'. Its x86_64 program also grows by QW4 (224 to 226 instructions), which is true but not visible there.",
+   "requiredChange": "Optionally check decision-id references in item text as obligations are checked. Record the musl/Rust source files' digests (or upstream tags and paths) in source-index.json. Mention OBSERVER x86_64 under QW4 in the v2 README. Can be carried."
+  }
+ ],
+ "questionAnswers": {
+  "Q0": "Yes for the round-4 change. Against the round-3 record, only A9 (proposed, decisions, source), E2 (A9's decisions in the section 11 table), the new owner decision W01-AMEND-QW4 and the effective digest changed. All other items, dispositions and obligations are byte-equal. A9 is correct: clone3 fails with ENOSYS in every role except BROKER; glibc 2.34+ falls back to clone in SERVER and WORKER; musl creates threads with SYS_clone only (pthread_create.c:243-245,355; clone.s 56/220; src/linux/clone.c has no clone3). The amended specification stays consistent. Round-3 notes R3-1 to R3-3 remain carried as stated.",
+  "Q1": "The kernel reasoning is unchanged from round 3 and stands. The musl and Rust claims are verified against the provided sources:\n- musl poll.c uses SYS_poll when it is defined (x86_64) and ppoll otherwise (aarch64, already in the base);\n- Rust mod-1.90.0.rs:32-50 runs sanitize_standard_fds (poll at line 89) on every start-up;\n- the main-thread guard on musl returns None.\nUncovered Rust/musl paths are in R4-1.",
+  "Q2": "Yes. Against round 3, v2 differs only by poll in NATIVE_STATIC, the base description and the W01-AMEND-QW4 decision. syscalls.json and the v2 model are byte-identical to round 3. Rebuilding with the current build_v2.py in scratch reproduces all three data files byte for byte. All 2813 vectors replay (decide == compiled filter == expect). Exactly four decision vectors changed, the x86_64 poll zero-argument checks for OBSERVER, EFFECT_GATE, POLICY_WRITER and HOST_CONTAINMENT, from KILL_PROCESS to ALLOW. All 353 stack checks pass and are unchanged. Exactly four digests and lengths changed (those roles' x86_64 programs, +2 instructions each), and all match the compiled programs. All 15 mutations are refused with unchanged messages (M09 included).",
+  "Q3": "Yes. A changed base, a missing or doubled current text, an undecided W01-AMEND-QW4, an unknown decision and a differing effective file are all refused with ValueError. The relaxed RESTATED rule admits only [W02d-QB] or [W02d-QB, W01-AMEND-QW4]: QW4 alone, QW4 first, and QB with QW3 are all refused. One residual gap is in R4-2(a).",
+  "Q4": "No overclaim. The READMEs keep candidate / DATA_CHECK_ONLY status, no filter, unit or sysctl, and E01-E12 open. The 'Round 4' section's claim that every native role would have been killed at start-up on x86_64 without poll is correct, since sanitize_standard_fds always runs. QW4 is framed as an analysed reference that W03 pins or re-checks."
+ },
+ "sourcesRead": [
+  "architecture/host-interface-amendment-w02d/{REVIEW_BRIEF.md, source-index.json, amendment.json, README.md (diff), HOST_INTERFACE_SPEC.md (diff), review-round3.json, round3/ (compared with bc3539d)}",
+  "scripts/host_interface_amendment.py (diff); scripts/seccomp_allowlists_v2.py",
+  "architecture/seccomp-allowlists-v2/{README.md, allowlists.json, vectors.json (diff), syscalls.json}; architecture/seccomp-allowlists/status.json",
+  "~/.local/state/harness-onion-ci/tools/w01amend/build_v2.py (diff from round 3)",
+  "~/.local/state/harness-onion-ci/tools/w01amend/research/rust/{mod-1.90.0.rs:1-175, stack_overflow-1.90.0.rs:140-300,420-433,535-600}",
+  "~/.local/state/harness-onion-ci/tools/w01amend/research/musl-1.2.5/{pthread_getattr_np.c, src/select/poll.c, src/thread/pthread_create.c:236-250,350-360, src/thread/x86_64/clone.s, src/thread/aarch64/clone.s, src/linux/clone.c}"
+ ],
+ "actions": {
+  "filesEdited": false,
+  "githubMutated": false,
+  "nativeActions": false,
+  "referenceModelExecuted": true,
+  "repositoryValidatorsRun": false,
+  "runnerActivated": false,
+  "testsRun": false,
+  "warmSourcesAccessed": false
+ },
+ "reviewLimit": "Read-only, one process at a time, each under 60 s, scratch only in /private/tmp/claude-501/w01amend-review-r4/. The models were imported and build_v2.py was rerun against a scratch copy (output in scratch only). No repository tests or validators, runner, native, cloud or GitHub actions, and no other worktree. The musl/Rust claims were checked only against the provided subset. R4-1's additional paths (thread naming, synccall, available_parallelism, raise) come from upstream sources not provided and were not compiled or traced. Commit 5aeb028 (adoption status records), between bc3539d and 769fe8e, was not reviewed: its status.json files are absent from the subject per the coordinator."
+}

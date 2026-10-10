@@ -62,9 +62,6 @@ def _texts(value, message):
 
 def _source(read, source):
     """A cited repository source must exist, and its line range or anchor must be inside it."""
-    if source.startswith(W01_AMEND):
-        require(source[len(W01_AMEND):] in W01_AMEND_ITEMS, "a known W01-AMEND item: " + source)
-        return
     path, _, where = source.partition(":")
     require(path != RECORD_PATH, "an obligation cannot cite the plan itself: " + source)
     require(path and not path.startswith("/") and "\\" not in path

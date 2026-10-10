@@ -74,7 +74,7 @@
     "w02d": "admitted by NATIVE_STATIC's thread rule (flags & 0x7e030900 == 0x10900); musl never issues clone3, so W02d-QB's clone3 -> ENOSYS rule needs no fallback; musl's posix_spawn (CLONE_VM | CLONE_VFORK) is refused, and only the broker spawns, through its own clone3 (W2). Steady state needs W02d v3 (owner decision Q-S, S-b): musl's mallocng realloc uses mremap(MREMAP_MAYMOVE) above the mmap threshold, thread naming uses prctl(PR_SET_NAME), and musl's abort and raise use tkill"
    },
    "startupRecheck": {
-    "reference": "W02d v2 (MET-ENFORCE-018, pending merge) analysed musl 1.2.5 with Rust 1.90.0 (1159e78c4747b02ef996e55082b704c09b970588) and added poll to NATIVE_STATIC",
+    "reference": "W02d v2 (MET-ENFORCE-018, merged 195c4c9) analysed musl 1.2.5 with Rust 1.90.0 (1159e78c4747b02ef996e55082b704c09b970588) and added poll to NATIVE_STATIC",
     "pinned": "Rust 1.99.0 (b940084d)",
     "result": "SAME_STARTUP_SYSCALLS",
     "findings": [
@@ -129,7 +129,7 @@
   {
    "id": "W02D-V2",
    "where": "meta",
-   "summary": "Parallel lane's packet 220 (MET-ENFORCE-018, W01-AMEND) with seccomp-allowlists-v2, which adds poll to NATIVE_STATIC; it must be merged before HE-001 and T04."
+   "summary": "Parallel lane's packet 220 (MET-ENFORCE-018, W01-AMEND) with seccomp-allowlists-v2, which adds poll to NATIVE_STATIC; merged as main 195c4c9, before HE-001 and T04."
   },
   {
    "id": "W02D-V3",
@@ -663,7 +663,7 @@
   },
   {
    "id": "A1-GROUPS",
-   "source": "W01-AMEND (MET-ENFORCE-018, pending merge) O-W03-GROUPS",
+   "source": "architecture/host-interface-amendment-w02d/amendment.json:\"O-W03-GROUPS\"",
    "text": "The broker runs with no supplementary groups; W3 checks an empty Groups: line.",
    "packets": [
     "HE-005",
@@ -673,7 +673,7 @@
   },
   {
    "id": "A1-WORKER-EXEC",
-   "source": "W01-AMEND (MET-ENFORCE-018, pending merge) O-W03-WORKER-EXEC",
+   "source": "architecture/host-interface-amendment-w02d/amendment.json:\"O-W03-WORKER-EXEC\"",
    "text": "The host policy gives planeon_worker_t no transition or nnp_transition into any domain, host-policy domains included.",
    "packets": [
     "HE-008"
@@ -682,7 +682,7 @@
   },
   {
    "id": "A1-SERVER-MEMFD",
-   "source": "W01-AMEND (MET-ENFORCE-018, pending merge) O-SERVER-MEMFD",
+   "source": "architecture/host-interface-amendment-w02d/amendment.json:\"O-SERVER-MEMFD\"",
    "text": "The live backend passes MFD_CLOEXEC | MFD_NOEXEC_SEAL before running under the v2 filters.",
    "packets": [
     "R12"
@@ -691,7 +691,7 @@
   },
   {
    "id": "A1-T04",
-   "source": "W01-AMEND (MET-ENFORCE-018, pending merge) O-T04-AMEND",
+   "source": "architecture/host-interface-amendment-w02d/amendment.json:\"O-T04-AMEND\"",
    "text": "Native confirmations of the amendment's kernel facts.",
    "packets": [
     "T04"
@@ -802,7 +802,7 @@
   {
    "id": "SEC-7",
    "source": "architecture/backend-distribution/review-round2.json:MET-ENFORCE-018), which is not merged",
-   "text": "W02d v2, with poll in NATIVE_STATIC, is merged before HE-001 and T04.",
+   "text": "W02d v2, with poll in NATIVE_STATIC, is merged (main 195c4c9) before HE-001 and T04; w03_plan.py checks the merged allowlists.",
    "packets": [
     "W02D-V2"
    ],
@@ -830,7 +830,7 @@
   },
   {
    "id": "TR-PARALLELISM",
-   "source": "W01-AMEND (MET-ENFORCE-018, pending merge) review R4-1",
+   "source": "architecture/host-interface-amendment-w02d/status.json:\"R4-1\"",
    "text": "std::thread::available_parallelism opens cgroup and /proc files; native modules take thread counts from configuration (W01-AMEND review R4-1).",
    "packets": [
     "HE-001",
@@ -840,7 +840,7 @@
   },
   {
    "id": "TR-FDS",
-   "source": "W01-AMEND (MET-ENFORCE-018, pending merge) review R4-1",
+   "source": "architecture/host-interface-amendment-w02d/status.json:\"R4-1\"",
    "text": "Units start every role with fds 0-2 open, so neither musl's AT_SECURE start-up nor Rust std opens /dev/null (W01-AMEND review R4-1).",
    "packets": [
     "HE-008",

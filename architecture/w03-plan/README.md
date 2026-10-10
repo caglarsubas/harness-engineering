@@ -26,7 +26,7 @@ no toolchain is installed, and E01-E12 stay OPEN_UNPROVEN.
 - musl's `setresuid` and `setresgid` go through `__synccall`, which signals other threads with `tkill`, so the broker's W4
   child makes the raw syscalls (TR-SETXID).
 
-**Start-up re-check at Rust 1.99.0.** W02d v2 (MET-ENFORCE-018) analysed musl 1.2.5 with Rust 1.90.0, and added
+**Start-up re-check at Rust 1.99.0.** W02d v2 (MET-ENFORCE-018, merged as main `195c4c9`) analysed musl 1.2.5 with Rust 1.90.0, and added
 `poll` to NATIVE_STATIC. At 1.99.0 the start-up syscalls are the same:
 - std's init order is unchanged: fd sanitising, SIGPIPE, the stack-overflow set-up.
 - One `poll` on fds 0-2.
@@ -48,6 +48,12 @@ T04 traces each built module's start-up and steady state on both architectures (
 **Crates.** Crates are vendored, and builds run `--locked --offline --frozen`. Licenses are checked against
 `legal/third-party-license-policy.yaml` as amended by LIC-HOST, whose OR-choice rule accepts Rust std and core (MIT OR
 Apache-2.0). Each artifact gets a CycloneDX SBOM.
+
+**Licenses of the Rust closure (Q-L3, L3-a).** Rust std and its closure are statically linked into every native module:
+core and std (MIT OR Apache-2.0), compiler_builtins (MIT AND Apache-2.0 WITH LLVM-exception AND (MIT OR Apache-2.0)),
+rustc-demangle (legacy "MIT/Apache-2.0"), and others. LIC-HOST adds the OR-choice rule (Q-L2), an AND-term rule and the
+legacy normalisation (Q-L3). The build-time license gate and SBOM enumerate every crate and record each election
+(LIC-RUST-STD, LIC-GATE).
 
 **Go, for the network-policy agent only.** Owner decision Q-N (N-a) builds kube-network-policies from its tag with R10's
 pinned Go 1.26.7 (the module requires go 1.26.0) and an offline module cache, CGO off and static.
@@ -83,9 +89,9 @@ R10 yet, so the owner's root extension (VERIFIER-EXT) comes before the first R10
 
 ## Obligation register
 
-`plan.json` lists 68 obligations. Each has its source (file and lines) and the packets that discharge it. They come from
+`plan.json` lists 70 obligations. Each has its source (file and lines) and the packets that discharge it. They come from
 native-profile v3, I05 v3, I06 v1 and v2, I07 v3, admission v3, the SELinux matrix v2, the W02d allowlists and W01 §2-§6,
-plus the four W01-AMEND items, the selection's open items, the license-policy amendment, the W02d v2 and v3 preconditions and three trace items from the W01-AMEND review. W01-AMEND (MET-ENFORCE-018) is pending merge, so its four items are cited by name. One of
+plus the four W01-AMEND items, the selection's open items, the license-policy amendment, the W02d v2 and v3 preconditions and three trace items from the W01-AMEND review. W01-AMEND (MET-ENFORCE-018) is merged as main `195c4c9`; its items are cited in `architecture/host-interface-amendment-w02d/`. One of
 them, O-SERVER-MEMFD, belongs to the R12 live backend and is listed as outside W03. Two items are discharged here, in
 W03-0: the I05 re-check (I05-1) and the version rule (I06-6).
 

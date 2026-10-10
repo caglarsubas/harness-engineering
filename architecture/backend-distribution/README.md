@@ -1,6 +1,6 @@
 # Backend distribution selection — W03-0 (DATA_CHECK_ONLY)
 
-Status: **CONTRACT_CANDIDATE_ROUND3_AWAITING_INDEPENDENT_REVIEW**. Round 1 (`review-round1.json`, bytes in `round1/`) and round 2 (`review-round2.json`, bytes in `round2/`) returned CHANGES_REQUIRED. Every finding is answered under "Round-1 findings and dispositions" and "Round-2 findings and dispositions". DATA_CHECK_ONLY: nothing is installed or executed, no
+Status: **CONTRACT_CANDIDATE_ROUND4_AWAITING_INDEPENDENT_REVIEW**. Rounds 1 to 3 (`review-round1.json` to `review-round3.json`, bytes in `round1/` to `round3/`) returned CHANGES_REQUIRED, and every finding is answered below. The branch was rebased onto main `195c4c9` (packet 220) after round 3; the earlier rounds' subject commits are the pre-rebase ones their records name, and their bytes are kept in the round directories. DATA_CHECK_ONLY: nothing is installed or executed, no
 I06 evidence record exists, and E01-E12 stay OPEN_UNPROVEN.
 
 W01 §2.1 leaves the concrete Kubernetes backend for `SEALED_SINGLE_NODE_CONTROL_PLANE_V1` to W03, "under license and
@@ -16,6 +16,7 @@ directory selects the concrete component set and shows, row by row, how it meets
 | Q4 | An upstream component set configured only from sealed files, with no installer at runtime. The parts: official v1.37.1 kube-apiserver, kube-controller-manager, kube-scheduler, kubelet and kube-proxy (nftables mode); etcd on a unix socket; containerd 2.x with runc and the cgroupfs driver; the CNI plugins bridge, host-local and loopback; kube-network-policies (nftables); no CoreDNS. Every part is digest-pinned. |
 | Q-L | L-a: keep the official upstream binaries, pinned. The license policy gains a reviewed class for host-OS and statically linked system libraries, with exact entries: glibc LGPL-2.1-or-later, libseccomp LGPL-2.1-only, libpathrs "MPL-2.0 OR LGPL-3.0-or-later" electing MPL-2.0, and nft GPL-2.0-only as a separately executed host program. Source offers come from the pinned tags (D-POLICY-AMEND, its own packet). |
 | Q-L2 | L2-a: the LIC-HOST amendment also adds an OR-choice rule (an "A OR B" expression with an allowed alternative is accepted, electing it, with the election recorded per component) and exact entries for GPL-3.0-or-later WITH GCC-exception-3.1 and the nft library closure in the host-OS class; gmp elects LGPL-3.0-or-later. |
+| Q-L3 | L3-a: LIC-HOST also adds an AND-term rule (a compound is accepted when every AND term is allowed, an allowed exception, reviewed or OR-resolved) and reads legacy "A/B" crate strings as "A OR B", with the normalisation recorded. The build-time license gate and SBOM produce the full crate list and elections (HE-001, HE-008). |
 | Q-E | E-a: etcd v3.7.2, the line Kubernetes v1.37.1 builds and tests against. |
 | Q-N | N-a: build kube-network-policies' standard command from tag v1.1.2 (`a145b01c`) with a pinned Go toolchain, static and with CGO off, in the host-image packet. |
 
@@ -99,7 +100,9 @@ Q-L (L-a) and Q-L2 (L2-a) approve these, through the LIC-HOST amendment:
 | D-LIC-LIBMNL | LGPL-2.1-or-later | | libmnl |
 | D-LIC-GMP | LGPL-3.0-or-later OR GPL-2.0-or-later | LGPL-3.0-or-later | gmp |
 
-jansson (MIT) needs no review. The nft libraries' expressions are the upstream licenses as recorded here; the host-image
+The crate lists above are libpathrs' direct and named transitive crates; under owner decision Q-L3 (L3-a), the
+build-time license gate and SBOM enumerate the full crate closures, including the Rust std closure linked into runc,
+and record every election. jansson (MIT) needs no review. The nft libraries' expressions are the upstream licenses as recorded here; the host-image
 packet verifies them against the shipped packages. The policy pins its identity, so the amendment is its own packet
 (D-POLICY-AMEND, LIC-HOST) before the host-image packet and before HE-001's license gate, which needs the OR-choice rule
 for Rust std and core (MIT OR Apache-2.0). I06 SC13 admits only `distribution.license == "Apache-2.0"`, so W02g-F2
@@ -168,6 +171,17 @@ Each exclusion names the criterion that rules it out:
 | F6 MINOR, check-module gaps | owner decisions bound to the parts (Q-L, Q-E, Q-N), role repositories pinned, URL-path architecture check, duplicate-key policy loading, the policy pinned by digest, required static-closure reviews; in `w03_plan.py` the exact musl flags and patches, the Rust commit for its version, cited lines and anchors, no `..`, R12 only for the obligation outside W03, ValueError on malformed input |
 | F7 NOTE, kubelet listener | D-KUBELET-LISTENER |
 | F8 NOTE | no change needed |
+
+## Round-3 findings and dispositions
+
+| Finding | Disposition |
+|---|---|
+| F1 MAJOR, the Rust std closure | owner decision Q-L3 (L3-a): AND-term rule and legacy normalisation in LIC-HOST; the build-time gate and SBOM produce the crate list and elections; `either` and `linux-raw-sys` added to runc's crate reviews; the plan records LIC-RUST-STD and LIC-GATE |
+| F2 MINOR, decisions not recorded | Q-L2 and Q-L3 recorded in `selection.json`, Q-L3 and Q-S in `plan.json`, each bound by the checks; the Q-L2 reviews attributed to Q-L2; SC13, LIC-HOST and VERIFIER-EXT updated; gmp's election tied to its explicit-review decision record |
+| F3 MINOR, TR-SETXID reason | restated: the clone3 child makes only raw, async-signal-safe calls, because `__synccall` takes `__tl_lock` (`synccall.c:59`) and the child runs on the parent's copied libc state |
+| F4 MINOR, check gaps | elected alternatives must be allowed, an allowed exception or an owner-approved explicit-review license; a host dependency's license equals its review's; the plan checks that every selection open item and LIC-RUST-STD are registered, refuses self-citation and reversed ranges, pins Go exactly, and requires every packet to discharge an obligation |
+| F5 NOTE, nft closure and crun | the host dependency list is labelled the minimum, extended from the shipped packages; versions set with the host OS; crun's reason reworded |
+| F6 NOTE | no change needed; the W01-AMEND citations now point at the merged record (`architecture/host-interface-amendment-w02d/`) |
 
 ## Not claimed
 

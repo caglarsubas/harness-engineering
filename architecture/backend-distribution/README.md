@@ -1,6 +1,6 @@
 # Backend distribution selection — W03-0 (DATA_CHECK_ONLY)
 
-Status: **CONTRACT_CANDIDATE_ROUND5_AWAITING_INDEPENDENT_REVIEW**. Rounds 1 to 4 (`review-round1.json` to `review-round4.json`, bytes in `round1/` to `round4/`) returned CHANGES_REQUIRED, and every finding is answered below. The branch was rebased onto main `195c4c9` (packet 220) after round 3; the earlier rounds' subject commits are the pre-rebase ones their records name, and their bytes are kept in the round directories. DATA_CHECK_ONLY: nothing is installed or executed, no
+Status: **ADOPTED_FOR_SOURCE_PUBLICATION** (review round 5 PASS on `104b115`; `status.json`). Before that: Rounds 1 to 4 (`review-round1.json` to `review-round4.json`, bytes in `round1/` to `round4/`) returned CHANGES_REQUIRED, and every finding is answered below. The branch was rebased onto main `195c4c9` (packet 220) after round 3; the earlier rounds' subject commits are the pre-rebase ones their records name, and their bytes are kept in the round directories. DATA_CHECK_ONLY: nothing is installed or executed, no
 I06 evidence record exists, and E01-E12 stay OPEN_UNPROVEN.
 
 W01 §2.1 leaves the concrete Kubernetes backend for `SEALED_SINGLE_NODE_CONTROL_PLANE_V1` to W03, "under license and

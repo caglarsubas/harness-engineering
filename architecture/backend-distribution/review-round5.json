@@ -1,0 +1,69 @@
+{
+ "schemaVersion": "harness.planeon.ai/w03-selection-review/v1",
+ "round": 5,
+ "reviewDate": "2026-10-10",
+ "subjectCommit": "104b11529b6448a2c208450e5fbbd677e5dd8069",
+ "subjectTree": "a73a213b495910117d58cdf600a107c9e53a1b8f",
+ "verdict": "PASS_FOR_SOURCE_PUBLICATION",
+ "roundFourFindings": {
+  "F1": {
+   "status": "FIXED",
+   "reason": "SEC-1 to SEC-5 now cite W02d v2's carriedToW03 (seccomp-allowlists-v2/status.json:93-97, checked line by line). SEC-QW4 registers the QW4 pin-or-re-check item (:98) and assigns it to W03-0, W02D-V3 and T04. The three TR items cite :101. A1-SERVER-MEMFD cites the amendment's owner field (amendment.json:365, R12 live backend) and notes that v2 also lists it at status.json:99. w03_plan.py now checks the toolchain partition and poll against the v2 allowlists, and the dead constants are gone. SEC-6 still cites the v1 README:153, with a note; v2 status.json:5 confirms the v6.12 tables and v2's README does not restate the sentence, so the citation is justified."
+  },
+  "F2": {
+   "status": "FIXED",
+   "reason": "architecture/w03-plan/README.md now matches plan.json TR-SETXID: raw async-signal-safe calls, because of __tl_lock (synccall.c:59) and the parent's copied libc state."
+  },
+  "F3": {
+   "status": "FIXED",
+   "reason": "Fixed in backend_distribution.py: each review's owner decision is bound (REVIEW_DECISIONS), and the owner-named and rule-fixed elections are bound (REVIEW_ELECTIONS). The probes for libpathrs electing LGPL-3.0-or-later, the crates electing MIT, and glibc or libgcc with the wrong decision are now refused. Fixed in w03_plan.py: an anchor must be an identifier or quoted key of at least 4 characters present as a whole token, so 'the' is refused; the plan README cannot be cited; LIC-GATE, the TR items, SEC-QW4 and SEC-8 must be registered; owner-decision:<id> must name one of the plan's recorded decisions (Q9 refused). Small residuals are recorded in F1 below."
+  },
+  "F4": {
+   "status": "FIXED",
+   "reason": "SEC-7 cites seccomp-allowlists-v2/README.md:12, SEC-8 cites owner-decision:Q-S, TR-SETXID cites v2 status.json:101, and LIC-RUST-STD and LIC-GATE cite selection.json's recorded \"Q-L3\". D-POLICY-AMEND now words the OR rule as allowed or an allowed exception, with an explicit-review alternative only under an owner-approved decision record."
+  },
+  "F5": {
+   "status": "ADDRESSED",
+   "reason": "No change was needed."
+  }
+ },
+ "findings": [
+  {
+   "id": "F1",
+   "severity": "NOTE",
+   "location": "scripts/w03_plan.py:64-88,178-198; scripts/backend_distribution.py:301-303",
+   "finding": "Residual limits of the two structural checks; the README claims match what the checks do. In w03_plan.py: a whole-token anchor can still be a common key, so amendment.json:\"owner\" or :text passes. owner-decision:<id> is checked for existence but not for relevance, so NP-1 could cite owner-decision:Q-S. SEC-QW4's packets and SEC-1's file are not pinned: T04-only packets, or a citation back to the v1 status, would pass. In backend_distribution.py: Q-L3 set to PENDING passes, since no selection field depends on it. Accepted by design, as in earlier rounds: digest values (checked by review), containerd-stress membership, and the meaning of dispositions and roles.",
+   "requiredChange": "None for this round. Optionally pin the sources and packets of the required obligations, or bind anchors to the obligation's identifier."
+  },
+  {
+   "id": "F2",
+   "severity": "NOTE",
+   "location": "verification",
+   "finding": "Verified: every new citation matches the cited text (seccomp-allowlists-v2/status.json:93-99 and :101, README.md:12, amendment.json:365, the selection.json \"Q-L3\" decision). The plan has 71 obligations, which matches the README, and 17 packets. The round4/ bytes equal add1b45, and review-round4.json is the round-4 verdict. The only remaining reference to seccomp-allowlists v1 is SEC-6, which is justified, plus historical disposition tables. Both check modules pass; backend_distribution reads its 4 inputs and w03_plan reads 72 cited files. Pins and the policy digest are unchanged since round 3.",
+   "requiredChange": "None."
+  }
+ ],
+ "pinsVerified": {
+  "unchangedPins": "Artifact digests, tags, the pause index, the policy digest (fa3a4398...) and the Go pin (R10 tools.lock, go 1.26.7) are unchanged since rounds 3 and 4",
+  "round4Bytes": "round4/ README, REVIEW_BRIEF, selection.json, both scripts and both plan files equal add1b45"
+ },
+ "checksRun": [
+  "git diff add1b45 104b115",
+  "cmp of round4/ against add1b45 blobs",
+  "python3 scripts/backend_distribution.py (passes)",
+  "python3 scripts/w03_plan.py (passes)",
+  "probe_bd.py: round-4 probes (/private/tmp/claude-501/w03-review-r5/probe/)",
+  "probe_plan.py: round-4 probes plus 7 new ones",
+  "line-by-line check of the new citations in seccomp-allowlists-v2/status.json, README.md and amendment.json",
+  "scan of the subject for stale merge and v1 references"
+ ],
+ "sourcesRead": [
+  "repo: architecture/backend-distribution/{README.md,REVIEW_BRIEF.md,selection.json,review-round4.json,round4/}, architecture/w03-plan/{README.md,plan.json}, scripts/backend_distribution.py, scripts/w03_plan.py",
+  "architecture/seccomp-allowlists-v2/{status.json,README.md,syscalls.json}, architecture/seccomp-allowlists/README.md:150-154, architecture/host-interface-amendment-w02d/amendment.json"
+ ],
+ "actions": {
+  "filesEdited": false,
+  "networkAccessed": "none this round (local repository reads only)",
+  "largeDownloads": []
+ }
+}

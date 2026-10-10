@@ -23,7 +23,7 @@ except ImportError:
 
 ROOT = Path(__file__).resolve().parents[1]
 AUTHORITY_PATH = "architecture/w01-amendment-authority.json"
-AUTHORITY_SHA256 = "80920124281804c723974ba2f68696607aaed3803705e9157d9b2097b89fbabc"
+AUTHORITY_SHA256 = "3e812b9d87172e376b4830a8683392d0ed4634fda2de3e71d37c8dee9f6b8061"
 VALIDATOR_PATH = "scripts/validate_w01_amendment.py"
 BASE_COMMIT = "b8ce77baad727e03bc14930521f2a062fd59d97a"
 NEW_PACKET = "MET-ENFORCE-018"
@@ -341,10 +341,10 @@ def validate_packet_payloads(packets: dict[str, Any]) -> None:
 
 
 # MET-ENFORCE-018 (roadmap W01-AMEND) publishes amendment W02D of the W01 host-interface record (W02d's carried items,
-# owner decisions W01-AMEND-QW1..QW3) and the W02d successor planeon.internal.seccomp-allowlists/v2 (memfd flags
-# MFD_CLOEXEC | MFD_NOEXEC_SEAL; the broker's pidfd_send_signal grant dropped). Repository bytes are read only through
-# reviewed_bytes, so a later bridged successor projects its own edits away first. Both reference models are executed from
-# this era's reviewed bytes, not imported, after the review binding has been checked.
+# owner decisions W01-AMEND-QW1..QW4) and the W02d successor planeon.internal.seccomp-allowlists/v2 (memfd flags
+# MFD_CLOEXEC | MFD_NOEXEC_SEAL; the broker's pidfd_send_signal grant dropped; NATIVE_STATIC grants poll). Repository
+# bytes are read only through reviewed_bytes, so a later bridged successor projects its own edits away first. Both
+# reference models are executed from this era's reviewed bytes, not imported, after the review binding has been checked.
 AMEND_DIR = "architecture/host-interface-amendment-w02d/"
 V2_DIR = "architecture/seccomp-allowlists-v2/"
 AMEND_MODEL = "scripts/host_interface_amendment.py"

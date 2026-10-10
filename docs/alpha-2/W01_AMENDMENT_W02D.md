@@ -16,9 +16,11 @@ replacements, and publishes the amended text beside it.
   reads; W5's execveat form and the worker's SELinux limits; the stacked filters; W3's groups check; W6's kill path),
   restates W02d-QB's ENOSYS refusal for clone3, and names four obligations: O-SERVER-MEMFD (the SERVER role's existing
   sealed-credential code must pass the new flags), O-W03-WORKER-EXEC, O-W03-GROUPS and O-T04-AMEND.
-- **The W02d successor** `seccomp-allowlists-v2` changes only the memfd flags rule and drops the broker's unused
-  `pidfd_send_signal` grant; its model refuses any `pidfd_send_signal` or `setgroups` grant. Digests change for SERVER,
-  OBSERVER and BROKER; 2,813 decision checks, 353 worker stack checks and 15 policy mutations replay.
+- **The W02d successor** `seccomp-allowlists-v2` changes the memfd flags rule, drops the broker's unused
+  `pidfd_send_signal` grant and adds `poll` to NATIVE_STATIC (QW4, below); its model refuses any `pidfd_send_signal` or
+  `setgroups` grant. Digests change on both architectures for SERVER, OBSERVER and BROKER and on x86_64 for
+  EFFECT_GATE, POLICY_WRITER and HOST_CONTAINMENT; 2,813 decision checks, 353 worker stack checks and 15 policy
+  mutations replay.
 - **W01-AMEND-QW4.** The native roles are Rust with musl, fully static (analysed reference: musl 1.2.5, Rust 1.90.0).
   NATIVE_STATIC grants `poll`, which Rust std calls at start-up and musl issues as SYS_poll on x86_64; musl creates
   threads with `clone`, never `clone3`, so the clone3 ENOSYS reason (glibc) applies to the CPython roles.

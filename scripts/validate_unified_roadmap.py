@@ -484,8 +484,8 @@ def validate() -> None:
     )
     old_ids = set(record["baselinePackets"])
     packet_files = sorted((ROOT / "task-packets").glob("*.yaml"))
-    require(len(packet_files) == 221, "221 current packets")
-    require({path.stem for path in packet_files} == old_ids | {NEW_PACKET, "MET-RUNNER-001", "MET-PERF-028", "MET-LINUX-005", "MET-VERIFY-001", "MET-PERF-029", "MET-PERF-030", "MET-LINUX-006", "MET-VERIFY-002", "MET-VERIFY-003", "MET-VERIFY-004", "MET-ENFORCE-004", "MET-ENFORCE-005", "MET-ENFORCE-006", "MET-ENFORCE-007", "MET-PERF-031", "MET-ENFORCE-008", "MET-ENFORCE-009", "MET-SECTOR-001", "MET-PERF-032", "MET-ENFORCE-010", "MET-ENFORCE-011", "MET-ENFORCE-012", "MET-ENFORCE-013", "MET-ENFORCE-014", "MET-ENFORCE-015", "MET-ENFORCE-016", "MET-PERF-035", "MET-PERF-036", "MET-SECTOR-002", "MET-ENFORCE-017", "MET-ENFORCE-018", "MET-ENFORCE-019"}, "closed packet catalog")
+    require(len(packet_files) == 222, "222 current packets")
+    require({path.stem for path in packet_files} == old_ids | {NEW_PACKET, "MET-RUNNER-001", "MET-PERF-028", "MET-LINUX-005", "MET-VERIFY-001", "MET-PERF-029", "MET-PERF-030", "MET-LINUX-006", "MET-VERIFY-002", "MET-VERIFY-003", "MET-VERIFY-004", "MET-ENFORCE-004", "MET-ENFORCE-005", "MET-ENFORCE-006", "MET-ENFORCE-007", "MET-PERF-031", "MET-ENFORCE-008", "MET-ENFORCE-009", "MET-SECTOR-001", "MET-PERF-032", "MET-ENFORCE-010", "MET-ENFORCE-011", "MET-ENFORCE-012", "MET-ENFORCE-013", "MET-ENFORCE-014", "MET-ENFORCE-015", "MET-ENFORCE-016", "MET-PERF-035", "MET-PERF-036", "MET-SECTOR-002", "MET-ENFORCE-017", "MET-ENFORCE-018", "MET-ENFORCE-019", "MET-ENFORCE-020"}, "closed packet catalog")
     for name, expected in record["baselinePackets"].items():
         raw = regular_bytes("task-packets/" + name + ".yaml")
         require(digest(raw) == expected, "changed predecessor YAML: " + name)
@@ -659,4 +659,4 @@ if __name__ == "__main__":
     except (ValueError, TypeError, KeyError, OSError, UnicodeError) as exc:
         print("Unified roadmap publication invalid: " + str(exc))
         raise SystemExit(1)
-    print("Unified roadmap source valid: 221 packets; 188 immutable predecessor YAML; no product acceptance.")
+    print("Unified roadmap source valid: 222 packets; 188 immutable predecessor YAML; no product acceptance.")

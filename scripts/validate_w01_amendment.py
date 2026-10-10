@@ -553,12 +553,12 @@ def validate() -> None:
             == record["validatorNormalizedSha256"], "W01 amendment validator drift")
     paths = sorted((ROOT / "task-packets").glob("*.yaml"))
     old = set(record["baselinePackets"])
-    require(len(paths) == 221
-            and {path.stem for path in paths} == old | {NEW_PACKET, successor.NEW_PACKET},
-            "closed 221-packet catalog retaining the 220-packet checkpoint")
+    require(len(paths) == 222
+            and {path.stem for path in paths} == old | {NEW_PACKET, successor.NEW_PACKET, successor.successor.NEW_PACKET},
+            "closed 222-packet catalog retaining the 220-packet checkpoint")
     packets = {}
     for path in paths:
-        if path.stem == successor.NEW_PACKET:
+        if path.stem in (successor.NEW_PACKET, successor.successor.NEW_PACKET):
             continue
         raw = regular_bytes("task-packets/" + path.name)
         expected = record["packetSha256"] if path.stem == NEW_PACKET else record["baselinePackets"][path.stem]
@@ -596,4 +596,4 @@ def validate() -> None:
 
 if __name__ == "__main__":
     validate()
-    print("W01 amendment W02D and seccomp allowlists v2 valid: 221 current specifications; 220-packet checkpoint and exact 219-packet predecessor; DATA_CHECK_ONLY, every E01-E12 obligation open.")
+    print("W01 amendment W02D and seccomp allowlists v2 valid: 222 current specifications; 220-packet checkpoint and exact 219-packet predecessor; DATA_CHECK_ONLY, every E01-E12 obligation open.")

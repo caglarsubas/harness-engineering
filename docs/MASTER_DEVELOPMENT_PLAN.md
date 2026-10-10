@@ -1,6 +1,28 @@
 # Harness-Onion — unified development roadmap
 
-## Current checkpoint — MET-ENFORCE-019 source preparation, October 10, 2026
+## Current checkpoint — MET-ENFORCE-020 source preparation, October 10, 2026
+
+Alpha2 OPEN. MET-ENFORCE-019 (W03-0) passed required verify (64/64, 503 s under Docker load) and merged as main 0e74704.
+Owner decision (via the lane monitor): slot 222 is W02d-V3. MET-ENFORCE-020 publishes the W02d successor seccomp
+allowlists v3: owner decision W02d-V3 adds three narrow NATIVE_STATIC rules for the Rust+musl native roles (independent
+review round 2, PASS_FOR_SOURCE_PUBLICATION). DATA_CHECK_ONLY. MET-ENFORCE-020 is the sole 222nd specification.
+
+| Phase | ID | Status | Description / gate |
+|---|---|---|---|
+| Alpha2A | MET-ENFORCE-020 / W02d-V3 | SOURCE_PREPARED | Seccomp allowlists v3 as the 222nd packet; verify from the owner's App |
+| Alpha2A | MET-ENFORCE-019 / W03-0 | VERIFY_PASSED_MERGED | Verify 503 s |
+| Alpha2A | LIC-HOST, W02a-F2, W02g-F2 | IN_PROGRESS_OR_PLANNED | License-policy amendment (slot 223); production backend profile |
+| Alpha2A | W03 | IN_PROGRESS | Host modules in the operator repository (primary lane), after the owner's verifier extension |
+| Alpha2A | W04 | IN_PROGRESS | Independent enforcement tests and observation-window map (parallel lane); W04-0 review-PASS, slot 224 |
+| Alpha2 | IND-BANK-001 to IND-BANK-005, KN-BANK-001, CTRL-BANK-001, DIST-BANK-001, CONF-BANK-001 | WAITING_PACKET_PUBLICATION | Banking pack, inputs and journey |
+| Alpha2 qualification | CONF-LINUX-001 / CONF-A2-001 | WAITING_PREREQUISITES | Linux verification only when mandatory |
+
+Keep the inherited 64 argv unchanged (the installed activation cap and the verifier's inheritance rule; the new
+layer validator adds no argv and runs inside the outer pytest), 420/750/900 s/15 min and 32 MiB. No cloud, runner registration,
+live/native/tenant or model-effort changes. Phase-end effort transition NOT_DUE.
+Prior checkpoints below are history only.
+
+## Historical W03-0 source checkpoint — MET-ENFORCE-019 source preparation, October 10, 2026
 
 Alpha2 OPEN. MET-ENFORCE-018 (W01-AMEND) passed required verify (64/64, 490 s) and merged as main 195c4c9. Owner rule
 (via the lane monitor): slot 221 goes to the first review-PASS contract packet. MET-ENFORCE-019 is W03-0: the W03 backend
@@ -1294,7 +1316,8 @@ These checkboxes count only the named deliverable at the stated evidence level. 
 - [x] Alpha 2 · CATALOG-BANK / MET-SECTOR-002 · Publish the SECTOR-D1 catalog follow-ups as a reviewed overlay with the catalogs byte-identical; pass required verify through the owner's App.
 - [x] Alpha 2A · W02d / MET-ENFORCE-017 · Publish the per-role, per-architecture seccomp allowlists and filter digests as reviewed data; pass required verify through the owner's App.
 - [x] Alpha 2A · W01-AMEND / MET-ENFORCE-018 · Publish W01 amendment W02D and the W02d successor seccomp-allowlists-v2 as reviewed data; pass required verify through the owner's App.
-- [ ] Alpha 2A · W03-0 / MET-ENFORCE-019 · Publish the W03 backend distribution selection and the W03 plan as reviewed data; pass required verify through the owner's App.
+- [x] Alpha 2A · W03-0 / MET-ENFORCE-019 · Publish the W03 backend distribution selection and the W03 plan as reviewed data; pass required verify through the owner's App.
+- [ ] Alpha 2A · W02d-V3 / MET-ENFORCE-020 · Publish the W02d successor seccomp-allowlists-v3 (Rust+musl NATIVE_STATIC rules) as reviewed data; pass required verify through the owner's App.
 - [ ] Alpha 2A · CONF-FIX-010 · Complete safe design and exact authority before any product attempt.
 - [ ] Alpha 2A · CONF-LIVE-004 · Produce the exact native-probe source implementation and separately qualify it.
 - [ ] Alpha 2A · CONF-LIVE-005 · Produce a reproducible selected package and operator handoff.

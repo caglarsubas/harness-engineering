@@ -1,6 +1,11 @@
 # Sol-High Task Packet Catalog
 
-## Current source preparation — MET-ENFORCE-019
+## Current source preparation — MET-ENFORCE-020
+
+W02d-V3 (MET-ENFORCE-020): seccomp allowlists v3, three narrow NATIVE_STATIC rules for the Rust+musl roles;
+DATA_CHECK_ONLY. Alpha2 OPEN; 221 accepted plus ENFORCE-020 only.
+
+## Historical W03-0 source preparation — MET-ENFORCE-019
 
 W03-0 (MET-ENFORCE-019): the W03 backend distribution selection (upstream v1.37.1 component set) and the W03 plan;
 DATA_CHECK_ONLY. Alpha2 OPEN; 220 accepted plus ENFORCE-019 only.
@@ -1273,3 +1278,4 @@ acceptance is claimed. Alpha2 ONGOING; model-effort transition NOT_DUE.
 | 219 | `MET-ENFORCE-017` | `Harness-Engineering` | W02d: per-role, per-architecture seccomp allowlists and filter digests; DATA_CHECK_ONLY |
 | 220 | `MET-ENFORCE-018` | `Harness-Engineering` | W01-AMEND: W01 amendment W02D and the W02d successor seccomp-allowlists-v2; DATA_CHECK_ONLY |
 | 221 | `MET-ENFORCE-019` | `Harness-Engineering` | W03-0: backend distribution selection (upstream v1.37.1 component set) and the W03 plan; DATA_CHECK_ONLY |
+| 222 | `MET-ENFORCE-020` | `Harness-Engineering` | W02d-V3: seccomp allowlists v3 for the Rust+musl native roles; DATA_CHECK_ONLY |

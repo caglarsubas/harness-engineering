@@ -1,0 +1,87 @@
+{
+ "schemaVersion": "planeon.internal.seccomp-allowlists-v3-review/v1",
+ "round": 1,
+ "reviewDate": "2026-10-10",
+ "verdict": "PASS_FOR_SOURCE_PUBLICATION",
+ "subjectCommit": "19ef263df7e52e58b07a3a5175ed0b9075d89f95",
+ "subjectSha256": {
+  "architecture/seccomp-allowlists-v3/README.md": "15a7b20490ac7cd4e810281b3a876427d84ca0e0ac61544b1af2f5512b22e5ba",
+  "architecture/seccomp-allowlists-v3/REVIEW_BRIEF.md": "2d74eaecc5a0d5ce325c749b23252e65e0725062a7256e52370cd5800136f828",
+  "architecture/seccomp-allowlists-v3/syscalls.json": "863f1df9bc55b7776520790a7314f6fa4b0480f2d58672db0f1f244aa36c7503",
+  "architecture/seccomp-allowlists-v3/allowlists.json": "397e79541a7cfaa4f435703703f48f9e1ef54d81a659709d5c80358e0c5bcf66",
+  "architecture/seccomp-allowlists-v3/vectors.json": "18353cb347dc8d4575b650fe4b4ece31f5bf9ca1ce490d1c50a9ae2962f25df8",
+  "scripts/seccomp_allowlists_v3.py": "65c1190cf3878222b5cf1dfe032addc1e79b4e2a940ec0d97e0af3a5b8da9c81"
+ },
+ "findings": [
+  {
+   "id": "R1-1",
+   "severity": "MINOR",
+   "location": "scripts/seccomp_allowlists_v3.py decide() docstring (inherited from v2); vectors.json mremap 'satisfied with every high word set' intents; README rule table",
+   "finding": "decide() states that 'every filtered argument is an int or unsigned int the kernel truncates (stated per condition in the policy)'. v3 is the first contract that filters an unsigned long argument the kernel does not truncate: mremap's flags (v6.12 mm/mremap.c:987-989, SYSCALL_DEFINE5(mremap, ..., unsigned long, flags, ...)). The filter compares only the low 32 bits, so flags = (1<<32)|MREMAP_MAYMOVE is ALLOWED by both the model and the compiled program (the vectors record this as ALLOW). It is safe only because v6.12 mm/mremap.c:1012-1013 returns -EINVAL for any flag bit outside MREMAP_FIXED|MREMAP_MAYMOVE|MREMAP_DONTUNMAP. That safety argument is neither stated nor cited anywhere in the subject, mm/mremap.c is not among the provided kernel sources, and the docstring claim is now false; nothing in the policy states argument width per condition.",
+   "requiredChange": "State in the model docstring and README (or the owner decision row / constantCitations) that mremap's flags is unsigned long, that only its low 32 bits are compared, and that the high bits are refused by the kernel at torvalds/linux@v6.12 mm/mremap.c:1012-1013 (-EINVAL), adding that citation; or carry it to W03 re-check alongside the pinned kernel."
+  },
+  {
+   "id": "R1-2",
+   "severity": "MINOR",
+   "location": "README.md 'Carried to W03'",
+   "finding": "musl 1.2.5 pthread_getattr_np (research/musl-1.2.5/pthread_getattr_np.c:15-21) probes the main thread's stack with mremap(p-l-PAGE_SIZE, PAGE_SIZE, 2*PAGE_SIZE, 0), i.e. flags 0, which v3 kills by design (the vectors assert 'mremap with flags 0' -> KILL_PROCESS in every non-exempt native role). Rust 1.90.0 std avoids it on musl (stack_overflow.rs:425-431 install_main_guard_linux_musl returns None; current_guard is only called for spawned threads, stack_overflow.rs:236-237, where musl takes the t->stack branch), so the std steady state fits. But any crate or role code that calls pthread_getattr_np on the main thread (for example stack-probing crates) would kill the role. The file sits in the author's research set, yet the W03 carry list omits it, so W03 has no trace item for the only known musl path that issues mremap with flags other than MREMAP_MAYMOVE.",
+   "requiredChange": "Add a W03 carry item: no native role (or its dependencies) calls pthread_getattr_np on the main thread, because musl issues mremap with flags 0 there and v3 kills it; W03's trace checks for it."
+  },
+  {
+   "id": "R1-3",
+   "severity": "NOTE",
+   "location": "allowlists.json BROKER duty 'the worker's calls after exec'; scripts/seccomp_allowlists_v3.py mremap check exemption",
+   "finding": "BROKER is a NATIVE_STATIC role but keeps unconditional mremap (from its worker-coverage duty, which absorbs the base's conditional rule), so MREMAP_FIXED and MREMAP_DONTUNMAP stay admitted for the broker (replayed: flags 2, 3, 4, 5, 0 all ALLOW for BROKER on both architectures). This is required by the coverage rule (KILL wins over the worker's unconditional CPython mremap), and the README states it, so it is no widening relative to v2; it is recorded so the decision text 'NATIVE_STATIC adds mremap only with MREMAP_MAYMOVE' is not read as covering the broker.",
+   "requiredChange": "None required; optionally say in the README that the broker, although native, admits every mremap flag for coverage."
+  },
+  {
+   "id": "R1-4",
+   "severity": "NOTE",
+   "location": "allowlists.json NATIVE_STATIC tkill; README rule table",
+   "finding": "tkill is unconditional, so the filter does not limit it to the calling thread: any tid passing the kernel's kill permission check can be signalled. The reach equals the unconditional tgkill v2 already grants, so it is no new authority. musl 1.2.5 also issues tkill from pthread_kill (src/thread/pthread_kill.c:13) and __synccall (src/thread/synccall.c:82, used by setresuid/setresgid), not only abort/raise; synccall.c:67-68 falls back to single-threaded when gettid differs from the cached tid, so a raw clone3 child does not signal stale tids. The README's 'signal the calling thread' describes musl's use, not the filter.",
+   "requiredChange": "None required; optionally list pthread_kill and __synccall as further musl tkill callers."
+  },
+  {
+   "id": "R1-5",
+   "severity": "NOTE",
+   "location": "scripts/seccomp_allowlists_v3.py check_policy prctl check",
+   "finding": "The new prctl check is a deny floor, not an exactness check: it accepts PR_SET_NAME in SERVER and WORKER (replayed: both accepted; WORKER is covered by the broker's PR_SET_NAME alternative), and it accepts narrower PR_SET_NAME alternatives. Exactness is carried by the filter digests, as in v2. Separately, a prctl errno rule in a role without a prctl grant (SERVER, WORKER) makes check_policy raise TypeError instead of ValueError (iterating the {'errno': n} dict); this is fail-closed and the same pattern already exists in v2 for clone, bpf and membarrier.",
+   "requiredChange": "None required; optionally guard the conditional checks with type(rules[name]) is list so a malformed policy is refused with a ValueError message."
+  },
+  {
+   "id": "R1-6",
+   "severity": "NOTE",
+   "location": "README.md rule table (prctl row); ownerDecisions W02d-V3",
+   "finding": "'tokio names its workers the same way' has no source in the subject or research set. The claim is plausible (tokio names its threads through std::thread::Builder::name, which reaches Rust std set_name in the new thread), but it is not cited.",
+   "requiredChange": "Cite the tokio source at the version W03 pins, or drop the clause."
+  }
+ ],
+ "questionAnswers": {
+  "Q0": "Yes. A structural diff of v2 and v3 syscalls.json and allowlists.json shows only: the schema version bumps; the constants PR_SET_NAME 15 and MREMAP_MAYMOVE 1; the citations for prctl.h:56 and mman.h:9; the tkill table entry (x86_64 200, syscall_64.tbl:212; aarch64 130, scripts/syscall.tbl:166, both checked against the v6.12 files); the W02d-V3 owner decision row; and three NATIVE_STATIC base rules (tkill unconditional, mremap [[arg3 == 1]], prctl [[arg0 == 15]]). No other role, duty, rule, constant or citation differs. The model diff is the docstring plus the two new checks in check_policy, which matches what make_v3.py patches into the v2 model. SERVER's and WORKER's compiled programs are byte-equal to v2's on both architectures (same digests). All other roles' programs change, which matches the README. Effective-rule diffs per role: OBSERVER, EFFECT_GATE, POLICY_WRITER and HOST_CONTAINMENT gain tkill, conditional mremap and conditional prctl; BROKER gains tkill and the PR_SET_NAME alternative beside PR_SET_NO_NEW_PRIVS, and keeps unconditional mremap.",
+  "Q1": "Yes, the rules are right and narrow at the cited versions, with the two MINOR doc gaps R1-1 and R1-2. musl 1.2.5 realloc.c:28-34 calls mremap(..., MREMAP_MAYMOVE), and mremap.c:12-29 passes int flags (positive, so no sign extension) as arg 3. Rust 1.90.0 thread.rs:141-157 calls pthread_setname_np(pthread_self(), ...); I fetched this file from upstream and it is byte-identical to the research copy (sha256 c4618769...). musl pthread_setname_np.c:17-18 takes the prctl(PR_SET_NAME) branch for self, and Rust calls set_name in the new thread itself, so the /proc/self/task/<tid>/comm path is not reached. musl abort.c:22 and raise.c:10 use SYS_tkill. The constants PR_SET_NAME 15 (prctl.h:56) and MREMAP_MAYMOVE 1 (mman.h:9) are correct, and v6.12 prctl takes int option, which is truncated. mremap flags is unsigned long and not truncated, but high bits get -EINVAL (mm/mremap.c:1012; R1-1). For every non-exempt native role, MREMAP_FIXED (2), MAYMOVE|FIXED (3), DONTUNMAP (4), MAYMOVE|DONTUNMAP (5) and 0 are KILL_PROCESS. Every prctl option other than 15 is KILL_PROCESS, and so is 38 outside the broker. BROKER (and SERVER and WORKER, unchanged from v2) admit every mremap flag for coverage (R1-3). The broker's prctl admits exactly 15 and 38. musl's main-thread pthread_getattr_np is the one known flags-0 mremap path (R1-2).",
+  "Q2": "Yes. An independent replay in scratch imported the v3 model read-only. All 2953 decision checks agree three ways (reference decide, compiled run_filter, recorded expect), with 0 mismatches and unique ids. All 355 worker stack checks hold (decide_stack(BROKER, WORKER) == decide(WORKER)), and they cover every WORKER decision check. All 18 mutations, M16-M18 included, are refused with exactly the recorded message. filterDigests and programLengths equal the compiled programs for all 7 roles on both architectures. Every v2 decision vector is present in v3 with an unchanged expectation (the ids are renumbered). The two new checks: 14 further widening mutations, run in scratch, were all refused. They were mask-weakened flags, a wrong argument index, an extra alternative, unconditional mremap or prctl in a native role, PR_SET_DUMPABLE, PR_SET_SECCOMP, PR_SET_NO_NEW_PRIVS outside the broker, a mask-weakened prctl, and base-level edits. The v3 policy passes, including require_covers and the broker's PR_SET_NO_NEW_PRIVS. One quirk: an errno-form prctl rule in SERVER or WORKER raises TypeError, which is still fail-closed (R1-5).",
+  "Q3": "No material overclaim. The counts (2953/355/18 against 2813/353/15), the digest-change set, the exemption for SERVER, WORKER and BROKER, and 'what stays open' all match the data. Three gaps: the README omits the unsigned-long width argument for mremap flags (R1-1), the tokio clause is uncited (R1-6), and the README describes tkill by musl's use, not by the filter's reach (R1-4). The four W03 carry items are correctly stated. setresuid/setresgid signal sibling threads through __synccall/tkill (synccall.c:82); a raw-clone3 child is treated as single-threaded by the gettid check (synccall.c:67-68), and using raw syscalls is the safe instruction. available_parallelism reads cgroup and /proc files. Rust std init polls fds 0-2 and opens /dev/null only on POLLNVAL (mod-1.90.0.rs:109,140). The version pin re-check is also stated correctly. One item is missing: main-thread pthread_getattr_np (R1-2)."
+ },
+ "sourcesRead": [
+  "architecture/seccomp-allowlists-v3/{REVIEW_BRIEF.md,README.md,source-index.json,syscalls.json,allowlists.json,vectors.json} at 19ef263",
+  "scripts/seccomp_allowlists_v3.py and scripts/seccomp_allowlists_v2.py (diffed)",
+  "architecture/seccomp-allowlists-v2/{syscalls.json,allowlists.json,vectors.json} (structural diff against v3; predecessor digests checked against source-index)",
+  "scripts/validate_seccomp_allowlists.py lines 405-470 (read only, to mirror the replay semantics; not executed)",
+  "~/.local/state/harness-onion-ci/tools/w02dv3/make_v3.py (read only)",
+  "~/.local/state/harness-onion-ci/tools/w01amend/research/musl-1.2.5: src/malloc/mallocng/realloc.c, src/mman/mremap.c, src/thread/pthread_setname_np.c, src/exit/abort.c, src/signal/raise.c, pthread_getattr_np.c",
+  "~/.local/state/harness-onion-ci/tools/w01amend/research/rust: thread-1.90.0.rs, stack_overflow-1.90.0.rs, mod-1.90.0.rs",
+  "~/.local/state/harness-onion-ci/tools/w02d/research/src/linux-v6.12: include/uapi/linux/mman.h, include/uapi/linux/prctl.h, kernel/sys.c (prctl), arch/x86/entry/syscalls/syscall_64.tbl, scripts/syscall.tbl",
+  "public upstream fetched with a generic User-Agent into scratch: torvalds/linux v6.12 mm/mremap.c (sha256 224327602dbaf82f44bd2339a00df60157662123b8e9a9618b67fa7c07b21f1e); rust-lang/rust 1.90.0 library/std/src/sys/pal/unix/thread.rs (sha256 c4618769d526abaf2d84d04261a6844c28780b87aed9e196b6401a75fdc2fc49, identical to the research copy); musl v1.2.5 src/thread/synccall.c, src/unistd/setxid.c, src/thread/pthread_kill.c"
+ ],
+ "actions": {
+  "filesEdited": false,
+  "githubMutated": false,
+  "nativeActions": false,
+  "referenceModelExecuted": true,
+  "repositoryValidatorsRun": false,
+  "runnerActivated": false,
+  "testsRun": false,
+  "warmSourcesAccessed": false
+ },
+ "reviewLimit": "Data-check review only. I imported the v3 and v2 models read-only from scratch scripts in /private/tmp/claude-501/w02dv3-review-r1/, ran no repository tests or validators, and installed no filter on any host. I did not run the builders build_v3.py and write_docs.py; I read make_v3.py only. tokio, the broader musl tree, and Rust std outside the three research files were not traced, so no claim is made that the Rust+musl roles fit the base beyond the cited paths (W03 trace). source-index.json itself (sha256 b36eefb70819340e997ce35d0e01bafadb8d6d4cb3499d277be64b3c861572d8) is not in its own subject list; all six listed subject and six predecessor digests match the bytes at 19ef263."
+}

@@ -1,6 +1,11 @@
 # Repository Plan: `Harness-Engineering`
 
-## Current source preparation — MET-ENFORCE-019
+## Current source preparation — MET-ENFORCE-020
+
+W02d-V3 (MET-ENFORCE-020): seccomp allowlists v3, three narrow NATIVE_STATIC rules for the Rust+musl roles;
+DATA_CHECK_ONLY. Alpha2 OPEN; 221 accepted plus ENFORCE-020 only.
+
+## Historical W03-0 source preparation — MET-ENFORCE-019
 
 W03-0 (MET-ENFORCE-019): the W03 backend distribution selection (upstream v1.37.1 component set) and the W03 plan;
 DATA_CHECK_ONLY. Alpha2 OPEN; 220 accepted plus ENFORCE-019 only.
@@ -1033,6 +1038,7 @@ Every packet uses branch `codex/<packet-id>`, changes only named paths, opens a 
 93. `MET-ENFORCE-017`: publish the W02d per-role, per-architecture seccomp allowlists and filter digests as reviewed data; source only.
 94. `MET-ENFORCE-018`: publish W01 amendment W02D and the W02d successor seccomp-allowlists-v2 as reviewed data; source only.
 95. `MET-ENFORCE-019`: publish the W03 backend distribution selection and the W03 plan as reviewed data; source only.
+96. `MET-ENFORCE-020`: publish the W02d successor seccomp-allowlists-v3 (Rust+musl NATIVE_STATIC rules) as reviewed data; source only.
 
 ## Testing, verification, and acceptance
 

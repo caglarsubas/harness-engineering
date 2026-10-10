@@ -1,6 +1,11 @@
 # Repository Plan: `Harness-Engineering`
 
-## Current source preparation — MET-ENFORCE-021
+## Current source preparation — MET-ENFORCE-022
+
+W04-0 (MET-ENFORCE-022): the independent enforcement test plan (TG-01..TG-08 against E01-E12) and the
+observation-window register schema; DATA_CHECK_ONLY. Alpha2 OPEN; 223 accepted plus ENFORCE-022 only.
+
+## Historical LIC-HOST source preparation — MET-ENFORCE-021
 
 LIC-HOST (MET-ENFORCE-021): license-policy amendment LIC-HOST-A1 as a reviewed overlay on the byte-identical
 base policy; DATA_CHECK_ONLY. Alpha2 OPEN; 222 accepted plus ENFORCE-021 only.
@@ -1045,6 +1050,7 @@ Every packet uses branch `codex/<packet-id>`, changes only named paths, opens a 
 95. `MET-ENFORCE-019`: publish the W03 backend distribution selection and the W03 plan as reviewed data; source only.
 96. `MET-ENFORCE-020`: publish the W02d successor seccomp-allowlists-v3 (Rust+musl NATIVE_STATIC rules) as reviewed data; source only.
 97. `MET-ENFORCE-021`: publish license-policy amendment LIC-HOST-A1 as a reviewed overlay on the byte-identical base policy; source only.
+98. `MET-ENFORCE-022`: publish the W04-0 independent enforcement test plan and observation-window register schema as reviewed data; source only.
 
 ## Testing, verification, and acceptance
 

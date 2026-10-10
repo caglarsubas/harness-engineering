@@ -1,0 +1,61 @@
+{
+ "schemaVersion": "planeon.internal.enforcement-test-plan-review/v1",
+ "round": 4,
+ "reviewDate": "2026-10-10",
+ "verdict": "PASS_FOR_SOURCE_PUBLICATION",
+ "subjectCommit": "f898fb199377cf6c3cc4c48ee7dfab23b0b5068c",
+ "subjectSha256": {
+  "architecture/enforcement-test-plan/README.md": "f2a312eaa81df74146d3f68f07785b7513d5212e1ef8657186367117d18a2d5c",
+  "architecture/enforcement-test-plan/REVIEW_BRIEF.md": "fbe5560293a6dff671957a1e712aa60763ba8c39d7c76ed206baed71b00eb1a6",
+  "architecture/enforcement-test-plan/traceability.json": "762c2dfa4356b5ac59491fc51359dc4e6ef26f6a22f08c7cca6982c0b2979f72",
+  "architecture/enforcement-test-plan/observation-windows.schema.json": "98cae664073e8fa26a8e686d8bcf743f734ac4fb843f6583e3c47bcac8b14f2d",
+  "scripts/enforcement_test_plan.py": "cb036384953325d721c7a7a0e787679261c9d0e01be2f6d742d8d7a126ae4fb1"
+ },
+ "findings": [
+  {
+   "id": "R4-1",
+   "severity": "NOTE",
+   "location": "scripts/enforcement_test_plan.py check_publishable; ownerDecisions D-OW-1",
+   "finding": "check_publishable correctly refuses a pending decision (M02b), but check() does not call it and no validator in the repository wires either function. A plan with D-OW-1 PENDING passes check() (M02). The model also accepts D-OW-1 selected 'C' or 'B' while the window binding and the W04-7 packet stay pinned to option A's semantics (M03); this is moot while A is selected. D-OW-1's date is free text (M05). The record carries no 'via' field: the lane-monitor channel appears only in the README. The owner's answer is taken from the record and the coordinator's relay; this reviewer cannot verify it independently.",
+   "requiredChange": "Optional: call check_publishable from whatever publishes or validates the plan, tie the window binding to the selected D-OW-1 option, and add a 'via' field to decision entries."
+  },
+  {
+   "id": "R4-2",
+   "severity": "NOTE",
+   "location": "traceability.json D-OW-1 (ENFORCEMENT_INTEGRATION.md:125 'amended through the roadmap')",
+   "finding": "The pinned ENFORCEMENT_INTEGRATION.md still gives W04's exit as the full 'observation-window map at the exact candidate revision'. The amendment D-OW-1 calls for happens outside this record, and no packet or non-claim tracks it.",
+   "requiredChange": "Optional: track the roadmap amendment of ENFORCEMENT_INTEGRATION.md:125 as an explicit follow-up (for example in W04-7's packet entry or the roadmap item)."
+  },
+  {
+   "id": "R4-3",
+   "severity": "NOTE",
+   "location": "scripts/enforcement_test_plan.py check_plan (residual leniency)",
+   "finding": "Small residuals, none of which changes the reviewed content:\n- An extra untagged TG-08 case may be W04_OFFLINE, because the migration class does not restrict non-required cases (M07b).\n- The LEDGER-E09 tag can be reused in TG-03 to get the offline exception (M07c).\n- A KEYS phrase is a short anchor, so a required case can be cut down to it (CE22 to 'connection K', M08).\n- Case obligations remain the author's judgement; this review checked them by hand in rounds 1-3.",
+   "requiredChange": "Optional: restrict the offline exception to (TG-02, LEDGER-E09), and require W06 or W05 phases for untagged TG-08 cases."
+  }
+ ],
+ "questionAnswers": {
+  "Q0": "Yes. Every group carries each matrix phrase as a MATRIX case in the phase its evidence class allows, the evidence class equals the brief's cell, and all section 4.4 vectors are in S44. INSTALLED is now a required TG-08 W06 case. Cases are unchanged from round 3 apart from blockedBy, which I verified by diff.",
+  "Q1": "Yes. The gates equal the pinned section 8 sentence, the TG-to-E map is derived from the case obligations and covers E01-E12, and E09 sits in TG-02 with the trusted-code boundary (ledger row E09, A02).",
+  "Q2": "Yes. Native classes run only in W06. Owner-implementation and fault groups refuse offline cases except the R12 reader's E09 case. CODEC runs after W05. Blockers now sit on the W06 cases they gate, and their text says they gate the run, not the writing. A01 is split per owner decision D-OW-1 A, with its W07 half named; A07-A09 are outside W04.",
+  "Q3": "Yes. The contract file lists and per-group contracts are pinned exactly, including planeon-a2.json. The six source documents and the selection record are pinned (commit 104b11529b6448a2c208450e5fbbd677e5dd8069, sha256 e6750f20...). All states are adopted, and the model run is green with the brief's reader. A missing input is refused.",
+  "Q4": "Yes, within D-OW-1 A. The schema equals window_schema(): the register is bound to the R12 reader at one baseline revision with W05's R10 release as enforcement context, an inventory tool that W04-7's packet pins and its reviewer re-runs, and removals only with a W07 candidate. check_register uses fullmatch and same-type const, and refuses self-parents, cycles, dangling parents, newline-suffixed ids and revisions, and 'exhaustive': 1. The independence rules are pinned. D-OW is verbatim and D-OW-1 is its own accepted entry. The non-claims are exact, and I found no overclaim. Residual notes are R4-1 to R4-3."
+ },
+ "sourcesRead": [
+  "round-4 subject files at f898fb1 (README incl. D-OW-1 and round-3 dispositions, REVIEW_BRIEF.md, source-index.json, traceability.json, observation-windows.schema.json, scripts/enforcement_test_plan.py)",
+  "git diff 6853a15..f898fb1 (model, brief); plan content diff 6853a15..f898fb1; review-round3.json and round3/ (compared to 6853a15 bytes); earlier rounds' pins",
+  "sources from rounds 1-3: corrected REVIEW_BRIEF.md matrix, resolved and W02D HOST_INTERFACE_SPEC.md, ENFORCEMENT_FEASIBILITY.md, OBSERVATION_ENFORCEMENT_DESIGN.md, ENFORCEMENT_INTEGRATION.md",
+  "git show 104b115:architecture/backend-distribution/selection.json (the only W03 input)"
+ ],
+ "actions": {
+  "filesEdited": false,
+  "githubMutated": false,
+  "nativeActions": false,
+  "referenceModelExecuted": true,
+  "repositoryValidatorsRun": false,
+  "runnerActivated": false,
+  "testsRun": false,
+  "warmSourcesAccessed": false
+ },
+ "reviewLimit": "Read-only design review of f898fb1 against 6853a15 and main 195c4c9. The reference model ran once at low priority (nice), as a scratch copy in /private/tmp/claude-501/w04-0-review-r4/. Its reader served selection.json from git show 104b115 and every other path from the worktree. It was run against 18 plan and 7 register mutations; nothing was written to the repository. Owner decision D-OW-1 is taken from the record and the coordinator's relay and was not independently verified. The selection's review state could not be checked (other W03 files are out of scope). The external builder was not read. No network access, validators, tests, runner, native or GitHub actions. PASS_FOR_SOURCE_PUBLICATION covers this data-check-only plan only. It is not native evidence or test execution, and E01-E12 stay OPEN_UNPROVEN."
+}

@@ -1,6 +1,11 @@
 # Sol-High Task Packet Catalog
 
-## Current source preparation — MET-ENFORCE-021
+## Current source preparation — MET-ENFORCE-022
+
+W04-0 (MET-ENFORCE-022): the independent enforcement test plan (TG-01..TG-08 against E01-E12) and the
+observation-window register schema; DATA_CHECK_ONLY. Alpha2 OPEN; 223 accepted plus ENFORCE-022 only.
+
+## Historical LIC-HOST source preparation — MET-ENFORCE-021
 
 LIC-HOST (MET-ENFORCE-021): license-policy amendment LIC-HOST-A1 as a reviewed overlay on the byte-identical
 base policy; DATA_CHECK_ONLY. Alpha2 OPEN; 222 accepted plus ENFORCE-021 only.
@@ -1285,3 +1290,4 @@ acceptance is claimed. Alpha2 ONGOING; model-effort transition NOT_DUE.
 | 221 | `MET-ENFORCE-019` | `Harness-Engineering` | W03-0: backend distribution selection (upstream v1.37.1 component set) and the W03 plan; DATA_CHECK_ONLY |
 | 222 | `MET-ENFORCE-020` | `Harness-Engineering` | W02d-V3: seccomp allowlists v3 for the Rust+musl native roles; DATA_CHECK_ONLY |
 | 223 | `MET-ENFORCE-021` | `Harness-Engineering` | LIC-HOST: license-policy amendment LIC-HOST-A1 (reviewed overlay, base byte-identical); DATA_CHECK_ONLY |
+| 224 | `MET-ENFORCE-022` | `Harness-Engineering` | W04-0: independent enforcement test plan and observation-window register schema; DATA_CHECK_ONLY |

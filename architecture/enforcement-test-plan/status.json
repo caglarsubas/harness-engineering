@@ -1,0 +1,95 @@
+{
+ "schemaVersion": "planeon.internal.enforcement-test-plan-status/v1",
+ "plan": "planeon.internal.enforcement-test-plan/v1",
+ "planLabel": "W04-0",
+ "reviewRounds": [
+  {
+   "round": 1,
+   "record": "architecture/enforcement-test-plan/review-round1.json",
+   "recordSha256": "bd4c45e1c514dac45e1f32029462ac1bb8b984e57a3a3c2fdc5184cd5de1c0d4",
+   "verdict": "CHANGES_REQUIRED",
+   "subjectDirectory": "architecture/enforcement-test-plan/round1/"
+  },
+  {
+   "round": 2,
+   "record": "architecture/enforcement-test-plan/review-round2.json",
+   "recordSha256": "8d1eb0ce4734f8b2e5692aad9ba95622d7a2007dcd4d5af4f5667e3fe1b8efac",
+   "verdict": "CHANGES_REQUIRED",
+   "subjectDirectory": "architecture/enforcement-test-plan/round2/"
+  },
+  {
+   "round": 3,
+   "record": "architecture/enforcement-test-plan/review-round3.json",
+   "recordSha256": "a93e318279792543722238bc7395a2e0f35d9169b81346b34194fc66e9367f4e",
+   "verdict": "CHANGES_REQUIRED",
+   "subjectDirectory": "architecture/enforcement-test-plan/round3/"
+  },
+  {
+   "round": 4,
+   "record": "architecture/enforcement-test-plan/review-round4.json",
+   "recordSha256": "06b595e86862f76bc635334137c83798125ec9b5f5892522175abccf86bffda8",
+   "verdict": "PASS_FOR_SOURCE_PUBLICATION",
+   "subjectDirectory": "CURRENT"
+  }
+ ],
+ "closedFindings": {
+  "R1-1": "CLOSED in round 2",
+  "R1-2": "CLOSED in round 2",
+  "R1-3": "CLOSED in round 2",
+  "R1-4": "CLOSED in round 2",
+  "R1-5": "CLOSED in round 2",
+  "R1-6": "CLOSED in round 2",
+  "R1-7": "CLOSED in round 2",
+  "R1-8": "CLOSED in round 2",
+  "R1-9": "CLOSED in round 2",
+  "R1-10": "CLOSED in round 2",
+  "R1-11": "CLOSED in round 2",
+  "R1-12": "CLOSED in round 2",
+  "R1-13": "CLOSED in round 2",
+  "R2-1": "CLOSED in round 3",
+  "R2-2": "CLOSED in round 3",
+  "R2-3": "CLOSED in round 3",
+  "R2-4": "CLOSED in round 3",
+  "R2-5": "CLOSED in round 3",
+  "R2-6": "CLOSED in round 3",
+  "R2-7": "CLOSED in round 3",
+  "R2-8": "CLOSED in round 3",
+  "R3-1": "CLOSED in round 4",
+  "R3-2": "CLOSED in round 4",
+  "R3-3": "CLOSED in round 4",
+  "R3-4": "CLOSED in round 4",
+  "R3-5": "CLOSED in round 4",
+  "R3-6": "CLOSED in round 4"
+ },
+ "carriedFindings": {
+  "R4-1": "carried (NOTE): check_publishable correctly refuses a pending decision (M02b), but check() does not call it and no validator in the repository wires either function. A plan with D-OW-1 PENDING passes check() (M02). The model also accepts D-OW-1 selected 'C' or 'B' while the window binding and the W04-7 packet stay pinned to option A's semantics (M03); this is moot while A is selected. D-OW-1's date is free text (M05). The record carries no 'via' field: the lane-monitor channel appears only in the README. The owner's answer is taken from the record and the coordinator's relay; this reviewer cannot verify it independently.",
+  "R4-2": "carried (NOTE): The pinned ENFORCEMENT_INTEGRATION.md still gives W04's exit as the full 'observation-window map at the exact candidate revision'. The amendment D-OW-1 calls for happens outside this record, and no packet or non-claim tracks it.",
+  "R4-3": "carried (NOTE): Small residuals, none of which changes the reviewed content:\n- An extra untagged TG-08 case may be W04_OFFLINE, because the migration class does not restrict non-required cases (M07b).\n- The LEDGER-E09 tag can be reused in TG-03 to get the offline exception (M07c).\n- A KEYS phrase is a short anchor, so a required case can be cut down to it (CE22 to 'connection K', M08).\n- Case obligations remain the author's judgement; this review checked them by hand in rounds 1-3."
+ },
+ "roadmapAmendment": {
+  "item": "W04",
+  "note": "ENFORCEMENT_INTEGRATION.md:125's W04 exit wording is amended through the roadmap per owner decision D-OW-1 = A (roadmap update 2026-10-10T21:00:00+08:00); the pinned document itself is unchanged",
+  "answers": "R4-2"
+ },
+ "contractState": "ADOPTED_PLAN",
+ "independentReviewer": "SEPARATE_AGENT_NOT_AUTHOR",
+ "obligations": {
+  "E01": "OPEN_UNPROVEN",
+  "E02": "OPEN_UNPROVEN",
+  "E03": "OPEN_UNPROVEN",
+  "E04": "OPEN_UNPROVEN",
+  "E05": "OPEN_UNPROVEN",
+  "E06": "OPEN_UNPROVEN",
+  "E07": "OPEN_UNPROVEN",
+  "E08": "OPEN_UNPROVEN",
+  "E09": "OPEN_UNPROVEN",
+  "E10": "OPEN_UNPROVEN",
+  "E11": "OPEN_UNPROVEN",
+  "E12": "OPEN_UNPROVEN"
+ },
+ "testsWritten": false,
+ "testsRun": false,
+ "nativeEvidence": false,
+ "registerFilled": false,
+ "phaseComplete": false
+}

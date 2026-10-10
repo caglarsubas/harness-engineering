@@ -1,0 +1,145 @@
+{
+ "schemaVersion": "planeon.internal.enforcement-test-plan-review/v1",
+ "round": 1,
+ "reviewDate": "2026-10-10",
+ "verdict": "CHANGES_REQUIRED",
+ "subjectCommit": "cabf8ed9791dbb893b6ebe02f2a7afdbaff70773",
+ "subjectSha256": {
+  "architecture/enforcement-test-plan/README.md": "a80ca1f3d20a7d94c1fb97271380ec0f6dbd7ae672482108b476c92195c4d3aa",
+  "architecture/enforcement-test-plan/REVIEW_BRIEF.md": "bc15d9c5b40144de529e26409ab88151fc336659f2d7396e74523eb5fc4a71a1",
+  "architecture/enforcement-test-plan/traceability.json": "901e3aa2e279518d21e6e8705806779a6244bacd1ef2dfce26322b0feb5dc4ac",
+  "architecture/enforcement-test-plan/observation-windows.schema.json": "93d8aba182c3822954ff2242313b8a3fdde9d936889a0c3a49f4deb9435f148a",
+  "scripts/enforcement_test_plan.py": "82c8f46d2ef377a2c9fab212991279bb01f5dec63adfa3110ad585cbf7e9d10b"
+ },
+ "findings": [
+  {
+   "id": "R1-1",
+   "severity": "MAJOR",
+   "location": "traceability.json testGroups TG-02, TG-03 (phases) and obligations E07/E10/E11/E12 (w06)",
+   "finding": "TG-02 and TG-03 run only AFTER_W05_RELEASE_SET, but the adopted spec gives both a native part: resolved HOST_INTERFACE_SPEC.md section 8 lists 'C2/C3 flush/stamp behaviour under load and restart (T02/T03)' under Native items, and section 6.3 says the counterexample-17 residual 'stays a T02 source case and a native case' (same text in the W02D effective spec). The plan gives these parts no W06 phase, and no obligation's w06 text runs them, so the native part of T02/T03 has no home.",
+   "requiredChange": "Add a W06_NATIVE_ONLY part to TG-02 and TG-03 (or separate native sub-groups) for the section 8 C2/C3 items and the G09 residual native case, and update the E07/E10/E11/E12 w06 texts."
+  },
+  {
+   "id": "R1-2",
+   "severity": "MAJOR",
+   "location": "traceability.json TG-08 obligations and contracts; obligation E07",
+   "finding": "TG-08 carries the section 4.4 rejection vectors, which are G06 vectors (section 4 is 'G06 - versioned native role and manifest enrollment'). Section 8 maps G06 to E07 only, yet TG-08 lists E10 and E11 but not E07, and E07's testGroups omit TG-08. TG-08's contracts also omit 'I06 backend profile v2', although 'new profile missing ... backend' and 'unknown backendComponents' depend on the backendComponents keys 'fixed by the selected I06 implementation profile version' (section 4.1).",
+   "requiredChange": "Add E07 to TG-08 and TG-08 to E07; add I06 backend profile v2 to TG-08's contracts."
+  },
+  {
+   "id": "R1-3",
+   "severity": "MAJOR",
+   "location": "traceability.json obligation E09 (outsideTestGroups, w06); acceptance A02; README Obligations table",
+   "finding": "The case for leaving E09 outside the groups doesn't hold up. (a) It names acceptance item A02, but A02 is mapped to TG-02 and its design obligations include E09 (OBSERVATION_ENFORCEMENT_DESIGN.md A02: 'E02/E07-E09'), while TG-02 does not list E09: the record contradicts itself. (b) Retained regression identities are preserved existing checks, not the ledger's required proof ('Reentrancy/wrong owner/partial construction/state corruption fail sticky; explicit trusted-code boundary', accountable R12). (c) W07 runs 'only after the enforcement premise is proven' (ENFORCEMENT_INTEGRATION.md W07), and W06's exit needs 'E01-E12 evidence', yet E09's w06 text says W06 'uses the W04 results as source evidence' when no W04 result for E09 is planned. (d) The cited line ENFORCEMENT_FEASIBILITY.md:164 is the E07 row; E09 is line 166.",
+   "requiredChange": "Either give E09 a W04 test group (for example TG-02, which A02 already maps to, with the factory/guard cases) or record an owner decision that places E09 outside W04 and names the packet that produces its evidence before W06. Fix the w06 text and the line citation."
+  },
+  {
+   "id": "R1-4",
+   "severity": "MAJOR",
+   "location": "traceability.json testGroups TG-04, TG-05, TG-06 cases",
+   "finding": "Several adopted test obligations that the spec assigns to specific groups are not traced to any case. Resolved and W02D section 8 Native items: section 5.1 kernel facts on the enrolled kernel and policy (T04); secure_mode_policyload conditionals in the pinned binary policy (T04); freeze-before-user-space under CLONE_INTO_CGROUP (T04/T05); completeness of the section 2 closure on a real host (E03-E05, E10); A2 field allowlists against real defaulting (T06). Counterexamples 18-28 (for example 21 gate restart mid-execution, 22 connection K stamped to A, 23 Pod through I07 WRITE_OBJECT, 24 aggregated ClusterRole widening, 25 datastore restore, 28 O_PATH cgroup detach) are not mapped either, and W02D section 11's O-T04-AMEND, which justifies the extra TG-04 seccomp case, is not cited. The section 2 closure on a real host is E03-E05 evidence, but TG-06 lists only E10 and TG-04 has no I06 contract.",
+   "requiredChange": "Add the section 8 native items and counterexamples 18-28 as cases, each with its source, under the right group (or as an explicit traced list), cite O-T04-AMEND for the seccomp case, and reconcile the E03-E05 coverage of the section 2 closure."
+  },
+  {
+   "id": "R1-5",
+   "severity": "MAJOR",
+   "location": "traceability.json contracts; TG-06",
+   "finding": "Some inputs a group needs are missing or unpinned. (a) admission-semantics-v3/admission-manifests/planeon-a2.json, the sealed A2 ValidatingAdmissionPolicy manifest that TG-06's 'final mutated objects' and the section 8 'A2 field allowlists against real defaulting' test, is not pinned, although the other admission v3 files are. (b) TG-06 cites 'owner decision Q4 of the distribution selection' and Kubernetes v1.37.1, but the selection record is pinned nowhere: it exists only at 104b115, which is not an ancestor of main 195c4c9 (sha256 e6750f20a56f76486c24e35114b9e0b204357e51e3f97e560a34c544bf238952). (c) That record's openItems D-W02A-F2 and D-SC01-PEER say no evidence record is possible until the W02a-F2 production profile and a W02g-F2 I06 successor exist. TG-06 pins I06 v2 and does not record this dependency. (d) The sources of the cases and gates (corrected REVIEW_BRIEF.md matrix, resolved spec, ENFORCEMENT_FEASIBILITY.md, OBSERVATION_ENFORCEMENT_DESIGN.md) are not pinned by sha256.",
+   "requiredChange": "Pin planeon-a2.json; pin the selection record by commit and sha256 (or wait for it on main) and record its review state; record TG-06's dependency on W02a-F2 and the W02g-F2 I06 successor; pin the matrix and spec sources."
+  },
+  {
+   "id": "R1-6",
+   "severity": "MAJOR",
+   "location": "observation-windows.schema.json; scripts/enforcement_test_plan.py check_window_schema",
+   "finding": "The schema does not force an exhaustive register. 'exhaustive': true is the register's own claim, with no inventory (the changed leaf boundaries and the removed or repositioned resampling calls) to close against, and 'windows' has no minItems. Fields required by OBSERVATION_ENFORCEMENT_DESIGN.md:141-150 and ENFORCEMENT_INTEGRATION.md ('nested custody/peer/clock checks') are missing: the identity of the removed or repositioned call and the kind of change; the custody, peer and clock checks nested in a removed global sample; the state not covered by the proof that keeps its original fresh checks; and, for an INDIRECT window, its parent removal. 'candidateRevision' names no repository, and the plan does not say which candidate W04-7 targets: W05 releases host artifacts, not the reader change whose leaf boundaries A01 needs. The id pattern 'OW-\\d{2,3}$' is unanchored ('xOW-01' matches), ids are not unique, string fields allow empty values, and 'tests' and 'obligations' are not tied to TG ids or test identities. The model locks in these weaknesses: it refuses an anchored pattern (S02) and accepts windows maxItems 0, exclusionProof of type null, and candidateRevision pattern '.*' (S01, S03, S05).",
+   "requiredChange": "Add a required inventory of changed boundaries and calls, and require each window to name its call, change kind, nested checks removed, retained fresh checks and parent removal (for INDIRECT). Bind the revision to a repository and say which candidate is meant. Anchor the id pattern, require unique ids and non-empty strings, and constrain tests and obligations. Make the model check these constraints by value."
+  },
+  {
+   "id": "R1-7",
+   "severity": "MAJOR",
+   "location": "scripts/enforcement_test_plan.py check_plan; README 'Native evidence classes ... the model refuses a native group with an earlier phase'",
+   "finding": "The reference model checks shape only and does not bind any reviewed content. In scratch it accepted: TG-04 relabelled OFFLINE_CONTRACT with W04_OFFLINE (M01, M04); TG-02 or TG-08 at W04_OFFLINE (M02, M03); wrong gate lists (M05, M06); cases replaced or the 4.4 case dropped (M07, M08); E01 moved outside the groups as 'not tested' (M09); every group covering only E09 (M10); A07 or A09 mapped into a group (M11, M12); group/acceptance and group/packet inconsistencies (M13, M15); every acceptance item marked observationWindows (M14); W04-7 'now' (M17); notClaimed replaced by native-proof claims (M18); superseded I05 v2 pinned as ADOPTED_DATA_CONTRACT (M20); and E09 with both groups and an outside note (M26). The README's native-phase guard holds only for the class label. A non-dict test group crashes with TypeError instead of a ValueError refusal (M23).",
+   "requiredChange": "Pin by value: each group's cases and evidence class to the matrix and the section 4.4 additions, the class-to-phase rule per group id, the section 8 gate map, the acceptance map in both directions, the group-to-packet assignment, adoption checked against each status.json (contractState and no superseding contract), notClaimed and the W04-7 timing. Type-check list elements before indexing."
+  },
+  {
+   "id": "R1-8",
+   "severity": "MINOR",
+   "location": "traceability.json TG-08 cases[3]; README TG-08 row",
+   "finding": "The section 4.4 case's own list leaves out 'missing EFFECT_GATE', 'extra role', 'lifecycle subject running inside a resident role cgroup' and 'migration never reinterprets accepted v1 data'. It is also stated as 'v1/v2 refusal' although the adopted native qualification v3 supersedes v2 and adds 14 cross-version and 14 migration cases (native-profile-v3 README).",
+   "requiredChange": "List each section 4.4 vector as its own case, and name the v3 cross-version and migration vectors."
+  },
+  {
+   "id": "R1-9",
+   "severity": "MINOR",
+   "location": "traceability.json TG-08 (evidenceClass, phases); obligations E10, E11 w06",
+   "finding": "The matrix asks for 'Source and installed migration tests separately', but TG-08 is one group with one evidence class and both phases, and no case says whether it is source or installed. The E10 and E11 w06 texts ('Runs TG-06, TG-07' and 'Runs TG-05') leave out TG-08's W06 installed part. The contract-level refusal and migration vectors could run offline against the adopted v3 vectors, yet they wait for W05.",
+   "requiredChange": "Split TG-08 into source and installed parts with separate cases and phases (and an offline contract-vector part, if it is wanted), and correct the E10 and E11 w06 texts."
+  },
+  {
+   "id": "R1-10",
+   "severity": "MINOR",
+   "location": "traceability.json acceptance A01-A08 and groups' acceptance lists",
+   "finding": "The acceptance mapping is incomplete and the evidence strings are shortened. A02 ('original deadlines', E02/E07-E09) omits TG-05, whose case is literally 'original deadlines', and omits TG-04. A05 ('concurrent normal updates, urgent invalidation') omits TG-02. The 'corresponding design obligations' column is not recorded. The evidence strings drop requirements: A01 'denied externally or detected with original fresh check', A02 'partial acquisition and original-resource-only cleanup', A03 'no credential/worker before all independent prerequisites', A04 'denied mutation windows', A06 'lost terminal delivery', A07 'full unaffected regression suites', A08 'explicitly reserved successor allowance' and 'localhost' CI. A01 as the register and A07-A09 outside W04 are correct.",
+   "requiredChange": "Quote the acceptance evidence in full, record each item's design obligations, and complete the A02 and A05 group lists."
+  },
+  {
+   "id": "R1-11",
+   "severity": "MINOR",
+   "location": "traceability.json TG-01 (r12Location, contracts)",
+   "finding": "TG-01's subject under test in W04_OFFLINE is not stated. If it is the contracts' own reference models, it repeats the repository validators and comes close to self-certification. If it is the owner implementations, it must wait for W05. TG-01 also leaves out the offline vectors of I06 v2, SELinux matrix v4 and seccomp allowlists v2, which no offline group exercises.",
+   "requiredChange": "State TG-01's subject under test for the offline phase, and either add the other offline contract vectors or say why they are left out."
+  },
+  {
+   "id": "R1-12",
+   "severity": "MINOR",
+   "location": "traceability.json independence.attestationFields; independence.rules",
+   "finding": "The attestation has no fields for the authoring lane or agent (rule 2), whether the implementation was read or run to derive expected results (rule 4), the W03 records and W05 artifact digests consumed, with their digests (rule 3), or the reviewer's independence check. No rule keeps the D-TOOL toolchains (pytest, Rust+musl) out of the stdlib-only R12 reader (ENFORCEMENT_INTEGRATION.md:100-102: 'do not silently extend ... the stdlib-only R12 reader').",
+   "requiredChange": "Add those attestation fields, and add a rule that confines the new toolchains to the enforcement test area."
+  },
+  {
+   "id": "R1-13",
+   "severity": "NOTE",
+   "location": "traceability.json testGroups cases and evidenceClass",
+   "finding": "The section 8 gate map is reproduced exactly for E01-E12 (the W02D effective text has the same map). Wording drift from the matrix: TG-05 says 'stalled role' instead of 'stalled Python'; NATIVE_HOST drops T04's 'Independently authorized' qualifier; TG-02 and TG-06 carry explanatory parentheticals. The contract pins all equal the bytes on main 195c4c9, and every subject file matches source-index.json.",
+   "requiredChange": "Optional: keep the matrix wording verbatim and record T04's independent authorization as a W06 precondition."
+  }
+ ],
+ "questionAnswers": {
+  "Q0": "Partly. Each group carries the matrix's cases and evidence class, apart from wording changes and an extra TG-04 seccomp case that is justified by W02D but not cited (R1-4, R1-13). The section 4.4 additions are covered only by a summary that leaves out several vectors and is stale against the adopted native v3 (R1-8). The section 8 native items and counterexamples 18-28 that the spec assigns to T02-T06 are not traced (R1-4).",
+  "Q1": "Not complete. The gate lists match section 8 exactly. TG-08 omits E07 (G06) (R1-2). The section 2 closure's E03-E05 coverage is unassigned (R1-4). E09's placement outside the groups is not justified and contradicts the record's own A02 mapping (R1-3).",
+  "Q2": "Mostly right, with gaps. No native-class group runs before W06. TG-02 and TG-03 have native parts under spec sections 8 and 6.3 but no W06 phase (R1-1). TG-08's source and installed parts are not separated, and its offline-runnable vector part waits for W05 (R1-9). TG-01's offline subject under test is unstated (R1-11). A01 is the register and A07-A09 are outside W04, both correct, but the A02 and A05 group lists are incomplete and the evidence strings are shortened (R1-10).",
+  "Q3": "All 34 pinned files equal the bytes on main 195c4c9, and every listed contract's status.json shows ADOPTED_DATA_CONTRACT or ADOPTED_AMENDMENT. Missing: admission v3's sealed A2 manifest, the selection record (not on main, unpinned), TG-06's dependency on W02a-F2 and the W02g-F2 I06 successor, I06 v2 for TG-08, and pins for the source documents (R1-2, R1-5).",
+  "Q4": "No. The schema requires the listed per-window fields but not exhaustiveness: no inventory, no minItems, no call identity, nested checks, retained fresh checks or indirect parent; an unanchored id pattern; no uniqueness; empty strings allowed; the target revision is unclear. The model also enforces the weak pattern (R1-6). The independence rules are sound in principle, but the attestation lacks fields to check them (R1-12). Overclaim: the README says the model refuses a native group with an earlier phase, which holds only for the class label (R1-7). The notClaimed list itself is accurate."
+ },
+ "sourcesRead": [
+  "architecture/enforcement-test-plan/REVIEW_BRIEF.md (subject)",
+  "architecture/enforcement-test-plan/README.md (subject)",
+  "architecture/enforcement-test-plan/source-index.json (subject)",
+  "architecture/enforcement-test-plan/traceability.json (subject)",
+  "architecture/enforcement-test-plan/observation-windows.schema.json (subject)",
+  "scripts/enforcement_test_plan.py (subject)",
+  "architecture/host-interface-inputs/corrected/REVIEW_BRIEF.md:60-95",
+  "architecture/host-interface-inputs/resolved/HOST_INTERFACE_SPEC.md sections 4, 7-10 and headings",
+  "architecture/host-interface-amendment-w02d/HOST_INTERFACE_SPEC.md (header, 6.3, 8, 11 and section 4.4 diff)",
+  "architecture/host-interface-amendment-w02d/status.json and amendment.json (grep O-T04-AMEND)",
+  "docs/alpha-2/ENFORCEMENT_FEASIBILITY.md:145-185",
+  "docs/alpha-2/OBSERVATION_ENFORCEMENT_DESIGN.md:135-155, 310-340",
+  "docs/alpha-2/ENFORCEMENT_INTEGRATION.md:85-145",
+  "status.json of the seven pinned W02 contracts (at 195c4c9); file listings of their directories",
+  "architecture/native-profile-v3/README.md (grep) and vectors.json (top-level keys)",
+  "architecture/admission-semantics-v3/README.md (grep) and the admission-manifests listing",
+  "architecture/repositories.yaml (conformance-labs edges)",
+  "git show 104b115:architecture/backend-distribution/selection.json (the only W03 input read)"
+ ],
+ "actions": {
+  "filesEdited": false,
+  "githubMutated": false,
+  "nativeActions": false,
+  "referenceModelExecuted": true,
+  "repositoryValidatorsRun": false,
+  "runnerActivated": false,
+  "testsRun": false,
+  "warmSourcesAccessed": false
+ },
+ "reviewLimit": "Read-only design review of the cabf8ed subject against main 195c4c9. The reference model ran only as a copy in /private/tmp/claude-501/w04-0-review-r1/, against 26 plan mutations and 7 schema mutations, reading bytes through git show; nothing was written to the repository. The external builder (~/.local/state/harness-onion-ci/tools/w04/build_w04_0.py) was not read because it is outside the worktree. No W03 file other than the named selection record was read, and its review state could not be checked. No network access, no repository validators, no test suite, no runner, native or GitHub actions. This verdict is not native evidence, and E01-E12 stay OPEN_UNPROVEN."
+}

@@ -1,6 +1,30 @@
 # Harness-Onion — unified development roadmap
 
-## Current checkpoint — MET-ENFORCE-021 source preparation, October 10, 2026
+## Current checkpoint — MET-ENFORCE-022 source preparation, October 10, 2026
+
+Alpha2 OPEN. MET-ENFORCE-021 (LIC-HOST) passed required verify (64/64, 490 s, the first run of the repository-aware v4
+verifier) and merged as main a5a0625. Owner rule (via the lane monitor): slot 224 is W04-0. MET-ENFORCE-022 publishes the
+independent enforcement test plan W04-0 (owner decisions D-R12, D-TOOL, D-MAP, D-OW, D-ID and D-OW-1 = A; independent
+review round 4, PASS_FOR_SOURCE_PUBLICATION). DATA_CHECK_ONLY. MET-ENFORCE-022 is the sole 224th specification.
+
+| Phase | ID | Status | Description / gate |
+|---|---|---|---|
+| Alpha2A | MET-ENFORCE-022 / W04-0 | SOURCE_PREPARED | Enforcement test plan as the 224th packet; verify from the owner's App |
+| Alpha2A | MET-ENFORCE-021 / LIC-HOST | VERIFY_PASSED_MERGED | Verify 490 s (first v4 run) |
+| Alpha2A | VERIFIER-EXT | INSTALLED | Repository-aware verifier v4 for harness-onion, R10 and R12; bootstrap PRs next |
+| Alpha2A | W02-CLEANUP | IN_REVIEW | Errata for W02a-F2, W02g-F2 and PERF-032-F (parallel lane), after W04-0 |
+| Alpha2A | W02-PROD | BLOCKED | Production backend profile and the I06 successor (primary lane), after LIC-HOST and W05 |
+| Alpha2A | W03 | IN_PROGRESS | Host modules in the operator repository (primary lane) |
+| Alpha2A | W04 | IN_PROGRESS | Independent enforcement tests and observation-window register (parallel lane); W04-1 to W04-6 in R12 |
+| Alpha2 | IND-BANK-001 to IND-BANK-005, KN-BANK-001, CTRL-BANK-001, DIST-BANK-001, CONF-BANK-001 | WAITING_PACKET_PUBLICATION | Banking pack, inputs and journey |
+| Alpha2 qualification | CONF-LINUX-001 / CONF-A2-001 | WAITING_PREREQUISITES | Linux verification only when mandatory |
+
+Keep the inherited 64 argv unchanged (the installed activation cap and the verifier's inheritance rule; the new
+layer validator adds no argv and runs inside the outer pytest), 420/750/900 s/15 min and 32 MiB. No cloud, runner registration,
+live/native/tenant or model-effort changes. Phase-end effort transition NOT_DUE.
+Prior checkpoints below are history only.
+
+## Historical LIC-HOST source checkpoint — MET-ENFORCE-021 source preparation, October 10, 2026
 
 Alpha2 OPEN. MET-ENFORCE-020 (W02d-V3) passed required verify (64/64, 408 s) and merged as main 5fab673. Owner rule
 (via the lane monitor): slot 223 is LIC-HOST. MET-ENFORCE-021 publishes license-policy amendment LIC-HOST-A1 (owner
@@ -1341,7 +1365,8 @@ These checkboxes count only the named deliverable at the stated evidence level. 
 - [x] Alpha 2A · W01-AMEND / MET-ENFORCE-018 · Publish W01 amendment W02D and the W02d successor seccomp-allowlists-v2 as reviewed data; pass required verify through the owner's App.
 - [x] Alpha 2A · W03-0 / MET-ENFORCE-019 · Publish the W03 backend distribution selection and the W03 plan as reviewed data; pass required verify through the owner's App.
 - [x] Alpha 2A · W02d-V3 / MET-ENFORCE-020 · Publish the W02d successor seccomp-allowlists-v3 (Rust+musl NATIVE_STATIC rules) as reviewed data; pass required verify through the owner's App.
-- [ ] Alpha 2A · LIC-HOST / MET-ENFORCE-021 · Publish license-policy amendment LIC-HOST-A1 as a reviewed overlay on the byte-identical base policy; pass required verify through the owner's App.
+- [x] Alpha 2A · LIC-HOST / MET-ENFORCE-021 · Publish license-policy amendment LIC-HOST-A1 as a reviewed overlay on the byte-identical base policy; pass required verify through the owner's App.
+- [ ] Alpha 2A · W04-0 / MET-ENFORCE-022 · Publish the independent enforcement test plan W04-0 (TG-01..TG-08 against E01-E12) and the observation-window register schema as reviewed data; pass required verify through the owner's App.
 - [ ] Alpha 2A · CONF-FIX-010 · Complete safe design and exact authority before any product attempt.
 - [ ] Alpha 2A · CONF-LIVE-004 · Produce the exact native-probe source implementation and separately qualify it.
 - [ ] Alpha 2A · CONF-LIVE-005 · Produce a reproducible selected package and operator handoff.

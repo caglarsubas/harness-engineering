@@ -37,7 +37,7 @@ def test_exact_current_source_and_complete_history_chain():
     assert isolated.validate() is None
     current = packets()
     accepted = isolated.historical_catalog(current)
-    assert len(current) == 219 and len(accepted) == 196
+    assert len(current) == 220 and len(accepted) == 196
     assert set(accepted) == set(current) - {isolated.NEW_PACKET, isolated.successor.NEW_PACKET,
                                             isolated.successor.successor.NEW_PACKET,
                                             isolated.successor.successor.successor.NEW_PACKET,
@@ -59,7 +59,8 @@ def test_exact_current_source_and_complete_history_chain():
                                             isolated.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET,
                                             isolated.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET,
                                             isolated.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET,
-                                            isolated.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET}
+                                            isolated.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET,
+                                            isolated.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET}
     assert len(portable.historical_catalog(current)) == 195
     assert len(proof.historical_catalog(current)) == 194
     assert len(recheck.historical_catalog(current)) == 193

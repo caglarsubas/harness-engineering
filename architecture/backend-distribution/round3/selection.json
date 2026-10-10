@@ -29,20 +29,6 @@
    "summary": "License closure of the release binaries (statically linked glibc, libseccomp, libpathrs; host nft): L-a reviewed policy entries with the official binaries, L-b dynamic builds, L-c an Apache-only closure."
   },
   {
-   "id": "Q-L2",
-   "selected": "L2-a",
-   "date": "2026-10-10",
-   "via": "owner (via the lane monitor)",
-   "summary": "The rest of the license closure: L2-a an OR-choice rule (an \"A OR B\" expression with an allowed alternative is accepted, electing it, recorded per component; gmp's election of LGPL-3.0-or-later, an explicit-review license, is owner-approved and needs its explicit-review decision record) and exact entries for GPL-3.0-or-later WITH GCC-exception-3.1 and the nft library closure in the host-OS class."
-  },
-  {
-   "id": "Q-L3",
-   "selected": "L3-a",
-   "date": "2026-10-10",
-   "via": "owner (via the lane monitor)",
-   "summary": "The Rust std closure: L3-a an AND-term rule (a compound is accepted when every AND term is allowed, an allowed exception, reviewed or OR-resolved; compiler_builtins resolves to MIT + Apache-2.0 WITH LLVM-exception + an Apache-2.0 election) and legacy \"A/B\" crate strings read as \"A OR B\" with the normalisation recorded; the full crate list and elections come from the build-time license gate and SBOM (HE-001, HE-008)."
-  },
-  {
    "id": "Q-E",
    "selected": "E-a",
    "date": "2026-10-10",
@@ -487,7 +473,7 @@
    "usedBy": [
     "SERVICE_PROXY"
    ],
-   "minimumVersion": "set when the host OS is chosen (D-LIC-CLOSURE)",
+   "minimumVersion": "the nftables release's requirement",
    "source": "a shared library of nft",
    "reviewEntries": [
     "D-LIC-LIBNFTNL"
@@ -499,7 +485,7 @@
    "usedBy": [
     "SERVICE_PROXY"
    ],
-   "minimumVersion": "set when the host OS is chosen (D-LIC-CLOSURE)",
+   "minimumVersion": "the nftables release's requirement",
    "source": "a shared library of nft and libnftnl",
    "reviewEntries": [
     "D-LIC-LIBMNL"
@@ -511,7 +497,7 @@
    "usedBy": [
     "SERVICE_PROXY"
    ],
-   "minimumVersion": "set when the host OS is chosen (D-LIC-CLOSURE)",
+   "minimumVersion": "the nftables release's requirement",
    "source": "a shared library of nft",
    "reviewEntries": [
     "D-LIC-GMP"
@@ -523,7 +509,7 @@
    "usedBy": [
     "SERVICE_PROXY"
    ],
-   "minimumVersion": "set when the host OS is chosen (D-LIC-CLOSURE)",
+   "minimumVersion": "the nftables release's requirement",
    "source": "nft's JSON library (needed for nft --json)",
    "reviewEntries": []
   }
@@ -711,7 +697,7 @@
    "dispositions": [
     "SELECTION"
    ],
-   "how": "Every artifact is pinned by the upstream's published SHA-256 (Kubernetes .sha256 files on dl.k8s.io, etcd SHA256SUMS, containerd and CNI checksum files, runc.sha256sum), the source-built agent by commit and the sandbox image by index digest. Installation is from the host image only; no component updates itself; images, including the sandbox image, are imported into containerd's content store at enrollment with no registry reachable. Every upstream project is Apache-2.0, but the release binaries are not Apache-only: runc, containerd's static archive and the pause binary link glibc and the GCC runtime statically, runc also links libseccomp, libpathrs and libpathrs' Rust crates, and kube-proxy executes the host's nft with its library closure (license reviews decided by owner questions Q-L and Q-L2). I06's SC13 model admits only distribution.license == Apache-2.0 (D-I06-LICENSE).",
+   "how": "Every artifact is pinned by the upstream's published SHA-256 (Kubernetes .sha256 files on dl.k8s.io, etcd SHA256SUMS, containerd and CNI checksum files, runc.sha256sum), the source-built agent by commit and the sandbox image by index digest. Installation is from the host image only; no component updates itself; images, including the sandbox image, are imported into containerd's content store at enrollment with no registry reachable. Every upstream project is Apache-2.0, but the release binaries are not Apache-only: runc, containerd's static archive and the pause binary link glibc statically, runc also links libseccomp and libpathrs, and kube-proxy executes the host's nft (license reviews decided by owner question Q-L). I06's SC13 model admits only distribution.license == Apache-2.0 (D-I06-LICENSE).",
    "roles": [
     "APISERVER",
     "CONTAINER_RUNTIME",
@@ -970,10 +956,9 @@
   },
   {
    "candidate": "crun",
-   "reason": "A GPL-2.0-or-later container runtime; LIC-HOST's host-OS class covers host-OS programs and libraries, not the container runtime, which owner decision Q4 fixes as runc.",
+   "reason": "GPL-2.0-or-later is not in the license policy's allowed or review lists.",
    "criteria": [
-    "LICENSE",
-    "OWNER-Q4"
+    "LICENSE"
    ]
   },
   {
@@ -1039,17 +1024,17 @@
    "license": "GPL-3.0-or-later WITH GCC-exception-3.1",
    "class": "UNCLASSIFIED_NEEDS_POLICY_AMENDMENT",
    "reason": "Static links made with gcc pull in runtime-library objects under the GCC runtime library exception (owner decision Q-L2, L2-a).",
-   "decision": "Q-L2",
+   "decision": "Q-L",
    "status": "OWNER_APPROVED",
    "elects": null
   },
   {
    "id": "D-LIC-CRATES-MIT-APACHE",
-   "subject": "libpathrs' crates bitflags, either, itertools, libc, once_cell, thiserror and static_assertions, statically linked into runc",
+   "subject": "libpathrs' crates bitflags, itertools, libc, once_cell, thiserror and static_assertions, statically linked into runc",
    "license": "MIT OR Apache-2.0",
    "class": "UNCLASSIFIED_NEEDS_POLICY_AMENDMENT",
    "reason": "Accepted by the OR-choice rule of owner decision Q-L2 (L2-a), electing Apache-2.0.",
-   "decision": "Q-L2",
+   "decision": "Q-L",
    "status": "OWNER_APPROVED",
    "elects": "Apache-2.0"
   },
@@ -1059,17 +1044,17 @@
    "license": "Unlicense OR MIT",
    "class": "UNCLASSIFIED_NEEDS_POLICY_AMENDMENT",
    "reason": "Accepted by the OR-choice rule, electing MIT.",
-   "decision": "Q-L2",
+   "decision": "Q-L",
    "status": "OWNER_APPROVED",
    "elects": "MIT"
   },
   {
    "id": "D-LIC-CRATES-LLVM-APACHE-MIT",
-   "subject": "libpathrs' crates rustix and linux-raw-sys, statically linked into runc",
+   "subject": "libpathrs' crate rustix, statically linked into runc",
    "license": "Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT",
    "class": "UNCLASSIFIED_NEEDS_POLICY_AMENDMENT",
    "reason": "Accepted by the OR-choice rule, electing Apache-2.0.",
-   "decision": "Q-L2",
+   "decision": "Q-L",
    "status": "OWNER_APPROVED",
    "elects": "Apache-2.0"
   },
@@ -1079,7 +1064,7 @@
    "license": "GPL-2.0-or-later",
    "class": "UNCLASSIFIED_NEEDS_POLICY_AMENDMENT",
    "reason": "nft library closure in the host-OS class (owner decision Q-L2); the expression is verified against the shipped package in the host-image packet.",
-   "decision": "Q-L2",
+   "decision": "Q-L",
    "status": "OWNER_APPROVED",
    "elects": null
   },
@@ -1089,7 +1074,7 @@
    "license": "LGPL-2.1-or-later",
    "class": "UNCLASSIFIED_NEEDS_POLICY_AMENDMENT",
    "reason": "nft library closure in the host-OS class; verified against the shipped package in the host-image packet.",
-   "decision": "Q-L2",
+   "decision": "Q-L",
    "status": "OWNER_APPROVED",
    "elects": null
   },
@@ -1099,7 +1084,7 @@
    "license": "LGPL-3.0-or-later OR GPL-2.0-or-later",
    "class": "UNCLASSIFIED_NEEDS_POLICY_AMENDMENT",
    "reason": "nft library closure; owner decision Q-L2 elects LGPL-3.0-or-later, which is on the policy's explicit-review list.",
-   "decision": "Q-L2",
+   "decision": "Q-L",
    "status": "OWNER_APPROVED",
    "elects": "LGPL-3.0-or-later"
   }
@@ -1157,7 +1142,7 @@
   {
    "id": "D-POLICY-AMEND",
    "owner": "LIC-HOST meta packet (main lane)",
-   "text": "Owner decisions Q-L (L-a) and Q-L2 (L2-a): amend legal/third-party-license-policy.yaml with a reviewed class for host-OS and statically linked system libraries holding exactly LGPL-2.1-or-later (glibc, libmnl), LGPL-2.1-only (libseccomp), GPL-3.0-or-later WITH GCC-exception-3.1 (the GCC runtime), GPL-2.0-only for separately executed host programs and their libraries (nft, libnftables), GPL-2.0-or-later (libnftnl), and an OR-choice rule accepting an \"A OR B\" expression with an allowed or reviewed alternative, electing it and recording the election per component (libpathrs electing MPL-2.0, its crates, Rust std and core, gmp electing LGPL-3.0-or-later with its explicit-review decision record), and (owner decision Q-L3, L3-a) an AND-term rule accepting a compound whose every AND term is allowed, an allowed exception, reviewed or OR-resolved, and legacy \"A/B\" crate strings read as \"A OR B\" with the normalisation recorded; the full crate closures and their elections come from the build-time license gate and SBOM (HE-001, HE-008), with source offers from the pinned tags. Validators pin the policy identity (validate_reuse: policyVersion 0.3.0), so the amendment is its own history-projected packet before the host-image packet."
+   "text": "Owner decisions Q-L (L-a) and Q-L2 (L2-a): amend legal/third-party-license-policy.yaml with a reviewed class for host-OS and statically linked system libraries holding exactly LGPL-2.1-or-later (glibc, libmnl), LGPL-2.1-only (libseccomp), GPL-3.0-or-later WITH GCC-exception-3.1 (the GCC runtime), GPL-2.0-only for separately executed host programs and their libraries (nft, libnftables), GPL-2.0-or-later (libnftnl), and an OR-choice rule accepting an \"A OR B\" expression with an allowed or reviewed alternative, electing it and recording the election per component (libpathrs electing MPL-2.0, its crates, Rust std and core, gmp electing LGPL-3.0-or-later), with source offers from the pinned tags. Validators pin the policy identity (validate_reuse: policyVersion 0.3.0), so the amendment is its own history-projected packet before the host-image packet."
   },
   {
    "id": "D-I06-LICENSE",
@@ -1167,7 +1152,7 @@
   {
    "id": "D-LIC-CLOSURE",
    "owner": "W03 host-image packet",
-   "text": "License closure and SBOM of every artifact: Go module sets, the statically linked C and Rust libraries and their crate closures, and the host runtime dependencies. The host dependency list here is the minimum (nft 1.0.1 or later with libnftables, libnftnl, libmnl, gmp, jansson); it is extended from the shipped packages (for example readline, libedit, linenoise or libxtables where the build links them) and their versions are fixed when the host OS is chosen."
+   "text": "License closure and SBOM of every artifact: Go module sets, the statically linked C and Rust libraries (D-LIC-GLIBC, D-LIC-LIBSECCOMP, D-LIC-LIBPATHRS), and host runtime dependencies (nft 1.0.1 or later, D-LIC-NFT), against legal/third-party-license-policy.yaml."
   },
   {
    "id": "D-NETPOL-BUILD",

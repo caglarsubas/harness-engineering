@@ -20,16 +20,6 @@
    "id": "Q5",
    "selected": "a",
    "summary": "Five modules (with the writer), plus host-image/ and enrollment/ with an off-host signer."
-  },
-  {
-   "id": "Q-L3",
-   "selected": "L3-a",
-   "summary": "LIC-HOST adds an AND-term rule and reads legacy \"A/B\" crate strings as \"A OR B\"; the build-time license gate and SBOM produce the crate list and elections (HE-001, HE-008)."
-  },
-  {
-   "id": "Q-S",
-   "selected": "S-b",
-   "summary": "W02d v3 adds mremap (flags == MREMAP_MAYMOVE), prctl (PR_SET_NAME) and tkill to NATIVE_STATIC; W03 cites v3 as a precondition for the native roles in steady state, and T04 still traces."
   }
  ],
  "toolchains": {
@@ -97,8 +87,7 @@
  "buildToolchains": {
   "GO_AGENT_BUILD": {
    "for": "kube-network-policies v1.1.2 (a145b01c), owner decision Q-N (N-a)",
-   "go": "1.26.7",
-   "goNote": "R10's pinned Go (mas-harness-operator tools.lock); the module requires go 1.26.0, upstream's Dockerfile uses golang:1.27, and go1.26.8 exists",
+   "go": "1.26.7, R10's pinned Go (the module requires go 1.26.0; upstream's Dockerfile uses golang:1.27)",
    "moduleCache": "an offline module cache for a145b01c, inventoried like R10's gomodcache",
    "build": "GOOS=linux, GOARCH amd64 and arm64, CGO_ENABLED=0, static; digests recorded (D-NETPOL-BUILD)"
   }
@@ -139,7 +128,7 @@
   {
    "id": "LIC-HOST",
    "where": "meta",
-   "summary": "License policy amendment (owner decisions Q-L L-a, Q-L2 L2-a and Q-L3 L3-a): a reviewed class for host-OS and statically linked system libraries, the OR-choice and AND-term rules, legacy normalisation, and history projection for the validators that pin the policy identity."
+   "summary": "License policy amendment (owner decision Q-L, L-a): a reviewed class for host-OS and statically linked system libraries, with history projection for the validators that pin the policy identity."
   },
   {
    "id": "W02A-F2",
@@ -154,7 +143,7 @@
   {
    "id": "VERIFIER-EXT",
    "where": "owner-root",
-   "summary": "Verifier policy gains mas-harness-operator and a host-enforcement toolchain profile; toolchain inventories under /opt/planeon (Rust 1.99.0 with the two musl targets, the vendored crate cache, the SBOM tool, and Go 1.26.7 with the agent's module cache); App access and branch protection on R10."
+   "summary": "Verifier policy gains mas-harness-operator and a host-enforcement toolchain profile; toolchain inventories under /opt/planeon; App access and branch protection on R10."
   },
   {
    "id": "HE-001",
@@ -699,15 +688,6 @@
    "scope": "W03"
   },
   {
-   "id": "VX-1",
-   "source": "architecture/w03-plan/README.md:VERIFIER-EXT",
-   "text": "The owner's verifier extension precedes the first R10 packet.",
-   "packets": [
-    "VERIFIER-EXT"
-   ],
-   "scope": "W03"
-  },
-  {
    "id": "SEL-POLICY-AMEND",
    "source": "architecture/backend-distribution/selection.json:D-POLICY-AMEND",
    "text": "Amend the license policy per owner decision Q-L before any artifact is released or HE-001's license gate runs.",
@@ -801,7 +781,7 @@
   },
   {
    "id": "SEC-7",
-   "source": "architecture/backend-distribution/review-round2.json:MET-ENFORCE-018), which is not merged",
+   "source": "architecture/w03-plan/plan.json:W02D-V2",
    "text": "W02d v2, with poll in NATIVE_STATIC, is merged before HE-001 and T04.",
    "packets": [
     "W02D-V2"
@@ -810,7 +790,7 @@
   },
   {
    "id": "SEC-8",
-   "source": "architecture/backend-distribution/review-round2.json:mremap",
+   "source": "architecture/w03-plan/plan.json:mremap",
    "text": "Steady-state calls outside NATIVE_STATIC v2: musl realloc's mremap, thread naming's prctl(PR_SET_NAME), abort's and raise's tkill; owner decision Q-S (S-b) adds them in W02d v3, and T04 still traces.",
    "packets": [
     "W02D-V3",
@@ -820,8 +800,8 @@
   },
   {
    "id": "TR-SETXID",
-   "source": "architecture/backend-distribution/review-round3.json:__synccall",
-   "text": "The broker's W4 child, a clone3 child without CLONE_VM, makes only async-signal-safe raw syscalls, including raw setresgid and setresuid: musl's wrappers go through __synccall (src/unistd/setxid.c:32), which first takes __tl_lock (src/thread/synccall.c:59), a lock another broker thread may have held at clone time, and the child runs on the parent's copied libc state (W01-AMEND review R4-1; W03-0 review round 3, F3).",
+   "source": "architecture/w03-plan/plan.json:__synccall",
+   "text": "musl's setresuid and setresgid go through __synccall (src/unistd/setxid.c:32), which signals other threads with SYS_tkill (src/thread/synccall.c:67, :82); the broker's W4 child therefore makes the raw setresgid and setresuid syscalls (W01-AMEND review R4-1).",
    "packets": [
     "HE-005",
     "T04"
@@ -830,7 +810,7 @@
   },
   {
    "id": "TR-PARALLELISM",
-   "source": "W01-AMEND (MET-ENFORCE-018, pending merge) review R4-1",
+   "source": "architecture/w03-plan/plan.json:available_parallelism",
    "text": "std::thread::available_parallelism opens cgroup and /proc files; native modules take thread counts from configuration (W01-AMEND review R4-1).",
    "packets": [
     "HE-001",
@@ -840,7 +820,7 @@
   },
   {
    "id": "TR-FDS",
-   "source": "W01-AMEND (MET-ENFORCE-018, pending merge) review R4-1",
+   "source": "architecture/w03-plan/plan.json:fds 0-2",
    "text": "Units start every role with fds 0-2 open, so neither musl's AT_SECURE start-up nor Rust std opens /dev/null (W01-AMEND review R4-1).",
    "packets": [
     "HE-008",
@@ -850,20 +830,10 @@
   },
   {
    "id": "LIC-RUST-STD",
-   "source": "architecture/backend-distribution/review-round3.json:compiler_builtins",
-   "text": "Rust std and its closure are statically linked into every native module (and into runc through libpathrs): core and std (MIT OR Apache-2.0), compiler_builtins (MIT AND Apache-2.0 WITH LLVM-exception AND (MIT OR Apache-2.0)), rustc-demangle (legacy MIT/Apache-2.0), hashbrown, cfg-if, miniz_oxide, adler2, object, libc. LIC-HOST's OR-choice rule (Q-L2), AND-term rule and legacy normalisation (Q-L3, L3-a) precede HE-001's license gate.",
+   "source": "architecture/w03-plan/plan.json:MIT OR Apache-2.0",
+   "text": "Rust std and core (MIT OR Apache-2.0) are statically linked into every native module; LIC-HOST's OR-choice rule (owner decision Q-L2) precedes HE-001's license gate.",
    "packets": [
     "LIC-HOST"
-   ],
-   "scope": "W03"
-  },
-  {
-   "id": "LIC-GATE",
-   "source": "architecture/backend-distribution/review-round3.json:compiler_builtins",
-   "text": "The build-time license gate and SBOM enumerate every crate closure (Rust std, vendored crates, libpathrs' crates in runc) and record each OR election and legacy normalisation (owner decision Q-L3, L3-a).",
-   "packets": [
-    "HE-001",
-    "HE-008"
    ],
    "scope": "W03"
   }

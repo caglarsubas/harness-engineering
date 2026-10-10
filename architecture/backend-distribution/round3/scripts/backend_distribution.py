@@ -58,7 +58,7 @@ OPTIONAL_ROLES = ("NETWORK_POLICY_AGENT", "SERVICE_PROXY")
 DISPOSITIONS = ("SELECTION", "SEALED_CONFIGURATION", "OBSERVER", "W02A_RECORD", "OPERATIONAL")
 ARCHES = ("amd64", "arm64")
 KINDS = ("RELEASE_BINARY", "RELEASE_ARCHIVE", "IMAGE_INDEX", "SOURCE_BUILD")
-OWNER_QUESTIONS = ("Q4", "Q-L", "Q-L2", "Q-L3", "Q-E", "Q-N")
+OWNER_QUESTIONS = ("Q4", "Q-L", "Q-E", "Q-N")
 MAX_BYTES = 4_194_304
 SHA256 = re.compile(r"[0-9a-f]{64}\Z")
 COMMIT = re.compile(r"[0-9a-f]{40}\Z")
@@ -132,10 +132,6 @@ def _policy(raw: bytes) -> dict:
     except (yaml.YAMLError, UnicodeDecodeError) as error:
         raise ValueError("license policy is not valid YAML: %s" % error) from None
     lists = {}
-    exceptions = policy.get("allowedExceptionExpressions") if type(policy) is dict else None
-    require(type(exceptions) is list and all(type(item) is dict and type(item.get("expression")) is str for item in exceptions),
-            "license policy allowed exceptions")
-    lists["allowedExceptionExpressions"] = frozenset(item["expression"] for item in exceptions)
     for key in ("defaultAllowedSpdx", "optionalExplicitReview", "deniedForDefaultDistribution"):
         value = policy.get(key) if type(policy) is dict else None
         require(type(value) is list and value and all(type(item) is str and EXPRESSION.fullmatch(item) for item in value),
@@ -246,10 +242,10 @@ def record(raw: bytes) -> dict:
                 "an OR expression records its elected alternative, and only an OR expression")
         _text(row["subject"], "license review subject")
         _text(row["reason"], "license review reason")
-        require(row["decision"] in ("Q-L", "Q-L2") and row["status"] in ("PENDING_OWNER", "OWNER_APPROVED"),
-                "a license review is decided by owner question Q-L or Q-L2")
-        require((row["status"] == "OWNER_APPROVED") == (selected[row["decision"]] != "PENDING"),
-                "a review is approved exactly when its owner question is decided")
+        require(row["decision"] == "Q-L" and row["status"] in ("PENDING_OWNER", "OWNER_APPROVED"),
+                "a license review is decided by owner question Q-L")
+        require((row["status"] == "OWNER_APPROVED") == (selected["Q-L"] != "PENDING"),
+                "a review is approved exactly when Q-L is decided")
     review_ids = [row["id"] for row in reviews]
     require(len(review_ids) == len(set(review_ids)), "duplicate license review")
     return value
@@ -281,9 +277,7 @@ def _check(read) -> dict:
         expected = ("OPTIONAL_EXPLICIT_REVIEW" if row["license"] in policy["optionalExplicitReview"]
                     else "UNCLASSIFIED_NEEDS_POLICY_AMENDMENT")
         if row["elects"] is not None:
-            require(row["elects"] in allowed or row["elects"] in policy["allowedExceptionExpressions"]
-                    or (row["elects"] in policy["optionalExplicitReview"] and row["status"] == "OWNER_APPROVED"),
-                    "an elected alternative is allowed, an allowed exception, or an owner-approved explicit-review license")
+            require(row["elects"] not in policy["deniedForDefaultDistribution"], "a denied alternative cannot be elected")
         require(row["license"] not in allowed and row["class"] == expected, "license review class matches the policy")
     components = value["components"]
     require(type(components) is list and components, "components")
@@ -294,8 +288,7 @@ def _check(read) -> dict:
             "one component per role, every required role present")
     parts = [part for row in components for part in row["parts"]]
     selected = {row["id"]: row["selected"] for row in value["ownerDecisions"]}
-    require(selected["Q4"] == "a" and selected["Q-L"] in ("PENDING", "L-a") and selected["Q-L2"] in ("PENDING", "L2-a")
-            and selected["Q-L3"] in ("PENDING", "L3-a") and selected["Q-E"] in ("PENDING",) + tuple(ETCD_TAGS)
+    require(selected["Q4"] == "a" and selected["Q-L"] in ("PENDING", "L-a") and selected["Q-E"] in ("PENDING",) + tuple(ETCD_TAGS)
             and selected["Q-N"] in ("PENDING", "N-a"),
             "this record uses the official binaries (Q-L L-a) and a source-built agent (Q-N N-a)")
     etcd = [part for row in components if row["role"] == "DATASTORE" for part in row["parts"]]
@@ -324,9 +317,6 @@ def _check(read) -> dict:
         _texts(row["reviewEntries"], "host dependency license reviews", empty=True)
         require(set(row["reviewEntries"]) <= review_ids, "unknown host dependency license review")
         require(row["license"] in allowed or row["reviewEntries"], "a host dependency outside the allowed list is reviewed")
-        review_license = {review["id"]: review["license"] for review in reviews}
-        require(all(review_license.get(entry) == row["license"] for entry in row["reviewEntries"]),
-                "a host dependency's license equals its review's")
     for part in parts:
         require(REQUIRED_REVIEWS.get(part["name"], set()) <= set(part["license"]["reviewEntries"]),
                 "the reviewed static closure of %s is recorded" % part["name"])

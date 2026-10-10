@@ -1,0 +1,122 @@
+{
+ "schemaVersion": "planeon.internal.contract-errata/v1",
+ "name": "W02a-F2 notes",
+ "contract": "planeon.internal.native-qualification/v3",
+ "contractDirectory": "architecture/native-profile-v3/",
+ "baseMain": "5fab673e250e7dd0f2ce9c19f6ce9da8cce9321c",
+ "findings": [
+  "R6-1",
+  "R6-2",
+  "R6-3"
+ ],
+ "evidenceClass": "DATA_CHECK_ONLY",
+ "versionRipple": false,
+ "ruleChanged": false,
+ "modelChanged": false,
+ "nativeAcceptance": false,
+ "tenantAcceptance": false,
+ "base": {
+  "architecture/native-profile-v3/README.md": "93b6f3897f4011ab85832b4319db44e4e1e94566adf61062a6170d1437dfcf50",
+  "architecture/native-profile-v3/review-round6.json": "dce53008c9b21f670935a6fb0c434678dec2538599fc757c46ac5a54a718c929",
+  "architecture/native-profile-v3/status.json": "f242944dd7a03eb64fd4f14d811711f7ed4ccf9bdb00bca82ea8abbaa5cb0538",
+  "architecture/native-profile-v3/vectors.json": "14af47a69c972039294be8659c31332acd5326bfb0a3a38384a2c6bf9d11fe6d",
+  "scripts/native_qualification_v3.py": "2ef5c14ad5d8c962cf3703ccd076059685ed8dcc852059e4f863e8d9dc8965ad"
+ },
+ "replacements": [
+  {
+   "id": "R6-1a",
+   "finding": "R6-1",
+   "path": "architecture/native-profile-v3/README.md",
+   "count": 1,
+   "old": "What this guarantees: no word of either entry names, adds, masks or overrides a systemd unit, carries root mount options or passes init arguments; the only difference between the entries is the maintenance unit, so both boot the same initramfs and root; and SELinux and lockdown can only be enabled.",
+   "new": "What this guarantees, in decision 2's terms: no word of either entry names a unit or carries a unit-bearing value, apart from the maintenance entry's own unit word; `root=`, `ro` and `rw` only drive systemd's fixed root-mount units (in a systemd initrd, `root=` makes the fstab generator write `sysroot.mount` and, for a device path, `systemd-fsck-root.service`, and turns off gpt-auto root discovery; `ro` and `rw` set `sysroot.mount`'s mount flag, and on the host they suppress gpt-auto's remount drop-in); no allowlisted word reaches init's arguments; the two command lines differ only by the maintenance unit word, so both name the same `initrd=` files and the same `root=` device, in the same order; and SELinux and lockdown can only be enabled. The kernel image or UKI that an entry loads is not on its command line, so the binding does not fix it (K1 statement)."
+  },
+  {
+   "id": "R6-1b",
+   "finding": "R6-1",
+   "path": "architecture/native-profile-v3/README.md",
+   "count": 1,
+   "old": "On kernels built without the SELinux boot-parameter, SELinux develop or lockdown LSM handlers, `selinux=`, `enforcing=` and `lockdown=` reach init's environment, where they are inert names for systemd.",
+   "new": "On a kernel built without the handler of an allowlisted key, that word reaches init's environment, where it is an inert name for systemd: `selinux=`, `enforcing=` and `lockdown=` without the SELinux boot-parameter, SELinux develop or lockdown LSM handlers, `initrd=` without `CONFIG_BLK_DEV_INITRD` and `security=` without `CONFIG_SECURITY`. No allowlisted bare word reaches init's arguments, because the `ro`, `rw` and `quiet` handlers are always built."
+  },
+  {
+   "id": "R6-2a",
+   "finding": "R6-2",
+   "path": "architecture/native-profile-v3/README.md",
+   "count": 1,
+   "old": "The grammar is widened only through a reviewed revision of this contract (`KERNEL_PARAMETERS` in the model).",
+   "new": "The grammar is widened only through a reviewed revision of this contract (`KERNEL_PARAMETERS` in the model). On a non-confidential VM, systemd-boot v256 appends the SMBIOS string `io.systemd.boot.kernel-cmdline-extra` to a type #1 entry's command line and systemd-stub appends `io.systemd.stub.kernel-cmdline-extra`, regardless of Secure Boot. Those words appear in `/proc/cmdline`, so they are part of both declared entries and must be inside the grammar; the hypervisor controls that part of the bound text."
+  },
+  {
+   "id": "R6-1c",
+   "finding": "R6-1",
+   "path": "architecture/native-profile-v3/README.md",
+   "count": 1,
+   "old": "  - the initramfs contents and its own command-line handling;\n",
+   "new": "  - the initramfs contents and its own command-line handling;\n  - the kernel image or UKI that each entry loads (the type #1 `linux` or `efi` key), which the command line\n    does not name: its built-in initramfs, which the kernel unpacks before the `initrd=` files; a UKI's embedded\n    `.initrd`; under Secure Boot, a UKI's embedded `.cmdline`, which replaces the loader options; and its addons;\n  - systemd-stub's sysext and confext sidecars (`/.extra/sysext`, `/.extra/confext`), which an initramfs that\n    ships `systemd-sysext.service` or `systemd-confext.service` merges;\n  - a network root: `root=/dev/nfs` is inside the grammar and hands root selection to the initramfs;\n"
+  },
+  {
+   "id": "R6-1d",
+   "finding": "R6-1",
+   "path": "architecture/native-profile-v3/README.md",
+   "count": 1,
+   "old": "    type 11 strings, qemu fw_cfg and `/.extra/credentials` placed by systemd-boot or its stub, which systemd v256 imports\n    regardless of Secure Boot;\n",
+   "new": "    type 11 strings, qemu fw_cfg and `/.extra/credentials` packed by systemd-stub (systemd-boot v256 packs none),\n    which systemd v256 imports regardless of Secure Boot; systemd-stub's `/.extra/global_credentials` (from\n    `\\loader\\credentials`) is imported into the encrypted, untrusted directory and takes effect only if it\n    decrypts;\n"
+  },
+  {
+   "id": "R6-1e",
+   "finding": "R6-1",
+   "path": "architecture/native-profile-v3/README.md",
+   "count": 1,
+   "old": "so both select the same root and initramfs.",
+   "new": "so both name the same `initrd=` files and `root=` device (errata R6-1: the kernel image or UKI each entry loads is W03/T04 state)."
+  },
+  {
+   "id": "R6-1f",
+   "finding": "R6-1",
+   "path": "architecture/native-profile-v3/README.md",
+   "count": 1,
+   "old": "the root's init binary, generators and the initramfs as W03/T04 state |",
+   "new": "the root's init binary, generators and the initramfs as W03/T04 state; errata R6-1 adds each entry's kernel image or UKI, systemd-stub's sysext and confext sidecars and a network root |"
+  },
+  {
+   "id": "R6-2b",
+   "finding": "R6-2",
+   "path": "architecture/native-profile-v3/README.md",
+   "count": 1,
+   "old": "The K1 row names the SMBIOS kernel-cmdline-extra string |",
+   "new": "The K1 row names the SMBIOS kernel-cmdline-extra string (restored by errata R6-2) |"
+  },
+  {
+   "id": "R6-3a",
+   "finding": "R6-3",
+   "path": "architecture/native-profile-v3/README.md",
+   "count": 1,
+   "old": "and V42's equal command lines also break\n  the maintenance-entry rule.\n",
+   "new": "and V42's equal command lines also break\n  the maintenance-entry rule. Under the round-5 binding, every one-sided command-line negative also breaks the\n  binding: V38, V47-V49, V52, V53, V57, V59-V66, V69, V70 and V73-V76 (V54, V58 and V68 are refused by the\n  schema first; V67 is single-defect). The errata vectors (`architecture/w02-notes-errata/native-profile-v3-r6-3-vectors.json`)\n  add bound pairs that break one rule each. The maintenance-grammar rule is implied by the enrolled grammar and the\n  binding, and the maintenance-target rule by the binding and distinct command lines, so both are reached\n  first only by cases that also break the binding; both are kept, and the overlap is stated here.\n"
+  },
+  {
+   "id": "R6-1g",
+   "finding": "R6-1",
+   "path": "scripts/native_qualification_v3.py",
+   "count": 1,
+   "old": "# Closed kernel command-line grammar (rounds 5-6, R4-1, R5-1). Every word of the enrolled entry is one of these kernel\n# parameters, none of which names, adds, masks or overrides a systemd unit or passes init arguments: \"--\" and every\n# later word, systemd.*, rd.* and SYSTEMD_* words, runlevel words, root mount options (rootflags= carries\n# x-systemd.* dependencies), console= (getty-generator adds a serial getty) and every other word are refused. The\n# maintenance entry is the enrolled entry plus MAINTENANCE_UNIT once, so both boot the same initramfs and root. The\n# grammar is widened only through a reviewed revision of this contract.\n",
+   "new": "# Closed kernel command-line grammar (rounds 5-6, R4-1, R5-1; W02 notes errata R6-1). Every word of the enrolled\n# entry is one of these kernel parameters: none names a unit or carries a unit-bearing value, root=, ro and rw only\n# drive systemd's fixed root-mount units, and none reaches init's arguments. \"--\" and every later word, systemd.*,\n# rd.* and SYSTEMD_* words, runlevel words, root mount options (rootflags= carries x-systemd.* dependencies),\n# console= (getty-generator adds a serial getty) and every other word are refused. The maintenance entry is the\n# enrolled entry plus MAINTENANCE_UNIT once, so both name the same initrd= files and root= device; the kernel\n# image or UKI an entry loads is not on its command line. The grammar is widened only through a reviewed revision\n# of this contract.\n"
+  }
+ ],
+ "effective": {
+  "architecture/native-profile-v3/README.md": {
+   "kind": "PUBLISHED",
+   "file": "architecture/w02-notes-errata/effective/native-profile-v3/README.md",
+   "sha256": "c102cdde499552a1f945b90b242e88321cae5e454d0ff06985bb0fc701127bb9"
+  },
+  "scripts/native_qualification_v3.py": {
+   "kind": "COMMENT_ONLY",
+   "sha256": "25db6ef501958f9c443ecb3f3dde9f65e8a067a687ae8dced3ded9a9effb0aea"
+  }
+ },
+ "addedVectors": {
+  "file": "architecture/w02-notes-errata/native-profile-v3-r6-3-vectors.json",
+  "sha256": "bb6964e6b8118180b81751837c83ddeca32df68b8b05fe4d2ff23166730402cf"
+ }
+}

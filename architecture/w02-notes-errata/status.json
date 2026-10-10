@@ -1,0 +1,134 @@
+{
+ "schemaVersion": "planeon.internal.w02-notes-errata-status/v1",
+ "workItem": "W02-CLEANUP",
+ "answers": {
+  "W02a-F2": [
+   "R6-1",
+   "R6-2",
+   "R6-3"
+  ],
+  "W02g-F2": [
+   "R2-4",
+   "R3-1",
+   "R3-2"
+  ],
+  "PERF-032-F": [
+   "F12",
+   "F13",
+   "F14",
+   "F15"
+  ]
+ },
+ "ownerDecisions": [
+  {
+   "id": "Q-S",
+   "selected": "A",
+   "date": "2026-10-10",
+   "decision": "Review notes only; the selection record's D-items, the distinct-verityDigest rule and R3-3 move to W02-PROD"
+  },
+  {
+   "id": "Q-F",
+   "selected": "A",
+   "date": "2026-10-10",
+   "decision": "Errata records with no version ripple: counted replacements, added R6-3 vectors replayed against the unchanged v3 model, I06 R2-4 by its documented alternative, PERF-032-F as ordinary code edits"
+  },
+  {
+   "id": "ROUND-6-FINAL",
+   "selected": "A",
+   "date": "2026-10-11",
+   "decision": "Round 6 is final: bypass-class F15 findings covered by the tripwire statement are carried as notes; a correctness or contract finding still blocks"
+  }
+ ],
+ "reviewRounds": [
+  {
+   "round": 1,
+   "record": "architecture/w02-notes-errata/review-round1.json",
+   "recordSha256": "35b046c1b31dd062c91856b21869aad97f777e7298a0c3d6c28cc09ff21a4d8f",
+   "verdict": "CHANGES_REQUIRED",
+   "subjectCommit": "60c01bdd8996eee2f90096d5cd5fc42bc743bbb2",
+   "subjectDirectory": "architecture/w02-notes-errata/round1/"
+  },
+  {
+   "round": 2,
+   "record": "architecture/w02-notes-errata/review-round2.json",
+   "recordSha256": "14cebfdf3b596b186360cf6897dd96a5f2b23a0d910b8bf7728067b82d3835fb",
+   "verdict": "CHANGES_REQUIRED",
+   "subjectCommit": "23c0535558e3d59e532fc2202b00e4e9ac17b8d6",
+   "subjectDirectory": "architecture/w02-notes-errata/round2/"
+  },
+  {
+   "round": 3,
+   "record": "architecture/w02-notes-errata/review-round3.json",
+   "recordSha256": "8de69961b8699064bc2729381591acbb05636e0301b494b12bea42e43e14738d",
+   "verdict": "CHANGES_REQUIRED",
+   "subjectCommit": "b4a61bd15d0d687b01a99c46c0ec119993a650d2",
+   "subjectDirectory": "architecture/w02-notes-errata/round3/"
+  },
+  {
+   "round": 4,
+   "record": "architecture/w02-notes-errata/review-round4.json",
+   "recordSha256": "4177faaf9e33f8c06cf758ef514dfbc4e409b2ed6554db0ec022015e2eaed7b6",
+   "verdict": "CHANGES_REQUIRED",
+   "subjectCommit": "0be9802544013a3238a59461b2bc43f1c320feb5",
+   "subjectDirectory": "architecture/w02-notes-errata/round4/"
+  },
+  {
+   "round": 5,
+   "record": "architecture/w02-notes-errata/review-round5.json",
+   "recordSha256": "56e7ac7e08ec23712d20549feffe192b1c3de84ca12e74a3cff2b97a8ec5830f",
+   "verdict": "CHANGES_REQUIRED",
+   "subjectCommit": "762e16fee213ec3443947b4d96c8ef5f22b71427",
+   "subjectDirectory": "architecture/w02-notes-errata/round5/"
+  },
+  {
+   "round": 6,
+   "record": "architecture/w02-notes-errata/review-round6.json",
+   "recordSha256": "8925fba2fba2547d5b67b7e40b411ad3208d29f61f4d8bd2900a45022045ecea",
+   "verdict": "PASS_FOR_SOURCE_PUBLICATION",
+   "subjectCommit": "bfba62dabb7b7363b7d90c559d40f0101cd15275",
+   "subjectDirectory": "CURRENT"
+  }
+ ],
+ "closedFindings": {
+  "C1-1": "CLOSED by round 6",
+  "C1-2": "CLOSED by round 6",
+  "C1-3": "CLOSED by round 6",
+  "C1-4": "CLOSED by round 6",
+  "C1-5": "CLOSED by round 6",
+  "C1-6": "CLOSED by round 6",
+  "C1-7": "CLOSED by round 6",
+  "C1-8": "CLOSED by round 6",
+  "C1-9": "CLOSED by round 6",
+  "C1-10": "CLOSED by round 6",
+  "C1-11": "CLOSED by round 6",
+  "C2-1": "CLOSED by round 6",
+  "C2-2": "CLOSED by round 6",
+  "C2-3": "CLOSED by round 6",
+  "C2-4": "CLOSED by round 6",
+  "C3-1": "CLOSED by round 6",
+  "C3-2": "CLOSED by round 6",
+  "C3-3": "CLOSED by round 6",
+  "C3-4": "CLOSED by round 6",
+  "C4-1": "CLOSED by round 6",
+  "C4-2": "CLOSED by round 6",
+  "C5-1": "CLOSED by round 6",
+  "C5-2": "CLOSED by round 6"
+ },
+ "carriedFindings": {
+  "C6-1": "carried (NOTE): The last state snapshot is taken before the check's own post-corpus stock loop (stock uniq and fresh Draft 2020-12 validator over the corpus). A new round-6 probe (/private/tmp/claude-501/cleanup-review-r6/probes/f15r6.py, fresh process) leaves the check intact (it only reads frames): the exec patches builtins.sorted, which fires during the post-loop Draft 2020-12 call on the last corpus case and rebinds _utils.uniq and _keywords.uniq to lambda c: True after that call's lookup. It is ACCEPTED 773, and afterwards stock Draft 2020-12 accepts [1, 1]. This is inside the stated limit: the patched builtin is an invisible change that leaves the three compared answer sets unchanged, and the rebinding is triggered by a later call, not by the exec or the reviewed unique's corpus calls. It relies on reading 'the corpus calls' as the reviewed unique's calls, which is how the README uses 'the corpus' ('after the corpus every answer of stock ... uniq'). No reader is misled about the guard: the byte pin remains it.",
+  "C6-2": "carried (NOTE): The clause is still stated without an inline qualifier; the qualification comes two sentences later ('its stored id' can be rebound, then nothing is excluded). The code comment beside _ID speaks only of a patched builtins.id, which is true as written. Taken together the text is exact; only the placement is indirect. README line 137 also runs past the file's usual wrap width (cosmetic)."
+ },
+ "carriedTo": {
+  "W02-PROD": [
+   "I06 v2 R2-4: a distinct-verityDigest rule for backend executables",
+   "I06 v2 R3-3: the import fallback narrowed to ModuleNotFoundError"
+  ]
+ },
+ "contractState": "ADOPTED_ERRATA",
+ "independentReviewer": "SEPARATE_AGENT_NOT_AUTHOR",
+ "versionRipple": false,
+ "ruleChanged": false,
+ "modelChanged": false,
+ "nativeAcceptance": false,
+ "tenantAcceptance": false
+}

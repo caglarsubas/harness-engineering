@@ -1,0 +1,103 @@
+{
+ "schemaVersion": "planeon.internal.w02-notes-errata-review/v1",
+ "round": 6,
+ "reviewDate": "2026-10-11",
+ "subjectCommit": "bfba62dabb7b7363b7d90c559d40f0101cd15275",
+ "verdict": "PASS_FOR_SOURCE_PUBLICATION",
+ "subjectSha256": {
+  "architecture/w02-notes-errata/README.md": "744da8b31616ec352b604912a03d29d19e082718e5cb522e7c31da2dde83b535",
+  "architecture/w02-notes-errata/REVIEW_BRIEF.md": "3713c9958fb0076f8ea6ffc90f0e51ad7a59a007f199564e980338f24f27311a",
+  "architecture/w02-notes-errata/effective/i06-backend-profile-v2/README.md": "562b00852cb84dc44f4118f8449e19819b2b1dae4d683102b5a1b53890abdd9c",
+  "architecture/w02-notes-errata/effective/i06-backend-profile-v2/REVIEW_BRIEF.md": "1634d77c9ebd8fea1a1021a22143dadeb702e66f0b81f592f3319c877abd7a99",
+  "architecture/w02-notes-errata/effective/i06-backend-profile-v2/criteria.json": "8d4f5d7837b0f68859f222dec8766d57c2b6cc5fe49f95fddd830836569940b4",
+  "architecture/w02-notes-errata/effective/native-profile-v3/README.md": "fd12a0ded9b7de557cb75a8bdeb01c2c3fa85c24035b174282d2274dc6000bd0",
+  "architecture/w02-notes-errata/i06-backend-profile-v2-errata.json": "ae59ac046609184015790f9e43ed8d99aece31575011f667f6b28ec30dba5b96",
+  "architecture/w02-notes-errata/native-profile-v3-errata.json": "e22e968d931d477d6cd70648d52eea52e5bcda6a76e07b17bd658d004e063961",
+  "architecture/w02-notes-errata/native-profile-v3-r6-3-vectors.json": "3b9b6b32b8da1b53cf2b597b8ac9e1f230889364424b14b667e7f985b03fb7a7",
+  "docs/MASTER_DEVELOPMENT_PLAN.md": "bcaadfbefc3d4abd9af88658f2c34da00bf0621393ba546e38986a0e026a4f87",
+  "docs/repositories/00-harness-engineering.md": "4cdb6997029923c14cfcebc0f987d5b896ccd12da1a4132ee826a8f4e055fafa",
+  "scripts/contract_errata.py": "15bef4f7e34302a3a1bc7d21fc5d17a806fe23753d27578075799e94508db449",
+  "scripts/perf032_followup.py": "4c764c6451d8273f18c544aac3c3e72b6fe3992b72f34af6c1a1f87da8a1a2cf",
+  "scripts/schema_unique.py": "a89588bd3f0f63a528c07d1962e2c320c25120409e8d0b20a1c78ca52c1b2354",
+  "scripts/validate_verify_headroom.py": "58bc01760a0cf6f57f8de6f048b08d9af5b39f76485042970acea52a5951d634",
+  "tests/test_verify_headroom.py": "41706e1fd841542fb3ac47cf9fe7addb407c793b0c8c4a1007c2992fd4839ae0"
+ },
+ "roundOneStatus": {
+  "C1-1": "CLOSED",
+  "C1-2": "CLOSED",
+  "C1-3": "CLOSED",
+  "C1-4": "CLOSED",
+  "C1-5": "CLOSED",
+  "C1-6": "CLOSED",
+  "C1-7": "CLOSED",
+  "C1-8": "CLOSED",
+  "C1-9": "CLOSED",
+  "C1-10": "CLOSED",
+  "C1-11": "CLOSED"
+ },
+ "roundOneNotes": "C1-5 (PARTIAL in round 5, following C4-1/C5-1) is CLOSED: the F15 coverage and limit are now stated exactly (C5-1). The other items are byte-unchanged since round 5 and stay CLOSED.",
+ "roundTwoStatus": {
+  "C2-1": "CLOSED",
+  "C2-2": "CLOSED",
+  "C2-3": "CLOSED",
+  "C2-4": "CLOSED"
+ },
+ "roundThreeStatus": {
+  "C3-1": "CLOSED",
+  "C3-2": "CLOSED",
+  "C3-3": "CLOSED",
+  "C3-4": "CLOSED"
+ },
+ "roundThreeNotes": "C3-1 (PARTIAL in round 5) is CLOSED with C5-1: the address-reuse and itertools.islice probes are still refused, and the builtins.sorted probe passes within the restated limit ('a patched builtin').",
+ "roundFourStatus": {
+  "C4-1": "CLOSED",
+  "C4-2": "CLOSED"
+ },
+ "roundFourNotes": "C4-1 is CLOSED: the three round-4 changes are still refused (type_checker, id_patch, sys_modules_swap) and type_checker_outside_corpus passes within the limit. The C4-1 row no longer restates the limit inexactly; it points to the README and docstring text that C5-1 fixed.",
+ "roundFiveStatus": {
+  "C5-1": "CLOSED",
+  "C5-2": "CLOSED"
+ },
+ "roundFiveNotes": "C5-1: the README F15 bullet and the perf032_followup.py module docstring now say that the bytes run in the check's own process and can rebind or mutate the check's globals, locals and builtins (require, corpus and expected answers, stored id), after which nothing is excluded; that the named changes are refused only when the check is left intact; that the three compared answer sets (reviewed unique, stock uniq, a fresh Draft 2020-12 validator) are the only answers compared; and, for an intact check, that invisible changes (in-place internal state, interpreter internals, a patched builtin) leaving those three answer sets unchanged, and changes triggered other than by the exec and the corpus calls, are not excluded. The round-5 probes reproduce and are all inside this text: checker_require, checker_id and corpus_locals alter the check (ACCEPTED 773); draft4_type_checker is an in-place mutation of a class other than Draft 2020-12, leaving the three compared sets unchanged (ACCEPTED 773). The C4-1 row was rewritten as asked. The 'identities are taken with the id bound at import' clause was kept but is qualified by the following sentence ('its stored id'), which satisfies the required 'qualify ... or drop it' (see C6-2). Code is AST-identical to 762e16f apart from the module docstring. C5-2: the docstring parenthetical names 'a patched builtin' again.",
+ "findings": [
+  {
+   "id": "C6-1",
+   "severity": "NOTE",
+   "location": "scripts/perf032_followup.py check_unique_oracle lines 200-206 (no snapshot after the post-corpus stock loop); README PERF-032-F F15 bullet and module docstring ('any change triggered by anything other than the exec and the corpus calls')",
+   "finding": "The last state snapshot is taken before the check's own post-corpus stock loop (stock uniq and fresh Draft 2020-12 validator over the corpus). A new round-6 probe (/private/tmp/claude-501/cleanup-review-r6/probes/f15r6.py, fresh process) leaves the check intact (it only reads frames): the exec patches builtins.sorted, which fires during the post-loop Draft 2020-12 call on the last corpus case and rebinds _utils.uniq and _keywords.uniq to lambda c: True after that call's lookup. It is ACCEPTED 773, and afterwards stock Draft 2020-12 accepts [1, 1]. This is inside the stated limit: the patched builtin is an invisible change that leaves the three compared answer sets unchanged, and the rebinding is triggered by a later call, not by the exec or the reviewed unique's corpus calls. It relies on reading 'the corpus calls' as the reviewed unique's calls, which is how the README uses 'the corpus' ('after the corpus every answer of stock ... uniq'). No reader is misled about the guard: the byte pin remains it.",
+   "requiredChange": "None. Optional: say 'the reviewed unique's corpus calls', or re-check the snapshot after the stock loop."
+  },
+  {
+   "id": "C6-2",
+   "severity": "NOTE",
+   "location": "README F15 bullet ('identities are taken with the `id` bound at import'); module docstring lines 19-20; perf032_followup.py line 52 comment",
+   "finding": "The clause is still stated without an inline qualifier; the qualification comes two sentences later ('its stored id' can be rebound, then nothing is excluded). The code comment beside _ID speaks only of a patched builtins.id, which is true as written. Taken together the text is exact; only the placement is indirect. README line 137 also runs past the file's usual wrap width (cosmetic).",
+   "requiredChange": "None."
+  }
+ ],
+ "questionAnswers": {
+  "1": "Unchanged since round 4/5: no replacement row, errata record, effective file or adopted input changed in round 6 (git diff 762e16f bfba62d outside round5/ touches only README, REVIEW_BRIEF, review-round5.json, source-index and the perf032_followup.py docstring). check_errata accepts both records, effective digests fd12a0de (v3 README), 25db6ef5 (comment-only model, not published), 562b0085, 1634d77c, 8d4f5d78. systemd v256 and Linux v6.12 facts were not re-checked (no fact-stating text changed since round 3, which checked them).",
+  "2": "replay_vectors returns 39 through the unchanged adopted model bytes; the replay probes (model +comment, wrong refusal, reused id, negative moved to accepted) are refused. Vectors and the README mutant table are byte-unchanged since round 4, whose 18-mutant replay stands; not rerun.",
+  "3": "Yes; text and model unchanged since round 4.",
+  "4": "Yes. The 28-probe check_errata/replay_vectors sweep reruns identically: wrong adopted digest/bytes, wrong count, code/string/docstring/cookie changes in a COMMENT_ONLY row, .py PUBLISHED, differing effective file/digest, wrong addedVectors digest/bytes/key/outside or '..' path, modelChanged true, unknown kind and duplicate id are refused; a pure comment line is accepted. The AST plus token-stream rule is sound for comment-only rows.",
+  "5": "Unchanged since round 4, where it was re-probed true; the effective text says so via check_qualification (W03).",
+  "6": "F12: all round-3 probes refused, current tree accepted (31 route tests, 806 calls); round-4 aliases and itertools.islice pass within the closed-list caveat. F14: four round-3 escapes and a new local name refused; composition of existing symbols accepted, as stated. F15: 773 on the current bytes. Refused: keywords_uniq, first_call_utils_uniq, code_swap, seventh_call, three_items, id_reuse, id_reuse_outside_corpus (address not reused in 199999 attempts; refused by the snapshot), itertools_patch, type_checker, id_patch, sys_modules_swap. Accepted and inside the stated limit: builtins_sorted_outside_corpus, type_checker_outside_corpus, draft4_type_checker, checker_require, checker_id, corpus_locals, and the new round-6 post_loop_hook (C6-1). No probe found a change that leaves the check intact, is triggered by the exec or the reviewed corpus calls, is visible to the snapshot or alters the three compared answer sets, and is accepted. F13: byte-unchanged since round 3 and exact (unique() docstring, check_grouped_module docstring and message, the two test rows, test module docstring, master-plan line, catalogue entry 82).",
+  "7": "No adopted contract, schema, rule, vector, model or version changes. All 13 adopted inputs equal their source-index digests at 5fab673 and in the worktree; the PERF-032 review digest b5d47233 matches. All 16 subject digests match source-index, the worktree and commit bfba62d. round5/ holds 17 files (the 16 round-5 subject paths plus source-index.json), each byte-identical to 762e16f. review-round5.json is byte-identical to the round-5 reviewer's output and matches earlierRounds recordSha256 56e7ac7e, as rounds 1-4 match theirs. Outside architecture/w02-notes-errata/, the whole subject changes only contract_errata.py, perf032_followup.py and the F13 wording files. The F15 coverage and limit statements now claim no more than the check shows."
+ },
+ "modelExecution": "Repository uv environment (offline, frozen, no sync), one process per command, each under 60 s with timeout. The PAUSE file was checked before commands; it appeared once, during which one short probe command (f15r6.py, a few seconds) had already been started because the guard only printed a warning; after that I waited until PAUSE was gone and gated every later command with a blocking wait. Worktree unmodified (git status --porcelain empty, HEAD bfba62d). Runs: (1) the brief's checks: both check_errata records accept; replay_vectors 39; validate_perf032_followup 806 over 31 route tests; check_unique_oracle 773. (2) Round-3 F15 probes (cleanup-review-r3/probes/f15probes.py via cleanup-review-r5/probes/run_r3.py, 10 probes, fresh process each). (3) Round-4 F15 probes (f15r4.py, 5, fresh process each). (4) Round-5 F15 probes (f15r5.py, 5, fresh process each). (5) New round-6 probe f15r6.py (post-corpus-loop hook). (6) F12 probes f12.py and f12r4.py, F14 probe f14.py (scratch file redirected into cleanup-review-r6/probes), and the 28-probe errata sweep, copied into cleanup-review-r6/probes. (7) Digest checks: subject, adopted inputs, round5/ against 762e16f, review-round{1..5}.json against earlierRounds, review-round5.json against the round-5 reviewer's file, the PERF-032 review; AST equality of perf032_followup.py with 762e16f apart from the module docstring; a scan for family classes outside module dicts (none). pytest and the model mutant replay were not rerun (inputs byte-unchanged).",
+ "sourcesRead": [
+  "git diff 762e16f bfba62d (all text outside round5/); git diff --stat 5fab673 bfba62d; git diff 5fab673 bfba62d for the F13 files",
+  "architecture/w02-notes-errata/{README.md, REVIEW_BRIEF.md, review-round5.json, source-index.json}; round5/ compared byte for byte with 762e16f",
+  "scripts/perf032_followup.py (whole file)",
+  "/private/tmp/claude-501/cleanup-review-r3/probes/f15probes.py; /private/tmp/claude-501/cleanup-review-r4/probes/{f15r4.py, run_brief.py, errata_sweep.py, f12.py, f12r4.py, f14.py}; /private/tmp/claude-501/cleanup-review-r5/{review-round5.json, probes/f15r5.py, probes/run_r3.py}",
+  "/Users/caglarsubasi/.local/state/harness-onion-ci/tools/perf032/review-round3.json (digest only)",
+  "jsonschema _utils.uniq source (installed package, read via inspect)"
+ ],
+ "actions": {
+  "filesEdited": false,
+  "githubMutated": false,
+  "personalDataSent": false,
+  "testsRun": true
+ },
+ "reviewLimit": "No network access was used. systemd v256 and Linux v6.12 statements were not re-checked (no fact-stating text changed since round 3). tests/test_verify_headroom.py and the model mutant replay were not rerun; their inputs are byte-unchanged. The later bridge layer and the full verify suite were not checked. The F12 and F15 probes are probes, not proofs that nothing else escapes; the judgement is that the stated coverage and limits are true and complete enough not to mislead, per the owner rule. 'testsRun' means the brief's check functions and probes, not pytest."
+}

@@ -1,0 +1,105 @@
+{
+ "schemaVersion": "planeon.internal.w01-amendment-review/v1",
+ "round": 2,
+ "reviewDate": "2026-10-10",
+ "verdict": "CHANGES_REQUIRED",
+ "subjectCommit": "ef62ff46082faf3d90d954eca30ac522db490a6a",
+ "subjectSha256": {
+  "architecture/host-interface-amendment-w02d/amendment.json": "ae66a3c2da7d86ce390aa280546a7420997029fe467349f2e57384deac935896",
+  "architecture/host-interface-amendment-w02d/HOST_INTERFACE_SPEC.md": "54a5c9a21c0f9a069d869f77bc3bfda1ab60f85335f1a9910cdeec18f3fe5178",
+  "architecture/host-interface-amendment-w02d/README.md": "5bc1f7da90cc235d3b8b83f0dfb8ea0d663ff69b37bf319f800ad8f192aeb5e3",
+  "architecture/host-interface-amendment-w02d/REVIEW_BRIEF.md": "3b9355bb3f6f6c798f08d3a3741ccd41200249cb5b0966a5109c175105f1026f",
+  "scripts/host_interface_amendment.py": "1dc077439305db1952983e04a585d1875c6409c4defda32cee346c11be319102",
+  "architecture/seccomp-allowlists-v2/README.md": "a0658450a6eed3e06666c520ccb14f2b0505f6791e30405b1a94e33ce6b06117",
+  "architecture/seccomp-allowlists-v2/syscalls.json": "343176d6518530ba9a4d71c36eec7f6e5a98a87198e5e08d53ac0d68d746ad67",
+  "architecture/seccomp-allowlists-v2/allowlists.json": "895e2d925723850062cc57c11e5c1c93603422db7e9ec0f98cc55c644fc522fb",
+  "architecture/seccomp-allowlists-v2/vectors.json": "809475d7853aa11885693201448e93c64819ac5587a756f0074c28cf4bb7abe4",
+  "scripts/seccomp_allowlists_v2.py": "12845115589add9e1b0562c6f764decda7685b32a63c9f11872f847af2a54caf"
+ },
+ "findings": [
+  {
+   "id": "R2-1",
+   "severity": "MINOR",
+   "location": "amendment.json item A3; HOST_INTERFACE_SPEC.md (effective) 5.3 SERVER row (OBSERVER and BROKER inherit it)",
+   "finding": "In answer to R1-4, A3 now says 'seccomp can check only the open flags, so the role's SELinux domain limits what it reads to selinuxfs status and policy, cgroup and /proc files and its own code'. As a statement about the SELinux domain, that is narrower than both the reviewed SELinux matrix and W01's own rows. In architecture/selinux-matrix-v2/matrix.json (v4), planeon_server_t also reads planeon_server_cred_t (its credential, which the sealed-credential path needs), planeon_run_t, the observer and broker socket files, planeon_bpf_pin_t and planeon_seal_t. planeon_observer_t reads planeon_observer_cred_t, which the OBSERVER row also states ('read-only to policy credential'). The broker opens the worker executable for W5. SERVER's CPython base has an unconditional read-only openat for its runtime. A W04 test or a W03 policy author taking the row literally would forbid reads the matrix grants and the rows require.",
+   "requiredChange": "Scope the sentence to what seccomp cannot do, for example: 'seccomp checks only the open flags; which files the role may read (for these inspection reads: selinuxfs status and policy, cgroup and /proc files, its own code) is decided by its SELinux domain (matrix v4 READ grants)'. Do not present that list as the domain's complete read set."
+  },
+  {
+   "id": "R2-2",
+   "severity": "MINOR",
+   "location": "amendment.json item A2; HOST_INTERFACE_SPEC.md 5.3 WORKER row, SELinux column",
+   "finding": "A2 says the worker has 'no execute_no_trans on any type and no transition out of the domain (SELinux matrix v4 A24-A32, A37, A60.18)'. The first half holds: A60.18 is the worker's per-source execute_no_trans closure over every type, declared or not, and A37 covers the entrypoint, interpreter and container types. The cited assertions do not establish the second half. A24-A31 constrain transitions only into the planeon domains (contain, maint, the daemon roles, worker, writer), and A32 covers only dyntransition. No assertion covers a worker transition into the qualk8s_* domains. The matrix README (lines 58-62; review R3, O06/O07) explicitly leaves transitions into the admin login and systemd, and access to undeclared host domains, to host policy outside the matrix. Within the matrix, the worker has no outgoing transition and no process2 nnp_transition grant (only broker to worker and runtime to container). That, not A24-A32, is what closes it for declared domains after no_new_privs. The claim is stated more broadly than its evidence.",
+   "requiredChange": "Either narrow the text to 'no transition into any declared domain (the matrix grants planeon_worker_t no transition and no process2 nnp_transition; A29, A30 and A32 for the planeon domains)' and keep 'no execute_no_trans on any type (A60.18)', which already refuses a second exec without a transition. Or add a per-source transition/nnp_transition closure for planeon_worker_t to a future matrix and cite it. Under either option, say that host-policy transitions are bounded by W03's module ('may grant nothing the matrix closes')."
+  },
+  {
+   "id": "R2-3",
+   "severity": "MINOR",
+   "location": "scripts/host_interface_amendment.py check_record (KINDS, decisions rule)",
+   "finding": "The new EDITORIAL kind needs no owner decision and no disposition, and the model puts no limit on where an EDITORIAL item may apply. In scratch I added an EDITORIAL item E3 that replaces 'No CAP_KILL: termination' with 'Holds CAP_KILL: termination' in the BROKER row, with decisions [], and re-pinned the effective file. check() accepted it. So a normative change can enter the effective specification without any owner decision, which the record's own rule ('each item citing its owner decisions') is meant to prevent. RESTATED items are also unconstrained: an item citing an unrelated decided decision (W02d-QB on the gate's SELinux text) passes, and RESTATED items need no disposition.",
+   "requiredChange": "Restrict EDITORIAL items structurally, for example: allowed only when the current text is the base's first line (title) or its last line (an appended section), and the proposed text keeps that line. Alternatively, list the allowed EDITORIAL ids and their anchors in the model. Optionally require each RESTATED item to name a decision whose text mentions the restated subject, or list the RESTATED ids in notAmended and check that."
+  },
+  {
+   "id": "R2-4",
+   "severity": "NOTE",
+   "location": "scripts/host_interface_amendment.py; README.md R1-7 disposition",
+   "finding": "The R1-7 disposition says the model 'raises ValueError on bad shapes'. An unhashable entry in an item's or a disposition's decisions list (for example [['x']]) still raises TypeError from set(). Other gaps remain:\n- a disposition's decisions may be empty or unrelated to its items' decisions (both accepted in scratch);\n- unused obligations are accepted;\n- obligation ids named in item text (O-SERVER-MEMFD in A4, O-W03-GROUPS in A10) are not checked against the obligations list;\n- dates are not format-checked;\n- baseLines is still not checked against the base;\n- dropping a carried item's only CARRIED amendment and re-pointing its disposition at another item passes (the model cannot judge semantics).\nThe five cases the brief names are all refused with ValueError. So are the coordinated base change (base digest now a constant), a dropped or reordered disposition, a changed carriedToW01 list, and a later item rewriting an earlier one.",
+   "requiredChange": "Check that decision and item entries are strings before calling set(), or soften the disposition wording. Optionally cross-check obligation references in item text."
+  },
+  {
+   "id": "R2-5",
+   "severity": "NOTE",
+   "location": "amendment.json item A7 (BROKER row) and O-T04-AMEND",
+   "finding": "'the worker shows Seccomp_filters: 2' holds only if the broker carries exactly one filter. fs/proc/array.c:339-340 prints seccomp.filter_count, kernel/fork.c:1900 copies it to the child, and kernel/seccomp.c:932 increments it in W4. That premise rests on W03 ('install exactly the compiled programs', F10: no systemd seccomp options), and A7 doesn't say so. The A7 source cites kernel/seccomp.c without line numbers.",
+   "requiredChange": "Add the premise ('the broker runs under exactly its one filter, so ...') or cite the W03 carried requirement, and give the line numbers."
+  },
+  {
+   "id": "R2-6",
+   "severity": "NOTE",
+   "location": "amendment.json item A10 (5.4 W3)",
+   "finding": "'W4's setresgid and setresuid leave supplementary groups unchanged, so the broker runs with none (obligation O-W03-GROUPS)' reads as a causal fact, but it is a requirement: the broker must run with none because setresgid/setresuid do not clear them. A10 cites kernel/sys.c:676-838, which is not among the provided v6.12 sources, so I could not check it there. The claim that setresuid/setresgid do not touch group_info is correct.",
+   "requiredChange": "Change 'so the broker runs with none' to 'so the broker must run with none', and add kernel/sys.c to the pinned sources or drop the line range."
+  },
+  {
+   "id": "R2-7",
+   "severity": "NOTE",
+   "location": "architecture/seccomp-allowlists-v2/README.md (QW3 row) and allowlists.json ownerDecisions W01-AMEND-QW3",
+   "finding": "The R1-10 disposition says QW3's reason now reads 'a CAP_SYS_ADMIN holder in the initial namespaces'. That is true in amendment.json and the amendment README. The v2 README still says 'any CAP_SYS_ADMIN holder can lower it in the init namespace (kernel/pid_sysctl.h)', and the v2 allowlists.json decision text still says 'any CAP_SYS_ADMIN holder'.",
+   "requiredChange": "Align the v2 wording and citation (kernel/pid_sysctl.h:8-32, include/linux/pid_namespace.h:59-67)."
+  },
+  {
+   "id": "R2-8",
+   "severity": "NOTE",
+   "location": "REVIEW_BRIEF.md; obligations O-SERVER-MEMFD; E1/E2 naming",
+   "finding": "Housekeeping points:\n- (a) The round-2 brief still says 'items A1-A7 are exact counted replacements'. The record now has E1, A1-A12 and E2.\n- (b) O-SERVER-MEMFD says the code is pinned in architecture/credential-ordering-inputs/source-before.json. Verified: commit 9df7dd7, live_linux_boundary.py:976 is the MFD_CLOEXEC | MFD_ALLOW_SEALING call. That snapshot does not contain tests/live_backend/test_linux_boundary.py. Lines 836-870 of that file are in architecture/conformance-consumer-closure-inputs/consumer-sources.json at the same commit.\n- (c) 'Amendment A1' (the design label HOST-INTERFACE-DRAFT-002-A1) shares its name with item A1. The effective file's line 6 still reads 'Design label HOST-INTERFACE-DRAFT-002'; the E1 preamble explains this.",
+   "requiredChange": "Update the brief text, name the rig's snapshot, and optionally rename the amendment (for example 'amendment 1') or the items to avoid the A1 clash."
+  }
+ ],
+ "questionAnswers": {
+  "Q0": "All six carriedToW01 items have exactly one disposition, in order, and the model checks this against W02d's status.json. Q1 is covered by A1 and A8; QA by A1, A2, A7 and A11; QC by A3; the W6 pidfd kill by A12 with O-T04-AMEND; setgroups by A10 with O-W03-GROUPS; F9 by A4 with O-SERVER-MEMFD. All 14 items are exact single replacements found at the stated lines; A8 and A9 cite the sentence start, one line before the matched text. The round-1 findings are answered as follows:\n- R1-1: A4 now says 'exactly' and names the existing code and O-SERVER-MEMFD. live_linux_boundary.py:976 verified in the pinned snapshot.\n- R1-2: A9 states ENOSYS for every non-broker role.\n- R1-3: A1 cites W02d-QD.\n- R1-4: answered, but over-narrowed; see R2-1.\n- R1-8: A10 gives the exact Groups: form.\nInternal consistency: the BROKER row (no CAP_KILL, cgroup.kill) agrees with W6 (A12). The SERVER row matches the v2 allowlists (memfd flags exactly 9, the inspection-reads duty, membarrier 0/8/16, clone3 ENOSYS). A3's SELinux sentence is narrower than the matrix and the OBSERVER row (R2-1). W3/W4 agree with QW2: setgroups is refused in every role and the model enforces it. Items beyond the carried six (A5, A6 and A9 RESTATED; A2, A7 and A11 from the primary draft) are each tied to a decided owner decision. A2 states more than its cited assertions establish (R2-2).",
+  "Q1": "Yes. The round-1 verification stands: mm/memfd.c:313-325 and 401-410; kernel/signal.c:814-824 and 846-860 on the pidfd_send_signal path. The init-namespace lowering now has a source: kernel/pid_sysctl.h:8-32 with include/linux/pid_namespace.h:59-67, so for the init namespace pidns_memfd_noexec_scope(NULL) is 0 and the minimum is 0. New kernel claims checked:\n- fs/proc/array.c:199-206 writes 'Groups:\\t' then a space.\n- Seccomp_filters is filter_count (array.c:339-340); it is copied on fork (fork.c:1900) and incremented on attach (seccomp.c:932), so the worker shows 2 if the broker has exactly one filter (R2-5).\n- kernel/sys.c (A10) is not in the provided sources (R2-6).",
+  "Q2": "Yes. v2 is v1 plus the disclosed changes, now including the owner-approved pidfd_send_signal drop, the QW1/QW2 refusals and the extra vectors. Rebuilding with the current build_v2.py into scratch reproduces syscalls.json, allowlists.json and vectors.json byte-for-byte. All 2813 vectors replay with decide == run_filter(compile_filter) == expect. All 353 stack checks equal the worker alone. All 14 digests and lengths match the compiled programs and are unchanged from round 1 (the programs did not change). All 15 mutations are refused with exactly the recorded messages: M09 'memfd_create only with MFD_CLOEXEC | MFD_NOEXEC_SEAL: SERVER'; M14 and M15 are the new pidfd and setgroups refusals. The 46 new vectors are all KILL_PROCESS: pidfd_send_signal and setgroups for every role and architecture, and memfd flags 3, 0x19 and 1 for SERVER, OBSERVER and BROKER. The table has 130 names: pidfd_send_signal and setgroups sampled, SIGKILL and its citation gone. The allowlists add W01-AMEND-QW2. The model diff from round 1 is only the two refusals and the docstring.",
+  "Q3": "Yes, verified in scratch with ValueError:\n- a changed base, including a coordinated base-plus-record change, now that the digest is a model constant;\n- a missing current text, or a wrong count;\n- an undecided owner decision;\n- an item citing an unknown decision;\n- a published effective file that differs;\n- a dropped disposition;\n- a changed carriedToW01 list;\n- a later item that rewrites an earlier one.\nRemaining gaps: an EDITORIAL item can change normative text without any decision (R2-3), and some malformed shapes raise TypeError (R2-4).",
+  "Q4": "No material overclaim. Both READMEs keep DATA_CHECK_ONLY / candidate status, no filter, unit or sysctl, E01-E12 OPEN_UNPROVEN, and the T04/W02a-F digest proof open. The three obligations are listed. The v2 README's counts are verified: 2813, 353, 15 and 130. Minor wording issues: 'no filter, unit or code exists' sits beside O-SERVER-MEMFD's existing code, which is in another repository and only snapshot-pinned here; and the v2 README still has the unqualified CAP_SYS_ADMIN wording (R2-7)."
+ },
+ "sourcesRead": [
+  "architecture/host-interface-amendment-w02d/{REVIEW_BRIEF.md, source-index.json, amendment.json, README.md, HOST_INTERFACE_SPEC.md (word diff against base), review-round1.json, round1/ (compared with 5c9c250)}",
+  "architecture/host-interface-inputs/resolved/HOST_INTERFACE_SPEC.md (lines 399-445, 607-609)",
+  "scripts/host_interface_amendment.py; scripts/seccomp_allowlists_v2.py (diff from 5c9c250); scripts/seccomp_allowlists.py",
+  "architecture/seccomp-allowlists/status.json; architecture/seccomp-allowlists-v2/{README.md, syscalls.json, allowlists.json, vectors.json}",
+  "architecture/selinux-matrix-v2/matrix.json (assertions A24-A37, A60.*, sourceClosures, transitions, process2, types READ grants) and README.md (lines 40-62, 176-200, 218-224, 372-398)",
+  "architecture/credential-ordering-inputs/source-before.json (live_linux_boundary.py:976); architecture/conformance-consumer-closure-inputs/consumer-sources.json (test_linux_boundary.py:836-870)",
+  "~/.local/state/harness-onion-ci/tools/w01amend/{build_v2.py, patch_v2_r2.py}",
+  "linux v6.12: include/linux/pid_namespace.h:59-67; kernel/pid_sysctl.h; fs/proc/array.c:199-206,339-340; kernel/fork.c:1887-1909; kernel/seccomp.c:631-632,932; earlier: mm/memfd.c, kernel/signal.c"
+ ],
+ "actions": {
+  "filesEdited": false,
+  "githubMutated": false,
+  "nativeActions": false,
+  "referenceModelExecuted": true,
+  "repositoryValidatorsRun": false,
+  "runnerActivated": false,
+  "testsRun": false,
+  "warmSourcesAccessed": false
+ },
+ "reviewLimit": "Read-only, one process at a time, each under 60 s, scratch only in /private/tmp/claude-501/w01amend-review-r2/. The models were imported and the current build_v2.py was rerun against a scratch copy (output in scratch only). No repository tests or validators, runner, native, cloud or GitHub actions. No other worktree was opened, and the primary lane's stopped draft was not read: A2, A7, A8, A11, E1/E2 and the obligations were judged against the matrix, the kernel sources and the record. kernel/sys.c is not in the provided sources. tools/w01amend/build.py, build_amend.py and write_docs.py were not read; the published amendment bytes were verified through the model."
+}

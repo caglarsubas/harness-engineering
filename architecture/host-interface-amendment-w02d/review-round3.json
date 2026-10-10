@@ -1,0 +1,68 @@
+{
+ "schemaVersion": "planeon.internal.w01-amendment-review/v1",
+ "round": 3,
+ "reviewDate": "2026-10-10",
+ "verdict": "PASS_FOR_SOURCE_PUBLICATION",
+ "subjectCommit": "bc3539d08378ce7f2bce44b11c4e4cf793613e86",
+ "subjectSha256": {
+  "architecture/host-interface-amendment-w02d/amendment.json": "811b5b294a3ae0db24d37fd170e778c3399ce551a8df4caea2bdd4e6cc2eaeb1",
+  "architecture/host-interface-amendment-w02d/HOST_INTERFACE_SPEC.md": "d1d5342cdd7bcf7723fde951a63094751bec8e0960817cf360ee320cb9abb420",
+  "architecture/host-interface-amendment-w02d/README.md": "5f345199608162c71cfb2480f7c091b71d7507a1af2a557b0b80d12c057117b1",
+  "architecture/host-interface-amendment-w02d/REVIEW_BRIEF.md": "df51081739c9947b244b28aabce3f49306fbc8eb7fa75ad91953a55fbe77c267",
+  "scripts/host_interface_amendment.py": "36ed7d5c9d0e7cb93cb9dece4d50866531b11484d8fcb36f1a752937440dbbbd",
+  "architecture/seccomp-allowlists-v2/README.md": "a9f286f18cb830bcd8f11c57bd84395f7a75ef982212323e745b09a77de72946",
+  "architecture/seccomp-allowlists-v2/syscalls.json": "343176d6518530ba9a4d71c36eec7f6e5a98a87198e5e08d53ac0d68d746ad67",
+  "architecture/seccomp-allowlists-v2/allowlists.json": "542ab73e2e55646ea77f066d59b10713cfe17ce4da863d8b61c99d7559aef4a0",
+  "architecture/seccomp-allowlists-v2/vectors.json": "809475d7853aa11885693201448e93c64819ac5587a756f0074c28cf4bb7abe4",
+  "scripts/seccomp_allowlists_v2.py": "12845115589add9e1b0562c6f764decda7685b32a63c9f11872f847af2a54caf"
+ },
+ "findings": [
+  {
+   "id": "R3-1",
+   "severity": "NOTE",
+   "location": "amendment.json item A2 (5.3 WORKER row, SELinux) and obligation O-W03-WORKER-EXEC",
+   "finding": "R2-2 is answered in substance. A2 now cites A60.18 only for the execute_no_trans closure, and transitions to domains the matrix does not close go to W03 as O-W03-WORKER-EXEC. The citation for the declared-domain half is still loose: 'no transition or nnp_transition into any declared domain (A24-A32)'.\n- A24-A31 constrain transitions only into the planeon domains (contain, maint, the four daemon roles, worker, writer).\n- A32 is dyntransition only.\n- No assertion names nnp_transition, and none covers a transition into the eight qualk8s_* domains.\nFor those, the closure comes from the matrix's grant tables. scripts/selinux_matrix_v2.py:141-144 and 196-202 allow a transition only when it is listed and, under no_new_privs, granted process2 nnp_transition; planeon_worker_t has neither. Two declared domains, init_t and planeon_admin_t (SYSTEM and ADMIN kinds), are explicitly outside the matrix (selinux_matrix_v2.py:261-263; matrix README lines 58-62). So the matrix does not close transitions into them, yet the obligation says W03 need act only 'beyond the declared domains SELinux matrix v4 already closes'. The risk is low (a host grant of planeon_worker_t to init_t with nnp_transition), but the obligation could be read as exempting those two domains.",
+   "requiredChange": "Cite the matrix's transitions and process2 nnp_transition grants (none from planeon_worker_t) next to A24-A32. Name init_t and planeon_admin_t explicitly in O-W03-WORKER-EXEC as host-policy targets W03 must also close. Can be carried to the next revision."
+  },
+  {
+   "id": "R3-2",
+   "severity": "NOTE",
+   "location": "scripts/host_interface_amendment.py check_record (EDITORIAL/RESTATED rules)",
+   "finding": "R2-3 and R2-4 are answered. In scratch, the round-2 attacks are now refused: the BROKER-row EDITORIAL edit, a RESTATED item citing another decision, unrelated disposition decisions, an unused obligation, an unknown obligation named in proposed text, and unhashable entries (all ValueError). Some residual limits remain, inherent to a text-substitution model:\n- An EDITORIAL item may still append arbitrary text after the title line or after the last line with no decision. Appending a normative override to E1, or a 'section 12' to E2, was accepted.\n- A RESTATED item may change other text in the same replacement as long as it adds 'ENOSYS': A6 rewritten to also allow exec and any clone flags was accepted.\n- A disposition's decisions may be empty.\n- Obligation references are scanned only in proposed text, not in why or source.\nThe published E1, E2 and RESTATED texts were reviewed and are correct.",
+   "requiredChange": "Optional hardening for a later revision: require RESTATED proposed text to equal current plus an inserted ENOSYS clause, i.e. current must be a prefix/suffix split of proposed. Bound EDITORIAL additions, for example by pinning the E1/E2 proposed digests in the model."
+  },
+  {
+   "id": "R3-3",
+   "severity": "NOTE",
+   "location": "HOST_INTERFACE_SPEC.md 5.3 SERVER row (A3); REVIEW_BRIEF.md subject item 1; README 'What stays open'",
+   "finding": "Editorial points:\n- (a) A3's new sentence ends the allowlist's enumeration early: '...; W02d-QC). Seccomp checks only the open flags of these reads; which files they reach is set by the role's SELinux domain (`architecture/selinux-matrix-v2/`), exit. Denied:'. The 'exit' grant now trails the SELinux sentence.\n- (b) The brief reads 'items A1-A7 are exact counted replacements in it: E1, A1-A12 and E2'. The stale 'A1-A7' was kept and the new list appended.\n- (c) README 'What stays open' says 'no filter, unit or code exists', while O-SERVER-MEMFD concerns existing (snapshot-pinned, other-repository) code.\n- (d) kernel/sys.c is now in the research source tree and lines 676-750 (__sys_setresuid) and 778-839 (__sys_setresgid) are correct. Neither touches group_info. Like the other kernel files, it is pinned only by the v6.12 tag and commit, with no per-file digest.",
+   "requiredChange": "Move ', exit' back before the SELinux sentence, or make the sentence a parenthetical. Fix the brief's sentence. Say 'no filter or unit exists; the sealed-credential code must change (O-SERVER-MEMFD)'. Can be carried."
+  }
+ ],
+ "questionAnswers": {
+  "Q0": "Yes. All six carriedToW01 items have exactly one disposition, in order, checked against W02d's status.json. All 14 items (E1, A1-A12, E2) apply exactly once, and each proposed text survives once in the effective file. The round-2 findings are answered:\n- R2-1: A3 is now scoped to the inspection reads, with no claim about the domain's whole read set.\n- R2-2: A2 states only what A60.18 and the matrix establish, and the rest goes to O-W03-WORKER-EXEC; the citation nuance is in R3-1.\n- R2-5: A7 states the one-filter premise with seccomp.c:932 and array.c:339-340.\n- R2-6: A10 says 'must run with none'.\nThe BROKER row agrees with W6, the SERVER row with the v2 allowlists, and W3/W4 with QW2. The README shows every item's current and proposed text verbatim except E2, which it describes.",
+  "Q1": "Yes. The kernel claims of rounds 1 and 2 stand. kernel/sys.c (now provided) confirms A10: __sys_setresuid at 676-749 and __sys_setresgid at 778-838 never touch group_info. The QW3 wording in the v2 README and v2 allowlists.json is now 'a CAP_SYS_ADMIN holder in the initial namespaces' with pid_sysctl.h:8-32 and pid_namespace.h:59-67, which is correct.",
+  "Q2": "Yes. The v2 model, syscalls.json and vectors.json are byte-identical to round 2. allowlists.json changes only in the W01-AMEND-QW3 decision wording. Rebuilding with the current build_v2.py in scratch reproduces all three data files byte for byte. All 2813 vectors replay with decide == compiled filter == expect, all 353 stack checks pass, all 14 digests and lengths match, and all 15 mutations are refused with the recorded messages, including M09.",
+  "Q3": "Yes, verified in scratch with ValueError: a changed base, a missing or doubled current text, an undecided decision, an unknown decision, and a differing effective file. The round-2 attacks are also refused (EDITORIAL outside the edges, RESTATED with another decision, unrelated disposition decisions, an unused or unknown obligation, unhashable entries), as are malformed top-level shapes. Residual limits are in R3-2.",
+  "Q4": "No overclaim. Both READMEs keep candidate / DATA_CHECK_ONLY status, no filter, unit or sysctl, E01-E12 OPEN_UNPROVEN, and the T04/W02a-F digest proof open. The four obligations are listed, and the v2 counts (130 syscalls; 2813, 353 and 15 checks) are verified. Wording nits are in R3-3."
+ },
+ "sourcesRead": [
+  "architecture/host-interface-amendment-w02d/{REVIEW_BRIEF.md, source-index.json, amendment.json, README.md, HOST_INTERFACE_SPEC.md (word diff against ef62ff4), review-round2.json, round2/ (compared with ef62ff4)}",
+  "scripts/host_interface_amendment.py (diff against ef62ff4); scripts/seccomp_allowlists_v2.py",
+  "architecture/seccomp-allowlists-v2/{README.md, allowlists.json (diff), syscalls.json, vectors.json}; architecture/seccomp-allowlists/status.json",
+  "architecture/selinux-matrix-v2/{matrix.json, README.md}; scripts/selinux_matrix_v2.py (transition semantics, lines 141-144, 196-202, 261-263)",
+  "~/.local/state/harness-onion-ci/tools/w01amend/build_v2.py",
+  "linux v6.12 kernel/sys.c:676-839 (plus earlier rounds' sources)"
+ ],
+ "actions": {
+  "filesEdited": false,
+  "githubMutated": false,
+  "nativeActions": false,
+  "referenceModelExecuted": true,
+  "repositoryValidatorsRun": false,
+  "runnerActivated": false,
+  "testsRun": false,
+  "warmSourcesAccessed": false
+ },
+ "reviewLimit": "Read-only, one process at a time, each under 60 s, scratch only in /private/tmp/claude-501/w01amend-review-r3/. The models were imported and build_v2.py was rerun against a scratch copy (output in scratch only). No repository tests or validators, runner, native, cloud or GitHub actions. No other worktree was opened, and the primary lane's stopped draft was not read. The subject commit is bc3539d per the coordinator's correction (7d27a91 does not exist). kernel/sys.c's authenticity rests on the research tree (tag and commit only). tools/w01amend/build.py, build_amend.py and write_docs.py were not read; the published bytes were verified through the model."
+}

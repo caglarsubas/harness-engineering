@@ -74,7 +74,8 @@ def _grouped(container: list) -> bool:
 
 
 def unique(container: list) -> bool:
-    """jsonschema 4.24.0 ``_utils.uniq``'s answer for the same container, whenever uniq returns one."""
+    """jsonschema 4.24.0 ``_utils.uniq``'s answer for the same container, whenever uniq returns one, apart from inputs
+    within one stack frame of the recursion limit (see the module docstring)."""
     try:
         ordered = sorted(_utils.unbool(item) for item in container)
         for left, right in zip(ordered, ordered[1:]):

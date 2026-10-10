@@ -1,6 +1,11 @@
 # Sol-High Task Packet Catalog
 
-## Current source preparation — MET-ENFORCE-022
+## Current source preparation — MET-ENFORCE-023
+
+W02-CLEANUP (MET-ENFORCE-023): W02 notes errata for native-profile-v3 and I06 v2, and the PERF-032-F checks;
+DATA_CHECK_ONLY, no version ripple. Alpha2 OPEN; 224 accepted plus ENFORCE-023 only.
+
+## Historical W04-0 source preparation — MET-ENFORCE-022
 
 W04-0 (MET-ENFORCE-022): the independent enforcement test plan (TG-01..TG-08 against E01-E12) and the
 observation-window register schema; DATA_CHECK_ONLY. Alpha2 OPEN; 223 accepted plus ENFORCE-022 only.
@@ -1291,3 +1296,4 @@ acceptance is claimed. Alpha2 ONGOING; model-effort transition NOT_DUE.
 | 222 | `MET-ENFORCE-020` | `Harness-Engineering` | W02d-V3: seccomp allowlists v3 for the Rust+musl native roles; DATA_CHECK_ONLY |
 | 223 | `MET-ENFORCE-021` | `Harness-Engineering` | LIC-HOST: license-policy amendment LIC-HOST-A1 (reviewed overlay, base byte-identical); DATA_CHECK_ONLY |
 | 224 | `MET-ENFORCE-022` | `Harness-Engineering` | W04-0: independent enforcement test plan and observation-window register schema; DATA_CHECK_ONLY |
+| 225 | `MET-ENFORCE-023` | `Harness-Engineering` | W02-CLEANUP: W02 notes errata (native-profile-v3, I06 v2) and PERF-032-F checks; DATA_CHECK_ONLY |

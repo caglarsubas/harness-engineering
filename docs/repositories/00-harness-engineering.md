@@ -1,6 +1,11 @@
 # Repository Plan: `Harness-Engineering`
 
-## Current source preparation — MET-ENFORCE-022
+## Current source preparation — MET-ENFORCE-023
+
+W02-CLEANUP (MET-ENFORCE-023): W02 notes errata for native-profile-v3 and I06 v2, and the PERF-032-F checks;
+DATA_CHECK_ONLY, no version ripple. Alpha2 OPEN; 224 accepted plus ENFORCE-023 only.
+
+## Historical W04-0 source preparation — MET-ENFORCE-022
 
 W04-0 (MET-ENFORCE-022): the independent enforcement test plan (TG-01..TG-08 against E01-E12) and the
 observation-window register schema; DATA_CHECK_ONLY. Alpha2 OPEN; 223 accepted plus ENFORCE-022 only.
@@ -1034,7 +1039,7 @@ Every packet uses branch `codex/<packet-id>`, changes only named paths, opens a 
 79. `MET-ENFORCE-008`: publish the W02c I07 policy-writer channel contract and closed policy-kind table with independent review; source only.
 80. `MET-ENFORCE-009`: publish the W02e SELinux domain, type, boolean and permission matrix with independent review; source only.
 81. `MET-SECTOR-001`: record owner decision SECTOR-D1 (banking replaces white goods through the first enterprise release) with dispositions and successor proposals; source only.
-82. `MET-PERF-032`: cut required-verify time by removing four repeated computations with unchanged refusals; source only.
+82. `MET-PERF-032`: cut required-verify time by removing four repeated computations with unchanged refusals (apart from inputs within one stack frame of the recursion limit); source only.
 83. `MET-ENFORCE-010`: publish the W02a-F native qualification record v3 with independent review; source only.
 84. `MET-ENFORCE-011`: publish the W02b-F I05 broker-gate channel v2 with independent review; source only.
 85. `MET-ENFORCE-012`: publish the W02g-F I06 backend profile v2 with independent review; source only.
@@ -1051,6 +1056,7 @@ Every packet uses branch `codex/<packet-id>`, changes only named paths, opens a 
 96. `MET-ENFORCE-020`: publish the W02d successor seccomp-allowlists-v3 (Rust+musl NATIVE_STATIC rules) as reviewed data; source only.
 97. `MET-ENFORCE-021`: publish license-policy amendment LIC-HOST-A1 as a reviewed overlay on the byte-identical base policy; source only.
 98. `MET-ENFORCE-022`: publish the W04-0 independent enforcement test plan and observation-window register schema as reviewed data; source only.
+99. `MET-ENFORCE-023`: publish the W02 notes errata (native-profile-v3, I06 v2) and the PERF-032-F checks as reviewed data; source only.
 
 ## Testing, verification, and acceptance
 

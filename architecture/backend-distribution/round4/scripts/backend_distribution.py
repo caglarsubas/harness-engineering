@@ -46,12 +46,6 @@ REQUIRED_REVIEWS = {"containerd": {"D-LIC-GLIBC", "D-LIC-LIBGCC"},
                     "runc": {"D-LIC-GLIBC", "D-LIC-LIBGCC", "D-LIC-LIBSECCOMP", "D-LIC-LIBPATHRS", "D-LIC-CRATES-MIT-APACHE",
                              "D-LIC-CRATES-UNLICENSE-MIT", "D-LIC-CRATES-LLVM-APACHE-MIT"}}
 REQUIRED_SANDBOX_REVIEWS = {"D-LIC-GLIBC", "D-LIC-LIBGCC"}
-# The owner's decision behind each review, and the elections the owner named or the OR rule fixes (Q-L, Q-L2).
-REVIEW_DECISIONS = {"D-LIC-GLIBC": "Q-L", "D-LIC-LIBSECCOMP": "Q-L", "D-LIC-LIBPATHRS": "Q-L", "D-LIC-NFT": "Q-L",
-                    "D-LIC-LIBGCC": "Q-L2", "D-LIC-CRATES-MIT-APACHE": "Q-L2", "D-LIC-CRATES-UNLICENSE-MIT": "Q-L2",
-                    "D-LIC-CRATES-LLVM-APACHE-MIT": "Q-L2", "D-LIC-LIBNFTNL": "Q-L2", "D-LIC-LIBMNL": "Q-L2", "D-LIC-GMP": "Q-L2"}
-REVIEW_ELECTIONS = {"D-LIC-LIBPATHRS": "MPL-2.0", "D-LIC-GMP": "LGPL-3.0-or-later", "D-LIC-CRATES-MIT-APACHE": "Apache-2.0",
-                    "D-LIC-CRATES-UNLICENSE-MIT": "MIT", "D-LIC-CRATES-LLVM-APACHE-MIT": "Apache-2.0"}
 REQUIRED_HOST_DEPENDENCIES = {"nft (nftables userspace)": ("SERVICE_PROXY", {"D-LIC-NFT"}),
                               "libnftables": ("SERVICE_PROXY", {"D-LIC-NFT"}),
                               "libnftnl": ("SERVICE_PROXY", {"D-LIC-LIBNFTNL"}),
@@ -282,10 +276,7 @@ def _check(read) -> dict:
     allowed = policy["defaultAllowedSpdx"]
     reviews = value["licenseReviews"]
     review_ids = {row["id"] for row in reviews}
-    require(review_ids == set(REVIEW_DECISIONS), "exactly the owner-decided license reviews")
     for row in reviews:
-        require(row["decision"] == REVIEW_DECISIONS[row["id"]], "the review's owner decision: " + row["id"])
-        require(row["elects"] == REVIEW_ELECTIONS.get(row["id"]), "the owner-named or rule-fixed election: " + row["id"])
         require(row["license"] not in policy["deniedForDefaultDistribution"], "a denied license cannot be reviewed")
         expected = ("OPTIONAL_EXPLICIT_REVIEW" if row["license"] in policy["optionalExplicitReview"]
                     else "UNCLASSIFIED_NEEDS_POLICY_AMENDMENT")

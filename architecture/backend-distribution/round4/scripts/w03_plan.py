@@ -13,10 +13,8 @@ import re
 
 RECORD_PATH = "architecture/w03-plan/plan.json"
 SCHEMA = "planeon.internal.w03-plan/v1"
-ALLOWLISTS_PATH = "architecture/seccomp-allowlists-v2/allowlists.json"
-PLAN_README = "architecture/w03-plan/README.md"
-ANCHOR = re.compile(r'"[A-Za-z0-9_.-]+"\Z|[A-Za-z0-9_][A-Za-z0-9_.-]*[A-Za-z0-9_]\Z')
-REQUIRED_OBLIGATIONS = ("LIC-RUST-STD", "LIC-GATE", "TR-SETXID", "TR-PARALLELISM", "TR-FDS", "SEC-QW4", "SEC-8")
+ALLOWLISTS_PATH = "architecture/seccomp-allowlists/allowlists.json"
+ALLOWLISTS_V2_PATH = "architecture/seccomp-allowlists-v2/allowlists.json"
 RUST_COMMITS = {"1.99.0": "b940084d7eb6a299eb4bfeb8e34901bc051e7ac4"}
 MUSL_PATCHES = ["CVE-2025-26519", "CVE-2026-40200", "CVE-2026-6042"]
 MUSL_THREAD_FLAGS = 0x7D0F00  # musl 1.2.5 pthread_create.c:243-245
@@ -24,7 +22,8 @@ LINES = re.compile(r"[0-9]+(?:-[0-9]+)?(?:,[0-9]+(?:-[0-9]+)?)*\Z")
 OWNER_QUESTIONS = ("Q1", "Q2", "Q3", "Q5", "Q-L3", "Q-S")
 SELECTED = {"Q1": "a", "Q2": "a", "Q3": "a", "Q5": "a", "Q-L3": "L3-a", "Q-S": "S-b"}
 SELECTION_PATH = "architecture/backend-distribution/selection.json"
-
+W01_AMEND = "W01-AMEND (MET-ENFORCE-018, pending merge) "
+W01_AMEND_ITEMS = ("O-W03-GROUPS", "O-W03-WORKER-EXEC", "O-SERVER-MEMFD", "O-T04-AMEND", "review R4-1")
 WHERE = ("meta", "owner-root", "R10", "native", "other")
 MAX_BYTES = 4_194_304
 COMMIT = re.compile(r"[0-9a-f]{40}\Z")
@@ -61,13 +60,10 @@ def _texts(value, message):
             and len(set(value)) == len(value), message)
 
 
-def _source(read, source, decisions=()):
-    """A cited source: an owner decision of this plan, or a repository file with a line range or an anchor token."""
-    if source.startswith("owner-decision:"):
-        require(source[len("owner-decision:"):] in decisions, "an owner decision of this plan: " + source)
-        return
+def _source(read, source):
+    """A cited repository source must exist, and its line range or anchor must be inside it."""
     path, _, where = source.partition(":")
-    require(path not in (RECORD_PATH, PLAN_README), "an obligation cannot cite the plan itself: " + source)
+    require(path != RECORD_PATH, "an obligation cannot cite the plan itself: " + source)
     require(path and not path.startswith("/") and "\\" not in path
             and all(part not in ("", ".", "..") for part in path.split("/")), "unsafe source path: " + source)
     try:
@@ -83,9 +79,7 @@ def _source(read, source, decisions=()):
                 require(all(1 <= n <= count for n in bounds) and bounds == sorted(bounds),
                         "cited lines outside the file or reversed: " + source)
         else:
-            require(ANCHOR.fullmatch(where) and len(where.strip('"')) >= 4
-                    and re.search(r"(?<![A-Za-z0-9_.-])%s(?![A-Za-z0-9_.-])" % re.escape(where), text),
-                    "a cited anchor is an identifier or quoted key present as a whole token: " + source)
+            require(where in text, "cited anchor not in the file: " + source)
 
 
 def check(read) -> dict:
@@ -178,7 +172,7 @@ def _check(read) -> dict:
         require(row["scope"] in ("W03", "OUTSIDE_W03") and (row["scope"] == "OUTSIDE_W03") == ("R12" in row["packets"]),
                 "only an obligation outside W03 goes to R12, and then only there: " + row["id"])
         require(row["scope"] == "W03" or row["packets"] == ["R12"], "an outside obligation names R12 alone")
-        _source(read, row["source"], [row["id"] for row in value["ownerDecisions"]])
+        _source(read, row["source"])
     ids = [row["id"] for row in obligations]
     require(len(ids) == len(set(ids)), "duplicate obligation")
     by_id = {row["id"]: row for row in obligations}
@@ -192,10 +186,16 @@ def _check(read) -> dict:
             "Rust std's license closure goes through LIC-HOST")
     require("W02D-V3" in packet_ids and "SEC-8" in by_id and "W02D-V3" in by_id["SEC-8"]["packets"],
             "owner decision Q-S (S-b): W02d v3 discharges the steady-state calls")
-    require(any(rule.get("name") == "poll" for rule in allowlists["runtimeBases"]["NATIVE_STATIC"]["rules"]),
-            "W02d v2's NATIVE_STATIC grants poll")
-    for required in REQUIRED_OBLIGATIONS:
-        require(required in {row["id"] for row in obligations}, "required obligation registered: " + required)
+    try:
+        v2 = _json(read(ALLOWLISTS_V2_PATH))
+    except OSError:
+        v2 = None
+    if v2 is None:
+        require("W02D-V2" in packet_ids and any(row["packets"] == ["W02D-V2"] for row in obligations),
+                "until W02d v2 is merged, its merge is a registered precondition")
+    else:
+        require(any(rule.get("name") == "poll" for rule in v2["runtimeBases"]["NATIVE_STATIC"]["rules"]),
+                "W02d v2's NATIVE_STATIC grants poll")
     _texts(value["notClaimed"], "non-claims")
     return value
 

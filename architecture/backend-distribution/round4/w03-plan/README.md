@@ -23,10 +23,8 @@ no toolchain is installed, and E01-E12 stay OPEN_UNPROVEN.
 - Start-up needs nothing beyond W02d v2 (`poll`). Steady state needs W02d v3 (owner decision Q-S, S-b). musl's mallocng
   `realloc` uses `mremap(MREMAP_MAYMOVE)` above the mmap threshold; naming a thread uses `prctl(PR_SET_NAME)`; musl's
   `abort` and `raise` use `tkill`. W02d v3 adds those three with narrow argument rules (W02D-V3, SEC-8).
-- The broker's W4 child, a `clone3` child without CLONE_VM, makes only async-signal-safe raw syscalls, including raw
-  `setresgid` and `setresuid`. musl's wrappers go through `__synccall`, which takes `__tl_lock` (`synccall.c:59`), and
-  another broker thread may have held that lock at clone time. The child also runs on the parent's copied libc state
-  (TR-SETXID).
+- musl's `setresuid` and `setresgid` go through `__synccall`, which signals other threads with `tkill`, so the broker's W4
+  child makes the raw syscalls (TR-SETXID).
 
 **Start-up re-check at Rust 1.99.0.** W02d v2 (MET-ENFORCE-018, merged as main `195c4c9`) analysed musl 1.2.5 with Rust 1.90.0, and added
 `poll` to NATIVE_STATIC. At 1.99.0 the start-up syscalls are the same:
@@ -91,7 +89,7 @@ R10 yet, so the owner's root extension (VERIFIER-EXT) comes before the first R10
 
 ## Obligation register
 
-`plan.json` lists 71 obligations. Each has its source (file and lines) and the packets that discharge it. They come from
+`plan.json` lists 70 obligations. Each has its source (file and lines) and the packets that discharge it. They come from
 native-profile v3, I05 v3, I06 v1 and v2, I07 v3, admission v3, the SELinux matrix v2, the W02d allowlists and W01 §2-§6,
 plus the four W01-AMEND items, the selection's open items, the license-policy amendment, the W02d v2 and v3 preconditions and three trace items from the W01-AMEND review. W01-AMEND (MET-ENFORCE-018) is merged as main `195c4c9`; its items are cited in `architecture/host-interface-amendment-w02d/`. One of
 them, O-SERVER-MEMFD, belongs to the R12 live backend and is listed as outside W03. Two items are discharged here, in

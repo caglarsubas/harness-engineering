@@ -504,7 +504,7 @@
   },
   {
    "id": "SEC-1",
-   "source": "architecture/seccomp-allowlists-v2/status.json:93",
+   "source": "architecture/seccomp-allowlists/status.json:79-85",
    "text": "Runtime bases are closed; trace the selected build at start-up and steady state on both architectures.",
    "packets": [
     "HE-001",
@@ -514,7 +514,7 @@
   },
   {
    "id": "SEC-2",
-   "source": "architecture/seccomp-allowlists-v2/status.json:94",
+   "source": "architecture/seccomp-allowlists/README.md:117-119",
    "text": "glibc 2.34+ without CET or shadow-stack arch_prctl at start-up, for the CPython roles.",
    "packets": [
     "HE-008"
@@ -523,7 +523,7 @@
   },
   {
    "id": "SEC-3",
-   "source": "architecture/seccomp-allowlists-v2/status.json:95",
+   "source": "architecture/seccomp-allowlists/status.json:79-85",
    "text": "No systemd seccomp options on planeon units.",
    "packets": [
     "HE-008"
@@ -532,7 +532,7 @@
   },
   {
    "id": "SEC-4",
-   "source": "architecture/seccomp-allowlists-v2/status.json:96",
+   "source": "architecture/seccomp-allowlists/status.json:79-85",
    "text": "Install exactly the compiled programs.",
    "packets": [
     "HE-002",
@@ -545,7 +545,7 @@
   },
   {
    "id": "SEC-5",
-   "source": "architecture/seccomp-allowlists-v2/status.json:97",
+   "source": "architecture/seccomp-allowlists/status.json:79-85",
    "text": "The broker runs with no supplementary groups.",
    "packets": [
     "HE-005",
@@ -556,7 +556,7 @@
   {
    "id": "SEC-6",
    "source": "architecture/seccomp-allowlists/README.md:153",
-   "text": "Re-check a distribution kernel or stable patch release against the pinned v6.12 tables (stated in the v1 README; v2 keeps the v6.12 tables).",
+   "text": "Re-check a distribution kernel or stable patch release against the pinned v6.12 tables.",
    "packets": [
     "HE-008",
     "T04"
@@ -682,8 +682,8 @@
   },
   {
    "id": "A1-SERVER-MEMFD",
-   "source": "architecture/host-interface-amendment-w02d/amendment.json:365",
-   "text": "The SERVER role's sealed-credential code passes MFD_CLOEXEC | MFD_NOEXEC_SEAL before running under the v2 filters. Outside W03: the amendment names its owner as the SERVER role's sealed-credential code, today the R12 live backend (W02d v2 also lists it in carriedToW03, status.json:99).",
+   "source": "architecture/host-interface-amendment-w02d/amendment.json:\"O-SERVER-MEMFD\"",
+   "text": "The live backend passes MFD_CLOEXEC | MFD_NOEXEC_SEAL before running under the v2 filters.",
    "packets": [
     "R12"
    ],
@@ -700,7 +700,7 @@
   },
   {
    "id": "VX-1",
-   "source": "owner-decision:Q1",
+   "source": "architecture/w03-plan/README.md:VERIFIER-EXT",
    "text": "The owner's verifier extension precedes the first R10 packet.",
    "packets": [
     "VERIFIER-EXT"
@@ -800,19 +800,8 @@
    "scope": "W03"
   },
   {
-   "id": "SEC-QW4",
-   "source": "architecture/seccomp-allowlists-v2/status.json:98",
-   "text": "Pin musl 1.2.5 and Rust 1.90.0 for the native roles, or re-check NATIVE_STATIC and the clone3 rule for the pinned versions (W01-AMEND-QW4): W03-0 pins Rust 1.99.0 and re-checks start-up (startupRecheck); steady state is W02d v3 and T04.",
-   "packets": [
-    "W03-0",
-    "W02D-V3",
-    "T04"
-   ],
-   "scope": "W03"
-  },
-  {
    "id": "SEC-7",
-   "source": "architecture/seccomp-allowlists-v2/README.md:12",
+   "source": "architecture/backend-distribution/review-round2.json:MET-ENFORCE-018), which is not merged",
    "text": "W02d v2, with poll in NATIVE_STATIC, is merged (main 195c4c9) before HE-001 and T04; w03_plan.py checks the merged allowlists.",
    "packets": [
     "W02D-V2"
@@ -821,7 +810,7 @@
   },
   {
    "id": "SEC-8",
-   "source": "owner-decision:Q-S",
+   "source": "architecture/backend-distribution/review-round2.json:mremap",
    "text": "Steady-state calls outside NATIVE_STATIC v2: musl realloc's mremap, thread naming's prctl(PR_SET_NAME), abort's and raise's tkill; owner decision Q-S (S-b) adds them in W02d v3, and T04 still traces.",
    "packets": [
     "W02D-V3",
@@ -831,7 +820,7 @@
   },
   {
    "id": "TR-SETXID",
-   "source": "architecture/seccomp-allowlists-v2/status.json:101",
+   "source": "architecture/backend-distribution/review-round3.json:__synccall",
    "text": "The broker's W4 child, a clone3 child without CLONE_VM, makes only async-signal-safe raw syscalls, including raw setresgid and setresuid: musl's wrappers go through __synccall (src/unistd/setxid.c:32), which first takes __tl_lock (src/thread/synccall.c:59), a lock another broker thread may have held at clone time, and the child runs on the parent's copied libc state (W01-AMEND review R4-1; W03-0 review round 3, F3).",
    "packets": [
     "HE-005",
@@ -841,7 +830,7 @@
   },
   {
    "id": "TR-PARALLELISM",
-   "source": "architecture/seccomp-allowlists-v2/status.json:101",
+   "source": "architecture/host-interface-amendment-w02d/status.json:\"R4-1\"",
    "text": "std::thread::available_parallelism opens cgroup and /proc files; native modules take thread counts from configuration (W01-AMEND review R4-1).",
    "packets": [
     "HE-001",
@@ -851,7 +840,7 @@
   },
   {
    "id": "TR-FDS",
-   "source": "architecture/seccomp-allowlists-v2/status.json:101",
+   "source": "architecture/host-interface-amendment-w02d/status.json:\"R4-1\"",
    "text": "Units start every role with fds 0-2 open, so neither musl's AT_SECURE start-up nor Rust std opens /dev/null (W01-AMEND review R4-1).",
    "packets": [
     "HE-008",
@@ -861,7 +850,7 @@
   },
   {
    "id": "LIC-RUST-STD",
-   "source": "architecture/backend-distribution/selection.json:\"Q-L3\"",
+   "source": "architecture/backend-distribution/review-round3.json:compiler_builtins",
    "text": "Rust std and its closure are statically linked into every native module (and into runc through libpathrs): core and std (MIT OR Apache-2.0), compiler_builtins (MIT AND Apache-2.0 WITH LLVM-exception AND (MIT OR Apache-2.0)), rustc-demangle (legacy MIT/Apache-2.0), hashbrown, cfg-if, miniz_oxide, adler2, object, libc. LIC-HOST's OR-choice rule (Q-L2), AND-term rule and legacy normalisation (Q-L3, L3-a) precede HE-001's license gate.",
    "packets": [
     "LIC-HOST"
@@ -870,7 +859,7 @@
   },
   {
    "id": "LIC-GATE",
-   "source": "architecture/backend-distribution/selection.json:\"Q-L3\"",
+   "source": "architecture/backend-distribution/review-round3.json:compiler_builtins",
    "text": "The build-time license gate and SBOM enumerate every crate closure (Rust std, vendored crates, libpathrs' crates in runc) and record each OR election and legacy normalisation (owner decision Q-L3, L3-a).",
    "packets": [
     "HE-001",

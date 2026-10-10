@@ -1,6 +1,6 @@
 # Backend distribution selection — W03-0 (DATA_CHECK_ONLY)
 
-Status: **CONTRACT_CANDIDATE_ROUND5_AWAITING_INDEPENDENT_REVIEW**. Rounds 1 to 4 (`review-round1.json` to `review-round4.json`, bytes in `round1/` to `round4/`) returned CHANGES_REQUIRED, and every finding is answered below. The branch was rebased onto main `195c4c9` (packet 220) after round 3; the earlier rounds' subject commits are the pre-rebase ones their records name, and their bytes are kept in the round directories. DATA_CHECK_ONLY: nothing is installed or executed, no
+Status: **CONTRACT_CANDIDATE_ROUND4_AWAITING_INDEPENDENT_REVIEW**. Rounds 1 to 3 (`review-round1.json` to `review-round3.json`, bytes in `round1/` to `round3/`) returned CHANGES_REQUIRED, and every finding is answered below. The branch was rebased onto main `195c4c9` (packet 220) after round 3; the earlier rounds' subject commits are the pre-rebase ones their records name, and their bytes are kept in the round directories. DATA_CHECK_ONLY: nothing is installed or executed, no
 I06 evidence record exists, and E01-E12 stay OPEN_UNPROVEN.
 
 W01 §2.1 leaves the concrete Kubernetes backend for `SEALED_SINGLE_NODE_CONTROL_PLANE_V1` to W03, "under license and
@@ -182,16 +182,6 @@ Each exclusion names the criterion that rules it out:
 | F4 MINOR, check gaps | elected alternatives must be allowed, an allowed exception or an owner-approved explicit-review license; a host dependency's license equals its review's; the plan checks that every selection open item and LIC-RUST-STD are registered, refuses self-citation and reversed ranges, pins Go exactly, and requires every packet to discharge an obligation |
 | F5 NOTE, nft closure and crun | the host dependency list is labelled the minimum, extended from the shipped packages; versions set with the host OS; crun's reason reworded |
 | F6 NOTE | no change needed; the W01-AMEND citations now point at the merged record (`architecture/host-interface-amendment-w02d/`) |
-
-## Round-4 findings and dispositions
-
-| Finding | Disposition |
-|---|---|
-| F1 MINOR, the plan still cited W02d v1 | SEC-1 to SEC-5 cite W02d v2's carriedToW03 (`seccomp-allowlists-v2/status.json:93-97`); SEC-QW4 registers the pin-or-re-check item (`:98`); the TR items cite `:101`; `w03_plan.py` checks the toolchain partition against the v2 allowlists; O-SERVER-MEMFD's outside-W03 scope cites the amendment's owner field (`amendment.json:365`); dead constants removed |
-| F2 MINOR, the plan README's TR-SETXID sentence | restated with the inherited `__tl_lock` and copied libc state |
-| F3 MINOR, check gaps | every review's owner decision and every owner-named or rule-fixed election bound; anchors must be an identifier or quoted key present as a whole token; the plan README cannot be cited; LIC-GATE, the TR items, SEC-QW4 and SEC-8 must be registered; owner decisions can be cited as `owner-decision:<id>` |
-| F4 NOTE, sources and OR wording | SEC-7 cites W02d v2's README; LIC-RUST-STD and LIC-GATE cite the recorded Q-L3; D-POLICY-AMEND words the OR rule as allowed or an allowed exception, an explicit-review alternative only with an owner-approved decision record |
-| F5 NOTE | no change needed |
 
 ## Not claimed
 

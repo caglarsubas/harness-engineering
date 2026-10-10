@@ -1,0 +1,54 @@
+{
+ "schemaVersion": "planeon.internal.seccomp-allowlists-v3-review/v1",
+ "round": 2,
+ "reviewDate": "2026-10-10",
+ "verdict": "PASS_FOR_SOURCE_PUBLICATION",
+ "subjectCommit": "2ac510608945499baf41f6131451f00fe0ef4e07",
+ "subjectSha256": {
+  "architecture/seccomp-allowlists-v3/README.md": "a2893cd722fcfb998a994bf21d49ecd8493c372518f83006be8329d4eeb21b08",
+  "architecture/seccomp-allowlists-v3/REVIEW_BRIEF.md": "447a858396ef88dacb91822895eabf3c26a1da93b1361fa2276f1ff2ec7429f7",
+  "architecture/seccomp-allowlists-v3/syscalls.json": "863f1df9bc55b7776520790a7314f6fa4b0480f2d58672db0f1f244aa36c7503",
+  "architecture/seccomp-allowlists-v3/allowlists.json": "397e79541a7cfaa4f435703703f48f9e1ef54d81a659709d5c80358e0c5bcf66",
+  "architecture/seccomp-allowlists-v3/vectors.json": "18353cb347dc8d4575b650fe4b4ece31f5bf9ca1ce490d1c50a9ae2962f25df8",
+  "scripts/seccomp_allowlists_v3.py": "65c1190cf3878222b5cf1dfe032addc1e79b4e2a940ec0d97e0af3a5b8da9c81"
+ },
+ "findings": [
+  {
+   "id": "R2-1",
+   "severity": "NOTE",
+   "location": "README.md paragraph after the rule table ('The v1 model's note that every filtered argument is an int holds for every other filtered argument'); scripts/seccomp_allowlists_v3.py decide() docstring (unchanged)",
+   "finding": "R1-1 is closed in substance. The README now states the unsigned long width of mremap's flags, the low-32-bit compare, and the v6.12 EINVAL for unknown flags at mm/mremap.c:1012-1013, which I checked against the local copy (byte-identical to the upstream file I fetched in round 1, sha256 224327602dbaf82f...). The paraphrase of the model note is imprecise, though. The model actually says 'an int or unsigned int the kernel truncates'. And not every other filtered argument is an int: ioctl arg1, memfd_create arg1, membarrier arg1 and seccomp arg0/arg1 are unsigned int, and clone arg0 is an unsigned long that v6.12 truncates with lower_32_bits (kernel/fork.c:2913-2924, the body x86_64 and arm64 share through CLONE_BACKWARDS). The substantive property (only the low 32 bits reach the kernel's decision for every other filtered argument) holds; I checked all 25 filtered (syscall, arg) pairs. The model docstring was left unchanged, which keeps the model bytes, so its 'every filtered argument' sentence is still literally untrue for mremap; the README now carries the correction.",
+   "requiredChange": "None for publication. Optionally reword to 'the model's note that every other filtered argument is an int or unsigned int, or (clone flags) an unsigned long the kernel truncates to 32 bits, still holds', and fix the docstring at the next model change."
+  },
+  {
+   "id": "R2-2",
+   "severity": "NOTE",
+   "location": "allowlists.json ownerDecisions W02d-V3 ('std and tokio thread names'); source-index.json earlierRounds",
+   "finding": "R1-6 is closed in the README. The recorded owner decision text in the data still mentions tokio; it is the owner's wording, data bytes are deliberately unchanged, and that is acceptable. source-index.json lists review-round1.json (sha256 daa61056..., byte-identical to my round-1 output) but not the two round1/ copies; both are byte-identical to the 19ef263 README and REVIEW_BRIEF (sha256 15a7b204... and 2d74eaec...).",
+   "requiredChange": "None; optionally index the round1/ copies with their digests."
+  }
+ ],
+ "questionAnswers": {
+  "Q0": "Unchanged from round 1. git diff 19ef263..2ac5106 touches only README.md, REVIEW_BRIEF.md and source-index.json, and adds review-round1.json plus the round1/ copies. syscalls.json, allowlists.json, vectors.json, scripts/ and the v2 directory are byte-unchanged, and all six subject digests match the source index. I re-ran the replay: SERVER and WORKER programs still equal v2's, and the other five roles' programs change as stated.",
+  "Q1": "Unchanged, and the rules remain correct and narrow. The added README text on mremap flags is correct for v6.12 (mm/mremap.c:987-989 unsigned long flags; 1012-1013 -EINVAL outside FIXED|MAYMOVE|DONTUNMAP). The wording on other arguments is imprecise but substantively true (R2-1).",
+  "Q2": "Unchanged: 2953/2953 decision checks agree three ways, 355/355 worker stack checks hold, all 18 mutations are refused with the recorded message, and the digests and lengths are the compiled programs'. All re-executed on the round-2 tree.",
+  "Q3": "No overclaim. The README now addresses R1-1 and R1-2 and drops the tokio clause. The W03 carry list (setresuid/setresgid signalling, available_parallelism reads, fds 0-2 open, main-thread pthread_getattr_np, version pins) is correct. The status line accurately summarises round 1. Round-1 findings: R1-1 CLOSED (README states width, compare and EINVAL with mm/mremap.c:1012-1013; residual wording in R2-1); R1-2 CLOSED (W03 carry item added: main-thread pthread_getattr_np mremap(..., 0), Rust 1.90 std avoids it on musl, no role or crate may call it; upstream path src/thread/pthread_getattr_np.c is correct); R1-3 CARRIED (NOTE); R1-4 CARRIED (NOTE); R1-5 CARRIED (NOTE); R1-6 CLOSED in README (tokio clause removed; owner decision text unchanged, R2-2)."
+ },
+ "sourcesRead": [
+  "git diff 19ef263..2ac5106 (README.md, REVIEW_BRIEF.md, source-index.json; added review-round1.json and round1/ copies)",
+  "architecture/seccomp-allowlists-v3/{README.md,REVIEW_BRIEF.md,source-index.json,review-round1.json,round1/...} at 2ac5106",
+  "~/.local/state/harness-onion-ci/tools/w02d/research/src/linux-v6.12: mm/mremap.c (new; sha256 equals the upstream copy fetched in round 1), kernel/fork.c (clone), kernel/seccomp.c, kernel/bpf/syscall.c, mm/memfd.c (syscall signatures), arch/x86/Kconfig and arch/arm64/Kconfig (CLONE_BACKWARDS)",
+  "round-1 sources as listed in review-round1.json (no new network fetches in round 2)"
+ ],
+ "actions": {
+  "filesEdited": false,
+  "githubMutated": false,
+  "nativeActions": false,
+  "referenceModelExecuted": true,
+  "repositoryValidatorsRun": false,
+  "runnerActivated": false,
+  "testsRun": false,
+  "warmSourcesAccessed": false
+ },
+ "reviewLimit": "Round-2 delta review plus a full re-replay of the unchanged data through the v3 model, imported read-only from /private/tmp/claude-501/w02dv3-review-r2/. I ran no repository tests or validators and installed no filter. The limits from round 1 stand: tokio, the wider musl tree and Rust std beyond the cited files were not traced. The subject commit is 2ac5106 per the coordinator's correction (the first message said 32e1c62, which does not exist in this repository)."
+}

@@ -1,0 +1,126 @@
+{
+ "schemaVersion": "planeon.internal.seccomp-allowlists-status/v3",
+ "contract": "planeon.internal.seccomp-allowlists/v3",
+ "kernel": {
+  "tag": "v6.12",
+  "commit": "adc218676eef25575469234709c2d87185ca223a"
+ },
+ "supersedes": {
+  "directory": "architecture/seccomp-allowlists-v2/",
+  "contract": "planeon.internal.seccomp-allowlists/v2",
+  "status": "architecture/seccomp-allowlists-v2/status.json"
+ },
+ "ownerDecisions": [
+  {
+   "date": "2026-10-09",
+   "decision": "W02d defines the WORKER allowlist from the worker's duties; the W01 section 5.3 WORKER row text 'Existing worker allowlist' is amended to 'the W02d worker allowlist' (carried to W01's record)",
+   "id": "W02d-Q1"
+  },
+  {
+   "date": "2026-10-09",
+   "decision": "exact duty syscalls per role from its row plus one closed runtime base per role (CPython 3.12 for SERVER and WORKER, one native static base for the five native roles); W03's language and libc must fit inside it or W02d reopens",
+   "id": "W02d-Q2"
+  },
+  {
+   "date": "2026-10-09",
+   "decision": "seccompFilterDigest is the SHA-256 of the classic-BPF sock_filter array (little-endian) the reference compiler emits per role and architecture; the boot-time proof that the installed filter equals it is an open T04/W02a-F obligation",
+   "id": "W02d-Q3"
+  },
+  {
+   "date": "2026-10-10",
+   "decision": "the broker kills the worker through cgroup.kill only (it has no CAP_KILL); W6 becomes freeze, cgroup.kill, wait for populated 0, and the unused pidfd_send_signal grant is dropped",
+   "id": "W01-AMEND-QW1"
+  },
+  {
+   "date": "2026-10-10",
+   "decision": "the broker runs with no supplementary groups and W3 checks the child holds none; no role may grant setgroups",
+   "id": "W01-AMEND-QW2"
+  },
+  {
+   "date": "2026-10-10",
+   "decision": "M-a: memfd_create flags are MFD_CLOEXEC | MFD_NOEXEC_SEAL, so the kernel clears exec and sets F_SEAL_EXEC on every call with no reliance on host state (not a vm.memfd_noexec pin, which a CAP_SYS_ADMIN holder in the initial namespaces can lower)",
+   "id": "W01-AMEND-QW3"
+  },
+  {
+   "date": "2026-10-10",
+   "decision": "NATIVE_STATIC adds three narrow rules for the Rust+musl steady state: mremap only with flags == MREMAP_MAYMOVE (musl mallocng realloc of large chunks), prctl only with arg0 == PR_SET_NAME (std and tokio thread names), and tkill (musl abort and raise); setresuid/setresgid threaded signalling, available_parallelism file reads and units starting roles with fds 0-2 open are W03 trace items",
+   "id": "W02d-V3"
+  },
+  {
+   "date": "2026-10-10",
+   "decision": "the native roles are Rust with musl, fully static (analysed reference: musl 1.2.5, Rust 1.90.0; W03 pins these or re-checks against W02d); NATIVE_STATIC adds poll, which Rust std calls on fds 0-2 at start-up and musl issues as SYS_poll on x86_64 (aarch64 has no poll syscall); musl creates threads with clone, never clone3, so the clone3 ENOSYS rule serves the CPython roles' glibc",
+   "id": "W01-AMEND-QW4"
+  }
+ ],
+ "reviewRounds": [
+  {
+   "round": 1,
+   "record": "architecture/seccomp-allowlists-v3/review-round1.json",
+   "recordSha256": "daa6105613c0d6981f0db230c5f00db919b4c446aa25c7a8c03e754d438f548c",
+   "verdict": "PASS_FOR_SOURCE_PUBLICATION",
+   "subjectDirectory": "architecture/seccomp-allowlists-v3/round1/"
+  },
+  {
+   "round": 2,
+   "record": "architecture/seccomp-allowlists-v3/review-round2.json",
+   "recordSha256": "02a2bfefd385ae7520b786fbf239a4f78192312d5f348400aa970a4b3968bd62",
+   "verdict": "PASS_FOR_SOURCE_PUBLICATION",
+   "subjectDirectory": "CURRENT"
+  }
+ ],
+ "closedFindings": {
+  "R1-1": "CLOSED in round 2",
+  "R1-2": "CLOSED in round 2",
+  "R1-6": "CLOSED in round 2"
+ },
+ "carriedFindings": {
+  "R1-3": "carried (NOTE): BROKER is a NATIVE_STATIC role but keeps unconditional mremap (from its worker-coverage duty, which absorbs the base's conditional rule), so MREMAP_FIXED and MREMAP_DONTUNMAP stay admitted for the broker (replayed: flags 2, 3, 4, 5, 0 all ALLOW for BROKER on both architectures). This is required by the coverage rule (KILL wins over the worker's unconditional CPython mremap), and the README states it, so it is no widening relative to v2; it is recorded so the decision text 'NATIVE_STATIC adds mremap only with MREMAP_MAYMOVE' is not read as covering the broker.",
+  "R1-4": "carried (NOTE): tkill is unconditional, so the filter does not limit it to the calling thread: any tid passing the kernel's kill permission check can be signalled. The reach equals the unconditional tgkill v2 already grants, so it is no new authority. musl 1.2.5 also issues tkill from pthread_kill (src/thread/pthread_kill.c:13) and __synccall (src/thread/synccall.c:82, used by setresuid/setresgid), not only abort/raise; synccall.c:67-68 falls back to single-threaded when gettid differs from the cached tid, so a raw clone3 child does not signal stale tids. The README's 'signal the calling thread' describes musl's use, not the filter.",
+  "R1-5": "carried (NOTE): The new prctl check is a deny floor, not an exactness check: it accepts PR_SET_NAME in SERVER and WORKER (replayed: both accepted; WORKER is covered by the broker's PR_SET_NAME alternative), and it accepts narrower PR_SET_NAME alternatives. Exactness is carried by the filter digests, as in v2. Separately, a prctl errno rule in a role without a prctl grant (SERVER, WORKER) makes check_policy raise TypeError instead of ValueError (iterating the {'errno': n} dict); this is fail-closed and the same pattern already exists in v2 for clone, bpf and membarrier.",
+  "R2-1": "carried (NOTE): R1-1 is closed in substance. The README now states the unsigned long width of mremap's flags, the low-32-bit compare, and the v6.12 EINVAL for unknown flags at mm/mremap.c:1012-1013, which I checked against the local copy (byte-identical to the upstream file I fetched in round 1, sha256 224327602dbaf82f...). The paraphrase of the model note is imprecise, though. The model actually says 'an int or unsigned int the kernel truncates'. And not every other filtered argument is an int: ioctl arg1, memfd_create arg1, membarrier arg1 and seccomp arg0/arg1 are unsigned int, and clone arg0 is an unsigned long that v6.12 truncates with lower_32_bits (kernel/fork.c:2913-2924, the body x86_64 and arm64 share through CLONE_BACKWARDS). The substantive property (only the low 32 bits reach the kernel's decision for every other filtered argument) holds; I checked all 25 filtered (syscall, arg) pairs. The model docstring was left unchanged, which keeps the model bytes, so its 'every filtered argument' sentence is still literally untrue for mremap; the README now carries the correction.",
+  "R2-2": "carried (NOTE): R1-6 is closed in the README. The recorded owner decision text in the data still mentions tokio; it is the owner's wording, data bytes are deliberately unchanged, and that is acceptable. source-index.json lists review-round1.json (sha256 daa61056..., byte-identical to my round-1 output) but not the two round1/ copies; both are byte-identical to the 19ef263 README and REVIEW_BRIEF (sha256 15a7b204... and 2d74eaec...)."
+ },
+ "carriedToW03": [
+  "runtime bases are closed requirements; trace the selected build at start-up and steady state on both arches",
+  "glibc 2.34+ without CET/shadow-stack arch_prctl at start-up",
+  "no systemd seccomp options (F10)",
+  "install exactly the compiled programs",
+  "the broker runs with no supplementary groups",
+  "pin musl 1.2.5 and Rust 1.90.0 for the native roles, or re-check the NATIVE_STATIC base and the clone3 rule against W02d for the pinned versions (W01-AMEND-QW4)",
+  "the SERVER role's sealed-credential code passes MFD_CLOEXEC | MFD_NOEXEC_SEAL (O-SERVER-MEMFD)",
+  "no transition or nnp_transition out of planeon_worker_t (O-W03-WORKER-EXEC)",
+  "trace the Rust/musl native roles against NATIVE_STATIC, including review note R4-1's paths (thread names, tkill in setresuid/setresgid and abort, available_parallelism, stdio open at start)",
+  "musl's setresuid/setresgid signal the other threads when threaded; the broker's W4 child uses the raw syscalls (W02d-V3)",
+  "Rust std's available_parallelism reads cgroup and /proc files; a role calling it needs those reads or must not call it (W02d-V3)",
+  "units start every native role with fds 0-2 open (W02d-V3)",
+  "no role or crate calls pthread_getattr_np on the main thread: musl probes with mremap flags 0, which v3 kills (review R1-2)"
+ ],
+ "openObligations": [
+  "T04/W02a-F: boot-time proof that the installed filter equals the published v3 digest (W02d-Q3)"
+ ],
+ "contractState": "ADOPTED_DATA_CONTRACT",
+ "obligations": {
+  "E01": "OPEN_UNPROVEN",
+  "E02": "OPEN_UNPROVEN",
+  "E03": "OPEN_UNPROVEN",
+  "E04": "OPEN_UNPROVEN",
+  "E05": "OPEN_UNPROVEN",
+  "E06": "OPEN_UNPROVEN",
+  "E07": "OPEN_UNPROVEN",
+  "E08": "OPEN_UNPROVEN",
+  "E09": "OPEN_UNPROVEN",
+  "E10": "OPEN_UNPROVEN",
+  "E11": "OPEN_UNPROVEN",
+  "E12": "OPEN_UNPROVEN"
+ },
+ "independentReviewer": "SEPARATE_AGENT_NOT_AUTHOR",
+ "nativeAcceptance": false,
+ "tenantAcceptance": false,
+ "filtersInstalled": false,
+ "roleCodeExists": false,
+ "traceValidated": false,
+ "distributionSelected": false,
+ "productExecution": false,
+ "runnerActivated": false,
+ "phaseComplete": false
+}

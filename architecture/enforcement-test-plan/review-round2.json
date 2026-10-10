@@ -1,0 +1,100 @@
+{
+ "schemaVersion": "planeon.internal.enforcement-test-plan-review/v1",
+ "round": 2,
+ "reviewDate": "2026-10-10",
+ "verdict": "CHANGES_REQUIRED",
+ "subjectCommit": "df76cc9262c94e74b0242381a8502c176a86fd5d",
+ "subjectSha256": {
+  "architecture/enforcement-test-plan/README.md": "8270f8035eeac459f2b165560824f0592f9a15c7e1e685d7fdfa0b0f0ca3260a",
+  "architecture/enforcement-test-plan/REVIEW_BRIEF.md": "d2a1021240d4cb732330626f4ddf57d7edecf01a9fa7716c986725c0770099ee",
+  "architecture/enforcement-test-plan/traceability.json": "5c38956ae4ba1fbba62d73993e015a8039322467ee9f24cf003880d12278e945",
+  "architecture/enforcement-test-plan/observation-windows.schema.json": "1a996db4633d1a5dc13982fedfe45d8300d508fdd5ee86d89a4ee2c04a283ca8",
+  "scripts/enforcement_test_plan.py": "3e03b37b90bda242378e3d3e474f23da7ff60221692818662086a1a92e2ba343"
+ },
+ "findings": [
+  {
+   "id": "R2-1",
+   "severity": "MAJOR",
+   "location": "traceability.json observationWindows.candidate; observation-windows.schema.json (candidateRepository, candidateRevision, boundaryInventory)",
+   "finding": "The register is bound to the wrong code and is still exhaustive only by its own declaration. The windows describe removed or moved native resampling calls of the observation reader: OBSERVATION_ENFORCEMENT_DESIGN.md:141-150, with ':226 R12 owns reader changes', and section 2's baseline 'Accepted conformance main 3a81c8f...'. ENFORCEMENT_FEASIBILITY.md:173 says 'against the exact product revision', and :192 assigns the 'Exhaustive direct/indirect trace mapping' to the R12 temporal reader successor. Yet the record names 'the exact R10 operator revision in W05's release set, with harness-onion main at that time' and never the R12 conformance reader. The schema carries one candidateRepository and candidateRevision, with no baseline (old) revision for the oldTracePosition values and no second revision for the enforcement that the exclusion proofs rely on. boundaryInventory is written by the register's author, with no tie to an independent derivation such as A07's 'independent changed-symbol/test map' or the baseline-to-candidate diff, so check_register's coverage check only proves consistency with a self-chosen list. The record also does not say how W04-7, after W05, gets a reader revision with removed calls when the reader successor is W07.",
+   "requiredChange": "Name the reader repository and its baseline and candidate revisions, alongside the R10 enforcement revision the exclusion proofs depend on. Add the baseline revision and an inventory source (path and sha256 of the independent changed-symbol map, or a rule deriving it from the diff) to the schema. State which reader candidate W04-7 maps, and why it is available after W05 and before W07, or move the fill point."
+  },
+  {
+   "id": "R2-2",
+   "severity": "MAJOR",
+   "location": "scripts/enforcement_test_plan.py docstring and check_plan; README 'Round-1 findings and dispositions' R1-7",
+   "finding": "The model claims more than it checks. The docstring says check 'checks content against the pinned sources: each group carries the matrix row's exact cases', but it stores only the matrix cell text and requires one case citing the brief. In scratch, with the derived texts recomputed, it accepted: dropping ENOSPC from TG-03 (N01); dropping 4 of TG-07's 5 matrix cases (N02); dropping every counterexample 18-28 case (N03) and the TG-08 section 4.4 case (N04); moving the section 8 and 6.3 native cases of TG-02, TG-03 and TG-08, the round-1 R1-1 fix, to before W06 (N05); running TG-03's owner-implementation cases W04_OFFLINE, before any release exists (N06); garbage case sources (N07); clearing TG-06's blockedBy (N08); dropping the planeon-a2.json pin, the R1-5 fix (N09), or every I05 file but status.json (N10); emptying TG-04's contracts (N11); moving the E09 case to TG-08 (N12); and an arbitrary window candidate, independence rules, W04-7 'now' and TG-04 in packet W04-2 (N13-N16). The current data is right, as checked by hand below, but the guard the R1-1, R1-4, R1-5 and R1-7 dispositions rely on is not there.",
+   "requiredChange": "Either pin by value the case sets per group (matrix cases, section 4.4 vectors, section 8 items with their W06 phase, counterexamples 18-28 with their groups), the required contract files (at least planeon-a2.json and each contract's model and vectors), blockedBy, the packet assignment, the W04-7 timing and the independence rules, or narrow the docstring and the R1-7 disposition to what is actually checked."
+  },
+  {
+   "id": "R2-3",
+   "severity": "MINOR",
+   "location": "scripts/enforcement_test_plan.py check_register and check_window_schema",
+   "finding": "check_register takes `schema` but never uses it and does no schema validation. It accepted an INDIRECT window that is its own parent (R02), a parent cycle with no DIRECT root (R03), windows with no required fields besides id, kind, boundary and parentWindow (R04), duplicate inventory entries (R05), an empty register (R06), and a register without candidateRepository, candidateRevision or exhaustive (R07). check_window_schema checks key sets but not property constraints: it accepted removing minLength from exclusionProof and candidateRepository, nestedChecksRemoved retyped as a string, boundaryInventory without uniqueItems, and obligations widened to any string (S01-S05). The README's statement that 'check_register enforces unique ids, inventory coverage and parents' holds only for those three properties.",
+   "requiredChange": "Validate the register against the schema in check_register, or re-check the required fields, types and non-empty values in code. Require INDIRECT parents to resolve to a DIRECT root with no cycle or self-reference. Check the schema's property constraints by value."
+  },
+  {
+   "id": "R2-4",
+   "severity": "MINOR",
+   "location": "traceability.json TG-01 case 'exact fields ... through a narrow adapter, any implementation's frame codec' (W04_OFFLINE)",
+   "finding": "Before W05 the only implementation frame codec is W03 source or work in progress, which the independence rules forbid W04 to read or run. So the implementation half of this case cannot be W04_OFFLINE. The offline half, and the 'host data contracts replay' case, run the adopted reference models against their own vectors, which repeats harness-onion's validators and is not independent evidence.",
+   "requiredChange": "Split the case: reference-model replay stays W04_OFFLINE (recorded as a contract self-consistency check, not implementation evidence), and the implementation codec part runs AFTER_W05_RELEASE_SET against the released build."
+  },
+  {
+   "id": "R2-5",
+   "severity": "MINOR",
+   "location": "traceability.json testGroups blockedBy (TG-04, TG-05, TG-07; W06 cases of TG-02, TG-03, TG-08)",
+   "finding": "Only TG-06 is blocked by D-W02A-F2. That open item ('a production W02a backend profile with these components' canonical paths, confined types and verity digests ... before any evidence record') and native qualification v3 P7(a) ('No production profile exists until W03 adds one') block every native case that targets the enrolled host's exact paths, types and digests too.",
+   "requiredChange": "Add D-W02A-F2 (and the production native profile) to blockedBy for every group or case with W06 cases, or record why they are not blocked."
+  },
+  {
+   "id": "R2-6",
+   "severity": "MINOR",
+   "location": "traceability.json w03Inputs; README R1-5 disposition; packet ordering",
+   "finding": "The selection record is pinned only by path and sha256. Its source commit (104b115) and review state are not recorded, although the independence rule allows only 'reviewed records'. With a worktree-only reader, check() crashes with FileNotFoundError rather than a ValueError refusal (it needs the record from packet 221). Nothing records that W04-0 must not merge before packet 221. The model is also wired into no validator, so nothing on main runs it.",
+   "requiredChange": "Record the source commit and review state in w03Inputs. Make W04-0's merge depend on packet 221 (or serve the pinned commit explicitly). Turn a read failure into a refusal. State whether and when check() is wired into a validator."
+  },
+  {
+   "id": "R2-7",
+   "severity": "MINOR",
+   "location": "traceability.json TG-02 case 'the R12 reader's private factory and dynamic guards' (E09)",
+   "finding": "The E09 case omits the ledger's 'explicit trusted-code boundary' (ENFORCEMENT_FEASIBILITY.md row E09) and the design's 'declared trusted-code limit' and 'resource-substitution' tests (OBSERVATION_ENFORCEMENT_DESIGN.md row E09).",
+   "requiredChange": "Add the trusted-code boundary declaration and resource-substitution to the E09 case."
+  },
+  {
+   "id": "R2-8",
+   "severity": "NOTE",
+   "location": "traceability.json TG-04 case 'freeze before user space under CLONE_INTO_CGROUP'; source-index.json earlierRounds",
+   "finding": "Section 8 assigns the freeze item to T04/T05, but it appears only in TG-04. The round1/ copies equal the cabf8ed bytes, which I checked (README, REVIEW_BRIEF.md, traceability.json, schema, model), but source-index earlierRounds pins only review-round1.json. The hand-checked content is otherwise sound:\n- all matrix cases and evidence classes are present;\n- all section 4.4 vectors are present;\n- all five section 8 native items and counterexamples 18-28 are placed;\n- gates are equal to section 8;\n- acceptance texts are equal to the design cells;\n- A01 is the register and A07-A09 are outside W04;\n- the contract states are adopted and all pins equal the bytes.",
+   "requiredChange": "Optional: add a TG-05 freeze case or note the choice, and pin the round1/ files in earlierRounds."
+  }
+ ],
+ "questionAnswers": {
+  "Q0": "Yes in data. Every group carries its matrix row's cases (by hand: TG-01..TG-07 five each, TG-08 three) and its evidence class, which the model checks against the brief's cell. Every section 4.4 vector is in TG-08's offline case, and migration non-reinterpretation and nonce reuse are in its source case. The model does not bind the case sets (R2-2).",
+  "Q1": "Yes, apart from minor points. The gate lists equal the section 8 sentence (model-checked against the pinned resolved spec). TG-08 now covers E07. E09 sits in TG-02 with A02, which the design's E02/E07-E09 supports, though its trusted-code boundary is missing (R2-7). The case-level obligations are plausible; freeze-before-user-space appears only in TG-04 (R2-8).",
+  "Q2": "Mostly right. No native-class case runs before W06, and the source groups carry their section 8 and 6.3 native cases in W06. TG-01's implementation half cannot run offline before W05 (R2-4). blockedBy covers only TG-06 (R2-5). A01 is the register and A07-A09 are outside W04, both model-checked; A02 includes TG-05 and A05 includes TG-02.",
+  "Q3": "Yes. All pinned contract files, the six source documents and planeon-a2.json equal the worktree and main bytes (model run green). Every contract's status.json is adopted. The selection record matches 104b115 (e6750f20...) but its commit and review state are not recorded, and the merge order relative to packet 221 is not recorded either (R2-6).",
+  "Q4": "No. The schema now names every field in OBSERVATION_ENFORCEMENT_DESIGN.md:141-150, but the register is bound to the R10 operator revision instead of the R12 reader, has no baseline revision, and its inventory is self-declared (R2-1). check_register is weak (R2-3). The independence rules and attestation fields hold. Overclaims: the model docstring and the R1-7 disposition (R2-2), and the README's check_register statement (R2-3)."
+ },
+ "sourcesRead": [
+  "round-2 subject files at df76cc9 (README incl. dispositions, REVIEW_BRIEF.md, source-index.json, traceability.json, observation-windows.schema.json, scripts/enforcement_test_plan.py)",
+  "git diff cabf8ed..df76cc9; architecture/enforcement-test-plan/review-round1.json and round1/ (compared to cabf8ed bytes)",
+  "docs/alpha-2/OBSERVATION_ENFORCEMENT_DESIGN.md:39-60, 221-242 (grep), 135-155, 310-340",
+  "docs/alpha-2/ENFORCEMENT_FEASIBILITY.md:145-195",
+  "docs/alpha-2/ENFORCEMENT_INTEGRATION.md:85-145",
+  "architecture/host-interface-inputs/resolved/HOST_INTERFACE_SPEC.md sections 4, 6.3, 8, 9 (round 1)",
+  "architecture/host-interface-amendment-w02d/HOST_INTERFACE_SPEC.md (round 1)",
+  "git show 104b115:architecture/backend-distribution/selection.json (the only W03 input; round 1)"
+ ],
+ "actions": {
+  "filesEdited": false,
+  "githubMutated": false,
+  "nativeActions": false,
+  "referenceModelExecuted": true,
+  "repositoryValidatorsRun": false,
+  "runnerActivated": false,
+  "testsRun": false,
+  "warmSourcesAccessed": false
+ },
+ "reviewLimit": "Read-only design review of df76cc9 against cabf8ed and main 195c4c9. The reference model ran only as a scratch copy in /private/tmp/claude-501/w04-0-review-r2/. Its reader served selection.json from git show 104b115 and every other path from the worktree, as the brief says. It was run against 17 plan, 5 schema and 8 register mutations; nothing was written to the repository. The external builder was not read (outside the worktree). No W03 file other than the selection record was read, and its review state could not be checked. No network access, validators, test suites, runner, native or GitHub actions. This verdict is not native evidence, and E01-E12 stay OPEN_UNPROVEN. Round-1 dispositions: R1-1 RESOLVED in data (TG-02 G09 residual and C2/C3, TG-03 C2/C3 as W06 cases); the model does not guard it (R2-2); R1-2 RESOLVED; R1-3 RESOLVED (E09 in TG-02; omission in R2-7); R1-4 RESOLVED in data; unguarded (R2-2); R1-5 RESOLVED in data; selection commit and merge order open (R2-6); a2 pin unguarded (R2-2); R1-6 PARTLY RESOLVED (schema fields added; candidate binding and inventory derivation R2-1; check_register R2-3); R1-7 PARTLY RESOLVED (gates, acceptance text, contract set and states, native-class phases, non-claims checked; case sets not; overclaim R2-2); R1-8 RESOLVED; R1-9 RESOLVED; R1-10 RESOLVED; R1-11 PARTLY RESOLVED (R2-4); R1-12 RESOLVED; R1-13 RESOLVED."
+}

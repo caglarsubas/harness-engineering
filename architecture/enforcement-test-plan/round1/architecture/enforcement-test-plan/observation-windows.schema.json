@@ -1,0 +1,108 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "planeon.internal.observation-windows/v1",
+ "title": "Exhaustive direct and indirect observation-window register at one exact candidate revision (W04-7)",
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "schemaVersion",
+  "candidateRevision",
+  "exhaustive",
+  "windows"
+ ],
+ "properties": {
+  "schemaVersion": {
+   "const": "planeon.internal.observation-windows/v1"
+  },
+  "candidateRevision": {
+   "type": "string",
+   "pattern": "^[0-9a-f]{40}$"
+  },
+  "exhaustive": {
+   "const": true
+  },
+  "windows": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "id",
+     "kind",
+     "protectedFacts",
+     "oldTracePosition",
+     "newTracePosition",
+     "lostWindow",
+     "exclusionProof",
+     "autonomousEventLatency",
+     "obligations",
+     "tests"
+    ],
+    "properties": {
+     "id": {
+      "type": "string",
+      "pattern": "OW-\\d{2,3}$"
+     },
+     "kind": {
+      "enum": [
+       "DIRECT",
+       "INDIRECT"
+      ]
+     },
+     "protectedFacts": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "minItems": 1
+     },
+     "oldTracePosition": {
+      "type": "string"
+     },
+     "newTracePosition": {
+      "type": [
+       "string",
+       "null"
+      ]
+     },
+     "lostWindow": {
+      "type": "string"
+     },
+     "exclusionProof": {
+      "type": "string"
+     },
+     "autonomousEventLatency": {
+      "type": "string"
+     },
+     "obligations": {
+      "type": "array",
+      "items": {
+       "enum": [
+        "E01",
+        "E02",
+        "E03",
+        "E04",
+        "E05",
+        "E06",
+        "E07",
+        "E08",
+        "E09",
+        "E10",
+        "E11",
+        "E12"
+       ]
+      },
+      "minItems": 1
+     },
+     "tests": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "minItems": 1
+     }
+    }
+   }
+  }
+ }
+}

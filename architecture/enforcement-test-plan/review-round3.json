@@ -1,0 +1,83 @@
+{
+ "schemaVersion": "planeon.internal.enforcement-test-plan-review/v1",
+ "round": 3,
+ "reviewDate": "2026-10-10",
+ "verdict": "CHANGES_REQUIRED",
+ "subjectCommit": "6853a15e52eb9dd8d3b460d70a178b4bdcce260b",
+ "subjectSha256": {
+  "architecture/enforcement-test-plan/README.md": "863666a247f7b9c7829f38315a650e4baa65bbd22266e2cff726851bcd28ba71",
+  "architecture/enforcement-test-plan/REVIEW_BRIEF.md": "3ed1bbc3c13ca52a82cfe7a30c0b5135d4ed1fc4a750a3937b24b245b31a46e5",
+  "architecture/enforcement-test-plan/traceability.json": "5471ca04b3de8b8215911118bd782432c49d05571c61f4a8fdf790ed78327c28",
+  "architecture/enforcement-test-plan/observation-windows.schema.json": "98cae664073e8fa26a8e686d8bcf743f734ac4fb843f6583e3c47bcac8b14f2d",
+  "scripts/enforcement_test_plan.py": "569b59ffac793e05b89ef040e760dc081cf96465093a49a0568cfcc1f60dbd23"
+ },
+ "findings": [
+  {
+   "id": "R3-1",
+   "severity": "MAJOR",
+   "location": "traceability.json ownerDecisions D-OW; README R2-1 disposition",
+   "finding": "D-OW's decision text was rewritten in place. Rounds 1 and 2 read 'the register is filled at the exact candidate revision in W04-7 after W05'. Round 3 reads 'filled after W05 in W04-7, bound to the R12 reader's baseline with W05's enforcement context; removals per W07 candidate', yet keeps selected 'accepted' and date 2026-10-10. The README says only that this clarification was 'sent to the owner'; the record holds no owner answer (date, channel). The change is substantive: the lost-window half of the map (removedOrMovedCall, lostWindow, exclusionProof, stateKeepingFreshChecks) moves from W04 to W07. That departs from ENFORCEMENT_INTEGRATION.md's W04 exit ('exhaustive direct/indirect observation-window map at the exact candidate revision'), which needs the owner's decision. The record presents an unanswered proposal as an accepted owner decision. The model does not pin owner decisions, and it accepts D-OW set to 'pending' or reversed (N14, N14b).",
+   "requiredChange": "Keep D-OW's original text and add the clarification as its own entry (for example D-OW-C) with its state (PENDING_OWNER, or the owner's answer with date and channel). Do not publish while it is pending, and have the model pin the decision entries."
+  },
+  {
+   "id": "R3-2",
+   "severity": "MINOR",
+   "location": "traceability.json acceptance A01; observationWindows; model (A01 forced into W04)",
+   "finding": "Since removals wait for W07, W04-7 delivers only the baseline inventory of observation calls. A01's evidence ('mutation after every changed leaf boundary, restored before next sample; denied externally or detected with original fresh check') needs changed boundaries and their exclusion proofs, so it cannot be completed in W04. The record still maps A01 wholly to W04 (observationWindows true, outsideW04 null), and the model enforces that.",
+   "requiredChange": "Record A01 as split: the baseline register in W04-7, and the removals, lost windows and A01 tests in W07, which must come after W06 for the exclusion proofs. Let the model accept that split."
+  },
+  {
+   "id": "R3-3",
+   "severity": "MINOR",
+   "location": "scripts/enforcement_test_plan.py validate_instance and check_register",
+   "finding": "The stdlib validator is laxer than the JSON Schema it implements. (a) It uses re.search with '^...$', and Python's '$' also matches before a trailing newline. A register with ids 'OW-01' and 'OW-01\\n' passes both the pattern and the uniqueness check (R09), and a baselineRevision with a trailing newline passes too (R10); under ECMA-262 semantics both fail. (b) const compares with ==, so 'exhaustive': 1 passes as true (R11). Inventory exhaustiveness rests on a generator and generatorSha256 that the register declares itself. Neither the plan nor the model pins that generator, says who writes it (A07 asks for an 'independent' changed-symbol map), or makes W04-7's reviewer re-run it at baselineRevision (R16).",
+   "requiredChange": "Use re.fullmatch (or '\\Z') and type-exact const and enum. Name in the plan the inventory generator's ownership and independence. Require W04-7's reviewer to re-run it at baselineRevision and compare the boundaries exactly."
+  },
+  {
+   "id": "R3-4",
+   "severity": "MINOR",
+   "location": "scripts/enforcement_test_plan.py check_plan (residual unpinned content)",
+   "finding": "Most of round 2's mutations are now refused (matrix cases, counterexamples, section 8/6.3/4.4 items, phases, sources, blockers, contract file lists, binding). Still accepted:\n- Dropping TG-08's INSTALLED case, or moving it before W06 (N05b, N05c). The class's matrix phase set {W5, W6} lets every migration case be source-only, so the R1-9 'separately' fix is unguarded.\n- An extra owner-implementation case in TG-03 at W04_OFFLINE, before any release (N06b). Untagged and non-required cases have unconstrained phases in source groups.\n- A CE22 case text of 'nothing', or an E09 case reduced to its three keywords (N18, N12). Only the tag, phase and source are checked, not that the case carries the requirement.\n- Per-group contract lists (N11, N11b), the acceptance mapping moved on both sides (N16) and r12Location (N17).",
+   "requiredChange": "Add INSTALLED to REQUIRED (TG-08, W06). Restrict phases of non-required cases per evidence class (no W04_OFFLINE in owner-implementation or fault groups except the tagged LEDGER-E09). Check that each required case's text carries its source phrase. Pin the group contract lists and the acceptance map."
+  },
+  {
+   "id": "R3-5",
+   "severity": "MINOR",
+   "location": "traceability.json testGroups[].blockedBy (TG-02, TG-03, TG-08); packets W04-3, W04-5",
+   "finding": "blockedBy is set per group, so TG-02 shows D-W02A-F2 although its LEDGER-E09 (W04_OFFLINE) and source (after W05) cases do not depend on a production profile. The record no longer says whether a blocker gates writing the W04 source packet or only the W06 run: round 2's W04-5 'TG-06 after D-W02A-F2 and D-SC01-PEER' became 'after W04-1'.",
+   "requiredChange": "Attach blockers to the cases they block (or state that blockedBy gates only the W06 run of the group's native cases), and make the packet earliest texts consistent with that."
+  },
+  {
+   "id": "R3-6",
+   "severity": "NOTE",
+   "location": "whole subject",
+   "finding": "These round-2 findings are resolved and verified:\n- R2-1: the register's subject is now the R12 reader, with the R10 release as enforcement context, removals deferred and a candidate needed for removals; the A01/D-OW consequences are in R3-1 and R3-2.\n- R2-2: in scratch, every matrix phrase, counterexample, section 8/6.3/4.4 item, case source, blocker, contract file list and binding mutation is refused.\n- R2-3: self-parents, cycles, missing fields and an empty inventory are refused.\n- R2-4: CODEC is after W05.\n- R2-5 and R2-6: the selection pin records commit 104b115 (full sha equal) and a missing input is refused.\n- R2-7 and R2-8: the E09 case wording, the TG-05 freeze case and earlierRounds pins with subject copies are all in place.\nAll 17 subject and earlier-round pins match, the round2/ copies equal the df76cc9 bytes, and the selection record still matches e6750f20. The selection's 'reviewed' state is asserted by the record, and this review could not verify it (W03 review files are out of scope).",
+   "requiredChange": "None."
+  }
+ ],
+ "questionAnswers": {
+  "Q0": "Yes. Every group carries its matrix row's phrases as MATRIX-tagged cases, the evidence class equals the brief's cell, and the section 4.4 vectors are in S44. The model now refuses dropping any of these. TG-08's INSTALLED part is not required by the model (R3-4).",
+  "Q1": "Yes. The gates equal the section 8 sentence. The TG-to-E map is derived from the case obligations, and every obligation is covered. E09 is placed in TG-02 with the trusted-code boundary and resource substitution, which ledger row E09 and A02 support.",
+  "Q2": "Mostly. Native classes run only in W06. CODEC is after W05. The section 8 and 6.3 native cases of the source groups are W06 and pinned. TG-08's installed case and the phases of untagged cases are unguarded (R3-4). Blockers are per group rather than per case (R3-5). A01 cannot be completed in W04 now that removals wait for W07 (R3-2). A07-A09 are outside W04.",
+  "Q3": "Yes. The contract file lists are pinned exactly, including planeon-a2.json; the six source documents and the selection record (commit 104b11529b6448a2c208450e5fbbd677e5dd8069, sha256 e6750f20...) are pinned; all states are adopted, and the model run is green with the brief's reader.",
+  "Q4": "Mostly. The schema is now bound to the R12 reader at one baseline revision, with the enforcement context, an inventory generator, and removals gated on a W07 candidate. check_register validates it, refusing self-parents and cycles. Residual leniency in the validator and an unpinned, self-declared generator (R3-3). The independence rules are pinned. Overclaim: D-OW is recorded as owner-accepted while the clarification is only sent to the owner (R3-1)."
+ },
+ "sourcesRead": [
+  "round-3 subject files at 6853a15 (README incl. round-2 dispositions, REVIEW_BRIEF.md, source-index.json, traceability.json, observation-windows.schema.json, scripts/enforcement_test_plan.py)",
+  "git diff df76cc9..6853a15; review-round2.json and round2/ (compared to df76cc9 bytes); round1/ pins",
+  "ownerDecisions at cabf8ed, df76cc9 and 6853a15",
+  "sources from rounds 1-2: corrected REVIEW_BRIEF.md matrix, resolved and W02D HOST_INTERFACE_SPEC.md, ENFORCEMENT_FEASIBILITY.md, OBSERVATION_ENFORCEMENT_DESIGN.md, ENFORCEMENT_INTEGRATION.md",
+  "git show 104b115:architecture/backend-distribution/selection.json (the only W03 input)"
+ ],
+ "actions": {
+  "filesEdited": false,
+  "githubMutated": false,
+  "nativeActions": false,
+  "referenceModelExecuted": true,
+  "repositoryValidatorsRun": false,
+  "runnerActivated": false,
+  "testsRun": false,
+  "warmSourcesAccessed": false
+ },
+ "reviewLimit": "Read-only design review of 6853a15 against df76cc9 and main 195c4c9. The reference model ran only as a scratch copy in /private/tmp/claude-501/w04-0-review-r3/. Its reader served selection.json from git show 104b115 and every other path from the worktree. It was run against 24 plan and 13 register mutations; nothing was written to the repository. Whether the owner has answered the D-OW clarification is not visible in the record or the repository. The selection's review state could not be checked (other W03 files are out of scope). The external builder was not read. No network access, validators, tests, runner, native or GitHub actions. This verdict is not native evidence, and E01-E12 stay OPEN_UNPROVEN."
+}

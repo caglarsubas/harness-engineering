@@ -1,0 +1,166 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "planeon.internal.observation-windows/v1",
+ "title": "Exhaustive direct and indirect observation-window register over a stated boundary inventory at one exact candidate revision (W04-7); unique ids, inventory coverage and indirect parents are checked by scripts/enforcement_test_plan.py check_register",
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "schemaVersion",
+  "candidateRepository",
+  "candidateRevision",
+  "exhaustive",
+  "boundaryInventory",
+  "windows"
+ ],
+ "properties": {
+  "schemaVersion": {
+   "const": "planeon.internal.observation-windows/v1"
+  },
+  "candidateRepository": {
+   "type": "string",
+   "minLength": 1
+  },
+  "candidateRevision": {
+   "type": "string",
+   "pattern": "^[0-9a-f]{40}$"
+  },
+  "exhaustive": {
+   "const": true
+  },
+  "boundaryInventory": {
+   "type": "array",
+   "items": {
+    "type": "string",
+    "minLength": 1
+   },
+   "minItems": 1,
+   "uniqueItems": true
+  },
+  "windows": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "id",
+     "kind",
+     "boundary",
+     "parentWindow",
+     "removedOrMovedCall",
+     "nestedChecksRemoved",
+     "protectedFacts",
+     "oldTracePosition",
+     "newTracePosition",
+     "lostWindow",
+     "exclusionProof",
+     "stateKeepingFreshChecks",
+     "autonomousEventLatency",
+     "obligations",
+     "tests"
+    ],
+    "properties": {
+     "id": {
+      "type": "string",
+      "pattern": "^OW-[0-9]{2,3}$"
+     },
+     "kind": {
+      "enum": [
+       "DIRECT",
+       "INDIRECT"
+      ]
+     },
+     "boundary": {
+      "type": "string",
+      "minLength": 1
+     },
+     "parentWindow": {
+      "type": [
+       "string",
+       "null"
+      ],
+      "pattern": "^OW-[0-9]{2,3}$"
+     },
+     "removedOrMovedCall": {
+      "type": "string",
+      "minLength": 1
+     },
+     "nestedChecksRemoved": {
+      "type": "array",
+      "items": {
+       "type": "string",
+       "minLength": 1
+      }
+     },
+     "protectedFacts": {
+      "type": "array",
+      "items": {
+       "type": "string",
+       "minLength": 1
+      },
+      "minItems": 1
+     },
+     "oldTracePosition": {
+      "type": "string",
+      "minLength": 1
+     },
+     "newTracePosition": {
+      "type": [
+       "string",
+       "null"
+      ],
+      "minLength": 1
+     },
+     "lostWindow": {
+      "type": "string",
+      "minLength": 1
+     },
+     "exclusionProof": {
+      "type": "string",
+      "minLength": 1
+     },
+     "stateKeepingFreshChecks": {
+      "type": "array",
+      "items": {
+       "type": "string",
+       "minLength": 1
+      }
+     },
+     "autonomousEventLatency": {
+      "type": "string",
+      "minLength": 1
+     },
+     "obligations": {
+      "type": "array",
+      "items": {
+       "enum": [
+        "E01",
+        "E02",
+        "E03",
+        "E04",
+        "E05",
+        "E06",
+        "E07",
+        "E08",
+        "E09",
+        "E10",
+        "E11",
+        "E12"
+       ]
+      },
+      "minItems": 1,
+      "uniqueItems": true
+     },
+     "tests": {
+      "type": "array",
+      "items": {
+       "type": "string",
+       "minLength": 1
+      },
+      "minItems": 1
+     }
+    }
+   },
+   "minItems": 1
+  }
+ }
+}

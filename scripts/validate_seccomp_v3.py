@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
-"""Validate the MET-PERF-036 SELinux replay changes and the exact 217-to-216 projection."""
+"""Validate the MET-ENFORCE-020 seccomp allowlists v3 and the exact 222-to-221 projection."""
 from __future__ import annotations
 
 import ast
 import base64
 import binascii
+import builtins
 import copy
 import hashlib
 import json
 import stat
+import types
 from functools import lru_cache
 from pathlib import Path
 from types import MappingProxyType
@@ -16,19 +18,17 @@ from typing import Any
 
 try:
     from safe_yaml import safe_load
-    import validate_sector_catalog as successor
 except ImportError:
     from scripts.safe_yaml import safe_load
-    from scripts import validate_sector_catalog as successor
 
 
 ROOT = Path(__file__).resolve().parents[1]
-AUTHORITY_PATH = "architecture/selinux-replay-authority.json"
-AUTHORITY_SHA256 = "cdc4535db69bb9b784980ef1e1c2ed8dac2d6a80a12408ddf0bc8177001e2edf"
-VALIDATOR_PATH = "scripts/validate_selinux_replay.py"
-BASE_COMMIT = "1d107e4ac906fcd93c617d26d523c01b0e72bce1"
-NEW_PACKET = "MET-PERF-036"
-PREVIOUS_PACKET = "MET-PERF-035"
+AUTHORITY_PATH = "architecture/seccomp-v3-authority.json"
+AUTHORITY_SHA256 = "14ff4d7d5f0af242265fa17ed8940b46bf1ca34e8c9891885b0670b285ceb528"
+VALIDATOR_PATH = "scripts/validate_seccomp_v3.py"
+BASE_COMMIT = "0e747049cba3eca9ec5b0334e0314525d053a83c"
+NEW_PACKET = "MET-ENFORCE-020"
+PREVIOUS_PACKET = "MET-ENFORCE-019"
 MAX_FILE_BYTES = 16_777_216
 # Test routes cover the top-level ci/test_ files as well as tests/.
 TEST_PREFIXES = ("tests/", "ci/test_")
@@ -52,12 +52,12 @@ def parse(raw: bytes) -> Any:
     def unique(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
         result: dict[str, Any] = {}
         for key, value in pairs:
-            require(key not in result, "duplicate selinux-replay authority member")
+            require(key not in result, "duplicate seccomp-v3 authority member")
             result[key] = value
         return result
 
     def no_constant(_value: str) -> Any:
-        raise ValueError("nonfinite selinux-replay authority number")
+        raise ValueError("nonfinite seccomp-v3 authority number")
 
     return json.loads(raw, object_pairs_hook=unique, parse_constant=no_constant)
 
@@ -95,18 +95,10 @@ _VERIFIED_AUTHORITY: tuple[str, bytes] | None = None
 
 
 def _checked_authority_raw() -> bytes:
-    """Newest first: every newer authority, then this one, each read exactly once."""
-    successor._checked_authority_raw()
-    return _checked_own_authority_raw()
-
-
-def _checked_own_authority_raw() -> bytes:
-    """Fresh complete read of this layer's authority only; callers reach newer
-    authorities through exactly one successor route per public call."""
     global _VERIFIED_AUTHORITY
     raw = regular_bytes(AUTHORITY_PATH)
     if type(raw) is not bytes or _VERIFIED_AUTHORITY != (AUTHORITY_SHA256, raw):
-        require(digest(raw) == AUTHORITY_SHA256, "SELinux replay history authority digest")
+        require(digest(raw) == AUTHORITY_SHA256, "seccomp v3 history authority digest")
         if type(raw) is bytes:
             _VERIFIED_AUTHORITY = (AUTHORITY_SHA256, raw)
     return raw
@@ -126,18 +118,18 @@ def authority() -> dict[str, Any]:
     require(type(value) is dict and set(value) == {
         "schemaVersion", "authorityPacket", "acceptedBase", "baselinePackets",
         "packetSha256", "changedFiles", "newFiles", "validatorNormalizedSha256",
-    }, "closed SELinux replay history authority")
-    require(value["schemaVersion"] == "harness.planeon.ai/selinux-replay-authority/v1"
+    }, "closed seccomp v3 history authority")
+    require(value["schemaVersion"] == "harness.planeon.ai/seccomp-v3-authority/v1"
             and value["authorityPacket"] == NEW_PACKET
             and value["acceptedBase"] == BASE_COMMIT
             and type(value["baselinePackets"]) is dict
-            and len(value["baselinePackets"]) == 216
+            and len(value["baselinePackets"]) == 221
             and NEW_PACKET not in value["baselinePackets"]
             and type(value["changedFiles"]) is dict
             and type(value["newFiles"]) is dict
             and _sha(value["packetSha256"])
             and _sha(value["validatorNormalizedSha256"]),
-            "accepted 216-packet base")
+            "accepted 221-packet base")
     for name, expected in value["baselinePackets"].items():
         require(type(name) is str and name and "/" not in name
                 and all(char in "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-" for char in name)
@@ -263,18 +255,10 @@ def _inverse(raw: bytes, hunks: tuple[tuple[int, bytes, bytes], ...]) -> bytes:
 
 
 def historical_bytes(path: str, raw: bytes) -> bytes:
-    """Undo the newer successor, then this step; every authority is read once."""
+    """Recheck the pinned authority and undo only this reviewed successor."""
+    _checked_authority_raw()
     _path(path)
     require(type(raw) is bytes and len(raw) <= MAX_FILE_BYTES, "bounded source bytes required")
-    rule = _PROJECTION_RULES.get(path)
-    # An exact 216-era byte string is already older than the successor layer.
-    # Every newer authority and this one are still rechecked before this fast return.
-    if rule is not None and digest(raw) == rule["beforeSha256"]:
-        _checked_authority_raw()
-        return raw
-    # The successor route freshly rechecks every newer authority exactly once.
-    raw = successor.historical_bytes(path, raw)
-    _checked_own_authority_raw()
     return _undo_this_layer(path, raw)
 
 
@@ -294,9 +278,8 @@ def _undo_this_layer(path: str, raw: bytes) -> bytes:
 
 
 def historical_test_bytes(raw: bytes) -> bytes:
+    _checked_authority_raw()
     require(type(raw) is bytes and len(raw) <= MAX_FILE_BYTES, "bounded test bytes required")
-    raw = successor.historical_test_bytes(raw)
-    _checked_own_authority_raw()
     current_sha = digest(raw)
     matches = [path for path, rule in _PROJECTION_RULES.items()
                if path.startswith(TEST_PREFIXES) and current_sha == rule["afterSha256"]]
@@ -305,26 +288,23 @@ def historical_test_bytes(raw: bytes) -> bytes:
 
 
 def current_test_bytes(before: bytes) -> bytes:
+    _checked_authority_raw()
     require(type(before) is bytes and len(before) <= MAX_FILE_BYTES, "bounded test bytes required")
     before_sha = digest(before)
     matches = [path for path, rule in _PROJECTION_RULES.items()
                if path.startswith(TEST_PREFIXES) and before_sha == rule["beforeSha256"]]
     require(len(matches) <= 1, "ambiguous predecessor test")
     if not matches:
-        current = successor.current_test_bytes(before)
-        _checked_own_authority_raw()
-        return current
-    current = successor.historical_bytes(matches[0], regular_bytes(matches[0]))
-    _checked_own_authority_raw()
+        return before
+    current = regular_bytes(matches[0])
     require(digest(current) == _PROJECTION_RULES[matches[0]]["afterSha256"],
             "current test drift")
-    return successor.current_test_bytes(current)
+    return current
 
 
 def historical_catalog(packets: dict[str, Any]) -> dict[str, Any]:
     """Remove only this layer, leaving predecessor checks to their owners."""
-    packets = successor.historical_catalog(packets)
-    _checked_own_authority_raw()
+    _checked_authority_raw()
     require(type(packets) is dict, "packet mapping")
     current_ids = set(_PACKET_BYTE_RULES)
     require(NEW_PACKET in current_ids and set(packets) == current_ids,
@@ -361,91 +341,168 @@ def validate_packet_payloads(packets: dict[str, Any]) -> None:
         require(supplied_sha == payload_sha, "changed packet payload: " + name)
 
 
-# MET-PERF-036 (roadmap PERF-SEL) cuts the SELinux layer tests' cost without changing any validator refusal: each layer's
-# vector replay is split into per-row helpers whose conjunction, in the old order and with the old messages, is the old
-# replay; the weakening tests call the conjunct that checks the changed row; the full replay runs inside validate() and
-# no longer again in a second test, which pins that route and drives one refusal through it. Nothing is cached.
-# Repository bytes are read only through reviewed_bytes. Every changed function, test and test table is pinned by its
-# exact whole lines, and each route from validate() to the vector replay is an unconditional top-level call.
-SOURCE_PINS = {'scripts/validate_selinux_matrix.py': {'check_vector_keys': '24865e12681a71660064cb1947c2c2cba5bb808ed742d3382886cefb2672771d', 'check_access_row': '7d2f9a5e1cb16c167514c448f9aa0d8bfbd32aba6ee0c8d3873e263a20813cea', 'check_mutation_row': '4aff663580cd57a5699bbe316ad20c7ae1fb5ce4e7e252064f77ff65c8920455', 'check_vector_inventory': '8cd496549ab67d45c4c23ee63d98b95375a6423471a69def8e109e1b1c1081d6', 'replay_vectors': '7f79baef2b87a122927bfdb9e6c966ccd30ec7c5a81971618ad3b7adbe810b6f', 'validate_vectors': '055b7dd6258156e8a4199122cecc8261376f9ae603af5aebc0f22befbdcfb121'}, 'scripts/validate_selinux_matrix_v2.py': {'check_v4_vector_keys': '44bddfd2070c06a9e9e53f188d04367428f863f5140e33eaf8c369a0133ba199', 'check_access_row': '7d2f9a5e1cb16c167514c448f9aa0d8bfbd32aba6ee0c8d3873e263a20813cea', 'check_mutation_row': '477b76b42710c294383d9daad834a8ac45a3203c0a89a80a544e5d74538c45aa', 'check_v4_vector_inventory': '979a4598b1318c6637498ca116706d633954bee9ebb7a91393cc378d7cce2c57', 'replay_v4_vectors': 'f30aa782298093f6aa0aa3d392ef2e92bc10f366af806229233b27d4cf0c4182', 'validate_v4_vectors': '2f99a923d56637b8f87410e4ecced8b41820e71d8313ae45ee20be2eb3f9d697'}, 'tests/test_selinux_matrix.py': {'test_every_vector_replays_and_every_assertion_holds': 'fe7d424462b3d9b41552f1b0a2dc6cbaf27921e8e9a2077338649e5cbed2c6c8', '<assign WEAKENINGS>': '04b6e42bb50c120f6d5d99021e11bc136a1c0c1b8b0cda429c2d22d321e1126e', 'test_vectors_cannot_be_weakened': '691c804962e76d9cab3bd68b466b09cca309e3f300afecd93f900301959298ef', 'test_full_replay_is_exactly_the_conjunction_of_the_helpers': 'a05e2463e86fcdf2c16c5ceb6a1e987bc3bfa8cb6060ae814eecb97035359230', 'test_full_replay_refuses_with_the_first_weakened_rows_message': 'b42d67a56f56af955beee4c58c5b54b810768a46972cae30f53f5a533c88f007', 'test_vector_refusal_reaches_the_contract_route': '6ebed3b08d338d03c06cebfa9e2decad2850785814fa6dbc43f3c7162329abc6'}, 'tests/test_selinux_matrix_v2.py': {'test_matrix_v4_replays_and_adoption_follows_the_review': 'e7984cfc6b4bb6065323c914ec099bdf565002a0de631884de75787bd1a7330b', '<assign WEAKENINGS>': '3a9af4be0aef19e99de93920088e38e9a1e8b61b3973444e1ff8bf99f20e847d', 'test_v4_vectors_cannot_be_weakened': 'c6bad31f0061cdfb2361515ac202643f190c057f3998d3e105ff3c135e38d7fb', 'test_full_replay_is_exactly_the_conjunction_of_the_helpers': '2258be820d9a7cb70c183622e31ddd4105328e3260dec8d6876a4ba79fc43e0b', 'test_full_replay_refuses_with_the_first_weakened_rows_message': '655c94be9fe71f0ea481347ee635b0dc28e256a28850c5cdf97b882470a85e98', 'test_vector_refusal_reaches_the_contract_route': 'c4c754ab812388e634326adecd19510e265b088af0be4f1b917fdbe8b93f4dc0', 'test_reviewed_bytes_is_the_only_semantic_read': '3b1d6d090b314b951f1d8dfc326ffb2e7419e47fc48d637a3793eb2fd8d0336c'}}
-# (file, function, the call that must be an unconditional top-level statement of its body)
-ROUTE_CALLS = (("scripts/validate_selinux_matrix.py", "validate", "validate_selinux_contract"),
-               ("scripts/validate_selinux_matrix.py", "validate_selinux_contract", "validate_vectors"),
-               ("scripts/validate_selinux_matrix_v2.py", "validate", "validate_selinux_matrix_v2"),
-               ("scripts/validate_selinux_matrix_v2.py", "validate_selinux_matrix_v2", "validate_v4_vectors"))
+# MET-ENFORCE-020 (roadmap W02d-V3) publishes the W02d successor planeon.internal.seccomp-allowlists/v3: owner decision
+# W02d-V3 adds three narrow NATIVE_STATIC rules for the Rust+musl native roles (mremap only with MREMAP_MAYMOVE, prctl only
+# with PR_SET_NAME, tkill). Repository bytes are read only through reviewed_bytes, so a later bridged successor projects its
+# own edits away first. The reference model is executed from this era's reviewed bytes, not imported, after the review
+# binding has been checked.
+V3_DIR = "architecture/seccomp-allowlists-v3/"
+V3_MODEL = "scripts/seccomp_allowlists_v3.py"
+SUBJECT = (V3_DIR + "README.md", V3_DIR + "REVIEW_BRIEF.md", V3_DIR + "syscalls.json", V3_DIR + "allowlists.json",
+           V3_DIR + "vectors.json", V3_MODEL)
+ROUNDS = ((1, "PASS_FOR_SOURCE_PUBLICATION"), (2, "PASS_FOR_SOURCE_PUBLICATION"))
+LAST_ROUND = len(ROUNDS)
+# Round 1 passed with two MINOR README findings; the README and brief it reviewed are kept under round1/.
+ROUND_COPIES = {1: (V3_DIR + "README.md", V3_DIR + "REVIEW_BRIEF.md")}
+# The adopted v2 contract stays byte-identical: v3 succeeds it.
+FROZEN_PATHS = ("architecture/seccomp-allowlists-v2/README.md", "architecture/seccomp-allowlists-v2/syscalls.json",
+                "architecture/seccomp-allowlists-v2/allowlists.json", "architecture/seccomp-allowlists-v2/vectors.json",
+                "architecture/seccomp-allowlists-v2/status.json", "scripts/seccomp_allowlists_v2.py")
+OBLIGATIONS = tuple("E%02d" % number for number in range(1, 13))
+REVIEW_ACTIONS = ("filesEdited", "githubMutated", "nativeActions", "repositoryValidatorsRun", "runnerActivated", "testsRun")
+V3_DECISIONS = ("W02d-Q1", "W02d-Q2", "W02d-Q3", "W01-AMEND-QW1", "W01-AMEND-QW2", "W01-AMEND-QW3", "W02d-V3", "W01-AMEND-QW4")
+FLOORS = {"decisionChecks": 2953, "workerStackChecks": 355, "policyMutations": 18}
+V3_FALSE = ("nativeAcceptance", "tenantAcceptance", "filtersInstalled", "roleCodeExists", "traceValidated",
+            "distributionSelected", "productExecution", "runnerActivated", "phaseComplete")
 
 
 def reviewed_bytes(path: str) -> bytes:
     """This packet's reviewed bytes of path; a bridged successor projects newer bytes back first."""
-    return successor.historical_bytes(path, regular_bytes(path))
+    return regular_bytes(path)
 
 
-def _whole(raw: str, node: ast.stmt) -> bytes:
-    """The exact whole lines of a definition or assignment, decorators included."""
-    lines = raw.splitlines(keepends=True)
-    first = min([node.lineno] + [decorator.lineno for decorator in getattr(node, "decorator_list", [])])
-    return "".join(lines[first - 1:node.end_lineno]).encode("utf-8")
+def _json(path: str) -> Any:
+    return parse(reviewed_bytes(path))
 
 
-def _definitions(tree: ast.Module, path: str) -> dict:
-    named = {}
-    for node in tree.body:
-        if isinstance(node, ast.FunctionDef):
-            name = node.name
-        elif isinstance(node, ast.Assign) and len(node.targets) == 1 and isinstance(node.targets[0], ast.Name):
-            name = "<assign %s>" % node.targets[0].id
-        else:
-            continue
-        require(name not in named, "one definition per pinned name: %s %s" % (path, name))
-        named[name] = node
-    return named
+def _era_model() -> types.ModuleType:
+    """The v3 reference model of this era, executed from its reviewed bytes."""
+    module = types.ModuleType("_met_enforce_020_seccomp_allowlists_v3")
+    module.__file__ = str(ROOT / V3_MODEL)
+    exec(compile(reviewed_bytes(V3_MODEL), V3_MODEL, "exec"), module.__dict__)
+    return module
 
 
-def validate_selinux_replay_sources() -> None:
-    """Every pinned helper, test and test table is exactly its reviewed text."""
-    for path, pins in SOURCE_PINS.items():
-        raw = reviewed_bytes(path).decode("utf-8")
-        named = _definitions(ast.parse(raw), path)
-        for name, expected in pins.items():
-            node = named.get(name)
-            require(node is not None, "pinned replay source present: %s %s" % (path, name))
-            require(digest(_whole(raw, node)) == expected, "unreviewed replay source: %s %s" % (path, name))
+def reviewer_actions_allowed(actions: Any) -> bool:
+    """Exactly the eight reviewer action booleans; reading and model execution may be true, every other action false."""
+    return (type(actions) is dict and set(actions) == set(REVIEW_ACTIONS) | {"referenceModelExecuted", "warmSourcesAccessed"}
+            and all(type(value) is bool for value in actions.values())
+            and all(actions[key] is False for key in REVIEW_ACTIONS))
 
 
-def validate_selinux_replay_routes() -> None:
-    """validate() reaches each layer's vector replay through unconditional top-level calls (review R3-F1)."""
-    for path, function, call in ROUTE_CALLS:
-        named = _definitions(ast.parse(reviewed_bytes(path).decode("utf-8")), path)
-        node = named.get(function)
-        require(isinstance(node, ast.FunctionDef), "route function present: %s %s" % (path, function))
-        top = [statement for statement in node.body if isinstance(statement, ast.Expr) and isinstance(statement.value, ast.Call)
-               and isinstance(statement.value.func, ast.Name) and statement.value.func.id == call]
-        require(len(top) == 1 and not any(isinstance(inner, (ast.Return, ast.Yield, ast.YieldFrom)) for inner in ast.walk(node)),
-                "unconditional top-level route call: %s %s -> %s" % (path, function, call))
+def _round_path(number: int, path: str) -> str:
+    """A round's reviewed bytes of path: its kept copy if a later round changed the file, else the current file."""
+    return V3_DIR + "round%d/" % number + path if path in ROUND_COPIES.get(number, ()) else path
 
 
-def validate_selinux_replay() -> None:
-    validate_selinux_replay_sources()
-    validate_selinux_replay_routes()
+def validate_v3_status() -> dict:
+    """The status is closed, its rounds are bound to their exact subject bytes, and the last round passes with notes."""
+    status = _json(V3_DIR + "status.json")
+    require(type(status) is dict and set(status) == {
+        "schemaVersion", "contract", "kernel", "supersedes", "ownerDecisions", "reviewRounds", "closedFindings",
+        "carriedFindings", "carriedToW03", "openObligations", "contractState", "obligations", "independentReviewer", *V3_FALSE}
+            and status["schemaVersion"] == "planeon.internal.seccomp-allowlists-status/v3"
+            and status["contract"] == "planeon.internal.seccomp-allowlists/v3"
+            and status["supersedes"] == {"directory": "architecture/seccomp-allowlists-v2/",
+                                         "contract": "planeon.internal.seccomp-allowlists/v2",
+                                         "status": "architecture/seccomp-allowlists-v2/status.json"}
+            and status["contractState"] == "ADOPTED_DATA_CONTRACT"
+            and status["obligations"] == {name: "OPEN_UNPROVEN" for name in OBLIGATIONS}
+            and status["independentReviewer"] == "SEPARATE_AGENT_NOT_AUTHOR"
+            and all(status[flag] is False for flag in V3_FALSE)
+            and status["ownerDecisions"] == _json(V3_DIR + "allowlists.json")["ownerDecisions"], "closed seccomp v3 status")
+    rounds = status["reviewRounds"]
+    require(type(rounds) is list and [(row.get("round"), row.get("verdict")) for row in rounds if type(row) is dict]
+            == list(ROUNDS), "two review rounds")
+    for row in rounds:
+        number = row["round"]
+        require(set(row) == {"round", "record", "recordSha256", "verdict", "subjectDirectory"}
+                and row["record"] == V3_DIR + "review-round%d.json" % number
+                and row["subjectDirectory"] == (V3_DIR + "round%d/" % number if number < LAST_ROUND else "CURRENT")
+                and row["recordSha256"] == digest(reviewed_bytes(row["record"])), "review round identity %d" % number)
+        review = _json(row["record"])
+        require(type(review) is dict and review.get("schemaVersion") == "planeon.internal.seccomp-allowlists-v3-review/v1"
+                and review.get("round") == number and review.get("verdict") == row["verdict"]
+                and reviewer_actions_allowed(review.get("actions")), "review record %d" % number)
+        require(review.get("subjectSha256") == {path: digest(reviewed_bytes(_round_path(number, path))) for path in SUBJECT},
+                "review round %d is bound to its exact subject bytes" % number)
+    final = _json(rounds[-1]["record"])
+    require(all(type(row) is dict and row.get("severity") == "NOTE" for row in final["findings"])
+            and {row["id"] for row in final["findings"]} <= set(status["carriedFindings"]),
+            "the final round passes with notes only, all carried")
+    return status
+
+
+def validate_v3_vectors(model: types.ModuleType, table: dict, policy: dict, vectors: dict) -> int:
+    """Every decision replays through both the reference decision and the compiled program; the worker's stacked filters
+    decide as its own; every mutation is refused with its stated message; the digests are the compiled programs'."""
+    require(table.get("schemaVersion") == "planeon.internal.seccomp-syscall-table/v3"
+            and table.get("kernel") == {"tag": "v6.12", "commit": "adc218676eef25575469234709c2d87185ca223a"}
+            and policy.get("schemaVersion") == "planeon.internal.seccomp-allowlists/v3" and policy.get("mode") == 2
+            and policy.get("defaultAction") == "KILL_PROCESS"
+            and [row.get("id") for row in policy["ownerDecisions"]] == list(V3_DECISIONS), "closed v3 table and policy")
+    model.check_policy(policy, table)
+    require(type(vectors) is dict and set(vectors) == {"evidenceClass", "filterDigests", "programLengths", "decisionChecks",
+                                                       "workerStackChecks", "policyMutations"}
+            and vectors["evidenceClass"] == "DATA_CHECK_ONLY"
+            and all(len(vectors[key]) >= floor for key, floor in FLOORS.items()), "closed v3 vectors")
+    programs = {(role, arch): model.compile_filter(policy, table, role, arch) for role in model.ROLES for arch in model.ARCHES}
+    require(vectors["filterDigests"] == {role: {arch: "sha256:" + digest(model.program_bytes(programs[role, arch]))
+                                                for arch in model.ARCHES} for role in model.ROLES}
+            and vectors["programLengths"] == {role: {arch: len(programs[role, arch]) for arch in model.ARCHES}
+                                              for role in model.ROLES}, "the published v3 digests are the compiled programs'")
+    checks, by_id = 0, {}
+    for row in vectors["decisionChecks"]:
+        data = model.seccomp_data(row["nr"], row["auditArch"], row["args"])
+        expect = model.action_name(model.decide(policy, table, row["role"], row["arch"], row["auditArch"], row["nr"], row["args"]))
+        require(expect == row["expect"] == model.action_name(model.run_filter(programs[row["role"], row["arch"]], data)),
+                "v3 decision check " + row["id"])
+        by_id[row["id"]] = row
+        checks += 1
+    for row in vectors["workerStackChecks"]:
+        base = by_id[row["decision"]]
+        require(base["role"] == "WORKER" and row["expect"] == "SAME_AS_WORKER"
+                and model.decide_stack(policy, table, ["BROKER", "WORKER"], base["arch"], base["auditArch"], base["nr"], base["args"])
+                == model.decide(policy, table, "WORKER", base["arch"], base["auditArch"], base["nr"], base["args"]),
+                "v3 worker stack check " + row["id"])
+        checks += 1
+    for row in vectors["policyMutations"]:
+        changed = copy.deepcopy(policy)
+        changed["roles"][row["role"]]["duties"].append(row["addDuty"])
+        try:
+            model.check_policy(changed, table)
+            refused = None
+        except ValueError as exc:
+            refused = str(exc)
+        require(refused is not None and refused == row["expect"], "v3 policy mutation " + row["id"])
+        checks += 1
+    return checks
+
+
+def validate_seccomp_v3() -> None:
+    """The review binding first; then the full v3 replay, from this era's reviewed bytes."""
+    for path in FROZEN_PATHS:
+        require(path not in _PROJECTION_RULES, "predecessor contract bytes must stay unchanged: " + path)
+    validate_v3_status()
+    checks = validate_v3_vectors(_era_model(), _json(V3_DIR + "syscalls.json"), _json(V3_DIR + "allowlists.json"),
+                                 _json(V3_DIR + "vectors.json"))
+    require(checks >= sum(FLOORS.values()), "every v3 vector replays")
 
 
 def validate() -> None:
     record = authority()
-    validator_raw = successor.historical_bytes(VALIDATOR_PATH, regular_bytes(VALIDATOR_PATH))
+    validator_raw = regular_bytes(VALIDATOR_PATH)
     literal = b'AUTHORITY_SHA256 = "' + AUTHORITY_SHA256.encode("ascii") + b'"'
     placeholder = b'AUTHORITY_SHA256 = "TO_BE_PINNED_AFTER_SOURCE_FREEZE"'
     require(validator_raw.count(literal) == 1
             and digest(validator_raw.replace(literal, placeholder))
-            == record["validatorNormalizedSha256"], "SELinux replay validator drift")
+            == record["validatorNormalizedSha256"], "seccomp v3 validator drift")
     paths = sorted((ROOT / "task-packets").glob("*.yaml"))
     old = set(record["baselinePackets"])
-    require(len(paths) == 222
-            and {path.stem for path in paths} == old | {NEW_PACKET, successor.NEW_PACKET, successor.successor.NEW_PACKET, successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.NEW_PACKET},
-            "closed 222-packet catalog retaining the 217-packet checkpoint")
+    require(len(paths) == 222 and {path.stem for path in paths} == old | {NEW_PACKET},
+            "closed 222-packet catalog")
     packets = {}
     for path in paths:
-        if path.stem in (successor.NEW_PACKET, successor.successor.NEW_PACKET, successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.NEW_PACKET, successor.successor.successor.successor.successor.NEW_PACKET):
-            continue
         raw = regular_bytes("task-packets/" + path.name)
         expected = record["packetSha256"] if path.stem == NEW_PACKET else record["baselinePackets"][path.stem]
         require(digest(raw) == expected, "packet YAML drift: " + path.stem)
@@ -463,23 +520,22 @@ def validate() -> None:
             and len(commands) == 64
             and commands == previous["offlineAcceptanceCommands"]
             and not any(VALIDATOR_PATH in argv for argv in commands),
-            "closed source-only selinux-replay packet and inherited commands")
+            "closed source-only seccomp-v3 packet and inherited commands")
     require(len(packet["allowedPaths"]) == len(set(packet["allowedPaths"]))
             and set(packet["allowedPaths"]) == set(record["changedFiles"])
             | set(record["newFiles"]) | {AUTHORITY_PATH, VALIDATOR_PATH,
                                          "task-packets/" + NEW_PACKET + ".yaml"},
-            "unreviewed or omitted selinux-replay packet path")
+            "unreviewed or omitted seccomp-v3 packet path")
     for path, rule in record["changedFiles"].items():
-        current = successor.historical_bytes(path, regular_bytes(path))
+        current = regular_bytes(path)
         require(digest(current) == rule["afterSha256"]
                 and digest(historical_bytes(path, current)) == rule["beforeSha256"],
                 "unreviewed current source: " + path)
     for path, expected in record["newFiles"].items():
-        require(digest(successor.historical_bytes(path, regular_bytes(path))) == expected,
-                "new source drift: " + path)
-    validate_selinux_replay()
+        require(digest(regular_bytes(path)) == expected, "new source drift: " + path)
+    validate_seccomp_v3()
 
 
 if __name__ == "__main__":
     validate()
-    print("SELinux replay valid: 222 current specifications; 217-packet checkpoint and exact 216-packet predecessor; validator refusals and freshness unchanged.")
+    print("Seccomp allowlists v3 valid: 222 current specifications; exact 221-packet predecessor; DATA_CHECK_ONLY, every E01-E12 obligation open.")

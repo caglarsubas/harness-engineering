@@ -665,6 +665,10 @@ def test_the_era_model_is_executed_from_reviewed_bytes(monkeypatch):
         return raw + b"\nraise ValueError('era model executed')\n" if path == profile.MODEL_PATH else raw
 
     monkeypatch.setattr(profile, "reviewed_bytes", changed)
+    # Changed model bytes are refused by the review binding first; past it, the model runs from reviewed_bytes.
+    with pytest.raises(ValueError, match="review round 3 is bound to its exact subject bytes"):
+        profile.validate_seccomp_allowlists()
+    monkeypatch.setattr(profile, "validate_seccomp_status", lambda: None)
     with pytest.raises(ValueError, match="era model executed"):
         profile.validate_seccomp_allowlists()
 
@@ -730,6 +734,28 @@ def test_the_adoption_records_bind_the_reviewed_subject(monkeypatch, path, old, 
         profile.validate_seccomp_status()
 
 
+@pytest.mark.parametrize("key,value", [
+    ("testsRun", True), ("filesEdited", None), ("githubMutated", 0), ("referenceModelExecuted", "yes"),
+    ("warmSourcesAccessed", 1), ("liveCampaignRun", False),
+])
+def test_review_records_state_exactly_the_reviewer_actions(key, value):
+    for number in (1, 2, 3):
+        actions = profile._json(profile.CONTRACT_DIR + "review-round%d.json" % number)["actions"]
+        assert profile.reviewer_actions_allowed(actions)
+        changed = dict(actions, **{key: value})
+        assert not profile.reviewer_actions_allowed(changed)
+    assert not profile.reviewer_actions_allowed({k: v for k, v in actions.items() if k != "testsRun"})
+
+
+def test_the_review_binding_is_checked_before_the_model_runs(monkeypatch):
+    calls = []
+    monkeypatch.setattr(profile, "validate_seccomp_status", lambda: calls.append("status"))
+    monkeypatch.setattr(profile, "_era_model", lambda: calls.append("model") or (_ for _ in ()).throw(ValueError("stop")))
+    with pytest.raises(ValueError, match="stop"):
+        profile.validate_seccomp_allowlists()
+    assert calls == ["status", "model"]
+
+
 def test_a_later_successor_leaves_this_era_valid_through_projection(monkeypatch):
     original = profile.regular_bytes
     path = profile.CONTRACT_DIR + "allowlists.json"
@@ -738,7 +764,7 @@ def test_a_later_successor_leaves_this_era_valid_through_projection(monkeypatch)
     assert later != era
     # The later tree on disk carries a revised policy; this era's check refuses it when read directly.
     monkeypatch.setattr(profile, "regular_bytes", lambda target: later if target == path else original(target))
-    with pytest.raises(ValueError, match="closed policy and owner decisions"):
+    with pytest.raises(ValueError, match="review round 3 is bound to its exact subject bytes"):
         profile.validate_seccomp_allowlists()
     # A bridged successor projects its own edits away first.
     monkeypatch.setattr(profile, "reviewed_bytes", lambda target: era if target == path else original(target))

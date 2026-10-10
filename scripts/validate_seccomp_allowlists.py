@@ -23,7 +23,7 @@ except ImportError:
 
 ROOT = Path(__file__).resolve().parents[1]
 AUTHORITY_PATH = "architecture/seccomp-allowlists-authority.json"
-AUTHORITY_SHA256 = "e49f62504ba408226fb27f4ca258da44ddf5447a64067cbd1c28fd702113e087"
+AUTHORITY_SHA256 = "f9094ceb10148cc8e03d06b257dda99e5ea6fcd0eeef2b601817345a0df0eb93"
 VALIDATOR_PATH = "scripts/validate_seccomp_allowlists.py"
 BASE_COMMIT = "984c953ad034dee9d0f8028e1ecfff4fefea98c3"
 NEW_PACKET = "MET-ENFORCE-017"
@@ -341,7 +341,7 @@ def validate_packet_payloads(packets: dict[str, Any]) -> None:
 
 
 # MET-ENFORCE-017 publishes the W02d per-role, per-architecture seccomp allowlists (planeon.internal.seccomp-allowlists/v1)
-# for the seven roles on x86_64 and aarch64 at Linux v6.12, under owner decisions W02d-Q1..Q3 (QA..QD are README text). Repository
+# for the seven roles on x86_64 and aarch64 at Linux v6.12, under owner decisions W02d-Q1..Q3 and QA..QD (README and duty sources). Repository
 # bytes are read only through reviewed_bytes, so a later bridged successor projects its own edits away first. The
 # reference model is executed from this era's reviewed bytes, not imported, and those bytes are bound by the review
 # rounds below, so a later revision of the model cannot change how this layer judges its own era.
@@ -440,6 +440,13 @@ def validate_seccomp_vectors(model: types.ModuleType, table: dict, policy: dict,
     return checks
 
 
+def reviewer_actions_allowed(actions: Any) -> bool:
+    """Exactly the eight reviewer action booleans; reading and model execution may be true, every other action false."""
+    return (type(actions) is dict and set(actions) == set(REVIEW_ACTIONS) | {"referenceModelExecuted", "warmSourcesAccessed"}
+            and all(type(value) is bool for value in actions.values())
+            and all(actions[key] is False for key in REVIEW_ACTIONS))
+
+
 def validate_seccomp_status() -> None:
     status = _json(STATUS_PATH)
     require(type(status) is dict and set(status) == {
@@ -463,8 +470,7 @@ def validate_seccomp_status() -> None:
         review = _json(row["record"])
         require(review.get("schemaVersion") == "planeon.internal.seccomp-allowlists-review/v1" and review.get("round") == number
                 and review.get("verdict") == row["verdict"]
-                and set(review["actions"]) == set(REVIEW_ACTIONS) | {"referenceModelExecuted", "warmSourcesAccessed"}
-                and all(review["actions"][key] is False for key in REVIEW_ACTIONS),
+                and reviewer_actions_allowed(review.get("actions")),
                 "review record %d" % number)
         require(review.get("subjectSha256") == {path: digest(reviewed_bytes(_round_path(number, path))) for path in SUBJECT},
                 "review round %d is bound to its exact subject bytes" % number)
@@ -478,12 +484,13 @@ def validate_seccomp_allowlists() -> None:
     """The allowlists replay exactly, the published digests are the compiled programs, and adoption follows the review."""
     for path in FROZEN_PATHS:
         require(path not in _PROJECTION_RULES, "predecessor contract bytes must stay unchanged: " + path)
+    # The review binding is checked before the model is executed or any contract data is used.
+    validate_seccomp_status()
     model = _era_model()
     table, policy = _json(CONTRACT_DIR + "syscalls.json"), _json(CONTRACT_DIR + "allowlists.json")
     validate_seccomp_policy(model, table, policy)
     checks = validate_seccomp_vectors(model, table, policy, _json(CONTRACT_DIR + "vectors.json"))
     require(checks >= sum(FLOORS.values()), "every seccomp vector replays")
-    validate_seccomp_status()
 
 
 def validate() -> None:

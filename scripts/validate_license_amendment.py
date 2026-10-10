@@ -24,7 +24,7 @@ except ImportError:
 
 ROOT = Path(__file__).resolve().parents[1]
 AUTHORITY_PATH = "architecture/license-amendment-authority.json"
-AUTHORITY_SHA256 = "4c2d82dea835f9bad51a18ced21ec0c4b9444498e9288b94dd7340dc8aba57f3"
+AUTHORITY_SHA256 = "1e56c285b0e4598a86ace4d85fb262688a921783e5ebd51840ca7e610e203613"
 VALIDATOR_PATH = "scripts/validate_license_amendment.py"
 BASE_COMMIT = "5fab673e250e7dd0f2ce9c19f6ce9da8cce9321c"
 NEW_PACKET = "MET-ENFORCE-021"
@@ -364,6 +364,25 @@ DECISIONS = (("Q-L", "L-a"), ("Q-L2", "L2-a"), ("Q-L3", "L3-a"))
 CLASS_COMPONENTS = ("glibc", "libseccomp", "libgcc", "libgcc_eh", "libnftnl", "libmnl")
 ELECTIONS = (("libpathrs", "MPL-2.0"), ("gmp", "LGPL-3.0-or-later"))
 VECTORS = 88
+# Owner-decided uses the classifier must decide this way (packet review P1-F3): (expression, component, kind, binary it
+# is linked into, outcome, elections).
+DECIDED_CASES = (
+    ("LGPL-2.1-or-later", "glibc", "STATIC_SYSTEM_LIBRARY", "runc", "HOST_OS_SYSTEM_LIBRARY", ()),
+    ("LGPL-2.1-or-later", "glibc", "HOST_OS_LIBRARY", None, "HOST_OS_SYSTEM_LIBRARY", ()),
+    ("GPL-2.0-or-later", "glibc", "STATIC_SYSTEM_LIBRARY", "runc", "OUT_OF_SCOPE", ()),
+    ("LGPL-2.1-only", "libseccomp", "STATIC_SYSTEM_LIBRARY", "runc", "HOST_OS_SYSTEM_LIBRARY", ()),
+    ("LGPL-2.1-only", "libseccomp", "STATIC_SYSTEM_LIBRARY", "containerd", "OUT_OF_SCOPE", ()),
+    ("GPL-3.0-or-later WITH GCC-exception-3.1", "libgcc", "STATIC_SYSTEM_LIBRARY", "pause", "HOST_OS_SYSTEM_LIBRARY", ()),
+    ("GPL-2.0-or-later", "libnftnl", "HOST_OS_LIBRARY", None, "HOST_OS_SYSTEM_LIBRARY", ()),
+    ("LGPL-2.1-or-later", "libnftnl", "HOST_OS_LIBRARY", None, "OUT_OF_SCOPE", ()),
+    ("GPL-2.0-only", "nft", "HOST_OS_PROGRAM", None, "OPTIONAL_EXPLICIT_REVIEW_APPROVED", ()),
+    ("LGPL-3.0-or-later", "gmp", "HOST_OS_LIBRARY", None, "OPTIONAL_EXPLICIT_REVIEW_APPROVED", ()),
+    ("MPL-2.0 OR LGPL-3.0-or-later", "libpathrs", "STATIC_SYSTEM_LIBRARY", "runc", "ACCEPTED_OR",
+     (("LGPL-3.0-or-later OR MPL-2.0", "MPL-2.0"),)),
+    ("LGPL-3.0-or-later OR GPL-2.0-or-later", "gmp", "HOST_OS_LIBRARY", None, "ACCEPTED_OR",
+     (("GPL-2.0-or-later OR LGPL-3.0-or-later", "LGPL-3.0-or-later"),)),
+    ("MIT AND GPL-2.0-or-later", "glibc", "STATIC_SYSTEM_LIBRARY", "runc", "OUT_OF_SCOPE", ()),
+)
 # The base policy stays byte-identical: the amendment is an overlay, never an edit.
 FROZEN_PATHS = (BASE_POLICY,)
 # The adopted bytes (fab6aea) of every reviewed file, round copy and review record, the status record and the reference
@@ -404,8 +423,17 @@ def reviewed_bytes(path: str) -> bytes:
     return regular_bytes(path)
 
 
+def _verified(path: str) -> bytes:
+    """reviewed_bytes, checked against its era digest on every read, so every byte parsed or executed is a hashed byte
+    (packet review P1-F4); a path outside the era is refused."""
+    raw = reviewed_bytes(path)
+    expected = ERA_SHA256.get(path)
+    require(expected is not None and digest(raw) == expected, "LIC-HOST reviewed bytes are bound: " + path)
+    return raw
+
+
 def _json(path: str) -> Any:
-    return parse(reviewed_bytes(path))
+    return parse(_verified(path))
 
 
 def _bound(check: Any, message: str) -> None:
@@ -434,7 +462,7 @@ def _era_model(path: str, name: str, imports: dict | None = None) -> types.Modul
         namespace = dict(vars(builtins))
         namespace["__import__"] = _era_import(imports)
         module.__dict__["__builtins__"] = namespace
-    exec(compile(reviewed_bytes(path), path, "exec"), module.__dict__)
+    exec(compile(_verified(path), path, "exec", dont_inherit=True), module.__dict__)
     return module
 
 
@@ -487,13 +515,25 @@ def validate_license_amendment() -> None:
     validate_era_bytes()
     validate_license_amendment_status()
     safe_yaml = _era_model(SAFE_YAML, "_met_enforce_021_safe_yaml")
-    amendment = _era_model(MODEL, "_met_enforce_021_license_amendment",
-                           {"safe_yaml": safe_yaml, "scripts.safe_yaml": safe_yaml}).check(reviewed_bytes)
+    module = _era_model(MODEL, "_met_enforce_021_license_amendment", {"safe_yaml": safe_yaml, "scripts.safe_yaml": safe_yaml})
+    amendment = module.check(_verified)
+
+    def decided() -> bool:
+        policy = module.effective_policy(_verified)
+        for expression, name, kind, linked, outcome, elections in DECIDED_CASES:
+            component = {"name": name, "kind": kind, "custody": "UPSTREAM_PINNED", "crateField": False,
+                         "linkedInto": None if linked is None else {"name": linked, "custody": "UPSTREAM_PINNED"}}
+            result = module.classify(policy, expression, component)
+            if (result["outcome"], tuple((row["group"], row["elected"]) for row in result["elections"])) != (outcome, elections):
+                return False
+        return True
+
     _bound(lambda: [(row["id"], row["selected"]) for row in amendment["ownerDecisions"]] == list(DECISIONS)
            and tuple(amendment["hostOsSystemLibraryClass"]["components"]) == CLASS_COMPONENTS
            and [(row["component"], row["elects"]) for row in amendment["ownerElections"]] == list(ELECTIONS)
            and amendment["base"] == {"path": BASE_POLICY, "sha256": ERA_SHA256[BASE_POLICY], "policyVersion": "0.3.0"}
-           and len(_json(AMEND_DIR + "vectors.json")["cases"]) == VECTORS,
+           and len(_json(AMEND_DIR + "vectors.json")["cases"]) == VECTORS
+           and decided(),
            "the amendment carries the owner's decisions")
 
 

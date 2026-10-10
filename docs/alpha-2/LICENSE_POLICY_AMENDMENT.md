@@ -6,7 +6,8 @@
 The W03 backend distribution (W03-0) keeps the official upstream binaries, so their statically linked system libraries
 and the host's nft need license decisions the base policy does not make. The owner decided Q-L (L-a), Q-L2 (L2-a) and
 Q-L3 (L3-a) on 2026-10-10, via the lane monitor. The base policy `legal/third-party-license-policy.yaml` is pinned by
-digest in 32 architecture records, and `scripts/validate_reuse.py` pins its version, so it stays byte-identical. The
+digest in 36 architecture records on `5fab673` (32 when the amendment was adopted on `195c4c9`), and
+`scripts/validate_reuse.py` pins its version, so it stays byte-identical. The
 amendment is a reviewed overlay instead:
 
 - **A host-OS and static system library class.** Each named component is accepted only under its decided license, in its

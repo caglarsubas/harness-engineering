@@ -747,12 +747,68 @@ def test_the_current_safe_yaml_module_is_not_used(monkeypatch):
     assert profile.validate_license_amendment() is None
 
 
-def test_an_early_return_model_is_refused_by_the_decision_binding(monkeypatch):
+@pytest.mark.parametrize("hollow", [b"    return {}, None\n", b"    return _json(read(RECORD_PATH)), None\n"])
+def test_a_hollow_model_is_refused_by_the_decision_binding(monkeypatch, hollow):
+    # The second form returns the record unvalidated and no policy (packet review P1-F3).
     raw = profile.reviewed_bytes(profile.MODEL)
+    assert b"RECORD_PATH" in raw and b"def _json(" in raw
     _rebind(monkeypatch, profile.MODEL, raw.replace(b"def _check(read) -> tuple:\n",
-                                                    b"def _check(read) -> tuple:\n    return {}, None\n", 1))
+                                                    b"def _check(read) -> tuple:\n" + hollow, 1))
     with pytest.raises(ValueError, match="carries the owner's decisions"):
         profile.validate_license_amendment()
+
+
+@pytest.mark.parametrize("index", range(13))
+def test_each_owner_decided_use_is_classified_as_decided(monkeypatch, index):
+    original = profile._era_model
+    expression = profile.DECIDED_CASES[index][0]
+
+    def patched(path, name, imports=None):
+        module = original(path, name, imports)
+        if path == profile.MODEL:
+            check, effective_policy, classify = module.check, module.effective_policy, module.classify
+
+            def flipped(policy, text, component):
+                result = dict(classify(policy, text, component))
+                if text == expression and component["name"] == profile.DECIDED_CASES[index][1]:
+                    result["outcome"] = "UNKNOWN" if result["outcome"] != "UNKNOWN" else "DENIED"
+                return result
+
+            def checked(read):
+                # The module's own vector replay runs unflipped; only the layer's decided-use binding sees the flip.
+                result, policy = check(read), effective_policy(read)
+                module.effective_policy = lambda read_again: policy
+                module.classify = flipped
+                return result
+            module.check = checked
+        return module
+
+    monkeypatch.setattr(profile, "_era_model", patched)
+    with pytest.raises(ValueError, match="carries the owner's decisions"):
+        profile.validate_license_amendment()
+
+
+def test_a_byte_changed_after_hashing_is_refused_when_read_again(monkeypatch):
+    original = profile.reviewed_bytes
+    reads = []
+
+    def changed(target):
+        raw = original(target)
+        if target == profile.MODEL:
+            reads.append(target)
+            if len(reads) > 1:   # the first read is validate_era_bytes' hash; the second is the one executed
+                return raw + b"\nraise ValueError('unhashed bytes executed')\n"
+        return raw
+
+    monkeypatch.setattr(profile, "reviewed_bytes", changed)
+    with pytest.raises(ValueError, match="LIC-HOST reviewed bytes are bound: scripts/license_amendment.py"):
+        profile.validate_license_amendment()
+    assert len(reads) == 2
+
+
+def test_only_era_paths_are_readable_by_the_semantic_check(monkeypatch):
+    with pytest.raises(ValueError, match="LIC-HOST reviewed bytes are bound: README.md"):
+        profile._verified("README.md")
 
 
 def _round(number):
@@ -885,8 +941,8 @@ def test_a_later_successor_leaves_this_era_valid_through_projection(monkeypatch)
 
 def test_reviewed_bytes_is_the_only_semantic_read():
     tree = ast.parse(profile.regular_bytes(profile.VALIDATOR_PATH))
-    names = {"_json", "_bound", "_era_import", "_era_model", "validate_era_bytes", "validate_license_amendment_status",
-             "validate_license_amendment"}
+    names = {"_verified", "_json", "_bound", "_era_import", "_era_model", "validate_era_bytes",
+             "validate_license_amendment_status", "validate_license_amendment"}
     seen = set()
     for node in tree.body:
         if isinstance(node, ast.FunctionDef) and node.name in names:

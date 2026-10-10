@@ -38,6 +38,7 @@
    "LGPL-2.1-or-later"
   ],
   "allowedKinds": [
+   "HOST_OS_PROGRAM",
    "HOST_OS_LIBRARY",
    "STATIC_SYSTEM_LIBRARY"
   ],
@@ -45,64 +46,31 @@
    "UPSTREAM_PINNED"
   ],
   "components": {
-   "glibc": {
-    "expression": "LGPL-2.1-or-later",
-    "kinds": [
-     "HOST_OS_LIBRARY",
-     "STATIC_SYSTEM_LIBRARY"
-    ],
-    "binaries": [
-     "containerd",
-     "pause",
-     "runc"
-    ]
-   },
-   "libseccomp": {
-    "expression": "LGPL-2.1-only",
-    "kinds": [
-     "STATIC_SYSTEM_LIBRARY"
-    ],
-    "binaries": [
-     "runc"
-    ]
-   },
-   "libgcc": {
-    "expression": "GPL-3.0-or-later WITH GCC-exception-3.1",
-    "kinds": [
-     "STATIC_SYSTEM_LIBRARY"
-    ],
-    "binaries": [
-     "containerd",
-     "pause",
-     "runc"
-    ]
-   },
-   "libgcc_eh": {
-    "expression": "GPL-3.0-or-later WITH GCC-exception-3.1",
-    "kinds": [
-     "STATIC_SYSTEM_LIBRARY"
-    ],
-    "binaries": [
-     "containerd",
-     "pause",
-     "runc"
-    ]
-   },
-   "libnftnl": {
-    "expression": "GPL-2.0-or-later",
-    "kinds": [
-     "HOST_OS_LIBRARY"
-    ],
-    "binaries": []
-   },
-   "libmnl": {
-    "expression": "LGPL-2.1-or-later",
-    "kinds": [
-     "HOST_OS_LIBRARY"
-    ],
-    "binaries": []
-   }
+   "glibc": [
+    "HOST_OS_LIBRARY",
+    "STATIC_SYSTEM_LIBRARY"
+   ],
+   "libseccomp": [
+    "STATIC_SYSTEM_LIBRARY"
+   ],
+   "libgcc": [
+    "STATIC_SYSTEM_LIBRARY"
+   ],
+   "libgcc_eh": [
+    "STATIC_SYSTEM_LIBRARY"
+   ],
+   "libnftnl": [
+    "HOST_OS_LIBRARY"
+   ],
+   "libmnl": [
+    "HOST_OS_LIBRARY"
+   ]
   },
+  "upstreamBinaries": [
+   "containerd",
+   "pause",
+   "runc"
+  ],
   "neverFor": [
    "planeon-authored source or modules",
    "code copied into a planeon repository",
@@ -120,18 +88,14 @@
    "elects": "MPL-2.0",
    "decidedBy": "Q-L",
    "component": "libpathrs",
-   "kind": "STATIC_SYSTEM_LIBRARY",
-   "binaries": [
-    "runc"
-   ]
+   "kind": "STATIC_SYSTEM_LIBRARY"
   },
   {
    "group": "GPL-2.0-or-later OR LGPL-3.0-or-later",
    "elects": "LGPL-3.0-or-later",
    "decidedBy": "Q-L2",
    "component": "gmp",
-   "kind": "HOST_OS_LIBRARY",
-   "binaries": []
+   "kind": "HOST_OS_LIBRARY"
   }
  ],
  "rules": {
@@ -148,7 +112,7 @@
    "decidedBy": "Q-L3"
   },
   "scope": {
-   "rule": "A host-OS class term is accepted only for a component the owner decisions name, under that component's decided term, in one of its decided kinds, in UPSTREAM_PINNED custody, and, for a STATIC_SYSTEM_LIBRARY, only when it is linked into one of that component's decided pinned official upstream binaries (hostOsSystemLibraryClass.components). An explicit-review approval applies only to its named subjects in their decided kinds and upstream-pinned custody; an owner election applies only to its named component in its decided kind, custody and binaries, and elsewhere the ranking decides. An open-content term applies only to an ARTIFACT. Elsewhere such a term is OUT_OF_SCOPE, which ranks with UNKNOWN, or stays OPTIONAL_EXPLICIT_REVIEW. The scope applies inside AND and OR compounds too.",
+   "rule": "A host-OS class term is accepted only for a component the owner decisions name, in its decided kind, in UPSTREAM_PINNED custody, and, for a STATIC_SYSTEM_LIBRARY, only when it is linked into one of the pinned official upstream binaries (containerd, pause, runc). An explicit-review approval and an owner election apply only to their named subjects in their decided kinds and upstream-pinned custody. An open-content term applies only to an ARTIFACT. Elsewhere such a term is OUT_OF_SCOPE, which ranks with UNKNOWN, or stays OPTIONAL_EXPLICIT_REVIEW. The scope applies inside AND and OR compounds too.",
    "decidedBy": "Q-L"
   },
   "precedence": "Expressions are compared in canonical form (nested operators flattened, operands sorted, single spaces), and a compound listed exactly in the base policy keeps its base outcome however it is spelled. An AND compound with a blocking term takes the most restrictive blocking outcome under the base evaluation.precedence (DENIED, then UNKNOWN or OUT_OF_SCOPE, then PLANNED_UNRESOLVED, then OPTIONAL_EXPLICIT_REVIEW); an OR expression with no accepted alternative takes its least restrictive alternative's outcome. No rule weakens the base deniedRule."

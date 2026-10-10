@@ -39,24 +39,19 @@ CLASS = "HOST_OS_SYSTEM_LIBRARY"
 APPROVED = "OPTIONAL_EXPLICIT_REVIEW_APPROVED"
 # The decided content, pinned (owner decisions Q-L and Q-L2).
 CLASS_EXPRESSIONS = ("GPL-2.0-or-later", "GPL-3.0-or-later WITH GCC-exception-3.1", "LGPL-2.1-only", "LGPL-2.1-or-later")
-CLASS_KINDS = ("HOST_OS_LIBRARY", "STATIC_SYSTEM_LIBRARY")
+CLASS_KINDS = ("HOST_OS_PROGRAM", "HOST_OS_LIBRARY", "STATIC_SYSTEM_LIBRARY")
 CLASS_CUSTODY = ("UPSTREAM_PINNED",)
 # The class reaches only the components the owner decisions name, each in its decided use (Q-L, Q-L2), and a static
 # library only when it is linked into one of the pinned official upstream binaries of the W03-0 selection.
-# Each named component: (its decided license term, its decided kinds, the pinned upstream binaries it may be linked into).
-GCC_RUNTIME = "GPL-3.0-or-later WITH GCC-exception-3.1"
-ALL_BINARIES = ("containerd", "pause", "runc")
-CLASS_COMPONENTS = {"glibc": ("LGPL-2.1-or-later", ("HOST_OS_LIBRARY", "STATIC_SYSTEM_LIBRARY"), ALL_BINARIES),
-                    "libseccomp": ("LGPL-2.1-only", ("STATIC_SYSTEM_LIBRARY",), ("runc",)),
-                    "libgcc": (GCC_RUNTIME, ("STATIC_SYSTEM_LIBRARY",), ALL_BINARIES),
-                    "libgcc_eh": (GCC_RUNTIME, ("STATIC_SYSTEM_LIBRARY",), ALL_BINARIES),
-                    "libnftnl": ("GPL-2.0-or-later", ("HOST_OS_LIBRARY",), ()),
-                    "libmnl": ("LGPL-2.1-or-later", ("HOST_OS_LIBRARY",), ())}
+CLASS_COMPONENTS = {"glibc": ("HOST_OS_LIBRARY", "STATIC_SYSTEM_LIBRARY"), "libseccomp": ("STATIC_SYSTEM_LIBRARY",),
+                    "libgcc": ("STATIC_SYSTEM_LIBRARY",), "libgcc_eh": ("STATIC_SYSTEM_LIBRARY",),
+                    "libnftnl": ("HOST_OS_LIBRARY",), "libmnl": ("HOST_OS_LIBRARY",)}
+UPSTREAM_BINARIES = ("containerd", "pause", "runc")
 # Each approval and owner election is bound to its subjects and its decided use: (subjects, kinds, question).
 DECISIONS = {"GPL-2.0-only": (("libnftables", "nft"), ("HOST_OS_LIBRARY", "HOST_OS_PROGRAM"), "Q-L"),
              "LGPL-3.0-or-later": (("gmp",), ("HOST_OS_LIBRARY",), "Q-L2")}
-OWNER_ELECTIONS = {"LGPL-3.0-or-later OR MPL-2.0": ("MPL-2.0", "Q-L", "libpathrs", "STATIC_SYSTEM_LIBRARY", ("runc",)),
-                   "GPL-2.0-or-later OR LGPL-3.0-or-later": ("LGPL-3.0-or-later", "Q-L2", "gmp", "HOST_OS_LIBRARY", ())}
+OWNER_ELECTIONS = {"LGPL-3.0-or-later OR MPL-2.0": ("MPL-2.0", "Q-L", "libpathrs", "STATIC_SYSTEM_LIBRARY"),
+                   "GPL-2.0-or-later OR LGPL-3.0-or-later": ("LGPL-3.0-or-later", "Q-L2", "gmp", "HOST_OS_LIBRARY")}
 FIELD_VALUES = ("NOASSERTION", "NONE")
 KINDS = ("CRATE", "GO_MODULE", "UPSTREAM_BINARY", "STATIC_SYSTEM_LIBRARY", "HOST_OS_PROGRAM", "HOST_OS_LIBRARY",
          "PLANEON_SOURCE", "ARTIFACT")
@@ -219,16 +214,16 @@ def normalise_legacy(field: str) -> str:
 
 # --- classification -------------------------------------------------------------------------------------------------
 
-def _in_use(component: dict, kinds, names=None, binaries=()) -> bool:
-    """The component is upstream-pinned, of a decided kind and name, and a static library is linked into one of its
-    decided pinned official upstream binaries."""
+def _in_use(component: dict, kinds, names=None) -> bool:
+    """The component is upstream-pinned, of a decided kind and name, and a static library is linked into a pinned
+    official upstream binary."""
     if component["custody"] != "UPSTREAM_PINNED" or component["kind"] not in kinds:
         return False
     if names is not None and component["name"] not in names:
         return False
     if component["kind"] == "STATIC_SYSTEM_LIBRARY":
         linked = component["linkedInto"]
-        return type(linked) is dict and linked.get("name") in binaries and linked.get("custody") == "UPSTREAM_PINNED"
+        return type(linked) is dict and linked.get("name") in UPSTREAM_BINARIES and linked.get("custody") == "UPSTREAM_PINNED"
     return True
 
 
@@ -264,9 +259,8 @@ class Policy:
             if term in self.categories[name]:
                 return name
         if term in CLASS_EXPRESSIONS:
-            decided = CLASS_COMPONENTS.get(component["name"])
-            ok = decided is not None and decided[0] == term and _in_use(component, decided[1], binaries=decided[2])
-            return CLASS if ok else "OUT_OF_SCOPE"
+            kinds = CLASS_COMPONENTS.get(component["name"], ())
+            return CLASS if _in_use(component, kinds) else "OUT_OF_SCOPE"
         return "UNKNOWN"
 
     def resolve(self, node, component: dict) -> tuple:
@@ -292,7 +286,7 @@ class Policy:
         group = render(node)
         owner = OWNER_ELECTIONS.get(group)
         named = [item for item in accepted if owner is not None and render(item[0]) == owner[0]
-                 and _in_use(component, (owner[3],), (owner[2],), owner[4])]
+                 and _in_use(component, (owner[3],), (owner[2],))]
         term, rank, elections, leaves = named[0] if named else min(accepted, key=lambda item: (item[1], render(item[0])))
         return "ACCEPTED_OR", rank, [{"group": group, "elected": render(term)}] + elections, leaves
 
@@ -365,12 +359,12 @@ def record(raw: bytes) -> dict:
         _text(row["via"], "decision route")
         _text(row["summary"], "decision summary")
     klass = value["hostOsSystemLibraryClass"]
-    _closed(klass, ("outcome", "expressions", "allowedKinds", "allowedCustody", "components", "neverFor", "releaseOutcome",
-                    "decidedBy"), "closed host-OS class")
+    _closed(klass, ("outcome", "expressions", "allowedKinds", "allowedCustody", "components", "upstreamBinaries", "neverFor",
+                    "releaseOutcome", "decidedBy"), "closed host-OS class")
     require(klass["outcome"] == CLASS and klass["expressions"] == list(CLASS_EXPRESSIONS)
             and klass["allowedKinds"] == list(CLASS_KINDS) and klass["allowedCustody"] == list(CLASS_CUSTODY)
-            and klass["components"] == {name: {"expression": term, "kinds": list(kinds), "binaries": list(binaries)}
-                                        for name, (term, kinds, binaries) in CLASS_COMPONENTS.items()}
+            and klass["components"] == {name: list(kinds) for name, kinds in CLASS_COMPONENTS.items()}
+            and klass["upstreamBinaries"] == list(UPSTREAM_BINARIES)
             and klass["decidedBy"] == ["Q-L", "Q-L2"], "the decided host-OS class, exactly")
     require(type(klass["neverFor"]) is list and klass["neverFor"] and all(type(x) is str and x for x in klass["neverFor"]),
             "class exclusions")
@@ -378,10 +372,9 @@ def record(raw: bytes) -> dict:
     elections = value["ownerElections"]
     require(type(elections) is list and [(row.get("group"), row.get("elects"), row.get("decidedBy"), row.get("component"),
                                            row.get("kind")) for row in elections if type(row) is dict]
-            == [(group, *named[:4]) for group, named in OWNER_ELECTIONS.items()], "the owner-named elections, exactly")
-    for row, (_, named) in zip(elections, OWNER_ELECTIONS.items()):
-        _closed(row, ("group", "elects", "decidedBy", "component", "kind", "binaries"), "closed owner election")
-        require(row["binaries"] == list(named[4]), "the owner election's binaries")
+            == [(group, *named) for group, named in OWNER_ELECTIONS.items()], "the owner-named elections, exactly")
+    for row in elections:
+        _closed(row, ("group", "elects", "decidedBy", "component", "kind"), "closed owner election")
         require(canonical(row["group"]) == row["group"], "an owner election names a canonical group")
     rules = value["rules"]
     _closed(rules, ("orChoice", "andTerms", "legacySlash", "scope", "precedence"), "closed rules")

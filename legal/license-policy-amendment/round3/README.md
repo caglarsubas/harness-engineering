@@ -1,6 +1,6 @@
 # License-policy amendment LIC-HOST-A1 (DATA_CHECK_ONLY)
 
-Status: **CONTRACT_CANDIDATE_ROUND4_AWAITING_INDEPENDENT_REVIEW**. Rounds 1 to 3 (`review-round1.json` to `review-round3.json`, bytes in `round1/` to `round3/`) returned CHANGES_REQUIRED; each finding is answered below.
+Status: **CONTRACT_CANDIDATE_ROUND3_AWAITING_INDEPENDENT_REVIEW**. Rounds 1 and 2 (`review-round1.json`, `review-round2.json`, bytes in `round1/`, `round2/`) returned CHANGES_REQUIRED; each finding is answered below.
 
 The owner decided three questions for the W03 backend distribution (`architecture/backend-distribution/`, W03-0). All
 three were decided on 2026-10-10, via the lane monitor:
@@ -21,7 +21,7 @@ reviewed amendment, and `scripts/license_amendment.py` gives the effective class
 | File | Content |
 |---|---|
 | `amendment.json` | `planeon.internal.license-policy-amendment/v1`: the base pin, the three owner decisions, the host-OS class, the three rules and their precedence, and two explicit-review decision records |
-| `vectors.json` | 88 classification cases (schema v2): expression, component, expected outcome and elections, refusals included |
+| `vectors.json` | 80 classification cases (schema v2): expression, component, expected outcome and elections, refusals included |
 | `../../scripts/license_amendment.py` | an SPDX expression parser (OR, AND, WITH, parentheses), `classify`, `effective_policy`, `check` |
 
 ## The amendment
@@ -38,21 +38,14 @@ leaf's category and the structured elections.
 - GPL-2.0-or-later (libnftnl).
 
 None of them appears in any base category. A class term is accepted only for a component the owner decisions name,
-under that component's decided term, in one of its decided kinds and in UPSTREAM_PINNED custody, including inside
-compounds. A static library also has to be linked into one of its decided pinned official upstream binaries:
+in its decided kind and in UPSTREAM_PINNED custody, including inside compounds:
+- glibc, as a host library or a static library;
+- libseccomp, libgcc and libgcc_eh, as static libraries;
+- libnftnl and libmnl, as host libraries.
 
-| Component | Decided term | Kinds | Binaries (static) | Decision |
-|---|---|---|---|---|
-| glibc | LGPL-2.1-or-later | host library, static library | containerd, pause, runc | Q-L |
-| libseccomp | LGPL-2.1-only | static library | runc | Q-L |
-| libgcc, libgcc_eh | GPL-3.0-or-later WITH GCC-exception-3.1 | static library | containerd, pause, runc | Q-L2 |
-| libnftnl | GPL-2.0-or-later | host library | — | Q-L2 |
-| libmnl | LGPL-2.1-or-later | host library | — | Q-L2 |
-
-Elsewhere the term is OUT_OF_SCOPE, which ranks with UNKNOWN. That includes any other term for these components (for
-example glibc under GPL-2.0-or-later), libseccomp in containerd or pause, and glibc or libgcc linked into a planeon binary,
-none of which the owner decisions cover. glibc as a host library is read as part of Q-L2's nft library closure: nft and
-its libraries load the host libc.
+A static library qualifies only when it is linked into one of the pinned official upstream binaries: containerd, pause or
+runc. Elsewhere the term is OUT_OF_SCOPE, which ranks with UNKNOWN. That includes glibc or libgcc linked into a planeon
+binary, which the owner decisions do not cover.
 
 **Explicit-review decision records.** GPL-2.0-only and LGPL-3.0-or-later are base explicit-review expressions, so they are
 decision records rather than class entries. A class term must not overlap a base category; W03-0's wording listed nft
@@ -67,7 +60,7 @@ one digest. An approval applies only to its named subjects, in their decided kin
 - gmp, as a host library, dynamically linked.
 
 For any other component, kind or custody the term stays OPTIONAL_EXPLICIT_REVIEW. The owner elections are bound in the
-same way: libpathrs as a static library linked into runc, gmp as a host library. Elsewhere the ranking decides. Open content is accepted only for an ARTIFACT, as the base
+same way: libpathrs as a static library, gmp as a host library. Open content is accepted only for an ARTIFACT, as the base
 limits it. NOASSERTION and NONE are whole-field values and are refused inside an expression.
 
 **Rules.**
@@ -96,9 +89,9 @@ true`, so the base entry's own release outcome applies.
 - at most 512 characters and 16 levels of nesting.
 Anything else is refused with a ValueError.
 
-`check` pins the decided content: the class, its kinds and custody, each class component's term, kinds and binaries, the
-decisions with their subjects and questions, and the owner elections with their binaries. It verifies the decision digests and the base digest, and confirms there is no overlap with base
-categories. All 88 vectors must classify as expected and cover every outcome, refusal included. `effective_policy` builds the
+`check` pins the decided content: the class, its kinds and custody, the decisions with their subjects and questions, and
+the owner elections. It verifies the decision digests and the base digest, and confirms there is no overlap with base
+categories. All 80 vectors must classify as expected and cover every outcome, refusal included. `effective_policy` builds the
 policy from the same base bytes whose digest `check` verified.
 
 ## Consumers
@@ -106,14 +99,6 @@ policy from the same base bytes whose digest `check` verified.
 The W03 license gate (HE-001 for the Rust modules, HE-008 for the host image) classifies every SBOM entry with
 `classify` and records the elections and normalisations. W02g-F2 replaces I06 SC13's single-license check with a reference
 to this closure. The base policy's own consumers are unchanged.
-
-Two limits for those consumers:
-- Components are identified by their upstream names. SBOM generators report distribution package names or purls (for
-  example libc6, libseccomp2, libgmp10), so the host-image packet needs a reviewed mapping or purl identity. Until it
-  exists, a mismatch fails closed (OUT_OF_SCOPE or OPTIONAL_EXPLICIT_REVIEW).
-- The native modules are fully static musl builds (Q3), so no glibc or GCC runtime is linked into planeon binaries. A
-  `*-linux-gnu` build would come out OUT_OF_SCOPE and need a further owner decision. HE-001's license gate enumerates the
-  musl target's self-contained objects.
 
 ## Round-1 findings and dispositions
 
@@ -141,13 +126,6 @@ Two limits for those consumers:
 | L15 MINOR, double read | `effective_policy` builds the policy from the verified base bytes |
 | L16 MINOR, files row | 80 v2 cases |
 | L17 NOTE | (5) legacy fields with spaces are read too; (2) an invalid vector component is refused before classification; (1) the amendment record will be pinned by digest in the packet's authority; (3), (4), (6) and (7) noted |
-
-## Round-3 findings and dispositions
-
-| Finding | Disposition |
-|---|---|
-| L18 MAJOR, class terms not bound | each class component is bound to its decided term, kinds and, for a static library, its decided binaries (the table above); `check` pins them; the libpathrs election is bound to runc, and elsewhere the ranking decides; OUT_OF_SCOPE vectors for glibc under GPL-2.0-or-later, glibc under the GCC runtime term, glibc host with "GPL-2.0-or-later OR LGPL-2.1-only", libnftnl under LGPL-2.1-or-later, libseccomp in containerd, in pause and as a host library; a vector for libpathrs in containerd |
-| L19 NOTE | (6) HOST_OS_PROGRAM removed from the class kinds; (5) the glibc host-library reading is stated; (3) and (4) are stated as limits for consumers; (1), (2), (7) and (8) noted, and (7) stays with the packet authority's digest pin |
 
 ## Not claimed
 

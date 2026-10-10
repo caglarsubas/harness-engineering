@@ -1,0 +1,81 @@
+{
+ "schemaVersion": "harness.planeon.ai/license-amendment-review/v1",
+ "round": 3,
+ "reviewDate": "2026-10-10",
+ "subjectCommit": "6c4cba474ac738c02a3cb021748a09f2c7f071ea",
+ "subjectTree": "621fe8539286469993c631213bda4e9c97d1c0e1",
+ "verdict": "CHANGES_REQUIRED",
+ "findings": [
+  {
+   "id": "L18",
+   "severity": "MAJOR",
+   "location": "scripts/license_amendment.py CLASS_COMPONENTS, UPSTREAM_BINARIES, _in_use, Policy.leaf (term in CLASS_EXPRESSIONS → CLASS_COMPONENTS.get(name)); amendment.json hostOsSystemLibraryClass.components/upstreamBinaries; OWNER_ELECTIONS (libpathrs)",
+   "finding": "The class now reaches only the named components in their decided kinds, and only through a pinned upstream binary. But it does not tie each component to the license it was decided under, or to the binary it was decided in. Any of the four class terms is accepted for any of the six named components. Any static component qualifies when linked into any of containerd, pause and runc. The owner decided specific pairs. Q-L: glibc LGPL-2.1-or-later (static in containerd, runc and pause, per W03-0 D-LIC-GLIBC) and libseccomp LGPL-2.1-only (static in runc only, D-LIC-LIBSECCOMP). Q-L2: GCC runtime under GPL-3.0-or-later WITH GCC-exception-3.1 (static in containerd, runc and pause), libnftnl GPL-2.0-or-later and libmnl LGPL-2.1-or-later as host shared libraries of nft. Probes: {glibc, STATIC_SYSTEM_LIBRARY, linkedInto runc} with 'GPL-2.0-or-later' gives HOST_OS_SYSTEM_LIBRARY. The same glibc with 'LGPL-2.1-only' or 'GPL-3.0-or-later WITH GCC-exception-3.1' also gives the class. {glibc, HOST_OS_LIBRARY} with 'GPL-2.0-or-later OR LGPL-2.1-only' gives ACCEPTED_OR, electing GPL-2.0-or-later. {libnftnl, HOST_OS_LIBRARY} with 'LGPL-2.1-or-later' gives the class. {libseccomp, STATIC, linkedInto containerd} and {libseccomp, STATIC, linkedInto pause} give the class. The libpathrs owner election applies when linked into containerd. The material case is the first: GPL-2.0-or-later was decided only for libnftnl, a host shared library loaded by the GPL program nft. Accepting it for a static library inside the Apache-2.0 binaries containerd, runc or pause would put GPL-2.0 code into those binaries without an owner decision. A host-image SBOM reporting such an expression would pass silently instead of reaching review. This is still broader than Q-L and Q-L2.",
+   "requiredChange": "Bind each class component to its decided expressions and, for a static library, to its decided binaries. Then pin both in the record and in check. Concretely: glibc gets LGPL-2.1-or-later, as HOST_OS_LIBRARY or as STATIC in containerd, pause and runc. libseccomp gets LGPL-2.1-only, as STATIC in runc only. libgcc and libgcc_eh get GPL-3.0-or-later WITH GCC-exception-3.1, as STATIC in containerd, pause and runc. libnftnl gets GPL-2.0-or-later as HOST_OS_LIBRARY. libmnl gets LGPL-2.1-or-later as HOST_OS_LIBRARY. Bind the libpathrs election to runc. Add vectors that must come out OUT_OF_SCOPE: glibc static with GPL-2.0-or-later, glibc host with 'GPL-2.0-or-later OR LGPL-2.1-only', libnftnl with LGPL-2.1-or-later, and libseccomp linked into containerd or pause. The libpathrs election in containerd should fall back to ranking."
+  },
+  {
+   "id": "L19",
+   "severity": "NOTE",
+   "location": "scripts/license_amendment.py, amendment.json, vectors.json (round 3)",
+   "finding": "Non-blocking observations. (1) An approval accepts any subject in any of the decided kinds, so nft as HOST_OS_LIBRARY and libnftables as HOST_OS_PROGRAM are also approved. This is harmless. (2) Blocked outcomes return leaves [], so a consumer cannot see which term blocked; for example 'MIT AND GPL-2.0-only' for a crate gives OPTIONAL_EXPLICIT_REVIEW with no leaves. (3) Components are identified by bare names (glibc, gmp, nft, libgcc_eh, ...). SBOM generators report distro or package identities instead (for example libc6, libseccomp2, libgmp10, nftables, libnftables1). The host-image packet needs a reviewed mapping or a purl identity. Until then, mismatches fail closed (OUT_OF_SCOPE or OPTIONAL_EXPLICIT_REVIEW). (4) A forward risk for HE-001: planeon Rust modules built for *-linux-gnu link the GCC runtime and glibc. libgcc_s as HOST_OS_LIBRARY, and glibc or libgcc_eh linked into a planeon binary, now come out OUT_OF_SCOPE. That is correct under the decisions, but W03 will need either a musl or other build choice, or a further owner decision. (5) Accepting glibc as HOST_OS_LIBRARY relies on reading Q-L2's 'nft library closure' as including the host libc. That reading is reasonable, but the record does not state it. (6) HOST_OS_PROGRAM remains in the class allowedKinds although no class component uses it. (7) Text fields the classifier does not read still accept edits: neverFor, the class releaseOutcome, the releaseAdmission and rule texts, the owner summaries, and decision text fields with a recomputed digest. This is deferred to the packet authority's digest pin, per the L17(1) disposition. (8) For gmp only, a superset of a base review compound is accepted (round-2 L17(6)).",
+   "requiredChange": "None required. Consider (3) and (4) in the host-image packet and (5) as one README sentence."
+  }
+ ],
+ "roundTwoFindings": {
+  "L11": {
+   "status": "FIXED",
+   "reason": "Each approval and owner election requires its subjects, its decided kinds and UPSTREAM_PINNED custody, and the kinds are inside the decision digest (recomputed independently, both match). Probes: nft as CRATE or PLANEON_SOURCE, libnftables static, gmp as CRATE, static, REPOSITORY_BUILT or HOST_OS_PROGRAM, nft as UPSTREAM_BINARY, and gmp's OR group for a gmp CRATE all give OPTIONAL_EXPLICIT_REVIEW. nft and libnftables as host program or library, and gmp as host library, stay approved. Mutations that change the kinds (even with a recomputed digest) or remove an election's kind are refused. The subject-by-kind cross product is noted in L19(1)."
+  },
+  "L12": {
+   "status": "ADDRESSED",
+   "reason": "Option (i) is implemented. Only the six named components in their decided kinds qualify. A static library needs linkedInto one of containerd, pause or runc in UPSTREAM_PINNED custody, and validate_component enforces linkedInto if and only if the kind is STATIC. Probes: glibc linked into a planeon binary, into a repository-built runc or into kubelet; libgcc_eh in a planeon binary; unnamed libfoo; libseccomp as a host library; libmnl static; glibc as HOST_OS_PROGRAM: all give OUT_OF_SCOPE. Remaining gap: licenses and binaries are not bound per component (L18)."
+  },
+  "L13": {
+   "status": "FIXED",
+   "reason": "NOASSERTION and NONE are refused inside any compound, in legacy crate fields too ('NOASSERTION/MIT'). A bare or parenthesised NOASSERTION stays PLANNED_UNRESOLVED. 'NOASSERTION OR SSPL-1.0' and 'MIT AND (SSPL-1.0 OR NOASSERTION)' are refusal vectors."
+  },
+  "L14": {
+   "status": "FIXED",
+   "reason": "Only effective leaves are returned: the AND terms and each OR group's elected alternative. 'MIT AND (Apache-2.0 OR SSPL-1.0)' now returns only Apache-2.0 and MIT. Exact base compounds return baseEntry true with no leaves, and releaseAdmission is defined over the effective leaves. Blocked results returning no leaves is a diagnostic note (L19(2))."
+  },
+  "L15": {
+   "status": "FIXED",
+   "reason": "effective_policy returns the Policy that _check built from the bytes it verified. A probe reader that returned different bytes on a second read was called only once, and SSPL-1.0 stays DENIED."
+  },
+  "L16": {
+   "status": "FIXED",
+   "reason": "The Files table and the text both say 80 cases (vectors schema v2), which matches vectors.json."
+  },
+  "L17": {
+   "status": "ADDRESSED",
+   "reason": "(5) Legacy fields with spaces are read ('MIT / Apache-2.0' gives ACCEPTED_OR, electing Apache-2.0); tabs are still refused. (2) An invalid vector component is refused before classification: REFUSED vectors via a bad kind, or via linkedInto on a crate, are rejected. (1) is deferred to the packet authority's digest pin; text-only mutations still pass (L19(7)). (3), (6) and (7) are noted. (4) is moot for gmp, because GPL-2.0-or-later is now out of scope for gmp."
+  }
+ },
+ "checksRun": [
+  "git rev-parse: HEAD 6c4cba47 and tree 621fe853 confirmed; git diff 14c7e3e..6c4cba4 limited to legal/license-policy-amendment/ and scripts/license_amendment.py; round1/ and review-round1.json untouched; base policy unchanged, sha256 fa3a4398...a40d0",
+  "round2/ copies compared byte for byte with 14c7e3e's README, REVIEW_BRIEF, amendment.json, vectors.json and scripts/license_amendment.py: all identical; review-round2.json spot-checked (round, subject, verdict, finding ids and severities, roundOneFindings, text)",
+  "python3 -B scripts/license_amendment.py: valid",
+  "Decision digests recomputed independently over the 6 required fields plus subjects, kinds and decidedBy: both match",
+  "80 vectors listed and compared with round 2 (17 new or re-keyed cases)",
+  "Comparison of the scope with Q-L, Q-L2 and Q-L3 and with W03-0 D-LIC-GLIBC, D-LIC-LIBSECCOMP, D-LIC-LIBGCC, D-LIC-LIBNFTNL, D-LIC-LIBMNL, D-LIC-GMP, D-LIC-NFT and D-LIC-LIBPATHRS (component, license and binary pairs)",
+  "138 scratch classification probes across 34 component profiles (linkedInto variants: runc, pause, containerd, kubelet, planeon, repository-built runc), 15 legacy crate-field probes, 8 component-validation probes, effective-leaf and baseEntry output (/private/tmp/claude-501/lichost-review-r3/probe.py)",
+  "35 scratch mutation probes of check() through a fake read() (26 refused, 9 accepted: the baseline, text-only fields, dict reorder, a non-string note) plus a single-read probe of effective_policy (/private/tmp/claude-501/lichost-review-r3/mutate.py)",
+  "Worktree clean after review (git status --ignored empty)"
+ ],
+ "sourcesRead": [
+  "legal/license-policy-amendment/REVIEW_BRIEF.md (round 3)",
+  "legal/license-policy-amendment/README.md (round 3, including the round-2 dispositions)",
+  "legal/license-policy-amendment/amendment.json (and git diff 14c7e3e..6c4cba4)",
+  "legal/license-policy-amendment/vectors.json (80 cases)",
+  "legal/license-policy-amendment/review-round2.json",
+  "legal/license-policy-amendment/round2/ (cmp only)",
+  "scripts/license_amendment.py (git diff 14c7e3e..6c4cba4)",
+  "legal/third-party-license-policy.yaml (digest)",
+  "W03-0 selection.json licenseReviews (from round 1, branch codex/w03-0-backend-distribution)"
+ ],
+ "actions": {
+  "filesEdited": false,
+  "networkAccessed": "none",
+  "personalDataSent": false
+ }
+}

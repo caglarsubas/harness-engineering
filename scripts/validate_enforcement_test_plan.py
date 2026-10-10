@@ -23,7 +23,7 @@ except ImportError:
 
 ROOT = Path(__file__).resolve().parents[1]
 AUTHORITY_PATH = "architecture/enforcement-test-plan-authority.json"
-AUTHORITY_SHA256 = "0a98d019c1af6a414392ca37b72a7fc162fd909906cca2eceab7fd8ecf5133a1"
+AUTHORITY_SHA256 = "39330f4b634b3aa1d188b90786c04efc7bc3e5164689e895bc62bdff71ada437"
 VALIDATOR_PATH = "scripts/validate_enforcement_test_plan.py"
 BASE_COMMIT = "a5a0625e68c39ee5c80cd17841ccf3cecd2a6cda"
 NEW_PACKET = "MET-ENFORCE-022"

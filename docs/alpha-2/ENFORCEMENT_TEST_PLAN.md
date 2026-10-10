@@ -6,8 +6,9 @@
 W04 writes the independent adversarial tests for the host enforcement modules that W03 builds. W04-0 is its plan, as
 reviewed data, under the owner's decisions of 2026-10-10 (via the lane monitor):
 
-- **D-R12**: the test source lives in R12 `mas-harness-conformance-labs`, verified by the owner's repository-aware
-  verifier (VERIFIER-EXT).
+- **D-R12**: the test source lives in R12 `mas-harness-conformance-labs`. The plan records R12's verification route as
+  pending an owner decision; since its review the owner has installed the repository-aware verifier VERIFIER-EXT,
+  which R12 adopts through its own bootstrap PR.
 - **D-TOOL**: Python 3.12 and pytest for the source and offline groups; static Rust+musl probe binaries for the native
   TG-04 and TG-05 probes.
 - **D-MAP**: eight test groups, TG-01 to TG-08, traced against the obligations E01-E12. W04 delivers test source and the

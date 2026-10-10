@@ -9,10 +9,6 @@
   "path": "architecture/i06-backend-profile-v2/criteria.json",
   "sha256": "026206c57d3025c0f0129b6615e46c83d5a8000ddc3288f000a1fe4570050cda"
  },
- "policySource": {
-  "path": "legal/third-party-license-policy.yaml",
-  "sha256": "fa3a4398acafc3960eaaae9f5396d4e96d91e6ff252b83f6c53e1f5f0d8a40d0"
- },
  "ownerDecisions": [
   {
    "id": "Q4",
@@ -93,8 +89,7 @@
      "license": {
       "spdx": "Apache-2.0",
       "reviewEntries": [
-       "D-LIC-GLIBC",
-       "D-LIC-LIBGCC"
+       "D-LIC-GLIBC"
       ]
      },
      "artifacts": [
@@ -131,12 +126,8 @@
       "spdx": "Apache-2.0",
       "reviewEntries": [
        "D-LIC-GLIBC",
-       "D-LIC-LIBGCC",
        "D-LIC-LIBSECCOMP",
-       "D-LIC-LIBPATHRS",
-       "D-LIC-CRATES-MIT-APACHE",
-       "D-LIC-CRATES-UNLICENSE-MIT",
-       "D-LIC-CRATES-LLVM-APACHE-MIT"
+       "D-LIC-LIBPATHRS"
       ]
      },
      "artifacts": [
@@ -438,8 +429,7 @@
   "license": "Apache-2.0",
   "usedBy": "CONTAINER_RUNTIME",
   "reviewEntries": [
-   "D-LIC-GLIBC",
-   "D-LIC-LIBGCC"
+   "D-LIC-GLIBC"
   ]
  },
  "hostDependencies": [
@@ -450,68 +440,10 @@
     "SERVICE_PROXY"
    ],
    "minimumVersion": "1.0.1",
-   "source": "kube-proxy nftables mode executes it (vendor/sigs.k8s.io/knftables/nftables.go:152,162-163) and runs nft --json (:410, :474)",
+   "source": "kube-proxy nftables mode executes it (vendor/sigs.k8s.io/knftables/nftables.go:152,162-163)",
    "reviewEntries": [
     "D-LIC-NFT"
    ]
-  },
-  {
-   "name": "libnftables",
-   "license": "GPL-2.0-only",
-   "usedBy": [
-    "SERVICE_PROXY"
-   ],
-   "minimumVersion": "1.0.1",
-   "source": "nft's library, from the same nftables release",
-   "reviewEntries": [
-    "D-LIC-NFT"
-   ]
-  },
-  {
-   "name": "libnftnl",
-   "license": "GPL-2.0-or-later",
-   "usedBy": [
-    "SERVICE_PROXY"
-   ],
-   "minimumVersion": "the nftables release's requirement",
-   "source": "a shared library of nft",
-   "reviewEntries": [
-    "D-LIC-LIBNFTNL"
-   ]
-  },
-  {
-   "name": "libmnl",
-   "license": "LGPL-2.1-or-later",
-   "usedBy": [
-    "SERVICE_PROXY"
-   ],
-   "minimumVersion": "the nftables release's requirement",
-   "source": "a shared library of nft and libnftnl",
-   "reviewEntries": [
-    "D-LIC-LIBMNL"
-   ]
-  },
-  {
-   "name": "gmp",
-   "license": "LGPL-3.0-or-later OR GPL-2.0-or-later",
-   "usedBy": [
-    "SERVICE_PROXY"
-   ],
-   "minimumVersion": "the nftables release's requirement",
-   "source": "a shared library of nft",
-   "reviewEntries": [
-    "D-LIC-GMP"
-   ]
-  },
-  {
-   "name": "jansson",
-   "license": "MIT",
-   "usedBy": [
-    "SERVICE_PROXY"
-   ],
-   "minimumVersion": "the nftables release's requirement",
-   "source": "nft's JSON library (needed for nft --json)",
-   "reviewEntries": []
   }
  ],
  "criteria": [
@@ -531,7 +463,7 @@
    "dispositions": [
     "SEALED_CONFIGURATION"
    ],
-   "how": "etcd v3.7.2 as one member, with no TCP listener. Client: --listen-client-urls unix:///run/qualification-k8s/datastore.sock (a unix client listener uses the URL's host and path, server/embed/etcd.go:750-753), advertised the same way: at v3.7.2 checkHostURLs skips the unix and unixs schemes (server/embed/config.go:1340-1344), so --advertise-client-urls, which is required once --listen-client-urls is set (server/etcdmain/config.go:251), and --initial-advertise-peer-urls may be unix URLs. etcd cannot run without a peer listener: --listen-peer-urls=\"\" is accepted as the flag's empty-string exception (server/embed/config.go:608-609, pkg/flags/unique_urls.go Set) and leaves the default http://localhost:2380 (config.go:87) in place, so the peer listener is one AF_UNIX socket. The peer listener passes only the URL's host to the listener (server/embed/etcd.go:576), so its form is unix://<name>[:<port>], a socket file relative to etcd's working directory, which is the datastore's private directory (unix:///<absolute path> would name an autobound abstract socket). I06 v1 and v2 require peerListen == [], which etcd cannot meet (D-SC01-PEER).",
+   "how": "etcd v3.7.2 as one member, with no TCP listener. Client: --listen-client-urls unix:///run/qualification-k8s/datastore.sock (a unix client listener uses the URL's host and path, server/embed/etcd.go:750-753). etcd cannot run without a peer listener: --listen-peer-urls=\"\" is accepted as the flag's empty-string exception (server/embed/config.go:608-609, pkg/flags/unique_urls.go Set) and leaves the default http://localhost:2380 (config.go:87) in place, so the peer listener is one AF_UNIX socket. The peer listener passes only the URL's host to the listener (server/embed/etcd.go:576), so its form is unix://<name>:<port>, a socket file relative to etcd's working directory, which is the datastore's private directory (unix:///<absolute path> would name an autobound abstract socket). --initial-advertise-peer-urls and --advertise-client-urls must be host:port forms (checkHostURLs, config.go:961-965), and the latter is required once --listen-client-urls is set (server/etcdmain/config.go:251); both are advertisement values with no listener. I06 v1 and v2 require peerListen == [], which etcd cannot meet (D-SC01-PEER).",
    "roles": [
     "DATASTORE"
    ],
@@ -544,17 +476,14 @@
    "dispositions": [
     "SEALED_CONFIGURATION"
    ],
-   "how": "kube-apiserver --bind-address=127.0.0.1 with the I06 v2 positive evidence's secure port; the kubelet, kube-proxy and the policy agent reach it through loopback kubeconfigs. The other components' listeners, which default to every interface, are pinned to loopback too: kube-controller-manager and kube-scheduler --bind-address=127.0.0.1, kube-proxy healthz and metrics on 127.0.0.1. The kubelet's server listener (--address, default 0.0.0.0:10250) and its --node-ip are fixed in the host-image packet so that only the apiserver reaches it (D-KUBELET-LISTENER).",
+   "how": "kube-apiserver --bind-address=127.0.0.1 with the I06 v2 positive evidence's secure port; the kubelet, kube-proxy and the policy agent reach it through loopback kubeconfigs. The other components' listeners, which default to every interface, are pinned to loopback too: kube-controller-manager and kube-scheduler --bind-address=127.0.0.1, kube-proxy healthz and metrics on 127.0.0.1.",
    "roles": [
     "APISERVER",
     "CONTROLLER_MANAGER",
-    "KUBELET",
     "SCHEDULER",
     "SERVICE_PROXY"
    ],
-   "openItems": [
-    "D-KUBELET-LISTENER"
-   ]
+   "openItems": []
   },
   {
    "id": "SC03",
@@ -985,8 +914,7 @@
    "class": "UNCLASSIFIED_NEEDS_POLICY_AMENDMENT",
    "reason": "containerd's release builds with CGO and -extldflags -static (Makefile:96-108, 332-336); runc's make static links static-pie against a Debian glibc toolchain; kubernetes build/pause compiles -static.",
    "decision": "Q-L",
-   "status": "OWNER_APPROVED",
-   "elects": null
+   "status": "OWNER_APPROVED"
   },
   {
    "id": "D-LIC-LIBSECCOMP",
@@ -995,8 +923,7 @@
    "class": "UNCLASSIFIED_NEEDS_POLICY_AMENDMENT",
    "reason": "runc's BUILDTAGS include seccomp; the release ships libseccomp-2.6.1.tar.gz for compliance.",
    "decision": "Q-L",
-   "status": "OWNER_APPROVED",
-   "elects": null
+   "status": "OWNER_APPROVED"
   },
   {
    "id": "D-LIC-LIBPATHRS",
@@ -1005,88 +932,16 @@
    "class": "UNCLASSIFIED_NEEDS_POLICY_AMENDMENT",
    "reason": "runc's BUILDTAGS include libpathrs; the release ships libpathrs-0.2.6.tar.xz; the dual expression is not an allowed exception under exact matching.",
    "decision": "Q-L",
-   "status": "OWNER_APPROVED",
-   "elects": "MPL-2.0"
+   "status": "OWNER_APPROVED"
   },
   {
    "id": "D-LIC-NFT",
    "subject": "nft, executed by kube-proxy from the host image",
    "license": "GPL-2.0-only",
    "class": "OPTIONAL_EXPLICIT_REVIEW",
-   "reason": "A separately executed host program and its library; GPL-2.0-only is on the policy's explicit-review list.",
+   "reason": "A separately executed host program; GPL-2.0-only is on the policy's explicit-review list.",
    "decision": "Q-L",
-   "status": "OWNER_APPROVED",
-   "elects": null
-  },
-  {
-   "id": "D-LIC-LIBGCC",
-   "subject": "the GCC runtime (libgcc, libgcc_eh) that gcc adds to the static links of containerd, runc and the pause binary",
-   "license": "GPL-3.0-or-later WITH GCC-exception-3.1",
-   "class": "UNCLASSIFIED_NEEDS_POLICY_AMENDMENT",
-   "reason": "Static links made with gcc pull in runtime-library objects under the GCC runtime library exception (owner decision Q-L2, L2-a).",
-   "decision": "Q-L",
-   "status": "OWNER_APPROVED",
-   "elects": null
-  },
-  {
-   "id": "D-LIC-CRATES-MIT-APACHE",
-   "subject": "libpathrs' crates bitflags, itertools, libc, once_cell, thiserror and static_assertions, statically linked into runc",
-   "license": "MIT OR Apache-2.0",
-   "class": "UNCLASSIFIED_NEEDS_POLICY_AMENDMENT",
-   "reason": "Accepted by the OR-choice rule of owner decision Q-L2 (L2-a), electing Apache-2.0.",
-   "decision": "Q-L",
-   "status": "OWNER_APPROVED",
-   "elects": "Apache-2.0"
-  },
-  {
-   "id": "D-LIC-CRATES-UNLICENSE-MIT",
-   "subject": "libpathrs' crate memchr, statically linked into runc",
-   "license": "Unlicense OR MIT",
-   "class": "UNCLASSIFIED_NEEDS_POLICY_AMENDMENT",
-   "reason": "Accepted by the OR-choice rule, electing MIT.",
-   "decision": "Q-L",
-   "status": "OWNER_APPROVED",
-   "elects": "MIT"
-  },
-  {
-   "id": "D-LIC-CRATES-LLVM-APACHE-MIT",
-   "subject": "libpathrs' crate rustix, statically linked into runc",
-   "license": "Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT",
-   "class": "UNCLASSIFIED_NEEDS_POLICY_AMENDMENT",
-   "reason": "Accepted by the OR-choice rule, electing Apache-2.0.",
-   "decision": "Q-L",
-   "status": "OWNER_APPROVED",
-   "elects": "Apache-2.0"
-  },
-  {
-   "id": "D-LIC-LIBNFTNL",
-   "subject": "libnftnl, a shared library of the host's nft",
-   "license": "GPL-2.0-or-later",
-   "class": "UNCLASSIFIED_NEEDS_POLICY_AMENDMENT",
-   "reason": "nft library closure in the host-OS class (owner decision Q-L2); the expression is verified against the shipped package in the host-image packet.",
-   "decision": "Q-L",
-   "status": "OWNER_APPROVED",
-   "elects": null
-  },
-  {
-   "id": "D-LIC-LIBMNL",
-   "subject": "libmnl, a shared library of the host's nft",
-   "license": "LGPL-2.1-or-later",
-   "class": "UNCLASSIFIED_NEEDS_POLICY_AMENDMENT",
-   "reason": "nft library closure in the host-OS class; verified against the shipped package in the host-image packet.",
-   "decision": "Q-L",
-   "status": "OWNER_APPROVED",
-   "elects": null
-  },
-  {
-   "id": "D-LIC-GMP",
-   "subject": "gmp, a shared library of the host's nft",
-   "license": "LGPL-3.0-or-later OR GPL-2.0-or-later",
-   "class": "UNCLASSIFIED_NEEDS_POLICY_AMENDMENT",
-   "reason": "nft library closure; owner decision Q-L2 elects LGPL-3.0-or-later, which is on the policy's explicit-review list.",
-   "decision": "Q-L",
-   "status": "OWNER_APPROVED",
-   "elects": "LGPL-3.0-or-later"
+   "status": "OWNER_APPROVED"
   }
  ],
  "rechecks": {
@@ -1127,12 +982,7 @@
   {
    "id": "D-SC01-PEER",
    "owner": "W02g-F2",
-   "text": "etcd cannot run without a peer listener, so the I06 successor accepts exactly one AF_UNIX peer listener, unix://<name>[:<port>] relative to etcd's working directory (the datastore's private directory), reachable only from the datastore's confined type, and no TCP listener; native evidence shows no TCP listener. I06's unix:///<absolute path> convention cannot express etcd's peer socket."
-  },
-  {
-   "id": "D-KUBELET-LISTENER",
-   "owner": "W03 host-image packet",
-   "text": "Fix the kubelet's --address and --node-ip so that only the apiserver's confined type reaches port 10250."
+   "text": "etcd cannot run without a peer listener, so the I06 successor accepts exactly one AF_UNIX peer listener, unix://<name>:<port> relative to etcd's working directory (the datastore's private directory), reachable only from the datastore's confined type, and no TCP listener; native evidence shows no TCP listener. I06's unix:///<absolute path> convention cannot express etcd's peer socket."
   },
   {
    "id": "D-HELPER-TYPES",
@@ -1142,12 +992,12 @@
   {
    "id": "D-POLICY-AMEND",
    "owner": "LIC-HOST meta packet (main lane)",
-   "text": "Owner decisions Q-L (L-a) and Q-L2 (L2-a): amend legal/third-party-license-policy.yaml with a reviewed class for host-OS and statically linked system libraries holding exactly LGPL-2.1-or-later (glibc, libmnl), LGPL-2.1-only (libseccomp), GPL-3.0-or-later WITH GCC-exception-3.1 (the GCC runtime), GPL-2.0-only for separately executed host programs and their libraries (nft, libnftables), GPL-2.0-or-later (libnftnl), and an OR-choice rule accepting an \"A OR B\" expression with an allowed or reviewed alternative, electing it and recording the election per component (libpathrs electing MPL-2.0, its crates, Rust std and core, gmp electing LGPL-3.0-or-later), with source offers from the pinned tags. Validators pin the policy identity (validate_reuse: policyVersion 0.3.0), so the amendment is its own history-projected packet before the host-image packet."
+   "text": "Owner decision Q-L (L-a): amend legal/third-party-license-policy.yaml with a reviewed class for host-OS and statically linked system libraries holding exactly LGPL-2.1-or-later (glibc), LGPL-2.1-only (libseccomp), MPL-2.0 OR LGPL-3.0-or-later electing MPL-2.0 (libpathrs) and GPL-2.0-only for separately executed host programs (nft), with source offers from the pinned tags. Validators pin the policy identity (validate_reuse: policyVersion 0.3.0), so the amendment is its own history-projected packet before the host-image packet."
   },
   {
    "id": "D-I06-LICENSE",
    "owner": "W02g-F2",
-   "text": "Replace I06 SC13's single distribution.license == Apache-2.0 check with a reference to the license closure reviewed under owner decision Q-L (L-a) and its LIC-HOST amendment."
+   "text": "Replace I06 SC13's single distribution.license == Apache-2.0 check with a reference to the reviewed license closure, once owner question Q-L is decided."
   },
   {
    "id": "D-LIC-CLOSURE",

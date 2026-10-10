@@ -35,23 +35,6 @@ KUBERNETES_PARTS = {"APISERVER": "kube-apiserver", "CONTROLLER_MANAGER": "kube-c
                     "SCHEDULER": "kube-scheduler", "KUBELET": "kubelet", "SERVICE_PROXY": "kube-proxy"}
 SOURCE_BUILD_ROLES = ("NETWORK_POLICY_AGENT",)
 SANDBOX_REFERENCE = "registry.k8s.io/pause:3.10.2"
-ROLE_REPOSITORIES = {"DATASTORE": ("https://github.com/etcd-io/etcd",),
-                     "CONTAINER_RUNTIME": ("https://github.com/containerd/containerd", "https://github.com/opencontainers/runc",
-                                           "https://github.com/containernetworking/plugins"),
-                     "NETWORK_POLICY_AGENT": ("https://github.com/kubernetes-sigs/kube-network-policies",)}
-ETCD_TAGS = {"E-a": "v3.7.2", "E-b": "v3.6.15"}
-# Reviewed static-closure facts of the selected release binaries (review round 1, F2 and F3): each part carries at least
-# these license reviews, the sandbox image's pause binary carries glibc's, and kube-proxy's nft is a reviewed host program.
-REQUIRED_REVIEWS = {"containerd": {"D-LIC-GLIBC", "D-LIC-LIBGCC"},
-                    "runc": {"D-LIC-GLIBC", "D-LIC-LIBGCC", "D-LIC-LIBSECCOMP", "D-LIC-LIBPATHRS", "D-LIC-CRATES-MIT-APACHE",
-                             "D-LIC-CRATES-UNLICENSE-MIT", "D-LIC-CRATES-LLVM-APACHE-MIT"}}
-REQUIRED_SANDBOX_REVIEWS = {"D-LIC-GLIBC", "D-LIC-LIBGCC"}
-REQUIRED_HOST_DEPENDENCIES = {"nft (nftables userspace)": ("SERVICE_PROXY", {"D-LIC-NFT"}),
-                              "libnftables": ("SERVICE_PROXY", {"D-LIC-NFT"}),
-                              "libnftnl": ("SERVICE_PROXY", {"D-LIC-LIBNFTNL"}),
-                              "libmnl": ("SERVICE_PROXY", {"D-LIC-LIBMNL"}),
-                              "gmp": ("SERVICE_PROXY", {"D-LIC-GMP"}),
-                              "jansson": ("SERVICE_PROXY", set())}
 REVIEW_CLASSES = ("UNCLASSIFIED_NEEDS_POLICY_AMENDMENT", "OPTIONAL_EXPLICIT_REVIEW")
 REQUIRED_ROLES = ("APISERVER", "CONTAINER_RUNTIME", "CONTROLLER_MANAGER", "DATASTORE", "KUBELET", "SCHEDULER")
 OPTIONAL_ROLES = ("NETWORK_POLICY_AGENT", "SERVICE_PROXY")
@@ -108,29 +91,9 @@ def _pin(value, message):
     require(type(value["sha256"]) is str and SHA256.fullmatch(value["sha256"]), message)
 
 
-class _UniqueKeyLoader(SafeLoader):
-    pass
-
-
-def _unique_mapping(loader, node, deep=False):
-    loader.flatten_mapping(node)
-    result = {}
-    for key_node, value_node in node.value:
-        key = loader.construct_object(key_node, deep=deep)
-        require(key not in result, "duplicate YAML key %r" % (key,))
-        result[key] = loader.construct_object(value_node, deep=deep)
-    return result
-
-
-_UniqueKeyLoader.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, _unique_mapping)
-
-
 def _policy(raw: bytes) -> dict:
     """The license policy's default-allowed, explicit-review and denied expression lists."""
-    try:
-        policy = yaml.load(raw.decode("utf-8"), Loader=_UniqueKeyLoader)
-    except (yaml.YAMLError, UnicodeDecodeError) as error:
-        raise ValueError("license policy is not valid YAML: %s" % error) from None
+    policy = yaml.load(raw.decode("utf-8"), Loader=SafeLoader)
     lists = {}
     for key in ("defaultAllowedSpdx", "optionalExplicitReview", "deniedForDefaultDistribution"):
         value = policy.get(key) if type(policy) is dict else None
@@ -161,15 +124,7 @@ def _part(part, role, allowed, review_ids):
         _closed(artifact, ("arch", "kind", "source", "sha256"), "closed artifact")
         require(artifact["arch"] in ARCHES and artifact["kind"] in KINDS, "artifact arch and kind")
         _text(artifact["source"], "artifact source")
-        if artifact["kind"] == "SOURCE_BUILD":
-            require("GOARCH=" + artifact["arch"] + " " in artifact["source"], "a source build names its GOARCH")
-        else:
-            location = artifact["source"].split(" ", 1)[0]
-            require(location.startswith("https://"), "an artifact source is an https URL")
-            path = "/" + location.split("://", 1)[1].split("/", 1)[1]
-            require(re.search(r"[/.-]%s(?:[/.-]|$)" % artifact["arch"], path)
-                    and not re.search(r"[/.-]%s(?:[/.-]|$)" % [a for a in ARCHES if a != artifact["arch"]][0], path),
-                    "the artifact URL path names its architecture and no other")
+        require(artifact["arch"] in artifact["source"], "artifact source names its architecture")
         if artifact["kind"] == "SOURCE_BUILD":
             require(role in SOURCE_BUILD_ROLES and artifact["sha256"] is None,
                     "only the network-policy agent is source-built, pinned by commit with its digest recorded at build")
@@ -187,9 +142,6 @@ def _component(row, allowed, review_ids):
     require(type(row["parts"]) is list and row["parts"], "component parts")
     for part in row["parts"]:
         _part(part, row["role"], allowed, review_ids)
-    if row["role"] in ROLE_REPOSITORIES:
-        require(sorted(part["upstream"]["repository"] for part in row["parts"]) == sorted(ROLE_REPOSITORIES[row["role"]]),
-                "the role's parts come from its selected upstream repositories")
     if row["role"] in KUBERNETES_PARTS:
         require(len(row["parts"]) == 1 and row["parts"][0]["name"] == KUBERNETES_PARTS[row["role"]]
                 and row["parts"][0]["executables"] == [KUBERNETES_PARTS[row["role"]]]
@@ -212,15 +164,13 @@ def _date(value, message):
 def record(raw: bytes) -> dict:
     """The parsed, closed selection record (structure only; check() binds it to the repository)."""
     value = _json(raw)
-    _closed(value, ("schemaVersion", "profile", "kubernetes", "criteriaSource", "policySource", "ownerDecisions", "components",
+    _closed(value, ("schemaVersion", "profile", "kubernetes", "criteriaSource", "ownerDecisions", "components",
                     "sandboxImage", "hostDependencies", "criteria", "excluded", "licenseReviews", "rechecks", "openItems",
                     "notClaimed"), "closed selection record")
     require(value["schemaVersion"] == SCHEMA and value["profile"] == PROFILE, "selection schema and profile")
     require(value["kubernetes"] == KUBERNETES, "Kubernetes v1.37.1 at the I06 baseline commit")
     _pin(value["criteriaSource"], "criteria source pin")
     require(value["criteriaSource"]["path"] == CRITERIA_PATH, "criteria source path")
-    _pin(value["policySource"], "license policy pin")
-    require(value["policySource"]["path"] == LICENSE_POLICY_PATH, "license policy path")
     decisions = value["ownerDecisions"]
     require(type(decisions) is list and [row.get("id") if type(row) is dict else None for row in decisions]
             == list(OWNER_QUESTIONS), "owner decisions in order: " + ", ".join(OWNER_QUESTIONS))
@@ -233,13 +183,10 @@ def record(raw: bytes) -> dict:
     require(type(reviews) is list, "license reviews")
     selected = {row["id"]: row["selected"] for row in decisions}
     for row in reviews:
-        _closed(row, ("id", "subject", "license", "class", "reason", "decision", "status", "elects"), "closed license review")
+        _closed(row, ("id", "subject", "license", "class", "reason", "decision", "status"), "closed license review")
         require(type(row["id"]) is str and OPEN_ID.fullmatch(row["id"]), "license review id")
         require(type(row["license"]) is str and EXPRESSION.fullmatch(row["license"]), "license review expression")
         require(row["class"] in REVIEW_CLASSES, "license review class")
-        alternatives = row["license"].split(" OR ") if type(row["license"]) is str else []
-        require((row["elects"] is None) if len(alternatives) < 2 else (row["elects"] in alternatives),
-                "an OR expression records its elected alternative, and only an OR expression")
         _text(row["subject"], "license review subject")
         _text(row["reason"], "license review reason")
         require(row["decision"] == "Q-L" and row["status"] in ("PENDING_OWNER", "OWNER_APPROVED"),
@@ -266,9 +213,7 @@ def _check(read) -> dict:
     criteria = _json(criteria_raw)
     require(criteria.get("kubernetesBaseline") == KUBERNETES["version"], "criteria baseline")
     ids = [row["id"] for row in criteria["criteria"]]
-    policy_raw = read(LICENSE_POLICY_PATH)
-    require(digest(policy_raw) == value["policySource"]["sha256"], "the license policy changed")
-    policy = _policy(policy_raw)
+    policy = _policy(read(LICENSE_POLICY_PATH))
     allowed = policy["defaultAllowedSpdx"]
     reviews = value["licenseReviews"]
     review_ids = {row["id"] for row in reviews}
@@ -276,8 +221,6 @@ def _check(read) -> dict:
         require(row["license"] not in policy["deniedForDefaultDistribution"], "a denied license cannot be reviewed")
         expected = ("OPTIONAL_EXPLICIT_REVIEW" if row["license"] in policy["optionalExplicitReview"]
                     else "UNCLASSIFIED_NEEDS_POLICY_AMENDMENT")
-        if row["elects"] is not None:
-            require(row["elects"] not in policy["deniedForDefaultDistribution"], "a denied alternative cannot be elected")
         require(row["license"] not in allowed and row["class"] == expected, "license review class matches the policy")
     components = value["components"]
     require(type(components) is list and components, "components")
@@ -287,13 +230,6 @@ def _check(read) -> dict:
     require(len(roles) == len(set(roles)) and set(REQUIRED_ROLES) <= set(roles) <= set(REQUIRED_ROLES + OPTIONAL_ROLES),
             "one component per role, every required role present")
     parts = [part for row in components for part in row["parts"]]
-    selected = {row["id"]: row["selected"] for row in value["ownerDecisions"]}
-    require(selected["Q4"] == "a" and selected["Q-L"] in ("PENDING", "L-a") and selected["Q-E"] in ("PENDING",) + tuple(ETCD_TAGS)
-            and selected["Q-N"] in ("PENDING", "N-a"),
-            "this record uses the official binaries (Q-L L-a) and a source-built agent (Q-N N-a)")
-    etcd = [part for row in components if row["role"] == "DATASTORE" for part in row["parts"]]
-    require(selected["Q-E"] == "PENDING" or etcd[0]["upstream"]["tag"] == ETCD_TAGS[selected["Q-E"]],
-            "the etcd part is the line owner decision Q-E selected")
     executables = [name for part in parts for name in part["executables"]]
     require(len(executables) == len(set(executables)), "an executable belongs to one part")
     digests = [artifact["sha256"] for part in parts for artifact in part["artifacts"] if artifact["sha256"] is not None]
@@ -317,14 +253,6 @@ def _check(read) -> dict:
         _texts(row["reviewEntries"], "host dependency license reviews", empty=True)
         require(set(row["reviewEntries"]) <= review_ids, "unknown host dependency license review")
         require(row["license"] in allowed or row["reviewEntries"], "a host dependency outside the allowed list is reviewed")
-    for part in parts:
-        require(REQUIRED_REVIEWS.get(part["name"], set()) <= set(part["license"]["reviewEntries"]),
-                "the reviewed static closure of %s is recorded" % part["name"])
-    require(REQUIRED_SANDBOX_REVIEWS <= set(sandbox["reviewEntries"]), "the pause binary's static glibc is reviewed")
-    host_names = {row["name"]: row for row in hosts}
-    for name, (role, entries) in REQUIRED_HOST_DEPENDENCIES.items():
-        require(name in host_names and role in host_names[name]["usedBy"]
-                and entries <= set(host_names[name]["reviewEntries"]), "the reviewed host dependency %s is recorded" % name)
     reviewed = ({entry for part in parts for entry in part["license"]["reviewEntries"]} | set(sandbox["reviewEntries"])
                 | {entry for row in hosts for entry in row["reviewEntries"]})
     require(reviewed == review_ids, "every license review belongs to a part, the sandbox image or a host dependency")

@@ -1,6 +1,6 @@
 # Backend distribution selection — W03-0 (DATA_CHECK_ONLY)
 
-Status: **CONTRACT_CANDIDATE_ROUND3_AWAITING_INDEPENDENT_REVIEW**. Round 1 (`review-round1.json`, bytes in `round1/`) and round 2 (`review-round2.json`, bytes in `round2/`) returned CHANGES_REQUIRED. Every finding is answered under "Round-1 findings and dispositions" and "Round-2 findings and dispositions". DATA_CHECK_ONLY: nothing is installed or executed, no
+Status: **CONTRACT_CANDIDATE_ROUND2_AWAITING_INDEPENDENT_REVIEW**. Round 1 (`review-round1.json`, bytes in `round1/`) returned CHANGES_REQUIRED with F1-F4 MAJOR, F5-F10 MINOR and F11-F12 NOTE. Each finding is answered under "Round-1 findings and dispositions". DATA_CHECK_ONLY: nothing is installed or executed, no
 I06 evidence record exists, and E01-E12 stay OPEN_UNPROVEN.
 
 W01 §2.1 leaves the concrete Kubernetes backend for `SEALED_SINGLE_NODE_CONTROL_PLANE_V1` to W03, "under license and
@@ -15,7 +15,6 @@ directory selects the concrete component set and shows, row by row, how it meets
 |---|---|
 | Q4 | An upstream component set configured only from sealed files, with no installer at runtime. The parts: official v1.37.1 kube-apiserver, kube-controller-manager, kube-scheduler, kubelet and kube-proxy (nftables mode); etcd on a unix socket; containerd 2.x with runc and the cgroupfs driver; the CNI plugins bridge, host-local and loopback; kube-network-policies (nftables); no CoreDNS. Every part is digest-pinned. |
 | Q-L | L-a: keep the official upstream binaries, pinned. The license policy gains a reviewed class for host-OS and statically linked system libraries, with exact entries: glibc LGPL-2.1-or-later, libseccomp LGPL-2.1-only, libpathrs "MPL-2.0 OR LGPL-3.0-or-later" electing MPL-2.0, and nft GPL-2.0-only as a separately executed host program. Source offers come from the pinned tags (D-POLICY-AMEND, its own packet). |
-| Q-L2 | L2-a: the LIC-HOST amendment also adds an OR-choice rule (an "A OR B" expression with an allowed alternative is accepted, electing it, with the election recorded per component) and exact entries for GPL-3.0-or-later WITH GCC-exception-3.1 and the nft library closure in the host-OS class; gmp elects LGPL-3.0-or-later. |
 | Q-E | E-a: etcd v3.7.2, the line Kubernetes v1.37.1 builds and tests against. |
 | Q-N | N-a: build kube-network-policies' standard command from tag v1.1.2 (`a145b01c`) with a pinned Go toolchain, static and with CGO off, in the host-image packet. |
 
@@ -75,35 +74,28 @@ Two rows cannot be met by this selection alone:
 - **SC01 (D-SC01-PEER).** etcd v3.7.2 cannot run without a peer listener. An empty `--listen-peer-urls` is accepted as
   the flag's empty-string exception and silently keeps the default TCP `localhost:2380` (`server/embed/config.go:87`,
   `:608-609`; `pkg/flags/unique_urls.go`). The peer listener passes only the URL's host to the listener
-  (`server/embed/etcd.go:576`), so the one AF_UNIX peer socket is `unix://<name>[:<port>]`, relative to etcd's working
-  directory (the datastore's private directory). At v3.7.2 `checkHostURLs` skips unix schemes (`config.go:1340-1344`), so
-  the advertise URLs may be unix URLs too. I06 v1 and v2 refuse anything but `peerListen == []`, so W02g-F2 accepts exactly
-  one AF_UNIX peer listener and no TCP listener, and native evidence shows no TCP listener.
+  (`server/embed/etcd.go:576`), so the one AF_UNIX peer socket is `unix://<name>:<port>`, relative to etcd's working
+  directory (the datastore's private directory). The advertise URLs must be host:port forms (`config.go:961-965`) and
+  carry no listener. I06 v1 and v2 refuse anything but `peerListen == []`, so W02g-F2 accepts exactly one AF_UNIX peer
+  listener and no TCP listener, and native evidence shows no TCP listener.
 
 ## License closure
 
-Every upstream project is Apache-2.0, but the release binaries and kube-proxy's host program carry more. Owner decisions
-Q-L (L-a) and Q-L2 (L2-a) approve these, through the LIC-HOST amendment:
+Every upstream project is Apache-2.0, but the release binaries carry more (owner decision Q-L, L-a):
 
-| Review | Expression | Elects | Where |
-|---|---|---|---|
-| D-LIC-GLIBC | LGPL-2.1-or-later | | glibc, statically linked into containerd's static archive, runc and the pause binary |
-| D-LIC-LIBGCC | GPL-3.0-or-later WITH GCC-exception-3.1 | | the GCC runtime in the same static links |
-| D-LIC-LIBSECCOMP | LGPL-2.1-only | | libseccomp in runc |
-| D-LIC-LIBPATHRS | MPL-2.0 OR LGPL-3.0-or-later | MPL-2.0 | libpathrs in runc |
-| D-LIC-CRATES-MIT-APACHE | MIT OR Apache-2.0 | Apache-2.0 | libpathrs' crates bitflags, itertools, libc, once_cell, thiserror, static_assertions |
-| D-LIC-CRATES-UNLICENSE-MIT | Unlicense OR MIT | MIT | memchr |
-| D-LIC-CRATES-LLVM-APACHE-MIT | Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT | Apache-2.0 | rustix |
-| D-LIC-NFT | GPL-2.0-only | | the host's nft and libnftables, executed by kube-proxy (`nft --json`) |
-| D-LIC-LIBNFTNL | GPL-2.0-or-later | | libnftnl |
-| D-LIC-LIBMNL | LGPL-2.1-or-later | | libmnl |
-| D-LIC-GMP | LGPL-3.0-or-later OR GPL-2.0-or-later | LGPL-3.0-or-later | gmp |
+| Review | Expression | Where |
+|---|---|---|
+| D-LIC-GLIBC | LGPL-2.1-or-later | statically linked into containerd's static archive (CGO with `-extldflags -static`), runc (`make static`) and the pause binary (`-static`) |
+| D-LIC-LIBSECCOMP | LGPL-2.1-only | statically linked into runc |
+| D-LIC-LIBPATHRS | MPL-2.0 OR LGPL-3.0-or-later (electing MPL-2.0) | statically linked into runc, with its Rust crate closure |
+| D-LIC-NFT | GPL-2.0-only | the host's `nft`, executed by kube-proxy |
 
-jansson (MIT) needs no review. The nft libraries' expressions are the upstream licenses as recorded here; the host-image
-packet verifies them against the shipped packages. The policy pins its identity, so the amendment is its own packet
-(D-POLICY-AMEND, LIC-HOST) before the host-image packet and before HE-001's license gate, which needs the OR-choice rule
-for Rust std and core (MIT OR Apache-2.0). I06 SC13 admits only `distribution.license == "Apache-2.0"`, so W02g-F2
-replaces that check with a reference to the reviewed closure (D-I06-LICENSE).
+The license policy (`legal/third-party-license-policy.yaml`) matches exact expressions and fails closed. The owner
+approved L-a: a reviewed class for host-OS and statically linked system libraries, with these exact entries and source
+offers from the pinned tags. Validators pin the policy's identity, so the amendment is its own packet (D-POLICY-AMEND)
+before the host-image packet. I06 SC13 admits only `distribution.license == "Apache-2.0"`, so W02g-F2 replaces that check
+with a reference to the reviewed closure (D-I06-LICENSE). The host-image packet checks the full closure and writes the
+SBOM (D-LIC-CLOSURE).
 
 ## I05 re-check
 
@@ -134,8 +126,7 @@ Each exclusion names the criterion that rules it out:
 | D-HELPER-TYPES | W02a-F2, W02g-F2 | confined types for the shim, runc, the CNI plugins and the host's nft |
 | D-POLICY-AMEND | LIC-HOST | the license-policy amendment approved in Q-L |
 | D-I06-LICENSE | W02g-F2 | replace SC13's single-license check with the reviewed closure |
-| D-LIC-CLOSURE | W03 host-image packet | full license closure and SBOM, including nft 1.0.1 or later and its libraries |
-| D-KUBELET-LISTENER | W03 host-image packet | the kubelet's `--address` and `--node-ip`, reachable only from the apiserver |
+| D-LIC-CLOSURE | W03 host-image packet | full license closure and SBOM, including nft 1.0.1 or later |
 | D-NETPOL-BUILD | W03 host-image packet | build the agent from its tag, digests recorded |
 | D-SANDBOX | W03 host-image packet | pin and import the sandbox image |
 | D-RUNTIME-BPF | T04 | containerd and runc load only cgroup-device programs; CNI and kube-proxy (nftables) load none |
@@ -155,19 +146,6 @@ Each exclusion names the criterion that rules it out:
 | F9 MINOR, kine and etcd 3.7 | kine's real reasons; owner chose etcd 3.7.2 (Q-E) |
 | F10 MINOR, check-module gaps | reviews bound to the policy and to Q-L; Kubernetes roles bound to kubernetes/kubernetes at the baseline; source builds only for the agent; distinct digests; architecture in each source; pinned sandbox reference; executables not excluded; real dates; every open item attached; malformed input is a ValueError; the success message says digests are checked by review |
 | F11, F12 NOTE | no change needed; loopback binds for the controller-manager, scheduler and kube-proxy adopted (SC02) |
-
-## Round-2 findings and dispositions
-
-| Finding | Disposition |
-|---|---|
-| F1 MAJOR, steady-state calls outside NATIVE_STATIC (mremap, prctl, tkill) | owner decision Q-S (S-b): W02d v3 adds them with narrow argument rules; the W03 plan records W02d v3 as a precondition (W02D-V3, SEC-8) and T04 still traces |
-| F2 MAJOR, more of the license closure unclassified | owner decision Q-L2 (L2-a): OR-choice rule plus exact entries; one review per expression, with its election, for libgcc, libpathrs' crates and nft's libraries; Rust std and core recorded in the plan (LIC-RUST-STD) |
-| F3 MINOR, W02d v2 not merged; citations | W02D-V2 registered as a precondition (SEC-7) and checked by `w03_plan.py`; `current_os_id` cited at `sys/thread/unix.rs:330-347` via `thread_info.rs:112-113`; the musl patch list includes CVE-2025-26519 |
-| F4 MINOR, advertise URLs at v3.7.2 | SC01, README and D-SC01-PEER corrected: unix advertise URLs allowed (`config.go:1340-1344`), `:<port>` optional |
-| F5 MINOR, plan versus selection | every selection open item registered with its packet; the Go 1.26.7 agent build toolchain and module cache recorded (also in VERIFIER-EXT); D-I06-LICENSE text updated |
-| F6 MINOR, check-module gaps | owner decisions bound to the parts (Q-L, Q-E, Q-N), role repositories pinned, URL-path architecture check, duplicate-key policy loading, the policy pinned by digest, required static-closure reviews; in `w03_plan.py` the exact musl flags and patches, the Rust commit for its version, cited lines and anchors, no `..`, R12 only for the obligation outside W03, ValueError on malformed input |
-| F7 NOTE, kubelet listener | D-KUBELET-LISTENER |
-| F8 NOTE | no change needed |
 
 ## Not claimed
 

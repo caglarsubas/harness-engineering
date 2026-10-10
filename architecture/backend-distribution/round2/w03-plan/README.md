@@ -20,11 +20,7 @@ no toolchain is installed, and E01-E12 stay OPEN_UNPROVEN.
 - musl never tries `clone3`, so W02d-QB's `clone3` → ENOSYS rule needs no libc fallback for these roles.
 - musl's `posix_spawn` uses CLONE_VM|CLONE_VFORK, which the rule refuses. Only the broker spawns, and it does so through
   its own `clone3` (W2).
-- Start-up needs nothing beyond W02d v2 (`poll`). Steady state needs W02d v3 (owner decision Q-S, S-b). musl's mallocng
-  `realloc` uses `mremap(MREMAP_MAYMOVE)` above the mmap threshold; naming a thread uses `prctl(PR_SET_NAME)`; musl's
-  `abort` and `raise` use `tkill`. W02d v3 adds those three with narrow argument rules (W02D-V3, SEC-8).
-- musl's `setresuid` and `setresgid` go through `__synccall`, which signals other threads with `tkill`, so the broker's W4
-  child makes the raw syscalls (TR-SETXID).
+- No W02d change is needed.
 
 **Start-up re-check at Rust 1.99.0.** W02d v2 (MET-ENFORCE-018) analysed musl 1.2.5 with Rust 1.90.0, and added
 `poll` to NATIVE_STATIC. At 1.99.0 the start-up syscalls are the same:
@@ -46,11 +42,7 @@ no toolchain is installed, and E01-E12 stay OPEN_UNPROVEN.
 T04 traces each built module's start-up and steady state on both architectures (SEC-1).
 
 **Crates.** Crates are vendored, and builds run `--locked --offline --frozen`. Licenses are checked against
-`legal/third-party-license-policy.yaml` as amended by LIC-HOST, whose OR-choice rule accepts Rust std and core (MIT OR
-Apache-2.0). Each artifact gets a CycloneDX SBOM.
-
-**Go, for the network-policy agent only.** Owner decision Q-N (N-a) builds kube-network-policies from its tag with R10's
-pinned Go 1.26.7 (the module requires go 1.26.0) and an offline module cache, CGO off and static.
+`legal/third-party-license-policy.yaml`, and each artifact gets a CycloneDX SBOM.
 
 ## Scope (Q1, Q5)
 
@@ -69,8 +61,7 @@ R10 yet, so the owner's root extension (VERIFIER-EXT) comes before the first R10
 | ID | Where | Content |
 |---|---|---|
 | W03-0 | meta | this record and the backend distribution selection |
-| W02D-V2, W02D-V3 | meta (parallel lane) | `poll` in NATIVE_STATIC; then `mremap`, `prctl(PR_SET_NAME)` and `tkill` (Q-S) |
-| LIC-HOST | meta | the license-policy amendment approved in Q-L and Q-L2 (D-POLICY-AMEND) |
+| LIC-HOST | meta | the license-policy amendment approved in Q-L (D-POLICY-AMEND) |
 | W02A-F2, W02G-F2 | meta | production backend profile and the I06 successor bound to it |
 | VERIFIER-EXT | owner root | verifier policy entry and toolchain profile, inventories, App access and branch protection |
 | HE-001 | R10 | scaffold, pins, vendored closure, license and SBOM gate, cross-builds |
@@ -83,9 +74,9 @@ R10 yet, so the owner's root extension (VERIFIER-EXT) comes before the first R10
 
 ## Obligation register
 
-`plan.json` lists 68 obligations. Each has its source (file and lines) and the packets that discharge it. They come from
+`plan.json` lists 53 obligations. Each has its source (file and lines) and the packets that discharge it. They come from
 native-profile v3, I05 v3, I06 v1 and v2, I07 v3, admission v3, the SELinux matrix v2, the W02d allowlists and W01 §2-§6,
-plus the four W01-AMEND items, the selection's open items, the license-policy amendment, the W02d v2 and v3 preconditions and three trace items from the W01-AMEND review. W01-AMEND (MET-ENFORCE-018) is pending merge, so its four items are cited by name. One of
+plus the four W01-AMEND items and the license-policy amendment. W01-AMEND (MET-ENFORCE-018) is pending merge, so its four items are cited by name. One of
 them, O-SERVER-MEMFD, belongs to the R12 live backend and is listed as outside W03. Two items are discharged here, in
 W03-0: the I05 re-check (I05-1) and the version rule (I06-6).
 

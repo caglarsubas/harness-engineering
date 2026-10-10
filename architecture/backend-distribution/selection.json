@@ -1,0 +1,947 @@
+{
+ "schemaVersion": "planeon.internal.backend-distribution-selection/v1",
+ "profile": "SEALED_SINGLE_NODE_CONTROL_PLANE_V1",
+ "kubernetes": {
+  "version": "v1.37.1",
+  "commit": "f78e722310e50bcaca9276be22276d9e91d91308"
+ },
+ "criteriaSource": {
+  "path": "architecture/i06-backend-profile-v2/criteria.json",
+  "sha256": "026206c57d3025c0f0129b6615e46c83d5a8000ddc3288f000a1fe4570050cda"
+ },
+ "ownerDecisions": [
+  {
+   "id": "Q4",
+   "selected": "a",
+   "date": "2026-10-10",
+   "via": "owner (via the lane monitor)",
+   "summary": "Upstream component set from sealed files: official v1.37.1 apiserver, controller-manager, scheduler, kubelet and kube-proxy (nftables); etcd 3.6 on a unix socket; containerd 2.x and runc (cgroupfs); CNI bridge, host-local and loopback; kube-network-policies (nftables); no CoreDNS."
+  },
+  {
+   "id": "Q-R",
+   "selected": "PENDING",
+   "date": "2026-10-10",
+   "via": "owner (via the lane monitor)",
+   "summary": "runc's release binaries statically link libseccomp (LGPL-2.1), which the license policy does not classify; recommended R-a: keep the official binary with a reviewed policy entry."
+  },
+  {
+   "id": "Q-N",
+   "selected": "PENDING",
+   "date": "2026-10-10",
+   "via": "owner (via the lane monitor)",
+   "summary": "kube-network-policies publishes images only; recommended N-a: build the standard command from the tag."
+  }
+ ],
+ "components": [
+  {
+   "role": "APISERVER",
+   "parts": [
+    {
+     "name": "kube-apiserver",
+     "upstream": {
+      "repository": "https://github.com/kubernetes/kubernetes",
+      "tag": "v1.37.1",
+      "commit": "f78e722310e50bcaca9276be22276d9e91d91308"
+     },
+     "license": {
+      "spdx": "Apache-2.0",
+      "reviewEntries": []
+     },
+     "artifacts": [
+      {
+       "arch": "amd64",
+       "kind": "RELEASE_BINARY",
+       "source": "https://dl.k8s.io/release/v1.37.1/bin/linux/amd64/kube-apiserver (checksum kube-apiserver.sha256)",
+       "sha256": "de9b1b43c10143f448408b3aaf15f44fd5248b97a56301417a1fe2f1fc47a691"
+      },
+      {
+       "arch": "arm64",
+       "kind": "RELEASE_BINARY",
+       "source": "https://dl.k8s.io/release/v1.37.1/bin/linux/arm64/kube-apiserver (checksum kube-apiserver.sha256)",
+       "sha256": "c3c240bc4a0fbe3ad311ac3d74ca1d19ac411628130ea825049550fd856020d9"
+      }
+     ],
+     "executables": [
+      "kube-apiserver"
+     ],
+     "excludedMembers": []
+    }
+   ],
+   "notes": []
+  },
+  {
+   "role": "CONTAINER_RUNTIME",
+   "parts": [
+    {
+     "name": "containerd",
+     "upstream": {
+      "repository": "https://github.com/containerd/containerd",
+      "tag": "v2.4.1",
+      "commit": "f2551031d7276a770f65f98c9b52e57e7dad07e8"
+     },
+     "license": {
+      "spdx": "Apache-2.0",
+      "reviewEntries": []
+     },
+     "artifacts": [
+      {
+       "arch": "amd64",
+       "kind": "RELEASE_ARCHIVE",
+       "source": "https://github.com/containerd/containerd/releases/download/v2.4.1/containerd-static-2.4.1-linux-amd64.tar.gz",
+       "sha256": "02ad3a7e80d7d2c018c7134d5eca7e301283db6895f100b957fb52ad8e5a30fd"
+      },
+      {
+       "arch": "arm64",
+       "kind": "RELEASE_ARCHIVE",
+       "source": "https://github.com/containerd/containerd/releases/download/v2.4.1/containerd-static-2.4.1-linux-arm64.tar.gz",
+       "sha256": "d3aba9347650505df79858bb9cbf1be52080fd8145f72dd9308d4936f487fb74"
+      }
+     ],
+     "executables": [
+      "containerd",
+      "containerd-shim-runc-v2"
+     ],
+     "excludedMembers": [
+      "ctr"
+     ]
+    },
+    {
+     "name": "runc",
+     "upstream": {
+      "repository": "https://github.com/opencontainers/runc",
+      "tag": "v1.5.2",
+      "commit": "29dd3dc2b13b4123162e5fe132504bb4b15569f1"
+     },
+     "license": {
+      "spdx": "Apache-2.0",
+      "reviewEntries": [
+       "D-LIC-RUNC"
+      ]
+     },
+     "artifacts": [
+      {
+       "arch": "amd64",
+       "kind": "RELEASE_BINARY",
+       "source": "https://github.com/opencontainers/runc/releases/download/v1.5.2/runc.amd64",
+       "sha256": "599f6f94ff8c5057241eff0d54c3c74f95c34935b6457b33fe545defc61e9488"
+      },
+      {
+       "arch": "arm64",
+       "kind": "RELEASE_BINARY",
+       "source": "https://github.com/opencontainers/runc/releases/download/v1.5.2/runc.arm64",
+       "sha256": "d10ecae898361832a059be2089bab92d158aec54661b18ed7346ed79628b46b0"
+      }
+     ],
+     "executables": [
+      "runc"
+     ],
+     "excludedMembers": []
+    },
+    {
+     "name": "cni-plugins",
+     "upstream": {
+      "repository": "https://github.com/containernetworking/plugins",
+      "tag": "v1.9.1",
+      "commit": "adc3e6b5b581638afbd194cf2e9319ecbb0151a1"
+     },
+     "license": {
+      "spdx": "Apache-2.0",
+      "reviewEntries": []
+     },
+     "artifacts": [
+      {
+       "arch": "amd64",
+       "kind": "RELEASE_ARCHIVE",
+       "source": "https://github.com/containernetworking/plugins/releases/download/v1.9.1/cni-plugins-linux-amd64-v1.9.1.tgz",
+       "sha256": "b98f74a0f8522f0a83867178729c1aa70f2158f90c45a2ca8fa791db1c76b303"
+      },
+      {
+       "arch": "arm64",
+       "kind": "RELEASE_ARCHIVE",
+       "source": "https://github.com/containernetworking/plugins/releases/download/v1.9.1/cni-plugins-linux-arm64-v1.9.1.tgz",
+       "sha256": "56171987d3947707c3563db2f4001bccaf50fd63468611b9f3cbecb1375ee7ec"
+      }
+     ],
+     "executables": [
+      "bridge",
+      "host-local",
+      "loopback"
+     ],
+     "excludedMembers": [
+      "every plugin other than bridge, host-local and loopback"
+     ]
+    }
+   ],
+   "notes": [
+    "containerd 2.4 is listed for Kubernetes 1.37 in containerd's RELEASES.md matrix (2.4.0+, 2.3.0+, CRI v1).",
+    "containerd runs runc through containerd-shim-runc-v2 with the cgroupfs driver (SystemdCgroup false); the CNI plugins run as containerd's children for pod networking on one node (bridge, host-local IPAM, loopback)."
+   ]
+  },
+  {
+   "role": "CONTROLLER_MANAGER",
+   "parts": [
+    {
+     "name": "kube-controller-manager",
+     "upstream": {
+      "repository": "https://github.com/kubernetes/kubernetes",
+      "tag": "v1.37.1",
+      "commit": "f78e722310e50bcaca9276be22276d9e91d91308"
+     },
+     "license": {
+      "spdx": "Apache-2.0",
+      "reviewEntries": []
+     },
+     "artifacts": [
+      {
+       "arch": "amd64",
+       "kind": "RELEASE_BINARY",
+       "source": "https://dl.k8s.io/release/v1.37.1/bin/linux/amd64/kube-controller-manager (checksum kube-controller-manager.sha256)",
+       "sha256": "acd67c8f8871d4594f307d2816bf11aa972f47617ee6e1f84b0ce92a091f7290"
+      },
+      {
+       "arch": "arm64",
+       "kind": "RELEASE_BINARY",
+       "source": "https://dl.k8s.io/release/v1.37.1/bin/linux/arm64/kube-controller-manager (checksum kube-controller-manager.sha256)",
+       "sha256": "b470c3730cd8e49622c656c47ac16ef994e2edf14ba905be2dad05bc34a4e353"
+      }
+     ],
+     "executables": [
+      "kube-controller-manager"
+     ],
+     "excludedMembers": []
+    }
+   ],
+   "notes": []
+  },
+  {
+   "role": "DATASTORE",
+   "parts": [
+    {
+     "name": "etcd",
+     "upstream": {
+      "repository": "https://github.com/etcd-io/etcd",
+      "tag": "v3.6.15",
+      "commit": "a3346427fbe6e456e9b6d6e429346481c6be7c71"
+     },
+     "license": {
+      "spdx": "Apache-2.0",
+      "reviewEntries": []
+     },
+     "artifacts": [
+      {
+       "arch": "amd64",
+       "kind": "RELEASE_ARCHIVE",
+       "source": "https://github.com/etcd-io/etcd/releases/download/v3.6.15/etcd-v3.6.15-linux-amd64.tar.gz",
+       "sha256": "b51d86e6bff2168de5ba8cd631c0fe6c785c7a1b32b083079f5677d6b7e2772c"
+      },
+      {
+       "arch": "arm64",
+       "kind": "RELEASE_ARCHIVE",
+       "source": "https://github.com/etcd-io/etcd/releases/download/v3.6.15/etcd-v3.6.15-linux-arm64.tar.gz",
+       "sha256": "567d9b8fa9e75b349600d2b64ef9bf6bc6d512cea75a2ce1c39b1b3046131244"
+      }
+     ],
+     "executables": [
+      "etcd"
+     ],
+     "excludedMembers": [
+      "etcdctl",
+      "etcdutl"
+     ]
+    }
+   ],
+   "notes": [
+    "etcd 3.6 per owner decision Q4; v3.6.15 is the newest 3.6 patch release (2026-09-22)."
+   ]
+  },
+  {
+   "role": "KUBELET",
+   "parts": [
+    {
+     "name": "kubelet",
+     "upstream": {
+      "repository": "https://github.com/kubernetes/kubernetes",
+      "tag": "v1.37.1",
+      "commit": "f78e722310e50bcaca9276be22276d9e91d91308"
+     },
+     "license": {
+      "spdx": "Apache-2.0",
+      "reviewEntries": []
+     },
+     "artifacts": [
+      {
+       "arch": "amd64",
+       "kind": "RELEASE_BINARY",
+       "source": "https://dl.k8s.io/release/v1.37.1/bin/linux/amd64/kubelet (checksum kubelet.sha256)",
+       "sha256": "cee008c1640c3b41820ef31d35b3cffc132b0c4b78c288be2b8022ebc7aa8293"
+      },
+      {
+       "arch": "arm64",
+       "kind": "RELEASE_BINARY",
+       "source": "https://dl.k8s.io/release/v1.37.1/bin/linux/arm64/kubelet (checksum kubelet.sha256)",
+       "sha256": "03e64bb3e1611d1b9ea40095b382af014bd2aa0b5f1b6670af6bbfaa0b735443"
+      }
+     ],
+     "executables": [
+      "kubelet"
+     ],
+     "excludedMembers": []
+    }
+   ],
+   "notes": []
+  },
+  {
+   "role": "NETWORK_POLICY_AGENT",
+   "parts": [
+    {
+     "name": "kube-network-policies",
+     "upstream": {
+      "repository": "https://github.com/kubernetes-sigs/kube-network-policies",
+      "tag": "v1.1.2",
+      "commit": "a145b01caf668ce509766b0a48ff4e153a5e50f8"
+     },
+     "license": {
+      "spdx": "Apache-2.0",
+      "reviewEntries": []
+     },
+     "artifacts": [
+      {
+       "arch": "amd64",
+       "kind": "SOURCE_BUILD",
+       "source": "cmd/kube-network-policies/standard at a145b01c, GOOS=linux GOARCH=amd64 CGO_ENABLED=0, pinned Go toolchain and module cache (D-NETPOL-BUILD)",
+       "sha256": null
+      },
+      {
+       "arch": "arm64",
+       "kind": "SOURCE_BUILD",
+       "source": "cmd/kube-network-policies/standard at a145b01c, GOOS=linux GOARCH=arm64 CGO_ENABLED=0, pinned Go toolchain and module cache (D-NETPOL-BUILD)",
+       "sha256": null
+      }
+     ],
+     "executables": [
+      "kube-network-policies"
+     ],
+     "excludedMembers": [
+      "cmd/kube-network-policies/npa-v1alpha1",
+      "cmd/kube-network-policies/npa-v1alpha2",
+      "cmd/kube-network-policies/iptracker",
+      "cmd/kube-ip-tracker"
+     ]
+    }
+   ],
+   "notes": [
+    "The project publishes container images only, no release binaries (owner question Q-N); the standard command enforces NetworkPolicy with nftables and uses no CustomResourceDefinitions."
+   ]
+  },
+  {
+   "role": "SCHEDULER",
+   "parts": [
+    {
+     "name": "kube-scheduler",
+     "upstream": {
+      "repository": "https://github.com/kubernetes/kubernetes",
+      "tag": "v1.37.1",
+      "commit": "f78e722310e50bcaca9276be22276d9e91d91308"
+     },
+     "license": {
+      "spdx": "Apache-2.0",
+      "reviewEntries": []
+     },
+     "artifacts": [
+      {
+       "arch": "amd64",
+       "kind": "RELEASE_BINARY",
+       "source": "https://dl.k8s.io/release/v1.37.1/bin/linux/amd64/kube-scheduler (checksum kube-scheduler.sha256)",
+       "sha256": "8d10dfc64de70b1670cc1ce52701eb6a219c0905a95bdde608edc5432f9eca43"
+      },
+      {
+       "arch": "arm64",
+       "kind": "RELEASE_BINARY",
+       "source": "https://dl.k8s.io/release/v1.37.1/bin/linux/arm64/kube-scheduler (checksum kube-scheduler.sha256)",
+       "sha256": "1bfe0c213f015abb08131ee8a02353eb0492dfe19a965b54c5ca1145b6d05e10"
+      }
+     ],
+     "executables": [
+      "kube-scheduler"
+     ],
+     "excludedMembers": []
+    }
+   ],
+   "notes": []
+  },
+  {
+   "role": "SERVICE_PROXY",
+   "parts": [
+    {
+     "name": "kube-proxy",
+     "upstream": {
+      "repository": "https://github.com/kubernetes/kubernetes",
+      "tag": "v1.37.1",
+      "commit": "f78e722310e50bcaca9276be22276d9e91d91308"
+     },
+     "license": {
+      "spdx": "Apache-2.0",
+      "reviewEntries": []
+     },
+     "artifacts": [
+      {
+       "arch": "amd64",
+       "kind": "RELEASE_BINARY",
+       "source": "https://dl.k8s.io/release/v1.37.1/bin/linux/amd64/kube-proxy (checksum kube-proxy.sha256)",
+       "sha256": "3f1dc2394bfe627927c17e8226b1a94c842529217c06436ddfeb73de8407b6e0"
+      },
+      {
+       "arch": "arm64",
+       "kind": "RELEASE_BINARY",
+       "source": "https://dl.k8s.io/release/v1.37.1/bin/linux/arm64/kube-proxy (checksum kube-proxy.sha256)",
+       "sha256": "c1797c5dd319123c7bbb60dc94f2e91f3aa7b0be9bfe0c9cf3b143d5ee9ab944"
+      }
+     ],
+     "executables": [
+      "kube-proxy"
+     ],
+     "excludedMembers": []
+    }
+   ],
+   "notes": [
+    "Runs in nftables mode (--proxy-mode=nftables)."
+   ]
+  }
+ ],
+ "sandboxImage": {
+  "reference": "registry.k8s.io/pause:3.10.2",
+  "indexDigest": "sha256:f548e0e8e3dc1896ca956272154dde3314e8cc4fde0a57577ee9fa1c63f5baf4",
+  "license": "Apache-2.0",
+  "usedBy": "CONTAINER_RUNTIME",
+  "reviewEntries": []
+ },
+ "criteria": [
+  {
+   "id": "SC00",
+   "dispositions": [
+    "W02A_RECORD"
+   ],
+   "how": "I06 v2 evidence binds one W02a v3 record by digest. No production W02a backend profile exists yet (the unit-distribution fixture is test-only), so this selection cannot yield evidence on its own: W02a-F2 adds the production profile that names these components and W02g-F2 binds an I06 successor to it (I06 v2 R1-4).",
+   "roles": [],
+   "openItems": [
+    "D-W02A-F2"
+   ]
+  },
+  {
+   "id": "SC01",
+   "dispositions": [
+    "SEALED_CONFIGURATION"
+   ],
+   "how": "etcd v3.6.15 as one member: --listen-client-urls unix:///run/qualification-k8s/datastore.sock (checkBindURLs skips the unix and unixs schemes, server/embed/config.go), no TCP client listener, an initial cluster of this member only. etcd cannot rely on an empty peer listener list: with --listen-peer-urls empty, UpdateDefaultClusterFromName indexes ListenPeerUrls[0] (server/embed/config.go:1573, called from server/etcdmain/etcd.go:83) whenever a default host is detected. The selection therefore uses a unix-socket peer listener in the datastore's private directory, which does not meet SC01's literal peerListen == [] (D-SC01-PEER).",
+   "roles": [
+    "DATASTORE"
+   ],
+   "openItems": [
+    "D-SC01-PEER"
+   ]
+  },
+  {
+   "id": "SC02",
+   "dispositions": [
+    "SEALED_CONFIGURATION"
+   ],
+   "how": "kube-apiserver --bind-address=127.0.0.1 with the I06 v2 positive evidence's secure port; the kubelet, kube-proxy and the policy agent reach it through loopback kubeconfigs.",
+   "roles": [
+    "APISERVER"
+   ],
+   "openItems": []
+  },
+  {
+   "id": "SC03",
+   "dispositions": [
+    "SEALED_CONFIGURATION"
+   ],
+   "how": "kube-apiserver: --anonymous-auth=false; no --token-auth-file; bootstrap-token authentication off (default); no --requestheader-* flags; no --authentication-config, OIDC or webhook authenticator; --service-account-signing-key-file readable only by the apiserver's domain, --service-account-key-file its public half only, one --service-account-issuer, --service-account-lookup=true. kube-controller-manager has no --cluster-signing-* or --service-account-private-key-file. Client certificates come from the off-host CA (W01 P4), so no CA key is on the host.",
+   "roles": [
+    "APISERVER",
+    "CONTROLLER_MANAGER"
+   ],
+   "openItems": []
+  },
+  {
+   "id": "SC04",
+   "dispositions": [
+    "SEALED_CONFIGURATION"
+   ],
+   "how": "kube-apiserver --authorization-config pointing at a sealed structured file whose authorizers are Node then RBAC; v1.37.1 reloads the file on change (upstream facts, authorizationConfig), and only maintenance can write a sealed type.",
+   "roles": [
+    "APISERVER"
+   ],
+   "openItems": []
+  },
+  {
+   "id": "SC05",
+   "dispositions": [
+    "SEALED_CONFIGURATION"
+   ],
+   "how": "--enable-admission-plugins and --disable-admission-plugins give exactly the I06 v2 allowed set: NodeRestriction on; webhook admission, MutatingAdmissionPolicy, NamespaceAutoProvision, ImagePolicyWebhook and AlwaysAdmit off. --admission-control-config-file carries the manifest-based admission configuration (OR08).",
+   "roles": [
+    "APISERVER"
+   ],
+   "openItems": []
+  },
+  {
+   "id": "SC06",
+   "dispositions": [
+    "SEALED_CONFIGURATION"
+   ],
+   "how": "kube-controller-manager --use-service-account-credentials=true and --controllers naming exactly the inventory controllers, with the ten required-disabled controllers off (CSR signing, approving and cleaner, bootstrap signer, token cleaner, legacy token controller and cleaner, ClusterRole aggregation, storage-version migrator, ClusterTrustBundle publisher); no signing key file.",
+   "roles": [
+    "CONTROLLER_MANAGER"
+   ],
+   "openItems": []
+  },
+  {
+   "id": "SC07",
+   "dispositions": [
+    "SEALED_CONFIGURATION"
+   ],
+   "how": "KubeletConfiguration: rotateCertificates false, serverTLSBootstrap false, no staticPodPath or staticPodURL, authentication.anonymous.enabled false, readOnlyPort 0, authorization.mode Webhook; no --bootstrap-kubeconfig.",
+   "roles": [
+    "KUBELET"
+   ],
+   "openItems": []
+  },
+  {
+   "id": "SC08",
+   "dispositions": [
+    "SELECTION",
+    "SEALED_CONFIGURATION"
+   ],
+   "how": "Eight separate processes from distinct upstream executables (distinct published digests per architecture): etcd, kube-apiserver, kube-controller-manager, kube-scheduler, kubelet, containerd (running containerd-shim-runc-v2 and runc as children), kube-proxy and kube-network-policies. No multi-call binary. Canonical paths and the W02a confined types come from the production W02a profile (D-W02A-F2).",
+   "roles": [
+    "APISERVER",
+    "CONTAINER_RUNTIME",
+    "CONTROLLER_MANAGER",
+    "DATASTORE",
+    "KUBELET",
+    "NETWORK_POLICY_AGENT",
+    "SCHEDULER",
+    "SERVICE_PROXY"
+   ],
+   "openItems": [
+    "D-W02A-F2"
+   ]
+  },
+  {
+   "id": "SC09",
+   "dispositions": [
+    "SELECTION",
+    "OBSERVER"
+   ],
+   "how": "No selected component registers a CustomResourceDefinition or an aggregated APIService: kube-network-policies runs only its standard command (its npa-v1alpha1 and npa-v1alpha2 commands, which use AdminNetworkPolicy CRDs, are not built), kube-proxy and the CNI plugins use none, and no metrics-server is selected. The observer still refuses either at runtime.",
+   "roles": [
+    "NETWORK_POLICY_AGENT",
+    "SERVICE_PROXY"
+   ],
+   "openItems": []
+  },
+  {
+   "id": "SC10",
+   "dispositions": [
+    "SEALED_CONFIGURATION",
+    "OBSERVER"
+   ],
+   "how": "Every backend component is a host process, so no backend Pod mounts a token. The only component API clients are kube-proxy (system:kube-proxy) and kube-network-policies, each with its closure identity in a sealed kubeconfig holding an off-host-issued client certificate.",
+   "roles": [
+    "NETWORK_POLICY_AGENT",
+    "SERVICE_PROXY"
+   ],
+   "openItems": []
+  },
+  {
+   "id": "SC11",
+   "dispositions": [
+    "SEALED_CONFIGURATION"
+   ],
+   "how": "containerd's CRI socket (/run/containerd/containerd.sock, root 0600) carries a type that only the kubelet's confined type may connect to (W02e matrix); no other CRI client is installed (ctr is left out of the archive).",
+   "roles": [
+    "CONTAINER_RUNTIME",
+    "KUBELET"
+   ],
+   "openItems": []
+  },
+  {
+   "id": "SC12",
+   "dispositions": [
+    "SEALED_CONFIGURATION"
+   ],
+   "how": "The sealed set is the profile's: control-plane flags and configuration, the eight unit definitions, kubeconfigs, PKI trust bundles, containerd's config.toml and one CNI conflist (bridge, host-local, loopback), the admission manifests and the audit policy; no static pod or auto-apply manifest directory. Exact paths come with the host-image packet.",
+   "roles": [
+    "APISERVER",
+    "CONTAINER_RUNTIME",
+    "CONTROLLER_MANAGER",
+    "DATASTORE",
+    "KUBELET",
+    "NETWORK_POLICY_AGENT",
+    "SCHEDULER",
+    "SERVICE_PROXY"
+   ],
+   "openItems": []
+  },
+  {
+   "id": "SC13",
+   "dispositions": [
+    "SELECTION"
+   ],
+   "how": "Every artifact is pinned by the upstream's published SHA-256 (Kubernetes .sha256 files on dl.k8s.io, etcd SHA256SUMS, containerd and CNI checksum files, runc.sha256sum), the source-built agent by commit and the sandbox image by index digest. Installation is from the host image only; no component updates itself; images, including the sandbox image, are imported into containerd's content store at enrollment with no registry reachable. Every upstream is Apache-2.0; the full dependency and statically linked library closure is checked in the host-image packet (D-LIC-CLOSURE), and runc's statically linked libseccomp (LGPL-2.1) needs an explicit review (D-LIC-RUNC).",
+   "roles": [
+    "APISERVER",
+    "CONTAINER_RUNTIME",
+    "CONTROLLER_MANAGER",
+    "DATASTORE",
+    "KUBELET",
+    "NETWORK_POLICY_AGENT",
+    "SCHEDULER",
+    "SERVICE_PROXY"
+   ],
+   "openItems": [
+    "D-LIC-CLOSURE",
+    "D-NETPOL-BUILD",
+    "D-SANDBOX"
+   ]
+  },
+  {
+   "id": "SC14",
+   "dispositions": [
+    "SELECTION"
+   ],
+   "how": "The five Kubernetes executables are the official v1.37.1 release builds of tag commit f78e7223, which report gitVersion v1.37.1 with no vendor suffix (I06 N5); the evidence record's kubernetesVersion confirms it at enrollment.",
+   "roles": [
+    "APISERVER",
+    "CONTROLLER_MANAGER",
+    "KUBELET",
+    "SCHEDULER",
+    "SERVICE_PROXY"
+   ],
+   "openItems": []
+  },
+  {
+   "id": "SC15",
+   "dispositions": [
+    "SEALED_CONFIGURATION"
+   ],
+   "how": "No --feature-gates, --emulated-version, --min-compatibility-version or --runtime-config flag or configuration field in any Kubernetes component, so every gate keeps its v1.37 default.",
+   "roles": [
+    "APISERVER",
+    "CONTROLLER_MANAGER",
+    "KUBELET",
+    "SCHEDULER",
+    "SERVICE_PROXY"
+   ],
+   "openItems": []
+  },
+  {
+   "id": "CL",
+   "dispositions": [
+    "OBSERVER"
+   ],
+   "how": "The closure (identity-closure.json) was derived from v1.37.1 bootstrap RBAC, which the selected apiserver runs; the planeon identities get client certificates with their fixed names from the off-host CA; check_closure runs against the observer's snapshot.",
+   "roles": [
+    "APISERVER"
+   ],
+   "openItems": []
+  },
+  {
+   "id": "IC01",
+   "dispositions": [
+    "OBSERVER"
+   ],
+   "how": "Checked by check_rbac_snapshot on every observer snapshot.",
+   "roles": [
+    "APISERVER"
+   ],
+   "openItems": []
+  },
+  {
+   "id": "IC02",
+   "dispositions": [
+    "OBSERVER"
+   ],
+   "how": "Checked by check_rbac_snapshot on every observer snapshot.",
+   "roles": [
+    "APISERVER"
+   ],
+   "openItems": []
+  },
+  {
+   "id": "IC03",
+   "dispositions": [
+    "OBSERVER"
+   ],
+   "how": "Checked by check_rbac_snapshot; the observer also refuses to produce a snapshot when a non-resource-URL rule is bound to system:apiserver (I06 v2 R1-7, a W03 observer obligation).",
+   "roles": [
+    "APISERVER"
+   ],
+   "openItems": []
+  },
+  {
+   "id": "IC04",
+   "dispositions": [
+    "OBSERVER"
+   ],
+   "how": "Checked by check_rbac_snapshot on every observer snapshot.",
+   "roles": [
+    "APISERVER"
+   ],
+   "openItems": []
+  },
+  {
+   "id": "IC05",
+   "dispositions": [
+    "OBSERVER"
+   ],
+   "how": "Checked by check_rbac_snapshot on every observer snapshot.",
+   "roles": [
+    "APISERVER"
+   ],
+   "openItems": []
+  },
+  {
+   "id": "OR01",
+   "dispositions": [
+    "OPERATIONAL"
+   ],
+   "how": "Unchanged for the upstream apiserver: a restart during ACTIVE invalidates the generation, because bootstrap-roles and the system-namespace and authentication-info controllers write policy kinds at start.",
+   "roles": [
+    "APISERVER"
+   ],
+   "openItems": []
+  },
+  {
+   "id": "OR02",
+   "dispositions": [
+    "OPERATIONAL",
+    "OBSERVER"
+   ],
+   "how": "Policy-kind objects carry no ownerReferences, so the upstream garbage collector cannot delete them; observer-checked.",
+   "roles": [
+    "CONTROLLER_MANAGER"
+   ],
+   "openItems": []
+  },
+  {
+   "id": "OR03",
+   "dispositions": [
+    "OPERATIONAL",
+    "OBSERVER"
+   ],
+   "how": "The aggregation controller is off (SC06), so no ClusterRole with an aggregationRule may be bound in the qualification namespace; observer-checked.",
+   "roles": [
+    "CONTROLLER_MANAGER"
+   ],
+   "openItems": []
+  },
+  {
+   "id": "OR04",
+   "dispositions": [
+    "OPERATIONAL"
+   ],
+   "how": "API Priority and Fairness objects affect availability only; system:masters is exempt; only the in-process producer writes them.",
+   "roles": [
+    "APISERVER"
+   ],
+   "openItems": []
+  },
+  {
+   "id": "OR05",
+   "dispositions": [
+    "OPERATIONAL",
+    "OBSERVER"
+   ],
+   "how": "The legacy token controller is off (SC06) and bootstrap tokens are unused (SC03), so no service-account-token or bootstrap-token Secret exists; observer-checked.",
+   "roles": [
+    "APISERVER",
+    "CONTROLLER_MANAGER"
+   ],
+   "openItems": []
+  },
+  {
+   "id": "OR06",
+   "dispositions": [
+    "OPERATIONAL",
+    "OBSERVER"
+   ],
+   "how": "No webhook configuration or MutatingAdmissionPolicy object exists although their plugins are off; observer-checked.",
+   "roles": [
+    "APISERVER"
+   ],
+   "openItems": []
+  },
+  {
+   "id": "OR07",
+   "dispositions": [
+    "OPERATIONAL"
+   ],
+   "how": "The observer starts INSPECTING only after /readyz/poststarthook/rbac/bootstrap-roles succeeds on the apiserver.",
+   "roles": [
+    "APISERVER"
+   ],
+   "openItems": []
+  },
+  {
+   "id": "OR08",
+   "dispositions": [
+    "SEALED_CONFIGURATION"
+   ],
+   "how": "The A2 admission policies are held in sealed manifest-based admission files (ManifestBasedAdmissionControlConfig, beta and on by default in v1.37.1, so no feature gate changes; admission semantics v3).",
+   "roles": [
+    "APISERVER"
+   ],
+   "openItems": []
+  }
+ ],
+ "excluded": [
+  {
+   "candidate": "k3s, k0s, RKE2 and other single-binary or repackaged distributions",
+   "reason": "One multi-call executable for several components, or a vendor-suffixed version.",
+   "criteria": [
+    "SC08",
+    "SC14"
+   ]
+  },
+  {
+   "candidate": "kine or an in-process SQLite datastore",
+   "reason": "Not a separate AF_UNIX datastore process.",
+   "criteria": [
+    "SC01",
+    "SC08"
+   ]
+  },
+  {
+   "candidate": "kubeadm (as installer or for its defaults)",
+   "reason": "Its defaults enable bootstrap tokens and CSR signing; the profile is built from sealed files with no installer.",
+   "criteria": [
+    "SC03",
+    "SC06",
+    "SC12"
+   ]
+  },
+  {
+   "candidate": "Calico, Cilium and Antrea",
+   "reason": "CustomResourceDefinitions, or BPF datapaths beyond cgroup-device programs.",
+   "criteria": [
+    "SC09",
+    "SC08"
+   ]
+  },
+  {
+   "candidate": "CoreDNS",
+   "reason": "Not needed by the qualification workloads (owner decision Q4).",
+   "criteria": [
+    "OWNER-Q4"
+   ]
+  },
+  {
+   "candidate": "CRI-O",
+   "reason": "Owner decision Q4 selected containerd.",
+   "criteria": [
+    "OWNER-Q4"
+   ]
+  },
+  {
+   "candidate": "crun",
+   "reason": "GPL-2.0-or-later is not in the license policy's allowed or review lists.",
+   "criteria": [
+    "LICENSE"
+   ]
+  },
+  {
+   "candidate": "kube-network-policies npa-v1alpha1 and npa-v1alpha2 commands",
+   "reason": "They use AdminNetworkPolicy CRDs.",
+   "criteria": [
+    "SC09"
+   ]
+  },
+  {
+   "candidate": "etcdctl, etcdutl and ctr",
+   "reason": "Clients, not components; left out of the installed set.",
+   "criteria": [
+    "SC08",
+    "SC11"
+   ]
+  }
+ ],
+ "licenseReviews": [
+  {
+   "id": "D-LIC-RUNC",
+   "component": "runc",
+   "license": "LGPL-2.1-only",
+   "reason": "runc's release binaries statically link libseccomp; the license policy neither allows nor lists LGPL-2.1, so the fail-closed rule denies it until the owner reviews it.",
+   "decision": "Q-R",
+   "status": "PENDING_OWNER"
+  }
+ ],
+ "rechecks": {
+  "i05OutcomeMapping": {
+   "path": "architecture/i05-gate-channel-v3/outcome-mapping.json",
+   "sha256": "4466f379f1cc669e047cffd8afa5fa88b2cc7648a51e2d38b17f0bd5e2252a3a",
+   "result": "SOURCES_IDENTICAL_AT_SELECTED_COMMIT",
+   "files": [
+    {
+     "path": "pkg/registry/core/configmap/storage/storage.go",
+     "sha256": "f2cb2988fcde7e8869ff92aa4235f4a8899acd7ecb4f7944fedc2e8ff45170ae"
+    },
+    {
+     "path": "pkg/registry/core/pod/storage/storage.go",
+     "sha256": "a781286c7977e0f94ffe5fea9853f79732308548e0cc6d61224d5cd1f460626e"
+    },
+    {
+     "path": "pkg/registry/core/service/storage/storage.go",
+     "sha256": "7ba0fe206016002e65080f694cea238f56972ffdd7a91cb62b78ee8878aa59df"
+    },
+    {
+     "path": "staging/src/k8s.io/apiserver/pkg/endpoints/handlers/delete.go",
+     "sha256": "e147c00d1c47ef33bf3f9029c5c1ce84ff282ebc021952bf8cae78976456a468"
+    },
+    {
+     "path": "staging/src/k8s.io/apiserver/pkg/registry/generic/registry/store.go",
+     "sha256": "b0e1b669df3de70beb228b2be79ce6544439bb36edcf9464633cf40588176ab3"
+    }
+   ]
+  }
+ },
+ "openItems": [
+  {
+   "id": "D-W02A-F2",
+   "owner": "W02a-F2 and W02g-F2 (main lane)",
+   "text": "A production W02a backend profile with these components' canonical paths, confined types and verity digests, and an I06 successor bound to it, before any evidence record."
+  },
+  {
+   "id": "D-SC01-PEER",
+   "owner": "W02g-F2",
+   "text": "Resolve SC01's peerListen == [] against etcd: accept an AF_UNIX peer listener in the datastore's private directory, reachable only from the datastore's confined type, or show on the enrolled host that an empty peer listener list starts."
+  },
+  {
+   "id": "D-LIC-CLOSURE",
+   "owner": "W03 host-image packet",
+   "text": "License closure and SBOM of every artifact: Go module sets, and any statically linked C library in containerd, runc and the pause binary, against legal/third-party-license-policy.yaml."
+  },
+  {
+   "id": "D-NETPOL-BUILD",
+   "owner": "W03 host-image packet",
+   "text": "Build kube-network-policies cmd/kube-network-policies/standard at a145b01c for both architectures with a pinned Go toolchain and module cache, CGO off, and record the digests (owner question Q-N)."
+  },
+  {
+   "id": "D-SANDBOX",
+   "owner": "W03 host-image packet",
+   "text": "Pin containerd's sandbox image to registry.k8s.io/pause:3.10.2 by index digest and import it at enrollment."
+  },
+  {
+   "id": "D-RUNTIME-BPF",
+   "owner": "T04",
+   "text": "Confirm on the enrolled kernel that containerd and runc load only cgroup-device programs under the cgroupfs driver (W02e E1) and that the CNI plugins and kube-proxy in nftables mode load none."
+  }
+ ],
+ "notClaimed": [
+  "No artifact is installed or executed.",
+  "No I06 evidence record exists; SC00 needs W02a-F2.",
+  "E01-E12 stay OPEN_UNPROVEN.",
+  "Not native or tenant acceptance."
+ ]
+}

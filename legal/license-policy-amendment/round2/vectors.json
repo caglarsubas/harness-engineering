@@ -7,8 +7,7 @@
     "name": "libmnl",
     "kind": "HOST_OS_LIBRARY",
     "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": null
+    "crateField": false
    },
    "outcome": "HOST_OS_SYSTEM_LIBRARY",
    "elections": [],
@@ -20,11 +19,7 @@
     "name": "glibc",
     "kind": "STATIC_SYSTEM_LIBRARY",
     "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": {
-     "name": "runc",
-     "custody": "UPSTREAM_PINNED"
-    }
+    "crateField": false
    },
    "outcome": "HOST_OS_SYSTEM_LIBRARY",
    "elections": [],
@@ -36,11 +31,7 @@
     "name": "libseccomp",
     "kind": "STATIC_SYSTEM_LIBRARY",
     "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": {
-     "name": "runc",
-     "custody": "UPSTREAM_PINNED"
-    }
+    "crateField": false
    },
    "outcome": "HOST_OS_SYSTEM_LIBRARY",
    "elections": [],
@@ -52,11 +43,7 @@
     "name": "libgcc",
     "kind": "STATIC_SYSTEM_LIBRARY",
     "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": {
-     "name": "runc",
-     "custody": "UPSTREAM_PINNED"
-    }
+    "crateField": false
    },
    "outcome": "HOST_OS_SYSTEM_LIBRARY",
    "elections": [],
@@ -68,8 +55,7 @@
     "name": "libnftnl",
     "kind": "HOST_OS_LIBRARY",
     "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": null
+    "crateField": false
    },
    "outcome": "HOST_OS_SYSTEM_LIBRARY",
    "elections": [],
@@ -81,8 +67,7 @@
     "name": "some-crate",
     "kind": "CRATE",
     "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": null
+    "crateField": false
    },
    "outcome": "OUT_OF_SCOPE",
    "elections": [],
@@ -94,8 +79,7 @@
     "name": "planeon-module",
     "kind": "PLANEON_SOURCE",
     "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": null
+    "crateField": false
    },
    "outcome": "OUT_OF_SCOPE",
    "elections": [],
@@ -107,11 +91,7 @@
     "name": "glibc",
     "kind": "STATIC_SYSTEM_LIBRARY",
     "custody": "REPOSITORY_BUILT",
-    "crateField": false,
-    "linkedInto": {
-     "name": "runc",
-     "custody": "UPSTREAM_PINNED"
-    }
+    "crateField": false
    },
    "outcome": "OUT_OF_SCOPE",
    "elections": [],
@@ -123,8 +103,7 @@
     "name": "nft",
     "kind": "HOST_OS_PROGRAM",
     "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": null
+    "crateField": false
    },
    "outcome": "OPTIONAL_EXPLICIT_REVIEW_APPROVED",
    "elections": [],
@@ -136,8 +115,7 @@
     "name": "libnftables",
     "kind": "HOST_OS_LIBRARY",
     "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": null
+    "crateField": false
    },
    "outcome": "OPTIONAL_EXPLICIT_REVIEW_APPROVED",
    "elections": [],
@@ -149,8 +127,7 @@
     "name": "other-program",
     "kind": "HOST_OS_PROGRAM",
     "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": null
+    "crateField": false
    },
    "outcome": "OPTIONAL_EXPLICIT_REVIEW",
    "elections": [],
@@ -162,8 +139,7 @@
     "name": "gmp",
     "kind": "HOST_OS_LIBRARY",
     "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": null
+    "crateField": false
    },
    "outcome": "OPTIONAL_EXPLICIT_REVIEW_APPROVED",
    "elections": [],
@@ -175,8 +151,7 @@
     "name": "some-crate",
     "kind": "CRATE",
     "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": null
+    "crateField": false
    },
    "outcome": "OPTIONAL_EXPLICIT_REVIEW",
    "elections": [],
@@ -188,8 +163,7 @@
     "name": "libmnl",
     "kind": "HOST_OS_LIBRARY",
     "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": null
+    "crateField": false
    },
    "outcome": "OPTIONAL_EXPLICIT_REVIEW",
    "elections": [],
@@ -201,8 +175,7 @@
     "name": "some-crate",
     "kind": "CRATE",
     "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": null
+    "crateField": false
    },
    "outcome": "DEFAULT_ALLOWED",
    "elections": [],
@@ -214,8 +187,7 @@
     "name": "some-crate",
     "kind": "CRATE",
     "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": null
+    "crateField": false
    },
    "outcome": "ALLOWED_EXCEPTION_EXPRESSION",
    "elections": [],
@@ -227,8 +199,7 @@
     "name": "dataset",
     "kind": "ARTIFACT",
     "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": null
+    "crateField": false
    },
    "outcome": "OPEN_CONTENT",
    "elections": [],
@@ -240,8 +211,7 @@
     "name": "some-crate",
     "kind": "CRATE",
     "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": null
+    "crateField": false
    },
    "outcome": "OUT_OF_SCOPE",
    "elections": [],
@@ -253,8 +223,7 @@
     "name": "some-crate",
     "kind": "CRATE",
     "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": null
+    "crateField": false
    },
    "outcome": "DENIED",
    "elections": [],
@@ -266,8 +235,7 @@
     "name": "some-crate",
     "kind": "CRATE",
     "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": null
+    "crateField": false
    },
    "outcome": "UNKNOWN",
    "elections": [],
@@ -279,8 +247,7 @@
     "name": "some-crate",
     "kind": "CRATE",
     "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": null
+    "crateField": false
    },
    "outcome": "PLANNED_UNRESOLVED",
    "elections": [],
@@ -292,8 +259,7 @@
     "name": "some-crate",
     "kind": "CRATE",
     "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": null
+    "crateField": false
    },
    "outcome": "ACCEPTED_OR",
    "elections": [
@@ -310,8 +276,7 @@
     "name": "some-crate",
     "kind": "CRATE",
     "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": null
+    "crateField": false
    },
    "outcome": "ACCEPTED_OR",
    "elections": [
@@ -328,8 +293,7 @@
     "name": "memchr",
     "kind": "CRATE",
     "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": null
+    "crateField": false
    },
    "outcome": "ACCEPTED_OR",
    "elections": [
@@ -346,8 +310,7 @@
     "name": "rustix",
     "kind": "CRATE",
     "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": null
+    "crateField": false
    },
    "outcome": "ACCEPTED_OR",
    "elections": [
@@ -364,8 +327,7 @@
     "name": "adler2",
     "kind": "CRATE",
     "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": null
+    "crateField": false
    },
    "outcome": "ACCEPTED_OR",
    "elections": [
@@ -382,8 +344,7 @@
     "name": "miniz_oxide",
     "kind": "CRATE",
     "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": null
+    "crateField": false
    },
    "outcome": "ACCEPTED_OR",
    "elections": [
@@ -400,11 +361,7 @@
     "name": "libpathrs",
     "kind": "STATIC_SYSTEM_LIBRARY",
     "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": {
-     "name": "runc",
-     "custody": "UPSTREAM_PINNED"
-    }
+    "crateField": false
    },
    "outcome": "ACCEPTED_OR",
    "elections": [
@@ -421,11 +378,7 @@
     "name": "libpathrs",
     "kind": "STATIC_SYSTEM_LIBRARY",
     "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": {
-     "name": "runc",
-     "custody": "UPSTREAM_PINNED"
-    }
+    "crateField": false
    },
    "outcome": "ACCEPTED_OR",
    "elections": [
@@ -442,8 +395,7 @@
     "name": "gmp",
     "kind": "HOST_OS_LIBRARY",
     "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": null
+    "crateField": false
    },
    "outcome": "ACCEPTED_OR",
    "elections": [
@@ -460,8 +412,7 @@
     "name": "gmp",
     "kind": "HOST_OS_LIBRARY",
     "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": null
+    "crateField": false
    },
    "outcome": "ACCEPTED_OR",
    "elections": [
@@ -478,8 +429,7 @@
     "name": "libfoo",
     "kind": "HOST_OS_LIBRARY",
     "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": null
+    "crateField": false
    },
    "outcome": "ACCEPTED_OR",
    "elections": [
@@ -496,8 +446,7 @@
     "name": "dataset",
     "kind": "ARTIFACT",
     "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": null
+    "crateField": false
    },
    "outcome": "ACCEPTED_OR",
    "elections": [
@@ -514,8 +463,7 @@
     "name": "compiler_builtins",
     "kind": "CRATE",
     "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": null
+    "crateField": false
    },
    "outcome": "ACCEPTED_AND",
    "elections": [
@@ -532,8 +480,7 @@
     "name": "rustc-demangle",
     "kind": "CRATE",
     "custody": "UPSTREAM_PINNED",
-    "crateField": true,
-    "linkedInto": null
+    "crateField": true
    },
    "outcome": "ACCEPTED_OR",
    "elections": [
@@ -550,8 +497,7 @@
     "name": "odd-crate",
     "kind": "CRATE",
     "custody": "UPSTREAM_PINNED",
-    "crateField": true,
-    "linkedInto": null
+    "crateField": true
    },
    "outcome": "ACCEPTED_OR",
    "elections": [
@@ -568,8 +514,7 @@
     "name": "some-crate",
     "kind": "CRATE",
     "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": null
+    "crateField": false
    },
    "outcome": "OUT_OF_SCOPE",
    "elections": [],
@@ -581,8 +526,7 @@
     "name": "some-crate",
     "kind": "CRATE",
     "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": null
+    "crateField": false
    },
    "outcome": "OPTIONAL_EXPLICIT_REVIEW",
    "elections": [],
@@ -594,8 +538,7 @@
     "name": "some-crate",
     "kind": "CRATE",
     "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": null
+    "crateField": false
    },
    "outcome": "OUT_OF_SCOPE",
    "elections": [],
@@ -607,8 +550,7 @@
     "name": "some-crate",
     "kind": "CRATE",
     "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": null
+    "crateField": false
    },
    "outcome": "DENIED",
    "elections": [],
@@ -620,8 +562,7 @@
     "name": "some-crate",
     "kind": "CRATE",
     "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": null
+    "crateField": false
    },
    "outcome": "DENIED",
    "elections": [],
@@ -633,38 +574,35 @@
     "name": "some-crate",
     "kind": "CRATE",
     "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": null
+    "crateField": false
    },
    "outcome": "DENIED",
    "elections": [],
    "note": "the same, reversed"
   },
   {
-   "expression": "WTFPL AND SSPL-1.0",
+   "expression": "NOASSERTION AND SSPL-1.0",
    "component": {
     "name": "some-crate",
     "kind": "CRATE",
     "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": null
+    "crateField": false
    },
    "outcome": "DENIED",
    "elections": [],
-   "note": "denied outranks unknown"
+   "note": "a denied term is never masked as a placeholder"
   },
   {
-   "expression": "GPL-3.0-only AND WTFPL",
+   "expression": "NOASSERTION AND WTFPL",
    "component": {
     "name": "some-crate",
     "kind": "CRATE",
     "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": null
+    "crateField": false
    },
    "outcome": "UNKNOWN",
    "elections": [],
-   "note": "unknown outranks review"
+   "note": "unknown outranks placeholder"
   },
   {
    "expression": "SSPL-1.0 OR WTFPL",
@@ -672,8 +610,7 @@
     "name": "some-crate",
     "kind": "CRATE",
     "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": null
+    "crateField": false
    },
    "outcome": "UNKNOWN",
    "elections": [],
@@ -685,8 +622,7 @@
     "name": "some-crate",
     "kind": "CRATE",
     "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": null
+    "crateField": false
    },
    "outcome": "UNKNOWN",
    "elections": [],
@@ -698,8 +634,7 @@
     "name": "some-crate",
     "kind": "CRATE",
     "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": null
+    "crateField": false
    },
    "outcome": "OPTIONAL_EXPLICIT_REVIEW",
    "elections": [],
@@ -711,8 +646,7 @@
     "name": "some-crate",
     "kind": "CRATE",
     "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": null
+    "crateField": false
    },
    "outcome": "ACCEPTED_OR",
    "elections": [
@@ -729,8 +663,7 @@
     "name": "some-crate",
     "kind": "CRATE",
     "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": null
+    "crateField": false
    },
    "outcome": "ALLOWED_EXCEPTION_EXPRESSION",
    "elections": [],
@@ -742,8 +675,7 @@
     "name": "some-crate",
     "kind": "CRATE",
     "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": null
+    "crateField": false
    },
    "outcome": "ALLOWED_EXCEPTION_EXPRESSION",
    "elections": [],
@@ -755,8 +687,7 @@
     "name": "some-crate",
     "kind": "CRATE",
     "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": null
+    "crateField": false
    },
    "outcome": "OPTIONAL_EXPLICIT_REVIEW",
    "elections": [],
@@ -768,8 +699,7 @@
     "name": "gmp",
     "kind": "HOST_OS_LIBRARY",
     "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": null
+    "crateField": false
    },
    "outcome": "OPTIONAL_EXPLICIT_REVIEW",
    "elections": [],
@@ -781,8 +711,7 @@
     "name": "some-crate",
     "kind": "CRATE",
     "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": null
+    "crateField": false
    },
    "outcome": "OPTIONAL_EXPLICIT_REVIEW",
    "elections": [],
@@ -794,8 +723,7 @@
     "name": "some-crate",
     "kind": "CRATE",
     "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": null
+    "crateField": false
    },
    "outcome": "OPTIONAL_EXPLICIT_REVIEW",
    "elections": [],
@@ -807,8 +735,7 @@
     "name": "some-crate",
     "kind": "CRATE",
     "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": null
+    "crateField": false
    },
    "outcome": "OPTIONAL_EXPLICIT_REVIEW",
    "elections": [],
@@ -820,8 +747,7 @@
     "name": "some-crate",
     "kind": "CRATE",
     "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": null
+    "crateField": false
    },
    "outcome": "REFUSED",
    "elections": [],
@@ -833,8 +759,7 @@
     "name": "some-crate",
     "kind": "CRATE",
     "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": null
+    "crateField": false
    },
    "outcome": "REFUSED",
    "elections": [],
@@ -846,8 +771,7 @@
     "name": "some-crate",
     "kind": "CRATE",
     "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": null
+    "crateField": false
    },
    "outcome": "REFUSED",
    "elections": [],
@@ -859,8 +783,7 @@
     "name": "some-crate",
     "kind": "CRATE",
     "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": null
+    "crateField": false
    },
    "outcome": "REFUSED",
    "elections": [],
@@ -872,8 +795,7 @@
     "name": "some-crate",
     "kind": "CRATE",
     "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": null
+    "crateField": false
    },
    "outcome": "REFUSED",
    "elections": [],
@@ -885,8 +807,7 @@
     "name": "some-crate",
     "kind": "CRATE",
     "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": null
+    "crateField": false
    },
    "outcome": "REFUSED",
    "elections": [],
@@ -898,8 +819,7 @@
     "name": "some-crate",
     "kind": "CRATE",
     "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": null
+    "crateField": false
    },
    "outcome": "REFUSED",
    "elections": [],
@@ -911,253 +831,11 @@
     "name": "some-crate",
     "kind": "CRATE",
     "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": null
+    "crateField": false
    },
    "outcome": "UNKNOWN",
    "elections": [],
    "note": "a trailing plus is a valid id; unclassified"
-  },
-  {
-   "expression": "LGPL-2.1-or-later",
-   "component": {
-    "name": "glibc",
-    "kind": "STATIC_SYSTEM_LIBRARY",
-    "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": {
-     "name": "containerd",
-     "custody": "UPSTREAM_PINNED"
-    }
-   },
-   "outcome": "HOST_OS_SYSTEM_LIBRARY",
-   "elections": [],
-   "note": "glibc in the official containerd static binary"
-  },
-  {
-   "expression": "LGPL-2.1-or-later",
-   "component": {
-    "name": "glibc",
-    "kind": "STATIC_SYSTEM_LIBRARY",
-    "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": {
-     "name": "planeon-broker",
-     "custody": "REPOSITORY_BUILT"
-    }
-   },
-   "outcome": "OUT_OF_SCOPE",
-   "elections": [],
-   "note": "glibc statically linked into a planeon binary is not decided"
-  },
-  {
-   "expression": "GPL-3.0-or-later WITH GCC-exception-3.1",
-   "component": {
-    "name": "libgcc_eh",
-    "kind": "STATIC_SYSTEM_LIBRARY",
-    "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": {
-     "name": "planeon-gate",
-     "custody": "REPOSITORY_BUILT"
-    }
-   },
-   "outcome": "OUT_OF_SCOPE",
-   "elections": [],
-   "note": "libgcc_eh in a planeon binary"
-  },
-  {
-   "expression": "GPL-2.0-or-later",
-   "component": {
-    "name": "libfoo",
-    "kind": "HOST_OS_LIBRARY",
-    "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": null
-   },
-   "outcome": "OUT_OF_SCOPE",
-   "elections": [],
-   "note": "an unnamed host library"
-  },
-  {
-   "expression": "GPL-2.0-or-later OR LGPL-2.1-only",
-   "component": {
-    "name": "libfoo",
-    "kind": "HOST_OS_LIBRARY",
-    "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": null
-   },
-   "outcome": "OUT_OF_SCOPE",
-   "elections": [],
-   "note": "no alternative in scope"
-  },
-  {
-   "expression": "GPL-2.0-only",
-   "component": {
-    "name": "libxtables",
-    "kind": "HOST_OS_LIBRARY",
-    "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": null
-   },
-   "outcome": "OPTIONAL_EXPLICIT_REVIEW",
-   "elections": [],
-   "note": "an undecided closure member"
-  },
-  {
-   "expression": "GPL-2.0-only",
-   "component": {
-    "name": "nft",
-    "kind": "CRATE",
-    "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": null
-   },
-   "outcome": "OPTIONAL_EXPLICIT_REVIEW",
-   "elections": [],
-   "note": "the nft approval is for the host program"
-  },
-  {
-   "expression": "GPL-2.0-only",
-   "component": {
-    "name": "nft",
-    "kind": "PLANEON_SOURCE",
-    "custody": "REPOSITORY_BUILT",
-    "crateField": false,
-    "linkedInto": null
-   },
-   "outcome": "OPTIONAL_EXPLICIT_REVIEW",
-   "elections": [],
-   "note": "never planeon source"
-  },
-  {
-   "expression": "GPL-2.0-only",
-   "component": {
-    "name": "libnftables",
-    "kind": "STATIC_SYSTEM_LIBRARY",
-    "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": {
-     "name": "runc",
-     "custody": "UPSTREAM_PINNED"
-    }
-   },
-   "outcome": "OPTIONAL_EXPLICIT_REVIEW",
-   "elections": [],
-   "note": "never statically linked"
-  },
-  {
-   "expression": "MIT AND GPL-2.0-only",
-   "component": {
-    "name": "nft",
-    "kind": "CRATE",
-    "custody": "REPOSITORY_BUILT",
-    "crateField": false,
-    "linkedInto": null
-   },
-   "outcome": "OPTIONAL_EXPLICIT_REVIEW",
-   "elections": [],
-   "note": "not through AND either"
-  },
-  {
-   "expression": "LGPL-3.0-or-later",
-   "component": {
-    "name": "gmp",
-    "kind": "CRATE",
-    "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": null
-   },
-   "outcome": "OPTIONAL_EXPLICIT_REVIEW",
-   "elections": [],
-   "note": "the gmp approval is for the host library"
-  },
-  {
-   "expression": "LGPL-3.0-or-later",
-   "component": {
-    "name": "gmp",
-    "kind": "STATIC_SYSTEM_LIBRARY",
-    "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": {
-     "name": "runc",
-     "custody": "UPSTREAM_PINNED"
-    }
-   },
-   "outcome": "OPTIONAL_EXPLICIT_REVIEW",
-   "elections": [],
-   "note": "gmp dynamically linked only"
-  },
-  {
-   "expression": "LGPL-3.0-or-later",
-   "component": {
-    "name": "gmp",
-    "kind": "HOST_OS_LIBRARY",
-    "custody": "REPOSITORY_BUILT",
-    "crateField": false,
-    "linkedInto": null
-   },
-   "outcome": "OPTIONAL_EXPLICIT_REVIEW",
-   "elections": [],
-   "note": "upstream-pinned only"
-  },
-  {
-   "expression": "LGPL-3.0-or-later OR GPL-2.0-or-later",
-   "component": {
-    "name": "gmp",
-    "kind": "CRATE",
-    "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": null
-   },
-   "outcome": "OPTIONAL_EXPLICIT_REVIEW",
-   "elections": [],
-   "note": "the gmp election does not reach a gmp crate"
-  },
-  {
-   "expression": "NOASSERTION OR SSPL-1.0",
-   "component": {
-    "name": "some-crate",
-    "kind": "CRATE",
-    "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": null
-   },
-   "outcome": "REFUSED",
-   "elections": [],
-   "note": "NOASSERTION is a whole-field value"
-  },
-  {
-   "expression": "MIT AND (SSPL-1.0 OR NOASSERTION)",
-   "component": {
-    "name": "some-crate",
-    "kind": "CRATE",
-    "custody": "UPSTREAM_PINNED",
-    "crateField": false,
-    "linkedInto": null
-   },
-   "outcome": "REFUSED",
-   "elections": [],
-   "note": "NOASSERTION inside an expression"
-  },
-  {
-   "expression": "MIT / Apache-2.0",
-   "component": {
-    "name": "spaced-crate",
-    "kind": "CRATE",
-    "custody": "UPSTREAM_PINNED",
-    "crateField": true,
-    "linkedInto": null
-   },
-   "outcome": "ACCEPTED_OR",
-   "elections": [
-    {
-     "group": "Apache-2.0 OR MIT",
-     "elected": "Apache-2.0"
-    }
-   ],
-   "note": "a legacy field with spaces"
   }
  ]
 }

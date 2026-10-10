@@ -41,18 +41,9 @@ APPROVED = "OPTIONAL_EXPLICIT_REVIEW_APPROVED"
 CLASS_EXPRESSIONS = ("GPL-2.0-or-later", "GPL-3.0-or-later WITH GCC-exception-3.1", "LGPL-2.1-only", "LGPL-2.1-or-later")
 CLASS_KINDS = ("HOST_OS_PROGRAM", "HOST_OS_LIBRARY", "STATIC_SYSTEM_LIBRARY")
 CLASS_CUSTODY = ("UPSTREAM_PINNED",)
-# The class reaches only the components the owner decisions name, each in its decided use (Q-L, Q-L2), and a static
-# library only when it is linked into one of the pinned official upstream binaries of the W03-0 selection.
-CLASS_COMPONENTS = {"glibc": ("HOST_OS_LIBRARY", "STATIC_SYSTEM_LIBRARY"), "libseccomp": ("STATIC_SYSTEM_LIBRARY",),
-                    "libgcc": ("STATIC_SYSTEM_LIBRARY",), "libgcc_eh": ("STATIC_SYSTEM_LIBRARY",),
-                    "libnftnl": ("HOST_OS_LIBRARY",), "libmnl": ("HOST_OS_LIBRARY",)}
-UPSTREAM_BINARIES = ("containerd", "pause", "runc")
-# Each approval and owner election is bound to its subjects and its decided use: (subjects, kinds, question).
-DECISIONS = {"GPL-2.0-only": (("libnftables", "nft"), ("HOST_OS_LIBRARY", "HOST_OS_PROGRAM"), "Q-L"),
-             "LGPL-3.0-or-later": (("gmp",), ("HOST_OS_LIBRARY",), "Q-L2")}
-OWNER_ELECTIONS = {"LGPL-3.0-or-later OR MPL-2.0": ("MPL-2.0", "Q-L", "libpathrs", "STATIC_SYSTEM_LIBRARY"),
-                   "GPL-2.0-or-later OR LGPL-3.0-or-later": ("LGPL-3.0-or-later", "Q-L2", "gmp", "HOST_OS_LIBRARY")}
-FIELD_VALUES = ("NOASSERTION", "NONE")
+DECISIONS = {"GPL-2.0-only": (("libnftables", "nft"), "Q-L"), "LGPL-3.0-or-later": (("gmp",), "Q-L2")}
+OWNER_ELECTIONS = {"LGPL-3.0-or-later OR MPL-2.0": ("MPL-2.0", "Q-L", "libpathrs"),
+                   "GPL-2.0-or-later OR LGPL-3.0-or-later": ("LGPL-3.0-or-later", "Q-L2", "gmp")}
 KINDS = ("CRATE", "GO_MODULE", "UPSTREAM_BINARY", "STATIC_SYSTEM_LIBRARY", "HOST_OS_PROGRAM", "HOST_OS_LIBRARY",
          "PLANEON_SOURCE", "ARTIFACT")
 OPEN_CONTENT_KINDS = ("ARTIFACT",)
@@ -175,8 +166,6 @@ def parse(expression: str):
 
     node = disjunction(0)
     require(position == len(tokens), "trailing tokens in %r" % expression)
-    require(type(node) is str or not any(token in FIELD_VALUES for token in tokens),
-            "NOASSERTION and NONE are whole-field values, never inside an expression")
     return node
 
 
@@ -206,38 +195,13 @@ def canonical(expression: str) -> str:
 
 def normalise_legacy(field: str) -> str:
     """A crates.io legacy license field "A/B" read as "A OR B" (rule legacySlash); other strings are unchanged."""
-    parts = [part.strip(" ") for part in field.split("/")]
+    parts = field.split("/")
     if len(parts) > 1 and all(IDSTRING.fullmatch(part) for part in parts):
         return " OR ".join(parts)
     return field
 
 
 # --- classification -------------------------------------------------------------------------------------------------
-
-def _in_use(component: dict, kinds, names=None) -> bool:
-    """The component is upstream-pinned, of a decided kind and name, and a static library is linked into a pinned
-    official upstream binary."""
-    if component["custody"] != "UPSTREAM_PINNED" or component["kind"] not in kinds:
-        return False
-    if names is not None and component["name"] not in names:
-        return False
-    if component["kind"] == "STATIC_SYSTEM_LIBRARY":
-        linked = component["linkedInto"]
-        return type(linked) is dict and linked.get("name") in UPSTREAM_BINARIES and linked.get("custody") == "UPSTREAM_PINNED"
-    return True
-
-
-def validate_component(component) -> dict:
-    require(type(component) is dict and set(component) == {"name", "kind", "custody", "crateField", "linkedInto"}
-            and type(component["name"]) is str and component["name"] != "" and component["kind"] in KINDS
-            and type(component["custody"]) is str and type(component["crateField"]) is bool, "component identity")
-    linked = component["linkedInto"]
-    require(linked is None or (type(linked) is dict and set(linked) == {"name", "custody"}
-                               and all(type(v) is str and v for v in linked.values())), "component linkage")
-    require((component["kind"] == "STATIC_SYSTEM_LIBRARY") == (linked is not None),
-            "a static system library names the binary it is linked into, and only it does")
-    return component
-
 
 class Policy:
     """The effective classification: the base categories plus the amendment's scoped class, decisions and elections."""
@@ -251,60 +215,58 @@ class Policy:
             if term in self.categories[name]:
                 return name
         if term in self.categories["OPTIONAL_EXPLICIT_REVIEW"]:
-            subjects, kinds, _ = DECISIONS.get(term, ((), (), None))
-            return APPROVED if _in_use(component, kinds, subjects) else "OPTIONAL_EXPLICIT_REVIEW"
+            return APPROVED if component["name"] in DECISIONS.get(term, ((), None))[0] else "OPTIONAL_EXPLICIT_REVIEW"
         if term in self.categories["OPEN_CONTENT"]:
             return "OPEN_CONTENT" if component["kind"] in OPEN_CONTENT_KINDS else "OUT_OF_SCOPE"
         for name in ("ALLOWED_EXCEPTION_EXPRESSION", "DEFAULT_ALLOWED"):
             if term in self.categories[name]:
                 return name
         if term in CLASS_EXPRESSIONS:
-            kinds = CLASS_COMPONENTS.get(component["name"], ())
-            return CLASS if _in_use(component, kinds) else "OUT_OF_SCOPE"
+            return CLASS if component["kind"] in CLASS_KINDS and component["custody"] in CLASS_CUSTODY else "OUT_OF_SCOPE"
         return "UNKNOWN"
 
-    def resolve(self, node, component: dict) -> tuple:
-        """(outcome, rank, elections, effective leaves): blocking outcomes follow base precedence; accepted ones carry an
-        election rank, and only the leaves in effect (AND terms and each OR group's elected alternative) are returned."""
+    def resolve(self, node, component: dict, leaves: list) -> tuple:
+        """(outcome, rank, elections): blocking outcomes follow base precedence; accepted ones carry an election rank."""
         if type(node) is str:
             outcome = self.leaf(node, component)
+            leaves.append({"term": node, "category": outcome})
             rank = ACCEPTED_RANK.get(outcome)
-            return outcome, (0 if node == CORE_LICENSE and rank is not None else rank), [], [{"term": node, "category": outcome}]
+            return outcome, (0 if node == CORE_LICENSE and rank is not None else rank), []
         kind, terms = node
-        results = [self.resolve(term, component) for term in terms]
-        blocking = [outcome for outcome, rank, _, _ in results if rank is None]
+        results = [self.resolve(term, component, leaves) for term in terms]
+        blocking = [outcome for outcome, rank, _ in results if rank is None]
         if kind == "AND":
             if blocking:
-                return min(blocking, key=lambda outcome: BLOCKING_RANK[outcome]), None, [], []
-            return ("ACCEPTED_AND", max(rank for _, rank, _, _ in results),
-                    [e for _, _, elections, _ in results for e in elections], [l for _, _, _, leaves in results for l in leaves])
-        accepted = [(term, rank, elections, leaves) for term, (_, rank, elections, leaves) in zip(terms, results)
-                    if rank is not None]
+                return min(blocking, key=lambda outcome: BLOCKING_RANK[outcome]), None, []
+            return "ACCEPTED_AND", max(rank for _, rank, _ in results), [e for _, _, elections in results for e in elections]
+        accepted = [(term, rank, elections) for term, (_, rank, elections) in zip(terms, results) if rank is not None]
         if not accepted:
             # An OR with no accepted alternative takes its least restrictive alternative's outcome (order-independent).
-            return max(blocking, key=lambda outcome: BLOCKING_RANK[outcome]), None, [], []
+            return max(blocking, key=lambda outcome: BLOCKING_RANK[outcome]), None, []
         group = render(node)
         owner = OWNER_ELECTIONS.get(group)
-        named = [item for item in accepted if owner is not None and render(item[0]) == owner[0]
-                 and _in_use(component, (owner[3],), (owner[2],))]
-        term, rank, elections, leaves = named[0] if named else min(accepted, key=lambda item: (item[1], render(item[0])))
-        return "ACCEPTED_OR", rank, [{"group": group, "elected": render(term)}] + elections, leaves
+        named = [item for item in accepted if owner is not None and render(item[0]) == owner[0] and component["name"] == owner[2]]
+        term, rank, elections = named[0] if named else min(accepted, key=lambda item: (item[1], render(item[0])))
+        return "ACCEPTED_OR", rank, [{"group": group, "elected": render(term)}] + elections
 
 
 def classify(policy: Policy, expression: str, component: dict) -> dict:
     """The effective outcome of one expression for one component (name, kind, custody, crateField)."""
-    validate_component(component)
+    require(type(component) is dict and set(component) == {"name", "kind", "custody", "crateField"}
+            and type(component["name"]) is str and component["name"] != "" and component["kind"] in KINDS
+            and type(component["custody"]) is str and type(component["crateField"]) is bool, "component identity")
     normalised = normalise_legacy(expression) if component["crateField"] else expression
     node = _canonical_node(parse(normalised))
     text = render(node)
     if type(node) is not str and text in policy.exact:
-        # A compound listed exactly in the base keeps its base outcome however it is spelled; the base entry's own
-        # releaseOutcome applies, so no leaves are returned.
-        return {"expression": expression, "canonical": text, "outcome": policy.exact[text], "elections": [], "leaves": [],
-                "baseEntry": True}
-    outcome, _, elections, leaves = policy.resolve(node, component)
-    return {"expression": expression, "canonical": text, "outcome": outcome, "elections": elections, "leaves": leaves,
-            "baseEntry": False}
+        # A compound listed exactly in the base keeps its base outcome, however it is spelled.
+        outcome = policy.exact[text]
+        if outcome == "OPTIONAL_EXPLICIT_REVIEW" and component["name"] in DECISIONS.get(text, ((), None))[0]:
+            outcome = APPROVED
+        return {"expression": expression, "canonical": text, "outcome": outcome, "elections": [], "leaves": []}
+    leaves = []
+    outcome, _, elections = policy.resolve(node, component, leaves)
+    return {"expression": expression, "canonical": text, "outcome": outcome, "elections": elections, "leaves": leaves}
 
 
 def base_categories(raw: bytes) -> dict:
@@ -341,7 +303,7 @@ def _text(value, message):
 def decision_body(row: dict) -> dict:
     """The digested part of a decision record: the base's required fields plus its subjects and deciding question."""
     body = {key: row[key] for key in DECISION_FIELDS[:-1]}
-    body.update(subjects=row["subjects"], kinds=row["kinds"], decidedBy=row["decidedBy"])
+    body.update(subjects=row["subjects"], decidedBy=row["decidedBy"])
     return body
 
 
@@ -359,22 +321,20 @@ def record(raw: bytes) -> dict:
         _text(row["via"], "decision route")
         _text(row["summary"], "decision summary")
     klass = value["hostOsSystemLibraryClass"]
-    _closed(klass, ("outcome", "expressions", "allowedKinds", "allowedCustody", "components", "upstreamBinaries", "neverFor",
-                    "releaseOutcome", "decidedBy"), "closed host-OS class")
+    _closed(klass, ("outcome", "expressions", "allowedKinds", "allowedCustody", "neverFor", "releaseOutcome", "decidedBy"),
+            "closed host-OS class")
     require(klass["outcome"] == CLASS and klass["expressions"] == list(CLASS_EXPRESSIONS)
             and klass["allowedKinds"] == list(CLASS_KINDS) and klass["allowedCustody"] == list(CLASS_CUSTODY)
-            and klass["components"] == {name: list(kinds) for name, kinds in CLASS_COMPONENTS.items()}
-            and klass["upstreamBinaries"] == list(UPSTREAM_BINARIES)
             and klass["decidedBy"] == ["Q-L", "Q-L2"], "the decided host-OS class, exactly")
     require(type(klass["neverFor"]) is list and klass["neverFor"] and all(type(x) is str and x for x in klass["neverFor"]),
             "class exclusions")
     _text(klass["releaseOutcome"], "class release outcome")
     elections = value["ownerElections"]
-    require(type(elections) is list and [(row.get("group"), row.get("elects"), row.get("decidedBy"), row.get("component"),
-                                           row.get("kind")) for row in elections if type(row) is dict]
+    require(type(elections) is list and [(row.get("group"), row.get("elects"), row.get("decidedBy"), row.get("component"))
+                                          for row in elections if type(row) is dict]
             == [(group, *named) for group, named in OWNER_ELECTIONS.items()], "the owner-named elections, exactly")
     for row in elections:
-        _closed(row, ("group", "elects", "decidedBy", "component", "kind"), "closed owner election")
+        _closed(row, ("group", "elects", "decidedBy", "component"), "closed owner election")
         require(canonical(row["group"]) == row["group"], "an owner election names a canonical group")
     rules = value["rules"]
     _closed(rules, ("orChoice", "andTerms", "legacySlash", "scope", "precedence"), "closed rules")
@@ -390,14 +350,13 @@ def record(raw: bytes) -> dict:
     require(type(reviews) is list and len(reviews) == len(DECISIONS), "explicit-review decisions")
     seen = set()
     for row in reviews:
-        _closed(row, DECISION_FIELDS + ("subjects", "kinds", "decidedBy"), "closed explicit-review decision")
+        _closed(row, DECISION_FIELDS + ("subjects", "decidedBy"), "closed explicit-review decision")
         for key in DECISION_FIELDS[:-1]:
             _text(row[key], "decision field " + key)
         require(row["expression"] in DECISIONS and row["expression"] not in seen, "a decided explicit-review expression")
         seen.add(row["expression"])
-        subjects, kinds, decided = DECISIONS[row["expression"]]
-        require(row["subjects"] == list(subjects) and row["kinds"] == list(kinds) and row["decidedBy"] == decided,
-                "decision subjects, kinds and question")
+        subjects, decided = DECISIONS[row["expression"]]
+        require(row["subjects"] == list(subjects) and row["decidedBy"] == decided, "decision subjects and question")
         require(row["decisionDigest"] == "sha256:" + digest(canonical_json(decision_body(row))),
                 "decision digest of " + row["expression"])
     require(type(value["notClaimed"]) is list and value["notClaimed"], "non-claims")
@@ -405,21 +364,19 @@ def record(raw: bytes) -> dict:
 
 
 def effective_policy(read) -> Policy:
-    """The base categories under the amendment, built from the same verified bytes check() read."""
-    try:
-        return _check(read)[1]
-    except (TypeError, KeyError, AttributeError, IndexError, RecursionError) as error:
-        raise ValueError("malformed amendment record: %s" % error) from None
+    """The base categories under the amendment, after check()."""
+    check(read)
+    return Policy(base_categories(read(BASE_PATH)))
 
 
 def check(read) -> dict:
     try:
-        return _check(read)[0]
+        return _check(read)
     except (TypeError, KeyError, AttributeError, IndexError, RecursionError) as error:
         raise ValueError("malformed amendment record: %s" % error) from None
 
 
-def _check(read) -> tuple:
+def _check(read) -> dict:
     value = record(read(RECORD_PATH))
     base = read(BASE_PATH)
     require(digest(base) == BASE_SHA256, "the base policy changed")
@@ -439,7 +396,6 @@ def _check(read) -> tuple:
         require(key not in keys, "duplicate vector")
         keys.add(key)
         require(case["outcome"] in OUTCOMES, "vector outcome")
-        validate_component(case["component"])
         try:
             got = classify(policy, case["expression"], case["component"])
         except ValueError:
@@ -451,7 +407,7 @@ def _check(read) -> tuple:
     require({case["outcome"] for case in vectors["cases"]} == set(OUTCOMES),
             "the vectors cover every outcome the classifier returns, and refusal")
     require(any(case["component"]["crateField"] for case in vectors["cases"]), "a legacy crate field vector")
-    return value, policy
+    return value
 
 
 if __name__ == "__main__":

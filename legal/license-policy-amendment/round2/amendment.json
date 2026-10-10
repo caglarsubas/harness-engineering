@@ -45,32 +45,6 @@
   "allowedCustody": [
    "UPSTREAM_PINNED"
   ],
-  "components": {
-   "glibc": [
-    "HOST_OS_LIBRARY",
-    "STATIC_SYSTEM_LIBRARY"
-   ],
-   "libseccomp": [
-    "STATIC_SYSTEM_LIBRARY"
-   ],
-   "libgcc": [
-    "STATIC_SYSTEM_LIBRARY"
-   ],
-   "libgcc_eh": [
-    "STATIC_SYSTEM_LIBRARY"
-   ],
-   "libnftnl": [
-    "HOST_OS_LIBRARY"
-   ],
-   "libmnl": [
-    "HOST_OS_LIBRARY"
-   ]
-  },
-  "upstreamBinaries": [
-   "containerd",
-   "pause",
-   "runc"
-  ],
   "neverFor": [
    "planeon-authored source or modules",
    "code copied into a planeon repository",
@@ -87,15 +61,13 @@
    "group": "LGPL-3.0-or-later OR MPL-2.0",
    "elects": "MPL-2.0",
    "decidedBy": "Q-L",
-   "component": "libpathrs",
-   "kind": "STATIC_SYSTEM_LIBRARY"
+   "component": "libpathrs"
   },
   {
    "group": "GPL-2.0-or-later OR LGPL-3.0-or-later",
    "elects": "LGPL-3.0-or-later",
    "decidedBy": "Q-L2",
-   "component": "gmp",
-   "kind": "HOST_OS_LIBRARY"
+   "component": "gmp"
   }
  ],
  "rules": {
@@ -112,7 +84,7 @@
    "decidedBy": "Q-L3"
   },
   "scope": {
-   "rule": "A host-OS class term is accepted only for a component the owner decisions name, in its decided kind, in UPSTREAM_PINNED custody, and, for a STATIC_SYSTEM_LIBRARY, only when it is linked into one of the pinned official upstream binaries (containerd, pause, runc). An explicit-review approval and an owner election apply only to their named subjects in their decided kinds and upstream-pinned custody. An open-content term applies only to an ARTIFACT. Elsewhere such a term is OUT_OF_SCOPE, which ranks with UNKNOWN, or stays OPTIONAL_EXPLICIT_REVIEW. The scope applies inside AND and OR compounds too.",
+   "rule": "A host-OS class term is accepted only for a component of kind HOST_OS_PROGRAM, HOST_OS_LIBRARY or STATIC_SYSTEM_LIBRARY in UPSTREAM_PINNED custody; an explicit-review approval only for its named subjects; an open-content term only for an ARTIFACT. Elsewhere such a term is OUT_OF_SCOPE, which ranks with UNKNOWN. The scope applies inside AND and OR compounds too.",
    "decidedBy": "Q-L"
   },
   "precedence": "Expressions are compared in canonical form (nested operators flattened, operands sorted, single spaces), and a compound listed exactly in the base policy keeps its base outcome however it is spelled. An AND compound with a blocking term takes the most restrictive blocking outcome under the base evaluation.precedence (DENIED, then UNKNOWN or OUT_OF_SCOPE, then PLANNED_UNRESOLVED, then OPTIONAL_EXPLICIT_REVIEW); an OR expression with no accepted alternative takes its least restrictive alternative's outcome. No rule weakens the base deniedRule."
@@ -120,8 +92,8 @@
  "releaseAdmission": {
   "HOST_OS_SYSTEM_LIBRARY": "ALLOW_ONLY_WITH_PINNED_CORRESPONDING_SOURCE_OFFER_LICENSE_TEXT_SBOM_AND_NOTICE",
   "OPTIONAL_EXPLICIT_REVIEW_APPROVED": "ALLOW_UNDER_THE_DECISION_RECORD_WITH_SOURCE_OFFER_LICENSE_TEXT_SBOM_AND_NOTICE",
-  "ACCEPTED_AND": "ALLOW_WITH_THE_UNION_OF_THE_EFFECTIVE_LEAVES'_OBLIGATIONS (the AND terms and each OR group's elected alternative, as classify returns them)",
-  "ACCEPTED_OR": "ALLOW_WITH_THE_EFFECTIVE_LEAVES'_OBLIGATIONS_AND_THE_RECORDED_ELECTIONS"
+  "ACCEPTED_AND": "ALLOW_WITH_THE_UNION_OF_EVERY_LEAF'S_OBLIGATIONS",
+  "ACCEPTED_OR": "ALLOW_WITH_THE_ELECTED_ALTERNATIVES'_OBLIGATIONS_AND_THE_RECORDED_ELECTIONS"
  },
  "explicitReviewDecisions": [
   {
@@ -131,14 +103,10 @@
    "networkCopyleftDisposition": "NOT_APPLICABLE: no network copyleft term; the program or library is not offered as a network service",
    "noticeAndAttributionDisposition": "License text and attribution in the host image's NOTICE and SBOM.",
    "approvingAuthority": "owner (R00), via the lane monitor, decision Q-L (L-a), 2026-10-10",
-   "decisionDigest": "sha256:9a16cdb970f900ea6fa28ad97adad938786572fa4b72bdc805308c67228c1ed4",
+   "decisionDigest": "sha256:3a2141673e154dec8e6e6f9892182054e72bc01ec07fd127db77d646bd181f36",
    "subjects": [
     "libnftables",
     "nft"
-   ],
-   "kinds": [
-    "HOST_OS_LIBRARY",
-    "HOST_OS_PROGRAM"
    ],
    "decidedBy": "Q-L"
   },
@@ -149,12 +117,9 @@
    "networkCopyleftDisposition": "NOT_APPLICABLE: no network copyleft term; the program or library is not offered as a network service",
    "noticeAndAttributionDisposition": "License text and attribution in the host image's NOTICE and SBOM.",
    "approvingAuthority": "owner (R00), via the lane monitor, decision Q-L2 (L2-a), 2026-10-10",
-   "decisionDigest": "sha256:0799ccc96bf61a46643e618f703c97919c369dd6a5578d619c8805e07d9f6cfd",
+   "decisionDigest": "sha256:bb80f849a01163ba093aa936eab80f59ddec4dd13c5609df4861a83fb642befc",
    "subjects": [
     "gmp"
-   ],
-   "kinds": [
-    "HOST_OS_LIBRARY"
    ],
    "decidedBy": "Q-L2"
   }

@@ -1,6 +1,6 @@
 # License-policy amendment LIC-HOST-A1 (DATA_CHECK_ONLY)
 
-Status: **CONTRACT_CANDIDATE_ROUND3_AWAITING_INDEPENDENT_REVIEW**. Rounds 1 and 2 (`review-round1.json`, `review-round2.json`, bytes in `round1/`, `round2/`) returned CHANGES_REQUIRED; each finding is answered below.
+Status: **CONTRACT_CANDIDATE_ROUND2_AWAITING_INDEPENDENT_REVIEW**. Round 1 (`review-round1.json`, bytes in `round1/`) returned CHANGES_REQUIRED (L1-L4 MAJOR, L5-L9 MINOR, L10 NOTE); each finding is answered below.
 
 The owner decided three questions for the W03 backend distribution (`architecture/backend-distribution/`, W03-0). All
 three were decided on 2026-10-10, via the lane monitor:
@@ -21,14 +21,13 @@ reviewed amendment, and `scripts/license_amendment.py` gives the effective class
 | File | Content |
 |---|---|
 | `amendment.json` | `planeon.internal.license-policy-amendment/v1`: the base pin, the three owner decisions, the host-OS class, the three rules and their precedence, and two explicit-review decision records |
-| `vectors.json` | 80 classification cases (schema v2): expression, component, expected outcome and elections, refusals included |
+| `vectors.json` | 24 classification cases with expected outcomes and elections |
 | `../../scripts/license_amendment.py` | an SPDX expression parser (OR, AND, WITH, parentheses), `classify`, `effective_policy`, `check` |
 
 ## The amendment
 
-**Component-scoped classification.** `classify(policy, expression, component)` takes the component's name, kind,
-custody and, for a static system library, the binary it is linked into. It also takes whether the expression is a legacy
-crate field. It returns the outcome, the canonical expression, every
+**Component-scoped classification.** `classify(policy, expression, component)` takes the component's name, kind and
+custody, and whether the expression is a legacy crate field. It returns the outcome, the canonical expression, every
 leaf's category and the structured elections.
 
 **HOST_OS_SYSTEM_LIBRARY class.** It has four exact terms:
@@ -37,15 +36,9 @@ leaf's category and the structured elections.
 - GPL-3.0-or-later WITH GCC-exception-3.1 (the GCC runtime);
 - GPL-2.0-or-later (libnftnl).
 
-None of them appears in any base category. A class term is accepted only for a component the owner decisions name,
-in its decided kind and in UPSTREAM_PINNED custody, including inside compounds:
-- glibc, as a host library or a static library;
-- libseccomp, libgcc and libgcc_eh, as static libraries;
-- libnftnl and libmnl, as host libraries.
-
-A static library qualifies only when it is linked into one of the pinned official upstream binaries: containerd, pause or
-runc. Elsewhere the term is OUT_OF_SCOPE, which ranks with UNKNOWN. That includes glibc or libgcc linked into a planeon
-binary, which the owner decisions do not cover.
+None of them appears in any base category. A class term is accepted only for a component of kind HOST_OS_PROGRAM,
+HOST_OS_LIBRARY or STATIC_SYSTEM_LIBRARY in UPSTREAM_PINNED custody, including inside compounds. Elsewhere it is
+OUT_OF_SCOPE, which ranks with UNKNOWN.
 
 **Explicit-review decision records.** GPL-2.0-only and LGPL-3.0-or-later are base explicit-review expressions, so they are
 decision records rather than class entries. A class term must not overlap a base category; W03-0's wording listed nft
@@ -53,15 +46,9 @@ under the class.
 - GPL-2.0-only covers nft and libnftables (Q-L).
 - LGPL-3.0-or-later covers gmp (Q-L2).
 
-Each record carries every required base field, plus its subjects, its decided kinds and its deciding question, under
-one digest. An approval applies only to its named subjects, in their decided kinds and upstream-pinned custody
-(OPTIONAL_EXPLICIT_REVIEW_APPROVED, the base's name):
-- nft and libnftables, as a host program and a host library;
-- gmp, as a host library, dynamically linked.
-
-For any other component, kind or custody the term stays OPTIONAL_EXPLICIT_REVIEW. The owner elections are bound in the
-same way: libpathrs as a static library, gmp as a host library. Open content is accepted only for an ARTIFACT, as the base
-limits it. NOASSERTION and NONE are whole-field values and are refused inside an expression.
+Each record carries every required base field, plus its subjects and deciding question, under one digest. An approval
+applies only to its named subjects (OPTIONAL_EXPLICIT_REVIEW_APPROVED, the base's name). For any other component the term
+stays OPTIONAL_EXPLICIT_REVIEW. Open content is accepted only for an ARTIFACT, as the base limits it.
 
 **Rules.**
 - Canonical form: nested operators are flattened, operands are sorted and spaces are single. A compound listed exactly in
@@ -77,10 +64,8 @@ limits it. NOASSERTION and NONE are whole-field values and are refused inside an
   `evaluation.precedence`. An OR with no accepted alternative takes its least restrictive alternative's outcome. Neither
   depends on term order, and no rule weakens the base `deniedRule`.
 
-**Release admission** is stated for each amendment outcome: the class, an approved review, an AND compound and an OR
-expression. A compound's obligations are the union of its effective leaves: the AND terms and each OR group's elected
-alternative, which is what `classify` returns. A compound listed exactly in the base returns no leaves and `baseEntry:
-true`, so the base entry's own release outcome applies.
+**Release admission** is stated for each amendment outcome: the class, an approved review, an AND compound (the union of
+the leaves' obligations) and an OR expression (the elected alternatives' obligations, with the elections recorded).
 
 **Parser** (SPDX 2.3 Annex D):
 - id strings of letters, digits, `.` and `-`, an optional trailing `+`, and `LicenseRef-` forms;
@@ -91,8 +76,7 @@ Anything else is refused with a ValueError.
 
 `check` pins the decided content: the class, its kinds and custody, the decisions with their subjects and questions, and
 the owner elections. It verifies the decision digests and the base digest, and confirms there is no overlap with base
-categories. All 80 vectors must classify as expected and cover every outcome, refusal included. `effective_policy` builds the
-policy from the same base bytes whose digest `check` verified.
+categories. All 63 vectors must classify as expected and cover every outcome, refusal included.
 
 ## Consumers
 
@@ -114,18 +98,6 @@ to this closure. The base policy's own consumers are unchanged.
 | L8 MINOR, outcome names and admission | OPTIONAL_EXPLICIT_REVIEW_APPROVED (the base's name); release admission stated per amendment outcome |
 | L9 MINOR, pin count | 32 architecture files, with the command |
 | L10 NOTE | GPL-2.0-only's decision record explained; libnftables stays in the host-image packet's shipped-package check |
-
-## Round-2 findings and dispositions
-
-| Finding | Disposition |
-|---|---|
-| L11 MAJOR, approvals by bare name | each approval and owner election is bound to its subjects, decided kinds and upstream-pinned custody; the kinds are inside the decision digest; vectors for nft as a crate or planeon source, libnftables static, gmp as a crate, static or repository-built, and gmp's OR group for a crate |
-| L12 MAJOR, class scope | option (i): the class reaches only the named components in their decided kinds; a static library needs `linkedInto` one of the pinned official upstream binaries; vectors for glibc and libgcc_eh in planeon binaries and for unnamed host libraries |
-| L13 MINOR, placeholder in compounds | NOASSERTION and NONE are refused inside an expression (SPDX 2.3) |
-| L14 MINOR, leaves | only the effective leaves are returned; release admission is defined over them; base entries return `baseEntry: true` |
-| L15 MINOR, double read | `effective_policy` builds the policy from the verified base bytes |
-| L16 MINOR, files row | 80 v2 cases |
-| L17 NOTE | (5) legacy fields with spaces are read too; (2) an invalid vector component is refused before classification; (1) the amendment record will be pinned by digest in the packet's authority; (3), (4), (6) and (7) noted |
 
 ## Not claimed
 

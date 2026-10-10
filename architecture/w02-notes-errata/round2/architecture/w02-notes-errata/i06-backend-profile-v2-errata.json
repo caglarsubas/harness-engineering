@@ -1,0 +1,109 @@
+{
+ "schemaVersion": "planeon.internal.contract-errata/v1",
+ "name": "W02g-F2 notes",
+ "contract": "SEALED_SINGLE_NODE_CONTROL_PLANE_V1/i06-backend-profile/v2",
+ "contractDirectory": "architecture/i06-backend-profile-v2/",
+ "baseMain": "5fab673e250e7dd0f2ce9c19f6ce9da8cce9321c",
+ "findings": [
+  "R2-4",
+  "R3-1",
+  "R3-2"
+ ],
+ "evidenceClass": "DATA_CHECK_ONLY",
+ "versionRipple": false,
+ "ruleChanged": false,
+ "modelChanged": false,
+ "nativeAcceptance": false,
+ "tenantAcceptance": false,
+ "base": {
+  "architecture/i06-backend-profile-v2/README.md": "553880b957586dbfa50eabc4a99d51735eef2a1b0a82641ea51d8e3ea8cf72eb",
+  "architecture/i06-backend-profile-v2/REVIEW_BRIEF.md": "f65c1ef1fbe43013c06f962a2ffde8d231a70392603ecc44850481c5ae8ec739",
+  "architecture/i06-backend-profile-v2/criteria.json": "026206c57d3025c0f0129b6615e46c83d5a8000ddc3288f000a1fe4570050cda",
+  "architecture/i06-backend-profile-v2/review-round2.json": "a5eefd7c6fb0f53f2a14880a079a69bd786c95be1ca8b3a3c5ab7c6de04cc0df",
+  "architecture/i06-backend-profile-v2/review-round3.json": "1a04fb792d080ee70f24fc93da68df8238a1593e91c9072c2e6dd3f75bf48bd2",
+  "architecture/i06-backend-profile-v2/status.json": "44217baf7857b86abfa9c8ccadb953e2678592e437c9caf049096c402abb9c20"
+ },
+ "replacements": [
+  {
+   "id": "R3-1a",
+   "finding": "R3-1",
+   "path": "architecture/i06-backend-profile-v2/README.md",
+   "count": 1,
+   "old": "## Round-2 findings and dispositions\n\n| Finding | Severity | Disposition |\n|---|---|---|\n| N1 W02a binding",
+   "new": "## W02g round-2 findings (N1-N6) and dispositions\n\n| Finding | Severity | Disposition |\n|---|---|---|\n| N1 W02a binding"
+  },
+  {
+   "id": "R3-1b",
+   "finding": "R3-1",
+   "path": "architecture/i06-backend-profile-v2/README.md",
+   "count": 1,
+   "old": "## Round-2 findings and dispositions\n\n| Finding | Severity | Disposition |\n|---|---|---|\n| R2-1 refusing steps",
+   "new": "## W02g-F round-2 findings (R2-1 to R2-5) and round-3 changes\n\n| Finding | Severity | Disposition |\n|---|---|---|\n| R2-1 refusing steps"
+  },
+  {
+   "id": "R3-1c",
+   "finding": "R3-1",
+   "path": "architecture/i06-backend-profile-v2/README.md",
+   "count": 1,
+   "old": "\"Round-2 findings and dispositions\" lists the round-3 changes.",
+   "new": "\"W02g-F round-2 findings (R2-1 to R2-5) and round-3 changes\" lists the round-3 changes."
+  },
+  {
+   "id": "R3-1d",
+   "finding": "R3-1",
+   "path": "architecture/i06-backend-profile-v2/REVIEW_BRIEF.md",
+   "count": 1,
+   "old": "README \"Round-2 findings and dispositions\"\nlists every round-3 change;",
+   "new": "README \"W02g-F round-2 findings (R2-1 to R2-5) and round-3\nchanges\" lists every round-3 change;"
+  },
+  {
+   "id": "R3-2a",
+   "finding": "R3-2",
+   "path": "architecture/i06-backend-profile-v2/README.md",
+   "count": 1,
+   "old": "| `review-round1.json`, `round1/` | the verbatim round-1 review and the bytes it reviewed |\n",
+   "new": "| `review-round1.json`, `round1/` | the verbatim round-1 review and the bytes it reviewed |\n| `review-round2.json`, `round2/` | the verbatim round-2 review and the bytes it reviewed |\n| `review-round3.json` | the verbatim round-3 review, of the bytes adopted on main |\n| `status.json` | the status record written at adoption |\n"
+  },
+  {
+   "id": "R2-4a",
+   "finding": "R2-4",
+   "path": "architecture/i06-backend-profile-v2/README.md",
+   "count": 1,
+   "old": "| R2-4 SHA-256-only distinctness | NOTE | Carried to W02g-F2 or W03: also require distinct `verityDigest` values for backend executables, or state that SHA-256 distinctness relies on the observed backend captures in the W03 composition |",
+   "new": "| R2-4 SHA-256-only distinctness | NOTE | Answered by the W02 notes errata with the documented alternative: SC08 content distinctness is by SHA-256 (`artifactDigest`), and a record whose `verityDigest` contradicts its SHA-256 is refused by the observed backend captures that callers compose through `check_qualification` (W03), which compares each executable's `contentDigest` and `measuredVerity` with the record (round-1 R1-5). A distinct-`verityDigest` rule is carried to W02-PROD |"
+  },
+  {
+   "id": "R2-4b",
+   "finding": "R2-4",
+   "path": "architecture/i06-backend-profile-v2/criteria.json",
+   "count": 1,
+   "old": "W02a v3 lets backend components share code within its single backend owner class\"",
+   "new": "W02a v3 lets backend components share code within its single backend owner class. Content distinctness is by SHA-256 (artifactDigest); a verityDigest that contradicts its SHA-256 is refused by the observed backend captures that callers compose through check_qualification (W03)\""
+  },
+  {
+   "id": "R3-2b",
+   "finding": "R3-2",
+   "path": "architecture/i06-backend-profile-v2/README.md",
+   "count": 1,
+   "old": "- N4 (W02e, W03), N5 (W03) and N6 (W02f, W02e), as carried by W02g.\n",
+   "new": "- N4 (W02e, W03), N5 (W03) and N6 (W02f, W02e), as carried by W02g.\n- W02-PROD (W02 notes errata): a distinct-`verityDigest` rule for the backend executables (round-2 R2-4) and the\n  predecessor-import fallback narrowed to `ModuleNotFoundError` for the two bare names (round-3 R3-3).\n"
+  }
+ ],
+ "effective": {
+  "architecture/i06-backend-profile-v2/README.md": {
+   "kind": "PUBLISHED",
+   "file": "architecture/w02-notes-errata/effective/i06-backend-profile-v2/README.md",
+   "sha256": "562b00852cb84dc44f4118f8449e19819b2b1dae4d683102b5a1b53890abdd9c"
+  },
+  "architecture/i06-backend-profile-v2/REVIEW_BRIEF.md": {
+   "kind": "PUBLISHED",
+   "file": "architecture/w02-notes-errata/effective/i06-backend-profile-v2/REVIEW_BRIEF.md",
+   "sha256": "1634d77c9ebd8fea1a1021a22143dadeb702e66f0b81f592f3319c877abd7a99"
+  },
+  "architecture/i06-backend-profile-v2/criteria.json": {
+   "kind": "PUBLISHED",
+   "file": "architecture/w02-notes-errata/effective/i06-backend-profile-v2/criteria.json",
+   "sha256": "8d4f5d7837b0f68859f222dec8766d57c2b6cc5fe49f95fddd830836569940b4"
+  }
+ }
+}

@@ -1,0 +1,123 @@
+{
+ "schemaVersion": "planeon.internal.w02-notes-errata-review/v1",
+ "round": 3,
+ "reviewDate": "2026-10-10",
+ "subjectCommit": "b4a61bd15d0d687b01a99c46c0ec119993a650d2",
+ "verdict": "CHANGES_REQUIRED",
+ "subjectSha256": {
+  "architecture/w02-notes-errata/README.md": "56f72d964ee3ecab4db548ccf618143b1668d2d7b84805298db0fc63fa69373b",
+  "architecture/w02-notes-errata/REVIEW_BRIEF.md": "78416aa8e1f12a931a4c1b68ab96ca113a1677efe2de6281cd8a9884a54942d3",
+  "architecture/w02-notes-errata/effective/i06-backend-profile-v2/README.md": "562b00852cb84dc44f4118f8449e19819b2b1dae4d683102b5a1b53890abdd9c",
+  "architecture/w02-notes-errata/effective/i06-backend-profile-v2/REVIEW_BRIEF.md": "1634d77c9ebd8fea1a1021a22143dadeb702e66f0b81f592f3319c877abd7a99",
+  "architecture/w02-notes-errata/effective/i06-backend-profile-v2/criteria.json": "8d4f5d7837b0f68859f222dec8766d57c2b6cc5fe49f95fddd830836569940b4",
+  "architecture/w02-notes-errata/effective/native-profile-v3/README.md": "fd12a0ded9b7de557cb75a8bdeb01c2c3fa85c24035b174282d2274dc6000bd0",
+  "architecture/w02-notes-errata/i06-backend-profile-v2-errata.json": "ae59ac046609184015790f9e43ed8d99aece31575011f667f6b28ec30dba5b96",
+  "architecture/w02-notes-errata/native-profile-v3-errata.json": "b88ec96c34476bc3dd0bc6f62a0fd3edc46bcedbc02fe05d112d2cc1442dac1d",
+  "architecture/w02-notes-errata/native-profile-v3-r6-3-vectors.json": "83698328ec9ac8bd6b5289a69bcd6715705c7380e5c4c5b9bca20b03723527d6",
+  "docs/MASTER_DEVELOPMENT_PLAN.md": "bcaadfbefc3d4abd9af88658f2c34da00bf0621393ba546e38986a0e026a4f87",
+  "docs/repositories/00-harness-engineering.md": "4cdb6997029923c14cfcebc0f987d5b896ccd12da1a4132ee826a8f4e055fafa",
+  "scripts/contract_errata.py": "ceb3c6088a25eed9ef9c8ab9d471984e426487612a35b4b932207012fdb50e05",
+  "scripts/perf032_followup.py": "eddeec5e21c7930c979a2039f2963c6c6da0f15473321eef59e64f9280c08aa9",
+  "scripts/schema_unique.py": "a89588bd3f0f63a528c07d1962e2c320c25120409e8d0b20a1c78ca52c1b2354",
+  "scripts/validate_verify_headroom.py": "58bc01760a0cf6f57f8de6f048b08d9af5b39f76485042970acea52a5951d634",
+  "tests/test_verify_headroom.py": "41706e1fd841542fb3ac47cf9fe7addb407c793b0c8c4a1007c2992fd4839ae0"
+ },
+ "roundOneStatus": {
+  "C1-1": "CLOSED",
+  "C1-2": "CLOSED",
+  "C1-3": "CLOSED",
+  "C1-4": "CLOSED",
+  "C1-5": "PARTIAL",
+  "C1-6": "CLOSED",
+  "C1-7": "CLOSED",
+  "C1-8": "CLOSED",
+  "C1-9": "CLOSED",
+  "C1-10": "CLOSED",
+  "C1-11": "CLOSED"
+ },
+ "roundOneNotes": {
+  "C1-1": "Closed together with C2-2: R6-1d now carries the null-key condition (creds-util.c v256 lines 1221-1238).",
+  "C1-2": "Closed together with C2-1: the overlap statements now match a rule-by-rule evaluation of all 39 cases.",
+  "C1-3": "Unchanged and still exact: all 18 table mutants and both message-change lists reproduce on the round-3 bytes.",
+  "C1-4": "Confirmed by probe: a .py row marked PUBLISHED with a matching effective file is refused ('a Python file is never published').",
+  "C1-5": "Function internals and the post-corpus re-check work for the listed probes, but the snapshot compares id() values of objects it does not keep alive, and exec-time changes outside the snapshot are not excluded (C3-1).",
+  "C1-6": "Unchanged; confirmed in round 2.",
+  "C1-7": "Confirmed by probe: a function built only from existing symbols (jsonschema.Draft202012Validator({'$ref': path}).iter_errors(value)) passes check_model_symbols and reads a local scratch file through jsonschema's deprecated remote retrieval, exactly the stated limit.",
+  "C1-8": "Confirmed by probe: __builtins__['map'], a dotted '.map(...)' call and getattr(...)('map') setups pass, as the closed-list caveat states (see C3-4).",
+  "C1-9": "Confirmed by probe: a wrong addedVectors sha256, changed vector bytes, an extra key and a file outside the errata directory are refused; a '..' path that starts with the errata prefix is not (C3-3).",
+  "C1-10": "Confirmed by probe: a string split inside parentheses (AST equal), a docstring change, a coding-cookie comment, a literal change and an added statement are refused; a pure comment line is accepted.",
+  "C1-11": "Unchanged; confirmed in round 2."
+ },
+ "roundTwoStatus": {
+  "C2-1": "CLOSED",
+  "C2-2": "CLOSED",
+  "C2-3": "CLOSED",
+  "C2-4": "CLOSED"
+ },
+ "roundTwoNotes": {
+  "C2-1": "Both READMEs and the effective v3 README now say that R63-02 and R63-04 break the binding and the twice-named rule, that R63-04 also breaks the maintenance grammar and R63-02 does not, and that only R63-03, R63-05 to R63-20 and R63-28 to R63-35 break both grammar rules. A rule-by-rule evaluation matching check_record lines 248-259 gives exactly this. The R63-01 to R63-20 intents are corrected, but R63-04's intent leaves out the maintenance grammar (C3-2). addedVectors.sha256 and source-index are updated (83698328...).",
+  "C2-2": "R6-1d adds the null-key sentence. creds-util.c v256 lines 1221-1238 refuse CRED_AES256_GCM_BY_NULL only when efi_has_tpm2() and is_efi_secure_boot() both hold, and warn but accept with a TPM2 and Secure Boot off. CREDENTIAL_ALLOW_NULL appears only in systemd-creds --allow-null (creds.c line 620); exec-credential.c and read_credential_with_decryption do not pass it. The sentence is exact.",
+  "C2-3": "The limit wording requested by round 2 and the docstring line-4 replacement were adopted verbatim. The probes deferred by round 2 show that this wording is still not exact (C3-1): an id-reuse rebinding and an exec-time patch outside the snapshot are triggered by the exec and still pass.",
+  "C2-4": "replay_vectors now executes native_model(read(NATIVE_MODEL)), which checks the digest of exactly the bytes it compiles; the model imports only stdlib and jsonschema. A model byte change is refused ('the adopted native v3 model bytes'). The module-level import is gone."
+ },
+ "findings": [
+  {
+   "id": "C3-1",
+   "severity": "MINOR",
+   "location": "scripts/perf032_followup.py _function_state/_dict_state/_oracle_state/check_unique_oracle and module docstring F15 item; architecture/w02-notes-errata/README.md PERF-032-F F15 bullet ('by identity', 'Refused: the round-3 _keywords.uniq ... rebindings', 'A change triggered by anything other than the exec and the corpus calls ... is not excluded')",
+   "finding": "The F15 limit is still not exact. Two changes triggered by the exec are not excluded. (1) Id reuse: the snapshot stores id() values, not the objects, so a snapshotted object can be freed and its address reused. An appended block frees stock _utils.uniq, then rebuilds it with types.FunctionType from the same code object, defaults and closure but with a copied globals dict whose 'equal' is wrong for ints >= 5, and binds it to both _utils.uniq and _keywords.uniq. The new function took the old address on the first attempt (3 of 3 runs). check_unique_oracle returns 773. Afterwards, stock Draft202012Validator({'uniqueItems': True}).is_valid([5, 5]) is True process-wide. This is the round-3 _keywords.uniq rebinding, which the README lists as refused, and the snapshot that claims identity does not see it. The plain variant (equal always False) is refused, but only by the answer check: [{}, {}] has a shared alias and falls back to _utils.uniq. The snapshot does not refuse it. (2) Changes outside the snapshot: appending 'import itertools; itertools.islice = lambda *a: iter(())' returns 773, and after it _utils.uniq([1, 1]) is True and stock uniqueItems accepts [1, 1], which is a corpus input. check_unique_oracle never calls _utils.uniq or the stock validator after the exec, and itertools and builtins are not in the snapshot. A builtins.sorted wrapper that is wrong only for 9-item arrays is also accepted. The module docstring defines 'as found' by its list, so its literal text holds. But the README sentence presents changes triggered by anything other than the exec and the corpus calls as the only gap, which is untrue. The merged byte pin still refuses all of these, so the pipeline is not affected.",
+   "requiredChange": "Make the checks match the wording, or narrow the wording. Tested in a scratch copy, both fixes keep the stock 773 and refuse probes (1) and (2): keep references to the snapshotted dict values (or store the objects and compare with 'is') so their ids cannot be reused; and after the corpus, also require _utils.uniq(case) is answer (optionally also the stock Draft202012Validator uniqueItems answer) for every corpus case. Then state the residual exactly. For example: 'a change to objects outside the snapshot (builtins, stdlib modules such as itertools) whose effect shows only on inputs outside the corpus, or a change triggered by a later call, a call count or time, is not excluded; the byte pin guards it'. Alternatively, keep the code and state both gaps (id reuse, and objects outside the snapshot) in the README and docstring."
+  },
+  {
+   "id": "C3-2",
+   "severity": "NOTE",
+   "location": "architecture/w02-notes-errata/native-profile-v3-r6-3-vectors.json R63-04 intent; README Round-2 dispositions row C2-1 ('The R63-01 to R63-20 intents say which rules each pair breaks')",
+   "finding": "R63-04's intent repeats R63-02's text ('refused by the enrolled grammar, and the pair also names the unit twice'). Unlike R63-02, R63-04 also breaks the maintenance grammar ('--' is outside the grammar and is not the unit word). The intent says nothing false, but it is incomplete, while the disposition row says the intents name the rules each pair breaks. The README paragraphs state it correctly.",
+   "requiredChange": "Optional: add 'and breaks the maintenance grammar' to R63-04's intent, then update addedVectors.sha256 and source-index."
+  },
+  {
+   "id": "C3-3",
+   "severity": "NOTE",
+   "location": "scripts/contract_errata.py check_errata line 79 (added['file'].startswith(ERRATA_DIR))",
+   "finding": "The guard that keeps the added-vector file inside the errata directory is a string-prefix test. addedVectors {'file': 'architecture/w02-notes-errata/../native-profile-v3/vectors.json', 'sha256': <that file's digest>} is accepted with a filesystem read(). A layer validator that reads by exact git path would fail on the lookup instead. The digest binding still holds, and replay_vectors is called separately by the caller, so nothing is accepted that a digest check would refuse.",
+   "requiredChange": "Optional: also require that the path has no '..' or empty segments (for example posixpath.normpath(file) == file)."
+  },
+  {
+   "id": "C3-4",
+   "severity": "NOTE",
+   "location": "scripts/perf032_followup.py DEFERRING_CALLS / check_route_test; README F12 bullet ('call named map, filter, ...')",
+   "finding": "Calls are matched by the exact callee text from ast.unparse. So a setup such as 'builtins.map(...)', 'getattr(__builtins__, \"get\")(\"map\")(...)' or '__builtins__[\"map\"](...)', combined with a module-alias receiver, passes check_route_test (25 routes), and so does the merged validate_route_locality. The README already says the list is closed and names __builtins__['map']. A call to an attribute named 'map' could still be read as 'a call named map'.",
+   "requiredChange": "Optional: say 'calls whose callee is spelled exactly map, filter, ...', or also match the last attribute name."
+  }
+ ],
+ "questionAnswers": {
+  "1": "Yes, apart from the R63-04 intent (C3-2). R6-1d's round-3 null-key sentence matches systemd v256 creds-util.c lines 1221-1238: the null key is refused only with a TPM2 and Secure Boot on, accepted with a warning with a TPM2 and Secure Boot off, and accepted without a TPM2. No PID1 or exec-credential path passes CREDENTIAL_ALLOW_NULL; only systemd-creds --allow-null does. R6-1a/b/c/e/f/g and R6-2a/b are unchanged since round 2, where they were confirmed against boot.c, stub.c and import-creds.c v256. I re-read the round-2 copies of those files for the credential and stub statements, and no Linux statement changed. The round-3 R6-1f text (C2-1) matches a rule-by-rule evaluation. check_errata accepts both records. The effective digests are fd12a0de (v3 README), 25db6ef5 (the comment-only model, which is not published), and 562b0085, 1634d77c and 8d4f5d78 (I06). The effective v3 README reads correctly in place: the Files paragraph and the K1 credentials bullet. One line break mid-sentence is cosmetic.",
+  "2": "Yes. replay_vectors returns 39 through native_model, which executes the adopted model bytes (2ef5c14a). By rule: R63-01 breaks only lockdown. R63-02 breaks the enrolled grammar, the twice-named rule and the binding. R63-04 breaks those and the maintenance grammar. R63-03, R63-05 to R63-20 and R63-28 to R63-35 break exactly the two grammar rules. R63-21 to R63-27 break only the binding. The A cases break nothing. So R63-01 and R63-21 to R63-27 are single-defect. The other grammar pairs break the two equivalent grammar rules, which cannot be separated under the binding, as stated. I replayed 18 mutants (the 15 in the README table plus enrolled-grammar-off, maintenance-grammar-off and binding-off) against the 238 record-level adopted cases plus the 39 errata cases, and the 15 table mutants through the full validate_v3_vectors (248 checks) as well. Every table row's flips reproduce exactly. The binding, unit-last and pattern mutants pass all 248 checks. All-off changes exactly the 20 listed adopted messages plus R63-02 and R63-04, and lockdown-off changes only V38. Both are refused by the full validator only on those message pins, as stated.",
+  "3": "Yes. Under the binding, the enrolled and maintenance grammar rules are equivalent. The twice-named rule implies the target rule. Given check_record's order (lines 248-259), the maintenance-grammar and target rules are reached first only by cases that also break the binding. Turning off the maintenance grammar alone changes only the V53, V59, V60, V65 and V66 messages and flips no case. Turning off the enrolled grammar alone flips nothing and moves R63-02 to the twice-named rule and the other grammar pairs to the maintenance grammar.",
+  "4": "Yes. In the deferred sweep, each of these is refused with its named message: a wrong or mismatched adopted digest, a wrong count (+1; 0 is 'malformed'), a code statement in the COMMENT_ONLY row, a changed string literal, a string split inside parentheses (AST equal, tokens differ), a docstring change, a coding-cookie comment, a .py row marked PUBLISHED with a matching effective file, a differing effective file or digest (native and I06), the adopted file named as effective, a wrong addedVectors digest or bytes, an extra addedVectors key, addedVectors outside the errata directory, a true modelChanged flag, an unknown kind and a duplicate id. A pure comment line is accepted. The comment-only rule is sound: it keeps ENCODING, STRING, NEWLINE and INDENT and drops only COMMENT and NL, so only comments, blank lines and whitespace between tokens (including line breaks inside brackets) can change. replay_vectors also refuses changed model bytes, an edited refusal, an adopted id and a negative moved to accepted. Gap: a '..' path with the errata prefix (C3-3).",
+  "5": "Yes, given an honest inspector. In adopted positive 1, giving SCHEDULER's executable KUBELET's verityDigest is accepted by check_record. An honest SCHEDULER capture is refused with 'backend observation differs' (native_qualification_v3.py lines 566-567, as cited). A capture that echoes the false verity is accepted. SC08 distinctness is by artifactDigest, which equals the file's sha256. The effective criteria and the R2-4 row say 'observed' and 'callers compose through check_qualification (W03)', which is accurate.",
+  "6": "F12: on the current tree, 31 route tests and 806 calls are accepted. The round-3 generator and map probes, the generator and map with a module receiver, set, list and dict comprehensions, iter, functools.partial, lambda and a setup-name receiver are all refused. __builtins__['map'], a dotted '.map' and getattr-built map setups pass, as stated (C3-4). F14: all four round-3 escapes and any new local name are refused. A composition from existing symbols passes and reads a local file, as stated. F15: 773 on the current bytes. Refused: _keywords.uniq = unique and the __code__ swap (by the snapshot), and the first-call, 7th-call and 3-item rebindings (by the answer check, through the aliased-container fallback). Accepted: the count-deferred 800th-call rebinding (the stated limit), an id-reuse rebinding of _utils.uniq and _keywords.uniq, an exec-time itertools.islice patch and a builtins.sorted patch (C3-1). F13: the edits are exact: the unique() docstring, the check_grouped_module docstring and message, the two test rows, the test module docstring, master-plan line 1306 and catalogue entry 82. tests/test_verify_headroom.py fails 25 tests, only with 'unreviewed current source' (MASTER_DEVELOPMENT_PLAN.md, test_verify_headroom.py, validate_verify_headroom.py) and 'reviewed schema_unique bytes', as the brief expects before the bridge layer.",
+  "7": "No adopted contract, schema, rule, vector, model or version changes. All 13 adopted inputs equal their source-index digests at base 5fab673 and in the subject, and native_qualification_v3.py and native_qualification_v2.py are untouched. round1/ and round2/ equal commits 60c01bd and 23c0535 file by file (16 and 17 files). review-round2.json is byte-identical to the round-2 reviewer's output and matches its earlierRounds digest. MET-PERF-032 bytes change only by the F13 wording, which Q-F = A allows. All 16 subject digests match source-index. The remaining overclaim is the F15 limit (C3-1)."
+ },
+ "modelExecution": "Repository uv environment (Python 3.12, jsonschema 4.24.0); one process per command, each under 60 s, worktree unmodified (git status --ignored clean). (1) The brief's checks: check_errata accepts both records; replay_vectors 39; validate_perf032_followup 806 over 31 route tests; check_unique_oracle 773. (2) Rule-by-rule evaluation of the 39 errata cases. (3) 18 textual mutants of a scratch copy of the v3 model against 238 record-level adopted cases plus 39 errata cases, then the 15 table mutants through the full validate_v3_vectors (248 checks). (4) The check_errata/replay_vectors sweep (28 probes). (5) F12 (15 probes), F14 (7 probes) and F15 (11 probes, each in a fresh process, including 3 id-reuse runs). (6) The R2-4 probe. (7) A scratch copy of perf032_followup with the two C3-1 fixes, against stock, id-reuse and itertools. (8) pytest tests/test_verify_headroom.py, single process.",
+ "deferredProbeResults": "1 check_errata sweep: every listed mutation is refused with its named rule (wrong adopted digest; wrong count; a non-comment edit in a COMMENT_ONLY row; a .py PUBLISHED row with a matching effective file; a differing effective file; a wrong addedVectors sha256; addedVectors outside the errata directory; a string split inside parentheses, refused by code_tokens although the ASTs are equal). Extra: a '..' path with the errata prefix is accepted (C3-3). 2 F12: the round-3 generator and map setups, comprehensions and a setup-name receiver are refused. __builtins__['map'] with a module receiver passes, as stated. 3 F14: the four round-3 escapes are refused. A composition from existing symbols passes and reads a local file through a $ref file:// URI, as stated. 4 F15: _keywords.uniq = unique, the deferred _utils.uniq rebinding, the __code__ swap and the 3-item trigger are refused. The id-reuse attempt succeeds: the rebuilt function reused the old address on the first attempt in 3 of 3 runs. With answers that differ only outside the corpus, it is accepted (773), and stock uniqueItems then accepts [5, 5]. An exec-time itertools.islice patch is also accepted, and stock uniqueItems then accepts [1, 1] (C3-1). 5 tests/test_verify_headroom.py: 25 failures, all with 'unreviewed current source' or 'reviewed schema_unique bytes', as expected before the bridge (not a finding).",
+ "sourcesRead": [
+  "git diff 23c0535 b4a61bd (full text outside round2/), git diff --stat 5fab673 b4a61bd, git diff 5fab673 b4a61bd for the F13 files and docs",
+  "architecture/w02-notes-errata/{README.md, REVIEW_BRIEF.md, review-round2.json, source-index.json, native-profile-v3-errata.json (round-3 hunks), native-profile-v3-r6-3-vectors.json (all intents and refusals), effective/native-profile-v3/README.md (Files paragraph, K1 statement), effective/i06-backend-profile-v2/{README.md headings, Files, R2-4 row, Still open; criteria.json SC08}}; round1/ and round2/ compared byte for byte with 60c01bd and 23c0535",
+  "scripts/contract_errata.py and scripts/perf032_followup.py (whole files); scripts/schema_unique.py; scripts/native_qualification_v3.py (check_record lines 240-259, _kernel_parameter, check_backend_capture lines 555-567, imports); scripts/native_qualification_v2.py (symbol set); scripts/validate_verify_headroom.py (validate_route_locality, validate_status_stub, check_grouped_module hunk); tests/test_selinux_matrix.py route test",
+  "/Users/caglarsubasi/.local/state/harness-onion-ci/tools/perf032/review-round3.json F12-F15 (digest b5d47233 matches source-index)",
+  "/private/tmp/claude-501/cleanup-review-r3/DEFERRED-from-round2.md; round-2 probes in /private/tmp/claude-501/cleanup-review-r2/probes (copied)",
+  "jsonschema 4.24.0 installed sources: _utils.uniq, _keywords imports, validators._warn_for_remote_retrieve",
+  "systemd v256: src/shared/creds-util.c (round-2 copy, lines 195-215 and 1205-1245); src/core/exec-credential.c, src/shared/creds-util.h and src/creds/creds.c fetched from raw.githubusercontent.com at tag v256 with User-Agent harness-onion-review and no personal data"
+ ],
+ "actions": [
+  "Verified the 16 subject digests, the 13 adopted-input digests at 5fab673 and in the subject, the base tree 3c00e86, the round1/ and round2/ copies, and both earlierRounds record digests",
+  "Ran the brief's four checks",
+  "Evaluated the 39 errata cases rule by rule; replayed 18 mutants against the adopted and errata vectors and the 15 table mutants through the full adopted v3 validation",
+  "Ran the deferred probes: the check_errata sweep and the F12, F14 and F15 sweeps (including id reuse), and tests/test_verify_headroom.py",
+  "Probed the R2-4 alternative; checked R6-1d's null-key sentence against systemd v256",
+  "Tested two candidate C3-1 fixes in a scratch copy of perf032_followup",
+  "Wrote probes and this verdict only under /private/tmp/claude-501/cleanup-review-r3/; the worktree was not modified, and nothing was committed or pushed"
+ ],
+ "reviewLimit": "Not checked: the later bridge layer and its calls to these checks; the full verify suite; Linux v6.12 sources (no round-3 change touches a Linux statement, and round 1 checked them); systemd behaviour beyond creds-util.c, exec-credential.c, creds.c and the round-2 copies of boot.c, stub.c, import-creds.c and debug-generator.c. The id-reuse result depends on CPython's allocator. It reproduced on the first attempt in every run here (Python 3.12, macOS), but it is not guaranteed on other builds. The F12, F14 and F15 sweeps are probes, not proofs that nothing else escapes."
+}

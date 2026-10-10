@@ -1,0 +1,108 @@
+{
+ "schemaVersion": "planeon.internal.w02-notes-errata-review/v1",
+ "round": 2,
+ "reviewDate": "2026-10-10",
+ "subjectCommit": "23c0535558e3d59e532fc2202b00e4e9ac17b8d6",
+ "verdict": "CHANGES_REQUIRED",
+ "subjectSha256": {
+  "architecture/w02-notes-errata/README.md": "0515e1c4081c4ddbd471370efff3af640bc179d646b72024f30c2f5bf7ac83b8",
+  "architecture/w02-notes-errata/REVIEW_BRIEF.md": "7b15d5db1703fd99bc60ff3f23bcb87b316863f7645a12e7b5a4553e2dda9573",
+  "architecture/w02-notes-errata/effective/i06-backend-profile-v2/README.md": "562b00852cb84dc44f4118f8449e19819b2b1dae4d683102b5a1b53890abdd9c",
+  "architecture/w02-notes-errata/effective/i06-backend-profile-v2/REVIEW_BRIEF.md": "1634d77c9ebd8fea1a1021a22143dadeb702e66f0b81f592f3319c877abd7a99",
+  "architecture/w02-notes-errata/effective/i06-backend-profile-v2/criteria.json": "8d4f5d7837b0f68859f222dec8766d57c2b6cc5fe49f95fddd830836569940b4",
+  "architecture/w02-notes-errata/effective/native-profile-v3/README.md": "ccec7e2e9d46df373313b2d9effee5230bcd9cf9040f8c6b891ee64a959e9fa8",
+  "architecture/w02-notes-errata/i06-backend-profile-v2-errata.json": "ae59ac046609184015790f9e43ed8d99aece31575011f667f6b28ec30dba5b96",
+  "architecture/w02-notes-errata/native-profile-v3-errata.json": "e1b75c4a312b1cf7d46e1fff594ec403711cd4c441936c4d42f15700f7dc4387",
+  "architecture/w02-notes-errata/native-profile-v3-r6-3-vectors.json": "bb6964e6b8118180b81751837c83ddeca32df68b8b05fe4d2ff23166730402cf",
+  "docs/MASTER_DEVELOPMENT_PLAN.md": "bcaadfbefc3d4abd9af88658f2c34da00bf0621393ba546e38986a0e026a4f87",
+  "docs/repositories/00-harness-engineering.md": "4cdb6997029923c14cfcebc0f987d5b896ccd12da1a4132ee826a8f4e055fafa",
+  "scripts/contract_errata.py": "205e049174446e5ce8aaa3c336933709baa56ff40bf35963f8fb6c9c23fd0baa",
+  "scripts/perf032_followup.py": "edecf241978d84fce5ee5496d462f768e41d8f9648b6e03417127c3e05e40c9d",
+  "scripts/schema_unique.py": "a89588bd3f0f63a528c07d1962e2c320c25120409e8d0b20a1c78ca52c1b2354",
+  "scripts/validate_verify_headroom.py": "58bc01760a0cf6f57f8de6f048b08d9af5b39f76485042970acea52a5951d634",
+  "tests/test_verify_headroom.py": "41706e1fd841542fb3ac47cf9fe7addb407c793b0c8c4a1007c2992fd4839ae0"
+ },
+ "roundOneStatus": {
+  "C1-1": "CLOSED",
+  "C1-2": "PARTIAL",
+  "C1-3": "CLOSED",
+  "C1-4": "CLOSED",
+  "C1-5": "PARTIAL",
+  "C1-6": "CLOSED",
+  "C1-7": "CLOSED",
+  "C1-8": "CLOSED",
+  "C1-9": "CLOSED",
+  "C1-10": "CLOSED",
+  "C1-11": "CLOSED"
+ },
+ "roundOneNotes": {
+  "C1-1": "Contrast removed; both stub-packed directories now import into @encrypted (import-creds.c v256 lines 164-275 confirm). The new 'only if they decrypt' wording needs the null-key condition (C2-2).",
+  "C1-2": "'Break one rule each' is gone, and the equivalence and twice-named-implies-target overlap is stated correctly. The replacement statements are false for R63-02 and R63-04 (C2-1).",
+  "C1-3": "Both terms are defined. My replay reproduces every table row and both message-change lists exactly (see modelExecution).",
+  "C1-4": "check_errata now refuses PUBLISHED for any .py path, and COMMENT_ONLY requires .py (code read; probe deferred).",
+  "C1-5": "Function internals are snapshotted and re-checked after a 773-array corpus. A rebinding deferred past call 773 still passes, and the stated limit does not cover it (C2-3).",
+  "C1-6": "R6-2a now says 'a type #1 entry with a linux key'; boot.c v256 line 2379 (LOADER_LINUX) confirms.",
+  "C1-7": "The F14 docstring states the composition limit and that the byte pin fixes behaviour.",
+  "C1-8": "The F12 text now says 'listed constructs ... not a proof'. Docstring line 4 residue is folded into C2-3.",
+  "C1-9": "addedVectors is checked against its file digest and must lie under the errata directory (code read; probe deferred). The bridge-layer calls remain future work.",
+  "C1-10": "code_tokens equality (comments and NL removed; ENCODING, INDENT, STRING and NEWLINE kept) plus AST equality now limit edits to comments, blank lines and spacing (code read; probe deferred).",
+  "C1-11": "The caveat was added to the test module docstring and catalogue entry 82."
+ },
+ "findings": [
+  {
+   "id": "C2-1",
+   "severity": "MINOR",
+   "location": "architecture/w02-notes-errata/README.md line 54 ('None of them breaks the binding'); effective/native-profile-v3/README.md lines 42-44 (row R6-3a new text: 'add bound pairs, which no longer break the binding ... every bound grammar pair breaks both'); native-profile-v3-r6-3-vectors.json intents of R63-02 to R63-20 ('so only its own rule is broken')",
+   "finding": "The round-2 rewording for C1-2 is false for R63-02 and R63-04. The binding (check_record line 258) compares the maintenance words with every unit word removed against the enrolled words. Both enrolled entries already hold systemd.unit=planeon-maintenance.target (bound pairs of V47 and V52), so after the filter the maintenance list lacks that word and cannot equal the enrolled list. No pair built from V47 or V52 can satisfy the binding. Rule-by-rule evaluation of the vectors: R63-02 breaks the enrolled grammar, the twice-named rule and the binding, but NOT the maintenance grammar, because its only out-of-grammar word is the unit word, which that rule exempts. R63-04 breaks the enrolled grammar, the maintenance grammar ('--'), the twice-named rule and the binding. R63-03, R63-05 to R63-20 and R63-28 to R63-35 break exactly the two grammar rules. Only R63-01 breaks one rule (lockdown). A mutant with only the enrolled grammar off confirms this: R63-02 moves to 'names the maintenance target twice' and R63-04 to 'maintenance boot entry outside the closed kernel parameters'. So these statements are untrue: 'None of them breaks the binding', 'bound pairs, which no longer break the binding' and 'every bound grammar pair breaks both' (fails for R63-02). The 20 vector intents saying 'so only its own rule is broken' are untrue for R63-02 to R63-20. The equivalence statement itself is correct: under the binding, the two grammar rules are equivalent, and the target rule is implied by the twice-named rule.",
+   "requiredChange": "State that R63-02 and R63-04 cannot be bound: the binding removes every unit word, so an enrolled entry that holds the unit always breaks it. Both also break the twice-named rule; R63-04 also breaks the maintenance grammar, and R63-02 does not. Limit 'no longer break the binding' and 'breaks both grammar rules' to R63-03, R63-05 to R63-20 and R63-28 to R63-35. Correct the R63-02 to R63-20 intents, then update addedVectors.sha256 and source-index."
+  },
+  {
+   "id": "C2-2",
+   "severity": "MINOR",
+   "location": "native-profile-v3-errata.json row R6-1d (new text); effective/native-profile-v3/README.md K1 limits, credentials bullet ('so they take effect only if they decrypt'); errata README R6-1 paragraph",
+   "finding": "The C1-1 rewording is literally true but reads as a protection that systemd v256 gives only conditionally. In systemd v256, the generator that turns systemd.extra-unit.* and systemd.unit-dropin.* credentials into units is debug-generator.c, which reads both credential directories (lines 272-276). It calls read_credential_with_decryption, and that calls decrypt_credential_and_warn without CREDENTIAL_ALLOW_NULL (creds-util.c lines 204-212). A credential sealed with the fixed null key (CRED_AES256_GCM_BY_NULL) carries no secret, so anyone who can write the ESP can produce one. systemd accepts it unless the machine has a TPM2 AND Secure Boot is enabled (creds-util.c lines 1221-1238). With TPM2 present and Secure Boot off, it accepts it with only a warning. So on a machine without a TPM2, or with Secure Boot off, ESP-placed /.extra/credentials and /.extra/global_credentials 'decrypt' and take effect. The K1 limits list is meant to enumerate what the binding does not exclude, so this condition belongs there.",
+   "requiredChange": "Add the null-key condition, for example: '... so they take effect only if they decrypt; a credential sealed with systemd's null key, which anyone with write access to the ESP can produce, decrypts unless the machine has a TPM2 and Secure Boot is enabled'. Alternatively, drop 'so they take effect only if they decrypt'."
+  },
+  {
+   "id": "C2-3",
+   "severity": "MINOR",
+   "location": "scripts/perf032_followup.py module docstring (line 4 'its claims are made true here instead of narrowed'; F15 limit lines 17-18) and check_unique_oracle; errata README PERF-032-F F15 bullet ('A change triggered only by an input outside the corpus is not excluded')",
+   "finding": "C1-5 is answered in part. Function internals are now snapshotted, and the state is re-checked after a 773-array corpus, so the round-1 __code__ swap and the 7th-call rebinding no longer pass. But the stated remaining limit ('a change triggered only by an input outside the corpus') leaves out changes triggered by call count, by a later call or by time. Probe: I appended to the current schema_unique.py a wrapper `unique` that rebinds `_utils.uniq` to `lambda c: True` on its 800th call. check_unique_oracle returns 773 (accepted). Exec'd again as a later layer would import it, after 800 calls `_utils.uniq([1, 1])` is True process-wide. check_grouped_module's corpus has at least 1000 unsortable arrays, so the rebinding lands inside it and makes its comparison vacuous: the same C1-5 scenario, with 773 in place of 7. The merged byte pin still refuses this, so the current pipeline is not affected. Separately, docstring line 4 still says the claims are 'made true here instead of narrowed', while the same docstring's F12, F14 and F15 items (and the README's 'each check below states exactly what it covers') now state limits.",
+   "requiredChange": "State the F15 limit exactly: 'a change triggered by anything other than the exec and the 773 corpus calls (a later call, a call count, time or an input outside the corpus) is not excluded; the byte pin guards it'. Alternatively, have the bridge layer re-check _oracle_state after check_grouped_module's corpus. Replace docstring line 4 with wording that matches the README ('answered by tighter checks; each item states what it covers')."
+  },
+  {
+   "id": "C2-4",
+   "severity": "NOTE",
+   "location": "scripts/contract_errata.py replay_vectors (digest check on read(NATIVE_MODEL); execution through the module-level import `native`)",
+   "finding": "replay_vectors requires digest(read(NATIVE_MODEL)) == NATIVE_MODEL_SHA256. It then executes the module imported at load time from sys.path ('native_qualification_v3' or scripts.native_qualification_v3), not the bytes it digested. Under a layer validator whose read() returns reviewed bytes, the executed model can differ from the digested one. The 'replayed through the unchanged v3 model' claim then rests on the working tree. On this commit the two are identical (both 2ef5c14a...).",
+   "requiredChange": "Optional: also require digest(open(native.__file__, 'rb').read()) == NATIVE_MODEL_SHA256, or exec the read bytes into a fresh module for the replay."
+  }
+ ],
+ "questionAnswers": {
+  "1": "R6-1a/b/c/e/f/g and R6-2b are unchanged since round 1 and were confirmed there. R6-2a (round 2) is exact: boot.c v256 line 2379 appends io.systemd.boot.kernel-cmdline-extra only for LOADER_LINUX (set at line 1456 for a 'linux' key) and not on a confidential VM; stub.c line 639 appends io.systemd.stub.kernel-cmdline-extra unless the VM is confidential; neither code path checks Secure Boot. R6-1d (round 2): stub.c packs '.extra/credentials' and '.extra/global_credentials' (lines 656-684); boot.c has no pack_cpio; import-creds.c v256 copies both into ENCRYPTED_SYSTEM_CREDENTIALS_DIRECTORY; SMBIOS and fw_cfg are imported with no Secure Boot condition (they are skipped only in containers and confidential VMs, which leaves the statement conservative). 'Take effect only if they decrypt' omits that null-key credentials decrypt without a TPM2 or with Secure Boot off (C2-2). R6-3a (round 2) contains false statements about R63-02 and R63-04 (C2-1). The effective files equal the counted replacements applied to the adopted bytes (check_errata accepts both records; effective digests ccec7e2e and 25db6ef5 for native, 562b0085, 1634d77c and 8d4f5d78 for I06), and they read correctly in place apart from C2-1 and C2-2.",
+  "2": "Yes. replay_vectors returns 39 through the unchanged model (digest 2ef5c14a). Each negative is refused with its pinned message and each accepted case is accepted. Single-defect: R63-01 breaks only lockdown. The grammar pairs R63-03, R63-05 to R63-20 and R63-28 to R63-35 break exactly the enrolled and maintenance grammar rules and no longer break the binding. R63-02 and R63-04 are not bound (C2-1). R63-21 to R63-27 break only the binding. I replayed all 18 table mutants through the full adopted validate_v3_vectors (248 checks, including qualification and cross-version cases) and through the 39 errata cases. Every listed errata flip reproduces exactly. The binding, unit-last, pattern and root= mutants pass all 248 checks. The all-off mutant changes exactly the 20 listed adopted messages plus R63-02 and R63-04 (to the twice-named rule), and the lockdown-off mutant changes only V38, as stated.",
+  "3": "The stated implications are exact: under the binding, the enrolled and maintenance grammar rules are equivalent; the twice-named rule (count == 1) implies the target rule; and given check_record's order (lines 248-259), the maintenance-grammar and target rules are reached first only by cases that also break the binding. Disabling either grammar rule alone flips no errata or adopted case. Disabling the maintenance grammar changes the messages of V53, V59, V60, V65 and V66 only. The surrounding sentence 'every bound grammar pair breaks both' is false for R63-02 (C2-1).",
+  "4": "check_errata accepts both current records. By reading round-2 contract_errata.py: a wrong adopted digest, a count mismatch (apply_replacements), a differing effective file or digest, a .py row marked PUBLISHED, a COMMENT_ONLY row whose token stream (without COMMENT and NL) or AST differs, and a wrong addedVectors digest each raise a named ValueError. The comment-only rule is sound: the token stream keeps ENCODING, STRING, NEWLINE and INDENT, so a coding-cookie, docstring, literal-spelling or indentation change is refused, and AST equality adds nothing beyond that. The negative probes were deferred under the coordinator's light-mode constraint (DEFERRED.md item 1); round 1 ran equivalent probes on the earlier code.",
+  "5": "Yes. In adopted positive 1, I gave SCHEDULER's backend file KUBELET's verityDigest. check_record accepts the record. An honest SCHEDULER capture (measuredVerity as observed) is refused with 'backend observation differs' (native_qualification_v3.py lines 566-567). A capture that echoes the false verity is accepted, so the alternative rests on an honest inspector, which the effective text conveys with 'observed'. SC08 distinctness is by artifactDigest (i06_backend_profile.py lines 470-474), which equals the file's sha256 in the record.",
+  "6": "On the current tree, validate_perf032_followup returns 806 calls over 31 route tests, and check_unique_oracle returns 773. F15 refuses no count-deferred rebinding past call 773 (C2-3). The F12, F14 and other F15 probe sweeps were deferred (DEFERRED.md items 2-4). The F13 edits are exact: the unique() docstring, the check_grouped_module docstring and message, the two test rows with the matching message, master-plan line 1306, the test module docstring and catalogue entry 82 (C1-11).",
+  "7": "No adopted contract, schema, rule, vector, model or version changes: all 13 adopted inputs match their source-index digests at base 5fab673 and in the subject; native_qualification_v3.py is untouched. The round1/ bytes equal 60c01bd, and review-round1.json matches its earlierRounds digest. MET-PERF-032 bytes change only by the F13 wording, which Q-F = A allows. Overclaims remain in C2-1 (binding statements and vector intents), C2-2 ('only if they decrypt' without the null-key condition) and C2-3 (F15 limit and 'made true instead of narrowed')."
+ },
+ "modelExecution": "Repository uv environment, one process per command. Before the coordinator's light-mode constraint (each ≤60 s): (1) check_errata on both records accepted; replay_vectors 39; validate_perf032_followup 806 for 31 route tests; check_unique_oracle 773. (2) Rule-by-rule evaluation of the 39 errata cases with the model's _kernel_parameter. (3) 18 textual mutants of a scratch copy of the v3 model, replayed against the 238 record, capture, lifecycle and backend cases plus the errata, then through the full validate_v3_vectors (248 checks) with the mutant substituted. (4) R2-4 probe. After the constraint (one call, ≤10 s): (5) check_unique_oracle on schema_unique.py with an appended count-deferred rebinding, accepted, followed by a second exec showing the rebinding takes effect at call 800.",
+ "sourcesRead": [
+  "git diff 60c01bd 23c0535 and git diff 5fab673 23c0535 (stat, plus full text of all non-round1 files)",
+  "architecture/w02-notes-errata/{README.md, REVIEW_BRIEF.md, review-round1.json, source-index.json, native-profile-v3-errata.json, native-profile-v3-r6-3-vectors.json, effective/*}; round1/ compared byte-for-byte with 60c01bd",
+  "architecture/native-profile-v3/vectors.json (V47, V48, V52, V67), scripts/native_qualification_v3.py (KERNEL_PARAMETERS, check_record, check_backend_capture, check_qualification), scripts/validate_native_profile_v3.py (validate_v3_vectors, _apply)",
+  "scripts/{contract_errata.py, perf032_followup.py, schema_unique.py, i06_backend_profile.py (SC08)}, F13 hunks of validate_verify_headroom.py, test_verify_headroom.py and the docs",
+  "/Users/caglarsubasi/.local/state/harness-onion-ci/tools/perf032/review-round3.json (digest only, b5d47233, matches source-index)",
+  "systemd v256 (GitHub raw, User-Agent harness-onion-review, no personal data): src/core/import-creds.c, src/boot/efi/boot.c, src/boot/efi/stub.c (byte-identical to the round-1 copies), src/debug-generator/debug-generator.c, src/shared/creds-util.c"
+ ],
+ "actions": [
+  "Verified the source-index subject and adopted digests, the base tree 3c00e86 and the round1/ bytes",
+  "Ran the brief's four checks on the subject",
+  "Evaluated each errata vector against each boot rule; replayed 18 mutants through the full adopted v3 validation and the errata vectors (scratch copies only)",
+  "Probed the R2-4 alternative and the F15 count-deferred rebinding",
+  "Checked R6-1d and R6-2a against systemd v256 sources, including credential decryption in debug-generator and creds-util",
+  "Wrote probes, DEFERRED.md and this verdict under /private/tmp/claude-501/cleanup-review-r2/; the worktree was not modified"
+ ],
+ "reviewLimit": "From partway through, a coordinator light-mode constraint was in force (production verify running), so these checks were deferred, with exact steps in /private/tmp/claude-501/cleanup-review-r2/DEFERRED.md: the check_errata negative-probe sweep (C1-4, C1-9 and C1-10 confirmed by reading code only); the F12, F14 and remaining F15 probe sweeps, including an id-reuse attempt against the id-based snapshot; and tests/test_verify_headroom.py (expected to fail on this commit). Not checked: the later bridge layer, the full verify suite, Linux sources (no round-2 change touches the Linux statements), or systemd behaviour beyond the six files read."
+}

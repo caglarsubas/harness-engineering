@@ -1,0 +1,160 @@
+{
+ "schemaVersion": "planeon.internal.w02-notes-errata-index/v1",
+ "round": 5,
+ "baseMain": "5fab673e250e7dd0f2ce9c19f6ce9da8cce9321c",
+ "baseTree": "3c00e8601f6b14c428114dcfa814d3ffba7c0703",
+ "subject": [
+  {
+   "path": "architecture/w02-notes-errata/README.md",
+   "sha256": "7a7dd42224b59b535b87a45b622d4115bcf3f3834af2bb740a1fec652f1371ec"
+  },
+  {
+   "path": "architecture/w02-notes-errata/REVIEW_BRIEF.md",
+   "sha256": "79c94fce1c62967209ce75127a9746570a72f10dd92c79e160e52515eb1d8192"
+  },
+  {
+   "path": "architecture/w02-notes-errata/effective/i06-backend-profile-v2/README.md",
+   "sha256": "562b00852cb84dc44f4118f8449e19819b2b1dae4d683102b5a1b53890abdd9c"
+  },
+  {
+   "path": "architecture/w02-notes-errata/effective/i06-backend-profile-v2/REVIEW_BRIEF.md",
+   "sha256": "1634d77c9ebd8fea1a1021a22143dadeb702e66f0b81f592f3319c877abd7a99"
+  },
+  {
+   "path": "architecture/w02-notes-errata/effective/i06-backend-profile-v2/criteria.json",
+   "sha256": "8d4f5d7837b0f68859f222dec8766d57c2b6cc5fe49f95fddd830836569940b4"
+  },
+  {
+   "path": "architecture/w02-notes-errata/effective/native-profile-v3/README.md",
+   "sha256": "fd12a0ded9b7de557cb75a8bdeb01c2c3fa85c24035b174282d2274dc6000bd0"
+  },
+  {
+   "path": "architecture/w02-notes-errata/i06-backend-profile-v2-errata.json",
+   "sha256": "ae59ac046609184015790f9e43ed8d99aece31575011f667f6b28ec30dba5b96"
+  },
+  {
+   "path": "architecture/w02-notes-errata/native-profile-v3-errata.json",
+   "sha256": "e22e968d931d477d6cd70648d52eea52e5bcda6a76e07b17bd658d004e063961"
+  },
+  {
+   "path": "architecture/w02-notes-errata/native-profile-v3-r6-3-vectors.json",
+   "sha256": "3b9b6b32b8da1b53cf2b597b8ac9e1f230889364424b14b667e7f985b03fb7a7"
+  },
+  {
+   "path": "docs/MASTER_DEVELOPMENT_PLAN.md",
+   "sha256": "bcaadfbefc3d4abd9af88658f2c34da00bf0621393ba546e38986a0e026a4f87"
+  },
+  {
+   "path": "docs/repositories/00-harness-engineering.md",
+   "sha256": "4cdb6997029923c14cfcebc0f987d5b896ccd12da1a4132ee826a8f4e055fafa"
+  },
+  {
+   "path": "scripts/contract_errata.py",
+   "sha256": "15bef4f7e34302a3a1bc7d21fc5d17a806fe23753d27578075799e94508db449"
+  },
+  {
+   "path": "scripts/perf032_followup.py",
+   "sha256": "a41f8123ba446ed6c25de120de33fe2e802334c6c0c93df273d87ef56afc3645"
+  },
+  {
+   "path": "scripts/schema_unique.py",
+   "sha256": "a89588bd3f0f63a528c07d1962e2c320c25120409e8d0b20a1c78ca52c1b2354"
+  },
+  {
+   "path": "scripts/validate_verify_headroom.py",
+   "sha256": "58bc01760a0cf6f57f8de6f048b08d9af5b39f76485042970acea52a5951d634"
+  },
+  {
+   "path": "tests/test_verify_headroom.py",
+   "sha256": "41706e1fd841542fb3ac47cf9fe7addb407c793b0c8c4a1007c2992fd4839ae0"
+  }
+ ],
+ "adoptedInputs": [
+  {
+   "path": "architecture/native-profile-v3/review-round6.json",
+   "sha256": "dce53008c9b21f670935a6fb0c434678dec2538599fc757c46ac5a54a718c929"
+  },
+  {
+   "path": "architecture/native-profile-v3/README.md",
+   "sha256": "93b6f3897f4011ab85832b4319db44e4e1e94566adf61062a6170d1437dfcf50"
+  },
+  {
+   "path": "architecture/native-profile-v3/vectors.json",
+   "sha256": "14af47a69c972039294be8659c31332acd5326bfb0a3a38384a2c6bf9d11fe6d"
+  },
+  {
+   "path": "architecture/native-profile-v3/qualification.schema.json",
+   "sha256": "ae5cbb6aa39f4edfa2d9919f25e55bad9ab214a99ca927c5afe7e2d943946ac5"
+  },
+  {
+   "path": "architecture/native-profile-v3/status.json",
+   "sha256": "f242944dd7a03eb64fd4f14d811711f7ed4ccf9bdb00bca82ea8abbaa5cb0538"
+  },
+  {
+   "path": "scripts/native_qualification_v3.py",
+   "sha256": "2ef5c14ad5d8c962cf3703ccd076059685ed8dcc852059e4f863e8d9dc8965ad"
+  },
+  {
+   "path": "architecture/i06-backend-profile-v2/review-round2.json",
+   "sha256": "a5eefd7c6fb0f53f2a14880a079a69bd786c95be1ca8b3a3c5ab7c6de04cc0df"
+  },
+  {
+   "path": "architecture/i06-backend-profile-v2/review-round3.json",
+   "sha256": "1a04fb792d080ee70f24fc93da68df8238a1593e91c9072c2e6dd3f75bf48bd2"
+  },
+  {
+   "path": "architecture/i06-backend-profile-v2/README.md",
+   "sha256": "553880b957586dbfa50eabc4a99d51735eef2a1b0a82641ea51d8e3ea8cf72eb"
+  },
+  {
+   "path": "architecture/i06-backend-profile-v2/REVIEW_BRIEF.md",
+   "sha256": "f65c1ef1fbe43013c06f962a2ffde8d231a70392603ecc44850481c5ae8ec739"
+  },
+  {
+   "path": "architecture/i06-backend-profile-v2/criteria.json",
+   "sha256": "026206c57d3025c0f0129b6615e46c83d5a8000ddc3288f000a1fe4570050cda"
+  },
+  {
+   "path": "architecture/i06-backend-profile-v2/status.json",
+   "sha256": "44217baf7857b86abfa9c8ccadb953e2678592e437c9caf049096c402abb9c20"
+  },
+  {
+   "path": "scripts/native_qualification_v2.py",
+   "sha256": "c72b6e18044f685c646756a1574bd81cd24f1475d7eda326778d70d1314ef68b"
+  }
+ ],
+ "perf032Review": {
+  "record": "MET-PERF-032 review round 3 (F12-F15), kept with the PERF-032 builder records",
+  "sha256": "b5d472332c4d38da51a05dada5110e2eafa048fd96f5c097a84c33123f395ada"
+ },
+ "earlierRounds": [
+  {
+   "round": 1,
+   "record": "architecture/w02-notes-errata/review-round1.json",
+   "recordSha256": "35b046c1b31dd062c91856b21869aad97f777e7298a0c3d6c28cc09ff21a4d8f",
+   "subjectCommit": "60c01bdd8996eee2f90096d5cd5fc42bc743bbb2",
+   "subjectDirectory": "architecture/w02-notes-errata/round1/"
+  },
+  {
+   "round": 2,
+   "record": "architecture/w02-notes-errata/review-round2.json",
+   "recordSha256": "14cebfdf3b596b186360cf6897dd96a5f2b23a0d910b8bf7728067b82d3835fb",
+   "subjectCommit": "23c0535558e3d59e532fc2202b00e4e9ac17b8d6",
+   "subjectDirectory": "architecture/w02-notes-errata/round2/"
+  },
+  {
+   "round": 3,
+   "record": "architecture/w02-notes-errata/review-round3.json",
+   "recordSha256": "8de69961b8699064bc2729381591acbb05636e0301b494b12bea42e43e14738d",
+   "subjectCommit": "b4a61bd15d0d687b01a99c46c0ec119993a650d2",
+   "subjectDirectory": "architecture/w02-notes-errata/round3/"
+  },
+  {
+   "round": 4,
+   "record": "architecture/w02-notes-errata/review-round4.json",
+   "recordSha256": "4177faaf9e33f8c06cf758ef514dfbc4e409b2ed6554db0ec022015e2eaed7b6",
+   "subjectCommit": "0be9802544013a3238a59461b2bc43f1c320feb5",
+   "subjectDirectory": "architecture/w02-notes-errata/round4/"
+  }
+ ]
+}

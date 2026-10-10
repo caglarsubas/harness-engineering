@@ -250,8 +250,8 @@ def validate_credential_lifecycle(packets, record, inputs):
         pinned(record)
         errors = validate_additions(packets)
         old = {Path(p).stem for p in record["protectedFiles"] if p.startswith("task-packets/")}
-        require(len(old) == 139 and len(packets) == 224
-                and set(packets) == old | set(ADDITIONS) | {"MET-UNIFY-005", "MET-RUNNER-001", "MET-PERF-028", "MET-LINUX-005", "MET-VERIFY-001", "MET-PERF-029", "MET-PERF-030", "MET-LINUX-006", "MET-VERIFY-002", "MET-VERIFY-003", "MET-VERIFY-004", "MET-ENFORCE-004", "MET-ENFORCE-005", "MET-ENFORCE-006", "MET-ENFORCE-007", "MET-PERF-031", "MET-ENFORCE-008", "MET-ENFORCE-009", "MET-SECTOR-001", "MET-PERF-032", "MET-ENFORCE-010", "MET-ENFORCE-011", "MET-ENFORCE-012", "MET-ENFORCE-013", "MET-ENFORCE-014", "MET-ENFORCE-015", "MET-ENFORCE-016", "MET-PERF-035", "MET-PERF-036", "MET-SECTOR-002", "MET-ENFORCE-017", "MET-ENFORCE-018", "MET-ENFORCE-019", "MET-ENFORCE-020", "MET-ENFORCE-021", "MET-ENFORCE-022"},
+        require(len(old) == 139 and len(packets) == 225
+                and set(packets) == old | set(ADDITIONS) | {"MET-UNIFY-005", "MET-RUNNER-001", "MET-PERF-028", "MET-LINUX-005", "MET-VERIFY-001", "MET-PERF-029", "MET-PERF-030", "MET-LINUX-006", "MET-VERIFY-002", "MET-VERIFY-003", "MET-VERIFY-004", "MET-ENFORCE-004", "MET-ENFORCE-005", "MET-ENFORCE-006", "MET-ENFORCE-007", "MET-PERF-031", "MET-ENFORCE-008", "MET-ENFORCE-009", "MET-SECTOR-001", "MET-PERF-032", "MET-ENFORCE-010", "MET-ENFORCE-011", "MET-ENFORCE-012", "MET-ENFORCE-013", "MET-ENFORCE-014", "MET-ENFORCE-015", "MET-ENFORCE-016", "MET-PERF-035", "MET-PERF-036", "MET-SECTOR-002", "MET-ENFORCE-017", "MET-ENFORCE-018", "MET-ENFORCE-019", "MET-ENFORCE-020", "MET-ENFORCE-021", "MET-ENFORCE-022", "MET-ENFORCE-023"},
                 "139 predecessors plus two credential packets and exact ordering authority required")
         pins = {**record["protectedFiles"], **record["inputFiles"]}
         require(type(inputs) is dict and set(inputs) == set(pins), "exact input map required")
@@ -320,7 +320,7 @@ def main():
     for error in errors:
         print("ERROR: " + error)
     if not errors:
-        print("Credential lifecycle authority valid: 224 packets; exact performance/test reconciliation; 127/305 checkpoint; DATA_CHECK_ONLY, product/native NOT_RUN.")
+        print("Credential lifecycle authority valid: 225 packets; exact performance/test reconciliation; 127/305 checkpoint; DATA_CHECK_ONLY, product/native NOT_RUN.")
     return int(bool(errors))
 
 

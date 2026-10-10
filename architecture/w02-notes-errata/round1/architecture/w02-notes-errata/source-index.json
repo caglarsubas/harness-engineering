@@ -1,0 +1,126 @@
+{
+ "schemaVersion": "planeon.internal.w02-notes-errata-index/v1",
+ "round": 1,
+ "baseMain": "5fab673e250e7dd0f2ce9c19f6ce9da8cce9321c",
+ "baseTree": "3c00e8601f6b14c428114dcfa814d3ffba7c0703",
+ "subject": [
+  {
+   "path": "architecture/w02-notes-errata/README.md",
+   "sha256": "51fd9d095aad71996f8fda2c2f7cabb7dee517806901445c121e725a73bc4e68"
+  },
+  {
+   "path": "architecture/w02-notes-errata/REVIEW_BRIEF.md",
+   "sha256": "52bda55c76659ec644975ceb1c8373a5f632b56bf4d77b619d6e8f6b27153912"
+  },
+  {
+   "path": "architecture/w02-notes-errata/effective/i06-backend-profile-v2/README.md",
+   "sha256": "562b00852cb84dc44f4118f8449e19819b2b1dae4d683102b5a1b53890abdd9c"
+  },
+  {
+   "path": "architecture/w02-notes-errata/effective/i06-backend-profile-v2/REVIEW_BRIEF.md",
+   "sha256": "1634d77c9ebd8fea1a1021a22143dadeb702e66f0b81f592f3319c877abd7a99"
+  },
+  {
+   "path": "architecture/w02-notes-errata/effective/i06-backend-profile-v2/criteria.json",
+   "sha256": "8d4f5d7837b0f68859f222dec8766d57c2b6cc5fe49f95fddd830836569940b4"
+  },
+  {
+   "path": "architecture/w02-notes-errata/effective/native-profile-v3/README.md",
+   "sha256": "c102cdde499552a1f945b90b242e88321cae5e454d0ff06985bb0fc701127bb9"
+  },
+  {
+   "path": "architecture/w02-notes-errata/i06-backend-profile-v2-errata.json",
+   "sha256": "ae59ac046609184015790f9e43ed8d99aece31575011f667f6b28ec30dba5b96"
+  },
+  {
+   "path": "architecture/w02-notes-errata/native-profile-v3-errata.json",
+   "sha256": "b497992a6b91431b882959bc65d338f30ed8d57353b706948be235394e7b8453"
+  },
+  {
+   "path": "architecture/w02-notes-errata/native-profile-v3-r6-3-vectors.json",
+   "sha256": "bb6964e6b8118180b81751837c83ddeca32df68b8b05fe4d2ff23166730402cf"
+  },
+  {
+   "path": "docs/MASTER_DEVELOPMENT_PLAN.md",
+   "sha256": "bcaadfbefc3d4abd9af88658f2c34da00bf0621393ba546e38986a0e026a4f87"
+  },
+  {
+   "path": "scripts/contract_errata.py",
+   "sha256": "9d01fcf5b654780cb20c1a1be1f4eb04d290ba4825f931b8bbbcc6b250eedfa1"
+  },
+  {
+   "path": "scripts/perf032_followup.py",
+   "sha256": "951b72bbfbe5e26c5f9e01c09c75b3562b745846d447b64395c1479b52993ead"
+  },
+  {
+   "path": "scripts/schema_unique.py",
+   "sha256": "a89588bd3f0f63a528c07d1962e2c320c25120409e8d0b20a1c78ca52c1b2354"
+  },
+  {
+   "path": "scripts/validate_verify_headroom.py",
+   "sha256": "58bc01760a0cf6f57f8de6f048b08d9af5b39f76485042970acea52a5951d634"
+  },
+  {
+   "path": "tests/test_verify_headroom.py",
+   "sha256": "25a7419dcd9c6d8d264ada1bb97e045bb5af6f661021d21daf780d9d23246d6e"
+  }
+ ],
+ "adoptedInputs": [
+  {
+   "path": "architecture/native-profile-v3/review-round6.json",
+   "sha256": "dce53008c9b21f670935a6fb0c434678dec2538599fc757c46ac5a54a718c929"
+  },
+  {
+   "path": "architecture/native-profile-v3/README.md",
+   "sha256": "93b6f3897f4011ab85832b4319db44e4e1e94566adf61062a6170d1437dfcf50"
+  },
+  {
+   "path": "architecture/native-profile-v3/vectors.json",
+   "sha256": "14af47a69c972039294be8659c31332acd5326bfb0a3a38384a2c6bf9d11fe6d"
+  },
+  {
+   "path": "architecture/native-profile-v3/qualification.schema.json",
+   "sha256": "ae5cbb6aa39f4edfa2d9919f25e55bad9ab214a99ca927c5afe7e2d943946ac5"
+  },
+  {
+   "path": "architecture/native-profile-v3/status.json",
+   "sha256": "f242944dd7a03eb64fd4f14d811711f7ed4ccf9bdb00bca82ea8abbaa5cb0538"
+  },
+  {
+   "path": "scripts/native_qualification_v3.py",
+   "sha256": "2ef5c14ad5d8c962cf3703ccd076059685ed8dcc852059e4f863e8d9dc8965ad"
+  },
+  {
+   "path": "architecture/i06-backend-profile-v2/review-round2.json",
+   "sha256": "a5eefd7c6fb0f53f2a14880a079a69bd786c95be1ca8b3a3c5ab7c6de04cc0df"
+  },
+  {
+   "path": "architecture/i06-backend-profile-v2/review-round3.json",
+   "sha256": "1a04fb792d080ee70f24fc93da68df8238a1593e91c9072c2e6dd3f75bf48bd2"
+  },
+  {
+   "path": "architecture/i06-backend-profile-v2/README.md",
+   "sha256": "553880b957586dbfa50eabc4a99d51735eef2a1b0a82641ea51d8e3ea8cf72eb"
+  },
+  {
+   "path": "architecture/i06-backend-profile-v2/REVIEW_BRIEF.md",
+   "sha256": "f65c1ef1fbe43013c06f962a2ffde8d231a70392603ecc44850481c5ae8ec739"
+  },
+  {
+   "path": "architecture/i06-backend-profile-v2/criteria.json",
+   "sha256": "026206c57d3025c0f0129b6615e46c83d5a8000ddc3288f000a1fe4570050cda"
+  },
+  {
+   "path": "architecture/i06-backend-profile-v2/status.json",
+   "sha256": "44217baf7857b86abfa9c8ccadb953e2678592e437c9caf049096c402abb9c20"
+  },
+  {
+   "path": "scripts/native_qualification_v2.py",
+   "sha256": "c72b6e18044f685c646756a1574bd81cd24f1475d7eda326778d70d1314ef68b"
+  }
+ ],
+ "perf032Review": {
+  "record": "MET-PERF-032 review round 3 (F12-F15), kept with the PERF-032 builder records",
+  "sha256": "b5d472332c4d38da51a05dada5110e2eafa048fd96f5c097a84c33123f395ada"
+ }
+}

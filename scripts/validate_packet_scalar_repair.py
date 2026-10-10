@@ -122,7 +122,7 @@ def validate_scalar_repair(packets: Any, record: Any, inputs: Any) -> list[str]:
         except ImportError:
             from scripts.validate_successor_inventory import ADDITIONS as SUCCESSORS, validate_additions as validate_successors
             from scripts.validate_proxy_contract import ADDITIONS as PROXY_ADDITIONS, validate_additions as validate_proxy_additions
-        if len(old_ids) != 130 or set(packets) != old_ids | set(ADDITIONS) | set(SUCCESSORS) | set(PROXY_ADDITIONS) | {"MET-UNIFY-005", "MET-RUNNER-001", "MET-PERF-028", "MET-LINUX-005", "MET-VERIFY-001", "MET-PERF-029", "MET-PERF-030", "MET-LINUX-006", "MET-VERIFY-002", "MET-VERIFY-003", "MET-VERIFY-004", "MET-ENFORCE-004", "MET-ENFORCE-005", "MET-ENFORCE-006", "MET-ENFORCE-007", "MET-PERF-031", "MET-ENFORCE-008", "MET-ENFORCE-009", "MET-SECTOR-001", "MET-PERF-032", "MET-ENFORCE-010", "MET-ENFORCE-011", "MET-ENFORCE-012", "MET-ENFORCE-013", "MET-ENFORCE-014", "MET-ENFORCE-015", "MET-ENFORCE-016", "MET-PERF-035", "MET-PERF-036", "MET-SECTOR-002", "MET-ENFORCE-017", "MET-ENFORCE-018", "MET-ENFORCE-019", "MET-ENFORCE-020", "MET-ENFORCE-021", "MET-ENFORCE-022"}:
+        if len(old_ids) != 130 or set(packets) != old_ids | set(ADDITIONS) | set(SUCCESSORS) | set(PROXY_ADDITIONS) | {"MET-UNIFY-005", "MET-RUNNER-001", "MET-PERF-028", "MET-LINUX-005", "MET-VERIFY-001", "MET-PERF-029", "MET-PERF-030", "MET-LINUX-006", "MET-VERIFY-002", "MET-VERIFY-003", "MET-VERIFY-004", "MET-ENFORCE-004", "MET-ENFORCE-005", "MET-ENFORCE-006", "MET-ENFORCE-007", "MET-PERF-031", "MET-ENFORCE-008", "MET-ENFORCE-009", "MET-SECTOR-001", "MET-PERF-032", "MET-ENFORCE-010", "MET-ENFORCE-011", "MET-ENFORCE-012", "MET-ENFORCE-013", "MET-ENFORCE-014", "MET-ENFORCE-015", "MET-ENFORCE-016", "MET-PERF-035", "MET-PERF-036", "MET-SECTOR-002", "MET-ENFORCE-017", "MET-ENFORCE-018", "MET-ENFORCE-019", "MET-ENFORCE-020", "MET-ENFORCE-021", "MET-ENFORCE-022", "MET-ENFORCE-023"}:
             errors.append("exact historical 132 plus three cumulative correction packets required")
         errors.extend(validate_successors(packets))
         errors.extend(validate_proxy_additions(packets))
@@ -166,7 +166,7 @@ def main() -> int:
     for error in errors:
         print("ERROR: " + error)
     if not errors:
-        print("Scalar repair authority valid: 224 packets; historical 132-packet record and 164 predecessor files unchanged.")
+        print("Scalar repair authority valid: 225 packets; historical 132-packet record and 164 predecessor files unchanged.")
     return int(bool(errors))
 
 

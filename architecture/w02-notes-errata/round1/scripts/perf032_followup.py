@@ -1,0 +1,126 @@
+#!/usr/bin/env python3
+"""PERF-032-F: the MET-PERF-032 review round-3 findings F12, F14 and F15, checked on current bytes.
+
+The merged MET-PERF-032 packet text is immutable, so its claims are made true here instead of narrowed:
+- F12: in every route test, setup values defer no computation by any construct (lambda, generator, comprehension,
+  map/filter/iter/zip/reversed/enumerate/partial), and every route call's receiver is a module alias, never a setup name;
+- F14: the stubbed status replay's model (`scripts/native_qualification_v2.py`) uses exactly its reviewed set of Name ids
+  and Attribute names, which a denylist could not pin (it missed `json.__builtins__`, `__loader__`, `__spec__` and
+  `RefResolver.resolve_remote`);
+- F15: executing the current `scripts/schema_unique.py` bytes and running its `unique` leave every jsonschema,
+  referencing and jsonschema_specifications module dict, the Draft 2020-12 class dict and its VALIDATORS exactly as
+  found (identity of every value), with `_keywords.uniq is _utils.uniq`, checked before and after the run.
+
+Every function takes a `read(path) -> bytes` callable, so a layer validator can pass its reviewed bytes. Every refusal
+is a ValueError naming the refused rule.
+"""
+from __future__ import annotations
+
+import ast
+import hashlib
+import json
+from typing import Any, Callable
+
+ROUTE_TEST = "test_newest_authority_is_freshly_checked_on_every_route"
+DEFERRING = (ast.Lambda, ast.GeneratorExp, ast.ListComp, ast.SetComp, ast.DictComp)
+DEFERRING_CALLS = frozenset({"map", "filter", "iter", "zip", "reversed", "enumerate", "functools.partial", "partial"})
+STATUS_MODEL_PATH = "scripts/native_qualification_v2.py"
+MODEL_SYMBOLS_SHA256 = "1a80347b5164c9eada78a132fe65e5fd27aab8ce58dd137fae73b72fbfbdb083"
+UNIQUE_PATH = "scripts/schema_unique.py"
+UNIQUE_CASES = ([1, True], [0, False], [{"a": 1}, {"a": True}], [[1], [True]], [{"a": [1, 2]}, {"a": [1, 2]}], [{}, {}], [])
+
+
+def require(condition: bool, message: str) -> None:
+    if not condition:
+        raise ValueError(message)
+
+
+def canonical(value: Any) -> bytes:
+    return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+
+
+def digest(raw: bytes) -> str:
+    return hashlib.sha256(raw).hexdigest()
+
+
+def _module_aliases(tree: ast.Module) -> set[str]:
+    aliases = set()
+    for node in tree.body:
+        if isinstance(node, ast.ImportFrom) and node.module == "scripts":
+            aliases |= {alias.asname or alias.name for alias in node.names}
+        elif isinstance(node, ast.Import):
+            aliases |= {(alias.asname or alias.name).split(".")[0] for alias in node.names}
+    return aliases
+
+
+def check_route_test(path: str, source: bytes) -> int:
+    """F12 for one test file; returns its number of route calls."""
+    tree = ast.parse(source)
+    functions = [node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == ROUTE_TEST]
+    require(len(functions) == 1, "one route test: " + path)
+    function, aliases = functions[0], _module_aliases(tree)
+    tables = [i for i, node in enumerate(function.body) if isinstance(node, ast.Assign)
+              and [ast.unparse(t) for t in node.targets] == ["calls"] and isinstance(node.value, ast.Dict)]
+    require(len(tables) == 1, "one route table: " + path)
+    setup_names = set()
+    for statement in function.body[:tables[0]]:
+        require(isinstance(statement, ast.Assign) and len(statement.targets) == 1
+                and isinstance(statement.targets[0], ast.Name), "route setup holds only assignments: " + path)
+        setup_names.add(statement.targets[0].id)
+        for node in ast.walk(statement.value):
+            require(not isinstance(node, DEFERRING)
+                    and not (isinstance(node, ast.Call) and ast.unparse(node.func) in DEFERRING_CALLS),
+                    "route setup defers no computation: %s %s" % (statement.targets[0].id, path))
+    calls = 0
+    for value in function.body[tables[0]].value.values:
+        body = value.body if isinstance(value, ast.Lambda) else value
+        func = body.func if isinstance(body, ast.Call) else body
+        require(isinstance(func, ast.Attribute) and isinstance(func.value, ast.Name) and func.value.id in aliases
+                and func.value.id not in setup_names, "route call receiver is a module alias: " + path)
+        calls += 1
+    return calls
+
+
+def model_symbols(source: bytes) -> bytes:
+    tree = ast.parse(source)
+    names = sorted({node.id for node in ast.walk(tree) if isinstance(node, ast.Name)})
+    attributes = sorted({node.attr for node in ast.walk(tree) if isinstance(node, ast.Attribute)})
+    return canonical({"names": names, "attributes": attributes})
+
+
+def check_model_symbols(source: bytes) -> None:
+    """F14: the stubbed replay's model uses exactly the reviewed symbol set."""
+    require(digest(model_symbols(source)) == MODEL_SYMBOLS_SHA256, "the stubbed model's exact symbol set")
+
+
+def _oracle_state() -> tuple:
+    import sys
+    import jsonschema
+    modules = sorted(name for name in sys.modules
+                     if name.split(".")[0] in ("jsonschema", "referencing", "jsonschema_specifications"))
+    return (tuple((name, tuple(sorted((k, id(v)) for k, v in vars(sys.modules[name]).items()))) for name in modules),
+            tuple(sorted((k, id(v)) for k, v in vars(jsonschema.Draft202012Validator).items())),
+            tuple(sorted((k, id(v)) for k, v in jsonschema.Draft202012Validator.VALIDATORS.items())))
+
+
+def check_unique_oracle(source: bytes) -> None:
+    """F15: the current schema_unique bytes leave the jsonschema family as found, before and after their run."""
+    from jsonschema import _keywords, _utils
+    before = _oracle_state()
+    require(_keywords.uniq is _utils.uniq, "stock uniqueItems calls jsonschema's own uniq")
+    namespace: dict[str, Any] = {"__name__": "reviewed_schema_unique_current"}
+    exec(compile(source, UNIQUE_PATH, "exec"), namespace)
+    require(_oracle_state() == before and _keywords.uniq is _utils.uniq, "schema_unique leaves jsonschema as found")
+    for case in UNIQUE_CASES:
+        require(namespace["unique"](case) is _utils.uniq(case), "uniqueItems answer: " + repr(case))
+    require(_oracle_state() == before and _keywords.uniq is _utils.uniq,
+            "schema_unique leaves jsonschema as found after its run")
+
+
+def validate_perf032_followup(read: Callable[[str], bytes], test_paths: list[str]) -> int:
+    """F12 on every given route test, F14 on the stubbed model, F15 on the schema_unique bytes; returns the route calls."""
+    require(len(test_paths) >= 17 and len(set(test_paths)) == len(test_paths), "the route tests")
+    calls = sum(check_route_test(path, read(path)) for path in test_paths)
+    check_model_symbols(read(STATUS_MODEL_PATH))
+    check_unique_oracle(read(UNIQUE_PATH))
+    return calls

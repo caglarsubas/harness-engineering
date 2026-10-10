@@ -1,0 +1,1007 @@
+{
+ "schemaVersion": "planeon.internal.native-profile-v3-errata-vectors/v1",
+ "contract": "planeon.internal.native-qualification/v3",
+ "evidenceClass": "DATA_CHECK_ONLY",
+ "nativeAcceptance": false,
+ "positiveSource": {
+  "path": "architecture/native-profile-v3/vectors.json",
+  "sha256": "14af47a69c972039294be8659c31332acd5326bfb0a3a38384a2c6bf9d11fe6d"
+ },
+ "model": {
+  "path": "scripts/native_qualification_v3.py",
+  "sha256": "2ef5c14ad5d8c962cf3703ccd076059685ed8dcc852059e4f863e8d9dc8965ad"
+ },
+ "findings": [
+  "R6-3"
+ ],
+ "negative": [
+  {
+   "id": "R63-01",
+   "positive": 1,
+   "target": "record",
+   "intent": "bound pair of V38 (maintenance = enrolled + the unit): the binding holds and only the lockdown rule is broken (errata R6-3a)",
+   "ops": [
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "ENROLLED",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1"
+    },
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "MAINTENANCE",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 systemd.unit=planeon-maintenance.target"
+    }
+   ],
+   "refusal": "enrolled boot entry without lockdown=integrity"
+  },
+  {
+   "id": "R63-02",
+   "positive": 1,
+   "target": "record",
+   "intent": "bound pair of V47 (maintenance = enrolled + the unit): the enrolled entry already holds the unit word, so no maintenance entry can satisfy the binding; refused by the enrolled grammar, and the pair also names the unit twice (errata R6-3a)",
+   "ops": [
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "ENROLLED",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity systemd.unit=planeon-maintenance.target quiet"
+    },
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "MAINTENANCE",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity systemd.unit=planeon-maintenance.target quiet systemd.unit=planeon-maintenance.target"
+    }
+   ],
+   "refusal": "enrolled boot entry outside the closed kernel parameters"
+  },
+  {
+   "id": "R63-03",
+   "positive": 1,
+   "target": "record",
+   "intent": "bound pair of V49 (maintenance = enrolled + the unit): the binding holds; refused by the enrolled grammar, and the maintenance grammar is broken too (errata R6-3a)",
+   "ops": [
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "ENROLLED",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 -- lockdown=integrity"
+    },
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "MAINTENANCE",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 -- lockdown=integrity systemd.unit=planeon-maintenance.target"
+    }
+   ],
+   "refusal": "enrolled boot entry outside the closed kernel parameters"
+  },
+  {
+   "id": "R63-04",
+   "positive": 1,
+   "target": "record",
+   "intent": "bound pair of V52 (maintenance = enrolled + the unit): the enrolled entry already holds the unit word, so no maintenance entry can satisfy the binding; refused by the enrolled grammar, and the pair also names the unit twice and breaks the maintenance grammar (errata R6-3a)",
+   "ops": [
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "ENROLLED",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity -- systemd.unit=planeon-maintenance.target"
+    },
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "MAINTENANCE",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity -- systemd.unit=planeon-maintenance.target systemd.unit=planeon-maintenance.target"
+    }
+   ],
+   "refusal": "enrolled boot entry outside the closed kernel parameters"
+  },
+  {
+   "id": "R63-05",
+   "positive": 1,
+   "target": "record",
+   "intent": "bound pair of V57 (maintenance = enrolled + the unit): the binding holds; refused by the enrolled grammar, and the maintenance grammar is broken too (errata R6-3a)",
+   "ops": [
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "ENROLLED",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity rd.systemd.unit=planeon-maintenance.target"
+    },
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "MAINTENANCE",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity rd.systemd.unit=planeon-maintenance.target systemd.unit=planeon-maintenance.target"
+    }
+   ],
+   "refusal": "enrolled boot entry outside the closed kernel parameters"
+  },
+  {
+   "id": "R63-06",
+   "positive": 1,
+   "target": "record",
+   "intent": "bound pair of V61 (maintenance = enrolled + the unit): the binding holds; refused by the enrolled grammar, and the maintenance grammar is broken too (errata R6-3a)",
+   "ops": [
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "ENROLLED",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity SYSTEMD_EFI_OPTIONS=systemd.unit=planeon-maintenance.target"
+    },
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "MAINTENANCE",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity SYSTEMD_EFI_OPTIONS=systemd.unit=planeon-maintenance.target systemd.unit=planeon-maintenance.target"
+    }
+   ],
+   "refusal": "enrolled boot entry outside the closed kernel parameters"
+  },
+  {
+   "id": "R63-07",
+   "positive": 1,
+   "target": "record",
+   "intent": "bound pair of V62 (maintenance = enrolled + the unit): the binding holds; refused by the enrolled grammar, and the maintenance grammar is broken too (errata R6-3a)",
+   "ops": [
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "ENROLLED",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity systemd.wants=planeon-maintenance.target"
+    },
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "MAINTENANCE",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity systemd.wants=planeon-maintenance.target systemd.unit=planeon-maintenance.target"
+    }
+   ],
+   "refusal": "enrolled boot entry outside the closed kernel parameters"
+  },
+  {
+   "id": "R63-08",
+   "positive": 1,
+   "target": "record",
+   "intent": "bound pair of V63 (maintenance = enrolled + the unit): the binding holds; refused by the enrolled grammar, and the maintenance grammar is broken too (errata R6-3a)",
+   "ops": [
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "ENROLLED",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity systemd.set_credential_binary=systemd.unit-dropin.multi-user.target:W1VuaXRdCldhbnRzPXBsYW5lb24tbWFpbnRlbmFuY2UudGFyZ2V0Cg=="
+    },
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "MAINTENANCE",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity systemd.set_credential_binary=systemd.unit-dropin.multi-user.target:W1VuaXRdCldhbnRzPXBsYW5lb24tbWFpbnRlbmFuY2UudGFyZ2V0Cg== systemd.unit=planeon-maintenance.target"
+    }
+   ],
+   "refusal": "enrolled boot entry outside the closed kernel parameters"
+  },
+  {
+   "id": "R63-09",
+   "positive": 1,
+   "target": "record",
+   "intent": "bound pair of V64 (maintenance = enrolled + the unit): the binding holds; refused by the enrolled grammar, and the maintenance grammar is broken too (errata R6-3a)",
+   "ops": [
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "ENROLLED",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity -- --unit=planeon-maintenance.target"
+    },
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "MAINTENANCE",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity -- --unit=planeon-maintenance.target systemd.unit=planeon-maintenance.target"
+    }
+   ],
+   "refusal": "enrolled boot entry outside the closed kernel parameters"
+  },
+  {
+   "id": "R63-10",
+   "positive": 1,
+   "target": "record",
+   "intent": "bound pair of V69 (maintenance = enrolled + the unit): the binding holds; refused by the enrolled grammar, and the maintenance grammar is broken too (errata R6-3a)",
+   "ops": [
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "ENROLLED",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity rootflags=x-systemd.requires=planeon-maintenance.target"
+    },
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "MAINTENANCE",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity rootflags=x-systemd.requires=planeon-maintenance.target systemd.unit=planeon-maintenance.target"
+    }
+   ],
+   "refusal": "enrolled boot entry outside the closed kernel parameters"
+  },
+  {
+   "id": "R63-11",
+   "positive": 1,
+   "target": "record",
+   "intent": "bound pair of V70 (maintenance = enrolled + the unit): the binding holds; refused by the enrolled grammar, and the maintenance grammar is broken too (errata R6-3a)",
+   "ops": [
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "ENROLLED",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity rootflags=X-mount.subdir=maintenance"
+    },
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "MAINTENANCE",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity rootflags=X-mount.subdir=maintenance systemd.unit=planeon-maintenance.target"
+    }
+   ],
+   "refusal": "enrolled boot entry outside the closed kernel parameters"
+  },
+  {
+   "id": "R63-12",
+   "positive": 1,
+   "target": "record",
+   "intent": "bound pair of V73 (maintenance = enrolled + the unit): the binding holds; refused by the enrolled grammar, and the maintenance grammar is broken too (errata R6-3a)",
+   "ops": [
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "ENROLLED",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=0 enforcing=1 lockdown=integrity"
+    },
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "MAINTENANCE",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=0 enforcing=1 lockdown=integrity systemd.unit=planeon-maintenance.target"
+    }
+   ],
+   "refusal": "enrolled boot entry outside the closed kernel parameters"
+  },
+  {
+   "id": "R63-13",
+   "positive": 1,
+   "target": "record",
+   "intent": "bound pair of V74 (maintenance = enrolled + the unit): the binding holds; refused by the enrolled grammar, and the maintenance grammar is broken too (errata R6-3a)",
+   "ops": [
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "ENROLLED",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=0 lockdown=integrity"
+    },
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "MAINTENANCE",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=0 lockdown=integrity systemd.unit=planeon-maintenance.target"
+    }
+   ],
+   "refusal": "enrolled boot entry outside the closed kernel parameters"
+  },
+  {
+   "id": "R63-14",
+   "positive": 1,
+   "target": "record",
+   "intent": "bound pair of V75 (maintenance = enrolled + the unit): the binding holds; refused by the enrolled grammar, and the maintenance grammar is broken too (errata R6-3a)",
+   "ops": [
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "ENROLLED",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity rodata=off"
+    },
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "MAINTENANCE",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity rodata=off systemd.unit=planeon-maintenance.target"
+    }
+   ],
+   "refusal": "enrolled boot entry outside the closed kernel parameters"
+  },
+  {
+   "id": "R63-15",
+   "positive": 1,
+   "target": "record",
+   "intent": "bound pair of V76 (maintenance = enrolled + the unit): the binding holds; refused by the enrolled grammar, and the maintenance grammar is broken too (errata R6-3a)",
+   "ops": [
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "ENROLLED",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity console=ttyS0"
+    },
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "MAINTENANCE",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity console=ttyS0 systemd.unit=planeon-maintenance.target"
+    }
+   ],
+   "refusal": "enrolled boot entry outside the closed kernel parameters"
+  },
+  {
+   "id": "R63-16",
+   "positive": 1,
+   "target": "record",
+   "intent": "bound pair of V53 (maintenance = enrolled + the unit): the binding holds; refused by the enrolled grammar, and the maintenance grammar is broken too (errata R6-3a)",
+   "ops": [
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "ENROLLED",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity systemd.unit=multi-user.target"
+    },
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "MAINTENANCE",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity systemd.unit=multi-user.target systemd.unit=planeon-maintenance.target"
+    }
+   ],
+   "refusal": "enrolled boot entry outside the closed kernel parameters"
+  },
+  {
+   "id": "R63-17",
+   "positive": 1,
+   "target": "record",
+   "intent": "bound pair of V59 (maintenance = enrolled + the unit): the binding holds; refused by the enrolled grammar, and the maintenance grammar is broken too (errata R6-3a)",
+   "ops": [
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "ENROLLED",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity 3"
+    },
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "MAINTENANCE",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity 3 systemd.unit=planeon-maintenance.target"
+    }
+   ],
+   "refusal": "enrolled boot entry outside the closed kernel parameters"
+  },
+  {
+   "id": "R63-18",
+   "positive": 1,
+   "target": "record",
+   "intent": "bound pair of V60 (maintenance = enrolled + the unit): the binding holds; refused by the enrolled grammar, and the maintenance grammar is broken too (errata R6-3a)",
+   "ops": [
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "ENROLLED",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity -- emergency"
+    },
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "MAINTENANCE",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity -- emergency systemd.unit=planeon-maintenance.target"
+    }
+   ],
+   "refusal": "enrolled boot entry outside the closed kernel parameters"
+  },
+  {
+   "id": "R63-19",
+   "positive": 1,
+   "target": "record",
+   "intent": "bound pair of V65 (maintenance = enrolled + the unit): the binding holds; refused by the enrolled grammar, and the maintenance grammar is broken too (errata R6-3a)",
+   "ops": [
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "ENROLLED",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity SYSTEMD_PROC_CMDLINE=systemd.unit=multi-user.target"
+    },
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "MAINTENANCE",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity SYSTEMD_PROC_CMDLINE=systemd.unit=multi-user.target systemd.unit=planeon-maintenance.target"
+    }
+   ],
+   "refusal": "enrolled boot entry outside the closed kernel parameters"
+  },
+  {
+   "id": "R63-20",
+   "positive": 1,
+   "target": "record",
+   "intent": "bound pair of V66 (maintenance = enrolled + the unit): the binding holds; refused by the enrolled grammar, and the maintenance grammar is broken too (errata R6-3a)",
+   "ops": [
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "ENROLLED",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity systemd.mask=planeon-maintenance.target"
+    },
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "MAINTENANCE",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity systemd.mask=planeon-maintenance.target systemd.unit=planeon-maintenance.target"
+    }
+   ],
+   "refusal": "enrolled boot entry outside the closed kernel parameters"
+  },
+  {
+   "id": "R63-21",
+   "positive": 1,
+   "target": "record",
+   "intent": "maintenance entry without lockdown=integrity, otherwise bound (round-6 probe GM3) (errata R6-3b)",
+   "ops": [
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "MAINTENANCE",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 systemd.unit=planeon-maintenance.target"
+    }
+   ],
+   "refusal": "maintenance boot entry differs from the enrolled entry beyond the maintenance unit"
+  },
+  {
+   "id": "R63-22",
+   "positive": 1,
+   "target": "record",
+   "intent": "maintenance entry without ro, otherwise bound (round-6 probe GM5) (errata R6-3b)",
+   "ops": [
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "MAINTENANCE",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 security=selinux selinux=1 enforcing=1 lockdown=integrity systemd.unit=planeon-maintenance.target"
+    }
+   ],
+   "refusal": "maintenance boot entry differs from the enrolled entry beyond the maintenance unit"
+  },
+  {
+   "id": "R63-23",
+   "positive": 1,
+   "target": "record",
+   "intent": "maintenance entry adding quiet (round-6 probe GM6) (errata R6-3b)",
+   "ops": [
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "MAINTENANCE",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity quiet systemd.unit=planeon-maintenance.target"
+    }
+   ],
+   "refusal": "maintenance boot entry differs from the enrolled entry beyond the maintenance unit"
+  },
+  {
+   "id": "R63-24",
+   "positive": 1,
+   "target": "record",
+   "intent": "maintenance entry with the enrolled words reordered (round-6 probe GM7) (errata R6-3b)",
+   "ops": [
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "MAINTENANCE",
+      "kernelCmdline"
+     ],
+     "value": "root=UUID=0b1d2c3e-0000-4000-8000-000000000001 initrd=\\planeon\\initrd-6.12.img ro security=selinux selinux=1 enforcing=1 lockdown=integrity systemd.unit=planeon-maintenance.target"
+    }
+   ],
+   "refusal": "maintenance boot entry differs from the enrolled entry beyond the maintenance unit"
+  },
+  {
+   "id": "R63-25",
+   "positive": 1,
+   "target": "record",
+   "intent": "maintenance entry repeating ro: the same word set, another word list (errata R6-3b)",
+   "ops": [
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "MAINTENANCE",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro ro security=selinux selinux=1 enforcing=1 lockdown=integrity systemd.unit=planeon-maintenance.target"
+    }
+   ],
+   "refusal": "maintenance boot entry differs from the enrolled entry beyond the maintenance unit"
+  },
+  {
+   "id": "R63-26",
+   "positive": 1,
+   "target": "record",
+   "intent": "two root= words swapped in the maintenance entry: the kernel and the fstab generator keep the last root= (errata R6-3b)",
+   "ops": [
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "ENROLLED",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 root=UUID=0b1d2c3e-0000-4000-8000-000000000002 ro security=selinux selinux=1 enforcing=1 lockdown=integrity"
+    },
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "MAINTENANCE",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000002 root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity systemd.unit=planeon-maintenance.target"
+    }
+   ],
+   "refusal": "maintenance boot entry differs from the enrolled entry beyond the maintenance unit"
+  },
+  {
+   "id": "R63-27",
+   "positive": 1,
+   "target": "record",
+   "intent": "two initrd= words swapped in the maintenance entry: the kernel loads microcode only from the first initrd (errata R6-3b)",
+   "ops": [
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "ENROLLED",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\ucode.img initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity"
+    },
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "MAINTENANCE",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img initrd=\\planeon\\ucode.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity systemd.unit=planeon-maintenance.target"
+    }
+   ],
+   "refusal": "maintenance boot entry differs from the enrolled entry beyond the maintenance unit"
+  },
+  {
+   "id": "R63-28",
+   "positive": 1,
+   "target": "record",
+   "intent": "bound pair with security=apparmor, which disables SELinux as a legacy major LSM (errata R6-3c)",
+   "ops": [
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "ENROLLED",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=apparmor selinux=1 enforcing=1 lockdown=integrity"
+    },
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "MAINTENANCE",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=apparmor selinux=1 enforcing=1 lockdown=integrity systemd.unit=planeon-maintenance.target"
+    }
+   ],
+   "refusal": "enrolled boot entry outside the closed kernel parameters"
+  },
+  {
+   "id": "R63-29",
+   "positive": 1,
+   "target": "record",
+   "intent": "bound pair with rootfstype=, outside the grammar (errata R6-3c)",
+   "ops": [
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "ENROLLED",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity rootfstype=ext4"
+    },
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "MAINTENANCE",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity rootfstype=ext4 systemd.unit=planeon-maintenance.target"
+    }
+   ],
+   "refusal": "enrolled boot entry outside the closed kernel parameters"
+  },
+  {
+   "id": "R63-30",
+   "positive": 1,
+   "target": "record",
+   "intent": "bound pair with initrd=<addr>,<size>, which early_initrd reads as a physical range (errata R6-3c)",
+   "ops": [
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "ENROLLED",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity initrd=0x1000000,0x200000"
+    },
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "MAINTENANCE",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity initrd=0x1000000,0x200000 systemd.unit=planeon-maintenance.target"
+    }
+   ],
+   "refusal": "enrolled boot entry outside the closed kernel parameters"
+  },
+  {
+   "id": "R63-31",
+   "positive": 1,
+   "target": "record",
+   "intent": "bound pair with a second lockdown= value (errata R6-3c)",
+   "ops": [
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "ENROLLED",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=none lockdown=integrity"
+    },
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "MAINTENANCE",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=none lockdown=integrity systemd.unit=planeon-maintenance.target"
+    }
+   ],
+   "refusal": "enrolled boot entry outside the closed kernel parameters"
+  },
+  {
+   "id": "R63-32",
+   "positive": 1,
+   "target": "record",
+   "intent": "bound pair with loglevel=8, outside loglevel=[0-7] (errata R6-3c)",
+   "ops": [
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "ENROLLED",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity loglevel=8"
+    },
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "MAINTENANCE",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity loglevel=8 systemd.unit=planeon-maintenance.target"
+    }
+   ],
+   "refusal": "enrolled boot entry outside the closed kernel parameters"
+  },
+  {
+   "id": "R63-33",
+   "positive": 1,
+   "target": "record",
+   "intent": "bound pair with root=fstab, a root= value outside the grammar (errata R6-3c)",
+   "ops": [
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "ENROLLED",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img root=fstab ro security=selinux selinux=1 enforcing=1 lockdown=integrity"
+    },
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "MAINTENANCE",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img root=fstab ro security=selinux selinux=1 enforcing=1 lockdown=integrity systemd.unit=planeon-maintenance.target"
+    }
+   ],
+   "refusal": "enrolled boot entry outside the closed kernel parameters"
+  },
+  {
+   "id": "R63-34",
+   "positive": 1,
+   "target": "record",
+   "intent": "bound pair with root=tmpfs, a root= value outside the grammar (errata R6-3c)",
+   "ops": [
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "ENROLLED",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img root=tmpfs ro security=selinux selinux=1 enforcing=1 lockdown=integrity"
+    },
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "MAINTENANCE",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img root=tmpfs ro security=selinux selinux=1 enforcing=1 lockdown=integrity systemd.unit=planeon-maintenance.target"
+    }
+   ],
+   "refusal": "enrolled boot entry outside the closed kernel parameters"
+  },
+  {
+   "id": "R63-35",
+   "positive": 1,
+   "target": "record",
+   "intent": "bound pair with root=gpt-auto, a root= value outside the grammar (errata R6-3c)",
+   "ops": [
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "ENROLLED",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img root=gpt-auto ro security=selinux selinux=1 enforcing=1 lockdown=integrity"
+    },
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "MAINTENANCE",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img root=gpt-auto ro security=selinux selinux=1 enforcing=1 lockdown=integrity systemd.unit=planeon-maintenance.target"
+    }
+   ],
+   "refusal": "enrolled boot entry outside the closed kernel parameters"
+  }
+ ],
+ "accepted": [
+  {
+   "id": "R63-A01",
+   "positive": 1,
+   "target": "record",
+   "intent": "both entries with root=LABEL= (errata R6-3c)",
+   "ops": [
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "ENROLLED",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img root=LABEL=planeon-root ro security=selinux selinux=1 enforcing=1 lockdown=integrity"
+    },
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "MAINTENANCE",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img root=LABEL=planeon-root ro security=selinux selinux=1 enforcing=1 lockdown=integrity systemd.unit=planeon-maintenance.target"
+    }
+   ]
+  },
+  {
+   "id": "R63-A02",
+   "positive": 1,
+   "target": "record",
+   "intent": "both entries with root=/dev/ (errata R6-3c)",
+   "ops": [
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "ENROLLED",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img root=/dev/vda2 ro security=selinux selinux=1 enforcing=1 lockdown=integrity"
+    },
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "MAINTENANCE",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img root=/dev/vda2 ro security=selinux selinux=1 enforcing=1 lockdown=integrity systemd.unit=planeon-maintenance.target"
+    }
+   ]
+  },
+  {
+   "id": "R63-A03",
+   "positive": 1,
+   "target": "record",
+   "intent": "maintenance unit first: the binding is position-free (errata R6-3c)",
+   "ops": [
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "MAINTENANCE",
+      "kernelCmdline"
+     ],
+     "value": "systemd.unit=planeon-maintenance.target initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro security=selinux selinux=1 enforcing=1 lockdown=integrity"
+    }
+   ]
+  },
+  {
+   "id": "R63-A04",
+   "positive": 1,
+   "target": "record",
+   "intent": "maintenance unit between two words: the binding is position-free (errata R6-3c)",
+   "ops": [
+    {
+     "op": "set",
+     "path": [
+      "bootEntries",
+      "MAINTENANCE",
+      "kernelCmdline"
+     ],
+     "value": "initrd=\\planeon\\initrd-6.12.img root=UUID=0b1d2c3e-0000-4000-8000-000000000001 ro systemd.unit=planeon-maintenance.target security=selinux selinux=1 enforcing=1 lockdown=integrity"
+    }
+   ]
+  }
+ ]
+}

@@ -1,4 +1,5 @@
-"""Exact source lineage for MET-PERF-032; verify-time changes with unchanged refusals and freshness."""
+"""Exact source lineage for MET-PERF-032; verify-time changes with unchanged refusals (apart from inputs within one
+stack frame of the recursion limit) and freshness."""
 import ast
 import json
 from copy import deepcopy
@@ -49,7 +50,7 @@ def test_exact_current_source_and_complete_history_chain():
     assert profile.validate() is None
     current = packets()
     accepted = profile.historical_catalog(current)
-    assert len(current) == 224 and len(accepted) == 207
+    assert len(current) == 225 and len(accepted) == 207
     assert set(accepted) == set(current) - {profile.NEW_PACKET, profile.successor.NEW_PACKET,
                                             profile.successor.successor.NEW_PACKET,
                                             profile.successor.successor.successor.NEW_PACKET,
@@ -65,7 +66,8 @@ def test_exact_current_source_and_complete_history_chain():
                                             profile.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET,
                                             profile.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET,
                                             profile.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET,
-                                            profile.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET}
+                                            profile.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET,
+                                            profile.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET}
     assert len(dprofile.historical_catalog(current)) == 206
     assert len(sprofile.historical_catalog(current)) == 205
     assert len(wprofile.historical_catalog(current)) == 204
@@ -694,8 +696,8 @@ def test_grouped_unique_items_matches_jsonschema_on_the_fixed_corpus():
     (b"        bucket.append(item)\n", b"        pass\n", "uniqueItems answer differs"),
     (b"    if not plain_and_shallow(container):\n        return _utils.uniq(container)\n", b"",
      "uniqueItems answer differs"),
-    (b"MAX_GROUPED_DEPTH = 100\n", b"MAX_GROUPED_DEPTH = 1000\n", "reaches every comparison path"),
-    (b"            if id(value) in seen:\n                return False\n", b"", "reaches every comparison path"),
+    (b"MAX_GROUPED_DEPTH = 100\n", b"MAX_GROUPED_DEPTH = 1000\n", "reaches the sorted, grouped and kept paths"),
+    (b"            if id(value) in seen:\n                return False\n", b"", "reaches the sorted, grouped and kept paths"),
     (b'{"uniqueItems": unique_items}', b'{"uniqueItems": unique_items, "minItems": unique_items}',
      "only uniqueItems differs"),
     (b'JSONSCHEMA_VERSION = "4.24.0"', b'JSONSCHEMA_VERSION = "4.25.0"', "only uniqueItems differs"),

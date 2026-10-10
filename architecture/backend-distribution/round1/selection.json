@@ -15,28 +15,21 @@
    "selected": "a",
    "date": "2026-10-10",
    "via": "owner (via the lane monitor)",
-   "summary": "Upstream component set from sealed files: official v1.37.1 apiserver, controller-manager, scheduler, kubelet and kube-proxy (nftables); etcd on a unix socket; containerd 2.x and runc (cgroupfs); CNI bridge, host-local and loopback; kube-network-policies (nftables); no CoreDNS."
+   "summary": "Upstream component set from sealed files: official v1.37.1 apiserver, controller-manager, scheduler, kubelet and kube-proxy (nftables); etcd 3.6 on a unix socket; containerd 2.x and runc (cgroupfs); CNI bridge, host-local and loopback; kube-network-policies (nftables); no CoreDNS."
   },
   {
-   "id": "Q-L",
-   "selected": "L-a",
+   "id": "Q-R",
+   "selected": "PENDING",
    "date": "2026-10-10",
    "via": "owner (via the lane monitor)",
-   "summary": "License closure of the release binaries (statically linked glibc, libseccomp, libpathrs; host nft): L-a reviewed policy entries with the official binaries, L-b dynamic builds, L-c an Apache-only closure."
-  },
-  {
-   "id": "Q-E",
-   "selected": "E-a",
-   "date": "2026-10-10",
-   "via": "owner (via the lane monitor)",
-   "summary": "etcd line: E-a v3.7.2 (Kubernetes v1.37.1 is built and tested with 3.7), E-b v3.6.15."
+   "summary": "runc's release binaries statically link libseccomp (LGPL-2.1), which the license policy does not classify; recommended R-a: keep the official binary with a reviewed policy entry."
   },
   {
    "id": "Q-N",
-   "selected": "N-a",
+   "selected": "PENDING",
    "date": "2026-10-10",
    "via": "owner (via the lane monitor)",
-   "summary": "kube-network-policies publishes images only: N-a build the standard command from the tag, N-b take the binary from the release image pinned by digest."
+   "summary": "kube-network-policies publishes images only; recommended N-a: build the standard command from the tag."
   }
  ],
  "components": [
@@ -88,9 +81,7 @@
      },
      "license": {
       "spdx": "Apache-2.0",
-      "reviewEntries": [
-       "D-LIC-GLIBC"
-      ]
+      "reviewEntries": []
      },
      "artifacts": [
       {
@@ -111,8 +102,7 @@
       "containerd-shim-runc-v2"
      ],
      "excludedMembers": [
-      "ctr",
-      "containerd-stress"
+      "ctr"
      ]
     },
     {
@@ -125,9 +115,7 @@
      "license": {
       "spdx": "Apache-2.0",
       "reviewEntries": [
-       "D-LIC-GLIBC",
-       "D-LIC-LIBSECCOMP",
-       "D-LIC-LIBPATHRS"
+       "D-LIC-RUNC"
       ]
      },
      "artifacts": [
@@ -186,9 +174,7 @@
    ],
    "notes": [
     "containerd 2.4 is listed for Kubernetes 1.37 in containerd's RELEASES.md matrix (2.4.0+, 2.3.0+, CRI v1).",
-    "containerd starts containerd-shim-runc-v2, which daemonizes and is reparented away from containerd; runc and the container processes are the shim's children. containerd executes the CNI plugins (bridge, host-local IPAM, loopback) for pod networking on one node. runc uses the cgroupfs driver (SystemdCgroup false).",
-    "Sealed containerd configuration: the gRPC socket at /run/qualification-k8s/containerd.sock (with its .ttrpc companion), NRI disabled ([plugins.\"io.containerd.nri.v1.nri\"] disable = true), the debug socket unset, the sandbox image pinned by digest, no registry mirrors.",
-    "The static archive links glibc statically (CGO_ENABLED=1 with -extldflags -static; only the shim is built with cgo off); runc's static release links glibc, libseccomp 2.6.1 and libpathrs 0.2.6 (review entries)."
+    "containerd runs runc through containerd-shim-runc-v2 with the cgroupfs driver (SystemdCgroup false); the CNI plugins run as containerd's children for pod networking on one node (bridge, host-local IPAM, loopback)."
    ]
   },
   {
@@ -234,8 +220,8 @@
      "name": "etcd",
      "upstream": {
       "repository": "https://github.com/etcd-io/etcd",
-      "tag": "v3.7.2",
-      "commit": "68c065e562994b89e333e77b039ad066f933c586"
+      "tag": "v3.6.15",
+      "commit": "a3346427fbe6e456e9b6d6e429346481c6be7c71"
      },
      "license": {
       "spdx": "Apache-2.0",
@@ -245,14 +231,14 @@
       {
        "arch": "amd64",
        "kind": "RELEASE_ARCHIVE",
-       "source": "https://github.com/etcd-io/etcd/releases/download/v3.7.2/etcd-v3.7.2-linux-amd64.tar.gz",
-       "sha256": "3a3679bc51a4ee9d30bccea1da7cd4fe62c6fc1d2ca1255068d2c53bf3026135"
+       "source": "https://github.com/etcd-io/etcd/releases/download/v3.6.15/etcd-v3.6.15-linux-amd64.tar.gz",
+       "sha256": "b51d86e6bff2168de5ba8cd631c0fe6c785c7a1b32b083079f5677d6b7e2772c"
       },
       {
        "arch": "arm64",
        "kind": "RELEASE_ARCHIVE",
-       "source": "https://github.com/etcd-io/etcd/releases/download/v3.7.2/etcd-v3.7.2-linux-arm64.tar.gz",
-       "sha256": "5e3ff99d428fabfcefdc95348f6560d1efe835f7b2d1ab3334fe0831076966b7"
+       "source": "https://github.com/etcd-io/etcd/releases/download/v3.6.15/etcd-v3.6.15-linux-arm64.tar.gz",
+       "sha256": "567d9b8fa9e75b349600d2b64ef9bf6bc6d512cea75a2ce1c39b1b3046131244"
       }
      ],
      "executables": [
@@ -265,7 +251,7 @@
     }
    ],
    "notes": [
-    "Owner decision Q-E: etcd v3.7.2. Kubernetes v1.37.1 builds and tests against etcd 3.7.0 (build/dependencies.yaml:66-67; kubeadm DefaultEtcdVersion 3.7.0-0); 3.6 remains supported (MinExternalEtcdVersion 3.5.24-0)."
+    "etcd 3.6 per owner decision Q4; v3.6.15 is the newest 3.6 patch release (2026-09-22)."
    ]
   },
   {
@@ -344,8 +330,7 @@
     }
    ],
    "notes": [
-    "The project publishes container images only, no release binaries (owner question Q-N); the standard command enforces NetworkPolicy through netlink nftables (github.com/google/nftables, no nft binary) and uses no CustomResourceDefinitions.",
-    "Sealed flags: --fail-open=false (the default true leaves traffic unenforced while the agent is down), --disable-nri, a loopback --metrics-bind-address (the default :9080 listens on every interface), --kubeconfig with its closure identity, --hostname-override with the node name."
+    "The project publishes container images only, no release binaries (owner question Q-N); the standard command enforces NetworkPolicy with nftables and uses no CustomResourceDefinitions."
    ]
   },
   {
@@ -419,7 +404,7 @@
     }
    ],
    "notes": [
-    "Runs in nftables mode (--proxy-mode=nftables), which executes the host's nft, version 1.0.1 or later (vendor/sigs.k8s.io/knftables/nftables.go:152,162-163); healthz and metrics bind loopback."
+    "Runs in nftables mode (--proxy-mode=nftables)."
    ]
   }
  ],
@@ -428,24 +413,8 @@
   "indexDigest": "sha256:f548e0e8e3dc1896ca956272154dde3314e8cc4fde0a57577ee9fa1c63f5baf4",
   "license": "Apache-2.0",
   "usedBy": "CONTAINER_RUNTIME",
-  "reviewEntries": [
-   "D-LIC-GLIBC"
-  ]
+  "reviewEntries": []
  },
- "hostDependencies": [
-  {
-   "name": "nft (nftables userspace)",
-   "license": "GPL-2.0-only",
-   "usedBy": [
-    "SERVICE_PROXY"
-   ],
-   "minimumVersion": "1.0.1",
-   "source": "kube-proxy nftables mode executes it (vendor/sigs.k8s.io/knftables/nftables.go:152,162-163)",
-   "reviewEntries": [
-    "D-LIC-NFT"
-   ]
-  }
- ],
  "criteria": [
   {
    "id": "SC00",
@@ -463,7 +432,7 @@
    "dispositions": [
     "SEALED_CONFIGURATION"
    ],
-   "how": "etcd v3.7.2 as one member, with no TCP listener. Client: --listen-client-urls unix:///run/qualification-k8s/datastore.sock (a unix client listener uses the URL's host and path, server/embed/etcd.go:750-753). etcd cannot run without a peer listener: --listen-peer-urls=\"\" is accepted as the flag's empty-string exception (server/embed/config.go:608-609, pkg/flags/unique_urls.go Set) and leaves the default http://localhost:2380 (config.go:87) in place, so the peer listener is one AF_UNIX socket. The peer listener passes only the URL's host to the listener (server/embed/etcd.go:576), so its form is unix://<name>:<port>, a socket file relative to etcd's working directory, which is the datastore's private directory (unix:///<absolute path> would name an autobound abstract socket). --initial-advertise-peer-urls and --advertise-client-urls must be host:port forms (checkHostURLs, config.go:961-965), and the latter is required once --listen-client-urls is set (server/etcdmain/config.go:251); both are advertisement values with no listener. I06 v1 and v2 require peerListen == [], which etcd cannot meet (D-SC01-PEER).",
+   "how": "etcd v3.6.15 as one member: --listen-client-urls unix:///run/qualification-k8s/datastore.sock (checkBindURLs skips the unix and unixs schemes, server/embed/config.go), no TCP client listener, an initial cluster of this member only. etcd cannot rely on an empty peer listener list: with --listen-peer-urls empty, UpdateDefaultClusterFromName indexes ListenPeerUrls[0] (server/embed/config.go:1573, called from server/etcdmain/etcd.go:83) whenever a default host is detected. The selection therefore uses a unix-socket peer listener in the datastore's private directory, which does not meet SC01's literal peerListen == [] (D-SC01-PEER).",
    "roles": [
     "DATASTORE"
    ],
@@ -476,12 +445,9 @@
    "dispositions": [
     "SEALED_CONFIGURATION"
    ],
-   "how": "kube-apiserver --bind-address=127.0.0.1 with the I06 v2 positive evidence's secure port; the kubelet, kube-proxy and the policy agent reach it through loopback kubeconfigs. The other components' listeners, which default to every interface, are pinned to loopback too: kube-controller-manager and kube-scheduler --bind-address=127.0.0.1, kube-proxy healthz and metrics on 127.0.0.1.",
+   "how": "kube-apiserver --bind-address=127.0.0.1 with the I06 v2 positive evidence's secure port; the kubelet, kube-proxy and the policy agent reach it through loopback kubeconfigs.",
    "roles": [
-    "APISERVER",
-    "CONTROLLER_MANAGER",
-    "SCHEDULER",
-    "SERVICE_PROXY"
+    "APISERVER"
    ],
    "openItems": []
   },
@@ -524,7 +490,7 @@
    "dispositions": [
     "SEALED_CONFIGURATION"
    ],
-   "how": "kube-controller-manager --use-service-account-credentials=true and --controllers naming exactly the I06 v2 positive evidence's 34 controllers, a subset of the 49-controller inventory in which the ten required-disabled controllers are off (CSR signing, approving and cleaner, bootstrap signer, token cleaner, legacy token controller and cleaner, ClusterRole aggregation, storage-version migrator, ClusterTrustBundle publisher); no signing key file.",
+   "how": "kube-controller-manager --use-service-account-credentials=true and --controllers naming exactly the inventory controllers, with the ten required-disabled controllers off (CSR signing, approving and cleaner, bootstrap signer, token cleaner, legacy token controller and cleaner, ClusterRole aggregation, storage-version migrator, ClusterTrustBundle publisher); no signing key file.",
    "roles": [
     "CONTROLLER_MANAGER"
    ],
@@ -547,7 +513,7 @@
     "SELECTION",
     "SEALED_CONFIGURATION"
    ],
-   "how": "Eight component processes from distinct upstream executables: etcd, kube-apiserver, kube-controller-manager, kube-scheduler, kubelet, containerd, kube-proxy and kube-network-policies. No multi-call binary. CONTAINER_RUNTIME also spans helper executables: containerd-shim-runc-v2 (which daemonizes away from containerd), runc and the container processes under the shim, and the CNI plugins that containerd executes; kube-proxy executes the host's nft. The five Kubernetes binaries have distinct published digests per architecture; etcd's and containerd's digests cover their archives, and the agent's digest is recorded at build. Canonical paths, the confined types of components and helpers and their verity digests come from the production W02a profile (D-W02A-F2, D-HELPER-TYPES).",
+   "how": "Eight separate processes from distinct upstream executables (distinct published digests per architecture): etcd, kube-apiserver, kube-controller-manager, kube-scheduler, kubelet, containerd (running containerd-shim-runc-v2 and runc as children), kube-proxy and kube-network-policies. No multi-call binary. Canonical paths and the W02a confined types come from the production W02a profile (D-W02A-F2).",
    "roles": [
     "APISERVER",
     "CONTAINER_RUNTIME",
@@ -559,9 +525,7 @@
     "SERVICE_PROXY"
    ],
    "openItems": [
-    "D-W02A-F2",
-    "D-HELPER-TYPES",
-    "D-RUNTIME-BPF"
+    "D-W02A-F2"
    ]
   },
   {
@@ -595,11 +559,10 @@
    "dispositions": [
     "SEALED_CONFIGURATION"
    ],
-   "how": "Every containerd listener is closed to all but the kubelet: the gRPC socket /run/qualification-k8s/containerd.sock (the I06 v2 positive evidence's path) and its .ttrpc companion carry a type that only the kubelet's confined type may connect to (W02e matrix); NRI, on by default in containerd 2.4 (/var/run/nri/nri.sock, external connections allowed), is disabled in the sealed configuration and the policy agent runs with --disable-nri; the debug socket stays unset. No other CRI client is installed: ctr and containerd-stress are left out of the archive.",
+   "how": "containerd's CRI socket (/run/containerd/containerd.sock, root 0600) carries a type that only the kubelet's confined type may connect to (W02e matrix); no other CRI client is installed (ctr is left out of the archive).",
    "roles": [
     "CONTAINER_RUNTIME",
-    "KUBELET",
-    "NETWORK_POLICY_AGENT"
+    "KUBELET"
    ],
    "openItems": []
   },
@@ -608,7 +571,7 @@
    "dispositions": [
     "SEALED_CONFIGURATION"
    ],
-   "how": "The sealed set is the I06 v2 positive evidence's files: ADMISSION_CONFIG, APISERVER_FLAGS, AUTHORIZATION_CONFIG, CNI_CONFIG (one conflist: bridge, host-local, loopback), COMPONENT_DEFINITIONS, CONTAINER_RUNTIME_CONFIG, CONTROLLER_MANAGER_FLAGS, DATASTORE_CONFIG, ENCRYPTION_CONFIG (kube-apiserver --encryption-provider-config), KUBECONFIGS, KUBELET_CONFIG, NETWORK_POLICY_AGENT_CONFIG, PKI_TRUST_BUNDLES, SCHEDULER_FLAGS and SERVICE_PROXY_CONFIG, plus the conditional files when used (admission manifests for OR08, an audit policy); no static pod or auto-apply manifest directory. Exact paths come with the host-image packet.",
+   "how": "The sealed set is the profile's: control-plane flags and configuration, the eight unit definitions, kubeconfigs, PKI trust bundles, containerd's config.toml and one CNI conflist (bridge, host-local, loopback), the admission manifests and the audit policy; no static pod or auto-apply manifest directory. Exact paths come with the host-image packet.",
    "roles": [
     "APISERVER",
     "CONTAINER_RUNTIME",
@@ -626,7 +589,7 @@
    "dispositions": [
     "SELECTION"
    ],
-   "how": "Every artifact is pinned by the upstream's published SHA-256 (Kubernetes .sha256 files on dl.k8s.io, etcd SHA256SUMS, containerd and CNI checksum files, runc.sha256sum), the source-built agent by commit and the sandbox image by index digest. Installation is from the host image only; no component updates itself; images, including the sandbox image, are imported into containerd's content store at enrollment with no registry reachable. Every upstream project is Apache-2.0, but the release binaries are not Apache-only: runc, containerd's static archive and the pause binary link glibc statically, runc also links libseccomp and libpathrs, and kube-proxy executes the host's nft (license reviews decided by owner question Q-L). I06's SC13 model admits only distribution.license == Apache-2.0 (D-I06-LICENSE).",
+   "how": "Every artifact is pinned by the upstream's published SHA-256 (Kubernetes .sha256 files on dl.k8s.io, etcd SHA256SUMS, containerd and CNI checksum files, runc.sha256sum), the source-built agent by commit and the sandbox image by index digest. Installation is from the host image only; no component updates itself; images, including the sandbox image, are imported into containerd's content store at enrollment with no registry reachable. Every upstream is Apache-2.0; the full dependency and statically linked library closure is checked in the host-image packet (D-LIC-CLOSURE), and runc's statically linked libseccomp (LGPL-2.1) needs an explicit review (D-LIC-RUNC).",
    "roles": [
     "APISERVER",
     "CONTAINER_RUNTIME",
@@ -640,9 +603,7 @@
    "openItems": [
     "D-LIC-CLOSURE",
     "D-NETPOL-BUILD",
-    "D-SANDBOX",
-    "D-POLICY-AMEND",
-    "D-I06-LICENSE"
+    "D-SANDBOX"
    ]
   },
   {
@@ -845,11 +806,10 @@
    ]
   },
   {
-   "candidate": "kine (standalone or embedded)",
-   "reason": "Kubernetes does not build or test against its emulated etcd API; its SQLite backend needs CGO and the SQLite blessing is not a classified license; embedded, it is not a separate process.",
+   "candidate": "kine or an in-process SQLite datastore",
+   "reason": "Not a separate AF_UNIX datastore process.",
    "criteria": [
-    "UPSTREAM-TESTING",
-    "LICENSE",
+    "SC01",
     "SC08"
    ]
   },
@@ -864,9 +824,10 @@
   },
   {
    "candidate": "Calico, Cilium and Antrea",
-   "reason": "CustomResourceDefinitions (SC09); their BPF datapaths also exceed W02e E1's cgroup-device-only rule.",
+   "reason": "CustomResourceDefinitions, or BPF datapaths beyond cgroup-device programs.",
    "criteria": [
-    "SC09"
+    "SC09",
+    "SC08"
    ]
   },
   {
@@ -898,7 +859,7 @@
    ]
   },
   {
-   "candidate": "etcdctl, etcdutl, ctr and containerd-stress",
+   "candidate": "etcdctl, etcdutl and ctr",
    "reason": "Clients, not components; left out of the installed set.",
    "criteria": [
     "SC08",
@@ -908,40 +869,12 @@
  ],
  "licenseReviews": [
   {
-   "id": "D-LIC-GLIBC",
-   "subject": "glibc statically linked into containerd (static archive), runc and the pause binary",
-   "license": "LGPL-2.1-or-later",
-   "class": "UNCLASSIFIED_NEEDS_POLICY_AMENDMENT",
-   "reason": "containerd's release builds with CGO and -extldflags -static (Makefile:96-108, 332-336); runc's make static links static-pie against a Debian glibc toolchain; kubernetes build/pause compiles -static.",
-   "decision": "Q-L",
-   "status": "OWNER_APPROVED"
-  },
-  {
-   "id": "D-LIC-LIBSECCOMP",
-   "subject": "libseccomp 2.6.1 statically linked into runc",
+   "id": "D-LIC-RUNC",
+   "component": "runc",
    "license": "LGPL-2.1-only",
-   "class": "UNCLASSIFIED_NEEDS_POLICY_AMENDMENT",
-   "reason": "runc's BUILDTAGS include seccomp; the release ships libseccomp-2.6.1.tar.gz for compliance.",
-   "decision": "Q-L",
-   "status": "OWNER_APPROVED"
-  },
-  {
-   "id": "D-LIC-LIBPATHRS",
-   "subject": "libpathrs 0.2.6 and its Rust crate closure statically linked into runc",
-   "license": "MPL-2.0 OR LGPL-3.0-or-later",
-   "class": "UNCLASSIFIED_NEEDS_POLICY_AMENDMENT",
-   "reason": "runc's BUILDTAGS include libpathrs; the release ships libpathrs-0.2.6.tar.xz; the dual expression is not an allowed exception under exact matching.",
-   "decision": "Q-L",
-   "status": "OWNER_APPROVED"
-  },
-  {
-   "id": "D-LIC-NFT",
-   "subject": "nft, executed by kube-proxy from the host image",
-   "license": "GPL-2.0-only",
-   "class": "OPTIONAL_EXPLICIT_REVIEW",
-   "reason": "A separately executed host program; GPL-2.0-only is on the policy's explicit-review list.",
-   "decision": "Q-L",
-   "status": "OWNER_APPROVED"
+   "reason": "runc's release binaries statically link libseccomp; the license policy neither allows nor lists LGPL-2.1, so the fail-closed rule denies it until the owner reviews it.",
+   "decision": "Q-R",
+   "status": "PENDING_OWNER"
   }
  ],
  "rechecks": {
@@ -982,27 +915,12 @@
   {
    "id": "D-SC01-PEER",
    "owner": "W02g-F2",
-   "text": "etcd cannot run without a peer listener, so the I06 successor accepts exactly one AF_UNIX peer listener, unix://<name>:<port> relative to etcd's working directory (the datastore's private directory), reachable only from the datastore's confined type, and no TCP listener; native evidence shows no TCP listener. I06's unix:///<absolute path> convention cannot express etcd's peer socket."
-  },
-  {
-   "id": "D-HELPER-TYPES",
-   "owner": "W02a-F2 and W02g-F2",
-   "text": "Map the helper executables (containerd-shim-runc-v2, runc, the CNI plugins, the host's nft) to confined types under I06's one-entry-type-per-domain rule."
-  },
-  {
-   "id": "D-POLICY-AMEND",
-   "owner": "LIC-HOST meta packet (main lane)",
-   "text": "Owner decision Q-L (L-a): amend legal/third-party-license-policy.yaml with a reviewed class for host-OS and statically linked system libraries holding exactly LGPL-2.1-or-later (glibc), LGPL-2.1-only (libseccomp), MPL-2.0 OR LGPL-3.0-or-later electing MPL-2.0 (libpathrs) and GPL-2.0-only for separately executed host programs (nft), with source offers from the pinned tags. Validators pin the policy identity (validate_reuse: policyVersion 0.3.0), so the amendment is its own history-projected packet before the host-image packet."
-  },
-  {
-   "id": "D-I06-LICENSE",
-   "owner": "W02g-F2",
-   "text": "Replace I06 SC13's single distribution.license == Apache-2.0 check with a reference to the reviewed license closure, once owner question Q-L is decided."
+   "text": "Resolve SC01's peerListen == [] against etcd: accept an AF_UNIX peer listener in the datastore's private directory, reachable only from the datastore's confined type, or show on the enrolled host that an empty peer listener list starts."
   },
   {
    "id": "D-LIC-CLOSURE",
    "owner": "W03 host-image packet",
-   "text": "License closure and SBOM of every artifact: Go module sets, the statically linked C and Rust libraries (D-LIC-GLIBC, D-LIC-LIBSECCOMP, D-LIC-LIBPATHRS), and host runtime dependencies (nft 1.0.1 or later, D-LIC-NFT), against legal/third-party-license-policy.yaml."
+   "text": "License closure and SBOM of every artifact: Go module sets, and any statically linked C library in containerd, runc and the pause binary, against legal/third-party-license-policy.yaml."
   },
   {
    "id": "D-NETPOL-BUILD",

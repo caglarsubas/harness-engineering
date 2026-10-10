@@ -1,29 +1,24 @@
-# Review brief — W03-0 backend distribution selection, round 1
+# Review brief — W03-0, round 2
 
-Subject: `architecture/backend-distribution/` (README.md, selection.json) and `scripts/backend_distribution.py`.
+Subject:
+- `architecture/backend-distribution/` (README.md, selection.json) and `scripts/backend_distribution.py`;
+- new in this round: `architecture/w03-plan/` (README.md, plan.json) and `scripts/w03_plan.py`, recording the owner's
+  toolchain and scope decisions, a W03 obligation register and the packet plan.
 
-Please check:
-1. **Criteria coverage.** Every I06 v2 criterion (`architecture/i06-backend-profile-v2/criteria.json`, SC00-SC15, CL,
-   IC01-IC05, OR01-OR08) has a row whose dispositions and text are right for the selected parts. Pay particular attention
-   to these:
-   - SC01: the etcd peer-listener finding (`server/embed/config.go:1573`, `server/etcdmain/etcd.go:83` at `a3346427`);
-   - SC03, SC05 and SC06: the flags against the I06 v2 positive evidence and the v1.37.1 upstream facts;
-   - SC08: separate processes, distinct executables;
-   - SC09: kube-network-policies' standard command uses no CRDs;
-   - SC13: pinning, offline operation and licenses.
-2. **Pins.** Each artifact digest equals the upstream's published checksum:
-   - Kubernetes: `https://dl.k8s.io/release/v1.37.1/bin/linux/{amd64,arm64}/<name>.sha256`;
-   - etcd v3.6.15: `SHA256SUMS`;
-   - containerd v2.4.1: `containerd-static-*.sha256sum`;
-   - runc v1.5.2: `runc.sha256sum`;
-   - CNI plugins v1.9.1: `*.sha256`.
-   Each tag resolves to the recorded commit, and the sandbox image index digest matches `registry.k8s.io/pause:3.10.2`.
-3. **Exclusions** cite the right criteria, and no qualifying candidate the owner should have seen is missing.
-4. **License.** Is the runc libseccomp finding right? Is anything else outside the policy, such as statically linked C
-   libraries in containerd's static archive or the pause binary?
-5. **I05 re-check.** The mapping's five source files match at `f78e7223`.
-6. **The check module** refuses malformed or incomplete records, does not read outside its four inputs, and makes no
-   claim it does not check.
+Round 1 (`review-round1.json`, bytes in `round1/`) returned CHANGES_REQUIRED. Please check:
+1. Each round-1 finding's disposition (README, "Round-1 findings and dispositions"), particularly:
+   - SC01 at etcd v3.7.2 (`68c065e562994b89e333e77b039ad066f933c586`): `server/embed/config.go:87, :608-609, :961-965`,
+     `server/embed/etcd.go:576, :750-753`, `server/etcdmain/config.go:251`;
+   - the license reviews against the owner's decision Q-L (L-a);
+   - NRI and every containerd listener (SC11).
+2. The etcd 3.7.2 pins: `SHA256SUMS` and the tag-to-commit resolution.
+3. The check modules: re-run your round-1 mutation probes against both modules.
+4. The plan record:
+   - the Rust 1.99.0 start-up re-check against W02d v2's analysed reference, Rust 1.90.0 with musl 1.2.5. Verify at
+     `b940084d` against `1159e78c`: `library/std/src/sys/pal/unix/mod.rs` and `stack_overflow.rs`,
+     `library/std/src/sys/thread/mod.rs`, and musl v1.2.5 `src/env/__libc_start_main.c` and `src/thread/pthread_create.c`;
+   - the musl thread flags against W02d's NATIVE_STATIC thread rule;
+   - whether the obligation register misses an obligation the W02 contracts carry to W03, or names a wrong source line;
+   - whether the packet plan is consistent with the owner's decisions.
 
-Read-only. Network reads of public release metadata and source files are fine. Do not download large archives unless
-needed; if you do, say which ones. No sudo, no edits.
+Read-only. Network reads of public sources are fine; avoid large downloads. No sudo, no edits.

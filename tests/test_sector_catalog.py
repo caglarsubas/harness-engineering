@@ -792,6 +792,15 @@ NAMING_RECORDS = frozenset({
     "architecture/sector-direction.json",
     "architecture/successor-inventory-amendment.json",
     "architecture/validation-performance-authority.json",
+    "architecture/w02-notes-errata/round1/docs/MASTER_DEVELOPMENT_PLAN.md",
+    "architecture/w02-notes-errata/round2/docs/MASTER_DEVELOPMENT_PLAN.md",
+    "architecture/w02-notes-errata/round2/docs/repositories/00-harness-engineering.md",
+    "architecture/w02-notes-errata/round3/docs/MASTER_DEVELOPMENT_PLAN.md",
+    "architecture/w02-notes-errata/round3/docs/repositories/00-harness-engineering.md",
+    "architecture/w02-notes-errata/round4/docs/MASTER_DEVELOPMENT_PLAN.md",
+    "architecture/w02-notes-errata/round4/docs/repositories/00-harness-engineering.md",
+    "architecture/w02-notes-errata/round5/docs/MASTER_DEVELOPMENT_PLAN.md",
+    "architecture/w02-notes-errata/round5/docs/repositories/00-harness-engineering.md",
 })
 
 

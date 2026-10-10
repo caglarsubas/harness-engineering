@@ -23,7 +23,7 @@ except ImportError:
 
 ROOT = Path(__file__).resolve().parents[1]
 AUTHORITY_PATH = "architecture/w02-notes-errata-authority.json"
-AUTHORITY_SHA256 = "ef4a2ba55e88d9596817f8b9f3946cf1b19531bef3abb143bf63b1daba54c9ee"
+AUTHORITY_SHA256 = "b934c22caa35780ec40bd3d14fbf173bc21c22ca40112896f813847dc499313b"
 VALIDATOR_PATH = "scripts/validate_w02_notes_errata.py"
 BASE_COMMIT = "4cb451018989885f2a014718854a2f5b4db5955f"
 NEW_PACKET = "MET-ENFORCE-023"
@@ -672,7 +672,7 @@ ERA_SHA256 = MappingProxyType({
     "tests/test_projection_reuse.py": "0384f121a52a900136d41ee1146d49b30db5e50b66011847b5d24e335aea75c1",
     "tests/test_seccomp_allowlists.py": "5c4bf2f65a79bc466356c531fddeee2f224158571d39d96bb01cf5bdad09001c",
     "tests/test_seccomp_v3.py": "50382355b67f4c4dba7685b2862e58a740ba0e8e105132745df14a12ac04f404",
-    "tests/test_sector_catalog.py": "4f230ccad80c892d1da65ae302d0a2c4f909ccdbc1c0a0b9658aa57369cc0f07",
+    "tests/test_sector_catalog.py": "9782f3dd08cd60d12244b44e02b977c35cd263a03e4a400f5bd9fc1711f3fbfc",
     "tests/test_sector_direction.py": "9d631918c0673632442aea39fcac18c6df17a055a140e98eee18dfd36c878ec5",
     "tests/test_selinux_matrix.py": "50a8d9541273611afed932c3e0a398e9d8a993e2e6b38c519e1908234e48c7cd",
     "tests/test_selinux_matrix_v2.py": "982029bf1a31590cc68a92921302789b2c3cb567eb3b3773c577e2aafda360a3",

@@ -1,5 +1,6 @@
-"""Exact source lineage for MET-ENFORCE-009; the SELinux matrix contract is DATA_CHECK_ONLY."""
+"""Exact source lineage for MET-ENFORCE-021; the license-policy amendment LIC-HOST-A1 is DATA_CHECK_ONLY."""
 import ast
+import json
 from copy import deepcopy
 import os
 from pathlib import Path
@@ -7,7 +8,24 @@ from types import MappingProxyType
 
 import pytest
 
-from scripts import validate_selinux_matrix as profile
+from scripts import validate_license_amendment as profile
+from scripts import validate_seccomp_v3 as fprofile
+from scripts import validate_backend_distribution as oprofile
+from scripts import validate_w01_amendment as uprofile
+from scripts import validate_seccomp_allowlists as jprofile
+from scripts import validate_sector_catalog as kprofile
+from scripts import validate_selinux_replay as tprofile
+from scripts import validate_parallel_suite as zprofile
+from scripts import validate_selinux_matrix_v2 as yprofile
+from scripts import validate_admission_channel_v3 as xprofile
+from scripts import validate_i07_policy_write_v2 as pprofile
+from scripts import validate_admission_semantics_v2 as aprofile
+from scripts import validate_i06_backend_profile_v2 as vprofile
+from scripts import validate_i05_gate_channel_v2 as cprofile
+from scripts import validate_native_profile_v3 as qprofile
+from scripts import validate_verify_headroom as hprofile
+from scripts import validate_sector_direction as dprofile
+from scripts import validate_selinux_matrix as sprofile
 from scripts import validate_i07_policy_write as wprofile
 from scripts import validate_projection_reuse as rprofile
 from scripts import validate_i05_gate_channel as gprofile
@@ -33,11 +51,6 @@ def packets():
             for path in (profile.ROOT / "task-packets").glob("*.yaml")}
 
 
-def layer_packets():
-    # The newer MET-SECTOR-001 layer is projected away before this layer's payload checks.
-    return profile.successor.historical_catalog(packets())
-
-
 def changed_test():
     return next(path for path in profile._PROJECTION_RULES if path.startswith("tests/"))
 
@@ -46,24 +59,25 @@ def test_exact_current_source_and_complete_history_chain():
     assert profile.validate() is None
     current = packets()
     accepted = profile.historical_catalog(current)
-    assert len(current) == 223 and len(accepted) == 205
-    assert set(accepted) == set(current) - {profile.NEW_PACKET, profile.successor.NEW_PACKET,
-                                            profile.successor.successor.NEW_PACKET,
-                                            profile.successor.successor.successor.NEW_PACKET,
-                                            profile.successor.successor.successor.successor.NEW_PACKET,
-                                            profile.successor.successor.successor.successor.successor.NEW_PACKET,
-                                            profile.successor.successor.successor.successor.successor.successor.NEW_PACKET,
-                                            profile.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET,
-                                            profile.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET,
-                                            profile.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET,
-                                            profile.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET,
-                                            profile.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET,
-                                            profile.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET,
-                                            profile.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET,
-                                            profile.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET,
-                                            profile.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET,
-                                            profile.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET,
-                                            profile.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.successor.NEW_PACKET}
+    assert len(current) == 223 and len(accepted) == 222
+    assert set(accepted) == set(current) - {profile.NEW_PACKET}
+    assert len(fprofile.historical_catalog(current)) == 221
+    assert len(oprofile.historical_catalog(current)) == 220
+    assert len(uprofile.historical_catalog(current)) == 219
+    assert len(jprofile.historical_catalog(current)) == 218
+    assert len(kprofile.historical_catalog(current)) == 217
+    assert len(tprofile.historical_catalog(current)) == 216
+    assert len(zprofile.historical_catalog(current)) == 215
+    assert len(yprofile.historical_catalog(current)) == 214
+    assert len(xprofile.historical_catalog(current)) == 213
+    assert len(pprofile.historical_catalog(current)) == 212
+    assert len(aprofile.historical_catalog(current)) == 211
+    assert len(vprofile.historical_catalog(current)) == 210
+    assert len(cprofile.historical_catalog(current)) == 209
+    assert len(qprofile.historical_catalog(current)) == 208
+    assert len(hprofile.historical_catalog(current)) == 207
+    assert len(dprofile.historical_catalog(current)) == 206
+    assert len(sprofile.historical_catalog(current)) == 205
     assert len(wprofile.historical_catalog(current)) == 204
     assert len(rprofile.historical_catalog(current)) == 203
     assert len(gprofile.historical_catalog(current)) == 202
@@ -84,7 +98,7 @@ def test_exact_current_source_and_complete_history_chain():
     for name, expected in profile.authority()["baselinePackets"].items():
         assert profile.digest(profile.regular_bytes("task-packets/" + name + ".yaml")) == expected
     for path, rule in profile._PROJECTION_RULES.items():
-        raw = profile.successor.historical_bytes(path, profile.regular_bytes(path))
+        raw = profile.regular_bytes(path)
         assert profile.digest(raw) == rule["afterSha256"]
         before = profile.historical_bytes(path, raw)
         assert profile.digest(before) == rule["beforeSha256"]
@@ -93,7 +107,7 @@ def test_exact_current_source_and_complete_history_chain():
 
 @pytest.mark.parametrize("fault", ["missing_new", "missing_old", "extra", "new_payload", "old_payload", "projected"])
 def test_catalog_refuses_all_packet_substitution_and_loss(fault):
-    current = deepcopy(layer_packets())
+    current = deepcopy(packets())
     if fault == "missing_new":
         current.pop(profile.NEW_PACKET)
     elif fault == "missing_old":
@@ -101,7 +115,7 @@ def test_catalog_refuses_all_packet_substitution_and_loss(fault):
     elif fault == "extra":
         current["UNREVIEWED-001"] = {}
     elif fault == "projected":
-        current = profile.historical_catalog(deepcopy(packets()))
+        current = profile.historical_catalog(current)
     else:
         name = profile.NEW_PACKET if fault == "new_payload" else "MET-001"
         current[name]["objective"] += " unreviewed"
@@ -110,7 +124,7 @@ def test_catalog_refuses_all_packet_substitution_and_loss(fault):
 
 
 def test_every_predecessor_payload_is_checked_without_a_verdict_cache():
-    current = layer_packets()
+    current = packets()
     profile.validate_packet_payloads(current)
     for name in sorted(profile.authority()["baselinePackets"]):
         original = current[name]
@@ -140,6 +154,40 @@ def test_exact_inverse_and_forward_test_round_trip_across_layers():
     assert profile.historical_test_bytes(current) == before
     assert profile.current_test_bytes(before) == current
     assert profile.current_test_bytes(before + b" ") == before + b" "
+    fprofile_before = fprofile.historical_bytes(path, current)
+    assert fprofile.current_test_bytes(fprofile_before) == current
+    oprofile_before = oprofile.historical_bytes(path, current)
+    assert oprofile.current_test_bytes(oprofile_before) == current
+    uprofile_before = uprofile.historical_bytes(path, current)
+    assert uprofile.current_test_bytes(uprofile_before) == current
+    jprofile_before = jprofile.historical_bytes(path, current)
+    assert jprofile.current_test_bytes(jprofile_before) == current
+    kprofile_before = kprofile.historical_bytes(path, current)
+    assert kprofile.current_test_bytes(kprofile_before) == current
+    tprofile_before = tprofile.historical_bytes(path, current)
+    assert tprofile.current_test_bytes(tprofile_before) == current
+    zprofile_before = zprofile.historical_bytes(path, current)
+    assert zprofile.current_test_bytes(zprofile_before) == current
+    yprofile_before = yprofile.historical_bytes(path, current)
+    assert yprofile.current_test_bytes(yprofile_before) == current
+    xprofile_before = xprofile.historical_bytes(path, current)
+    assert xprofile.current_test_bytes(xprofile_before) == current
+    pprofile_before = pprofile.historical_bytes(path, current)
+    assert pprofile.current_test_bytes(pprofile_before) == current
+    aprofile_before = aprofile.historical_bytes(path, current)
+    assert aprofile.current_test_bytes(aprofile_before) == current
+    vprofile_before = vprofile.historical_bytes(path, current)
+    assert vprofile.current_test_bytes(vprofile_before) == current
+    cprofile_before = cprofile.historical_bytes(path, current)
+    assert cprofile.current_test_bytes(cprofile_before) == current
+    qprofile_before = qprofile.historical_bytes(path, current)
+    assert qprofile.current_test_bytes(qprofile_before) == current
+    hprofile_before = hprofile.historical_bytes(path, current)
+    assert hprofile.current_test_bytes(hprofile_before) == current
+    dprofile_before = dprofile.historical_bytes(path, current)
+    assert dprofile.current_test_bytes(dprofile_before) == current
+    sprofile_before = sprofile.historical_bytes(path, current)
+    assert sprofile.current_test_bytes(sprofile_before) == current
     wprofile_before = wprofile.historical_bytes(path, current)
     assert wprofile.current_test_bytes(wprofile_before) == current
     rprofile_before = rprofile.historical_bytes(path, current)
@@ -178,14 +226,30 @@ def test_exact_inverse_and_forward_test_round_trip_across_layers():
         profile.historical_bytes(path, current + b" ")
 
 
-@pytest.mark.parametrize("route", ["authority", "changed", "old_bytes", "unchanged", "historical_test", "current_test", "catalog", "payloads", "wprofile_old", "rprofile_old", "gprofile_old", "iprofile_old", "nprofile_old", "resolution_old", "account_old", "canary_old", "isolated_old", "portable_old", "proof_old", "recheck_old", "verifier_old", "linux_old", "performance_old", "runner_old", "roadmap_old"])
+@pytest.mark.parametrize("route", ["authority", "changed", "old_bytes", "unchanged", "historical_test", "current_test", "catalog", "payloads", "fprofile_old", "oprofile_old", "uprofile_old", "jprofile_old", "kprofile_old", "tprofile_old", "zprofile_old", "yprofile_old", "xprofile_old", "pprofile_old", "aprofile_old", "vprofile_old", "cprofile_old", "qprofile_old", "hprofile_old", "dprofile_old", "sprofile_old", "wprofile_old", "rprofile_old", "gprofile_old", "iprofile_old", "nprofile_old", "resolution_old", "account_old", "canary_old", "isolated_old", "portable_old", "proof_old", "recheck_old", "verifier_old", "linux_old", "performance_old", "runner_old", "roadmap_old"])
 def test_newest_authority_is_freshly_checked_on_every_route(monkeypatch, route):
     path = changed_test()
     raw = profile.regular_bytes(path)
     before = profile.historical_bytes(path, raw) if route in ("current_test", "old_bytes") else None
-    current_packets = packets() if route == "catalog" else None
-    layer = layer_packets() if route == "payloads" else None
+    current_packets = packets() if route in ("catalog", "payloads") else None
     master_raw = roadmap.regular_bytes(roadmap.MASTER_PATH)
+    old_fprofile = fprofile.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "fprofile_old" else None
+    old_oprofile = oprofile.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "oprofile_old" else None
+    old_uprofile = uprofile.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "uprofile_old" else None
+    old_jprofile = jprofile.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "jprofile_old" else None
+    old_kprofile = kprofile.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "kprofile_old" else None
+    old_tprofile = tprofile.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "tprofile_old" else None
+    old_zprofile = zprofile.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "zprofile_old" else None
+    old_yprofile = yprofile.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "yprofile_old" else None
+    old_xprofile = xprofile.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "xprofile_old" else None
+    old_pprofile = pprofile.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "pprofile_old" else None
+    old_aprofile = aprofile.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "aprofile_old" else None
+    old_vprofile = vprofile.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "vprofile_old" else None
+    old_cprofile = cprofile.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "cprofile_old" else None
+    old_qprofile = qprofile.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "qprofile_old" else None
+    old_hprofile = hprofile.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "hprofile_old" else None
+    old_dprofile = dprofile.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "dprofile_old" else None
+    old_sprofile = sprofile.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "sprofile_old" else None
     old_wprofile = wprofile.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "wprofile_old" else None
     old_rprofile = rprofile.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "rprofile_old" else None
     old_gprofile = gprofile.historical_bytes(roadmap.MASTER_PATH, master_raw) if route == "gprofile_old" else None
@@ -211,7 +275,24 @@ def test_newest_authority_is_freshly_checked_on_every_route(monkeypatch, route):
         "historical_test": lambda: profile.historical_test_bytes(raw),
         "current_test": lambda: profile.current_test_bytes(before),
         "catalog": lambda: profile.historical_catalog(current_packets),
-        "payloads": lambda: profile.validate_packet_payloads(layer),
+        "payloads": lambda: profile.validate_packet_payloads(current_packets),
+        "fprofile_old": lambda: fprofile.historical_bytes(roadmap.MASTER_PATH, old_fprofile),
+        "oprofile_old": lambda: oprofile.historical_bytes(roadmap.MASTER_PATH, old_oprofile),
+        "uprofile_old": lambda: uprofile.historical_bytes(roadmap.MASTER_PATH, old_uprofile),
+        "jprofile_old": lambda: jprofile.historical_bytes(roadmap.MASTER_PATH, old_jprofile),
+        "kprofile_old": lambda: kprofile.historical_bytes(roadmap.MASTER_PATH, old_kprofile),
+        "tprofile_old": lambda: tprofile.historical_bytes(roadmap.MASTER_PATH, old_tprofile),
+        "zprofile_old": lambda: zprofile.historical_bytes(roadmap.MASTER_PATH, old_zprofile),
+        "yprofile_old": lambda: yprofile.historical_bytes(roadmap.MASTER_PATH, old_yprofile),
+        "xprofile_old": lambda: xprofile.historical_bytes(roadmap.MASTER_PATH, old_xprofile),
+        "pprofile_old": lambda: pprofile.historical_bytes(roadmap.MASTER_PATH, old_pprofile),
+        "aprofile_old": lambda: aprofile.historical_bytes(roadmap.MASTER_PATH, old_aprofile),
+        "vprofile_old": lambda: vprofile.historical_bytes(roadmap.MASTER_PATH, old_vprofile),
+        "cprofile_old": lambda: cprofile.historical_bytes(roadmap.MASTER_PATH, old_cprofile),
+        "qprofile_old": lambda: qprofile.historical_bytes(roadmap.MASTER_PATH, old_qprofile),
+        "hprofile_old": lambda: hprofile.historical_bytes(roadmap.MASTER_PATH, old_hprofile),
+        "dprofile_old": lambda: dprofile.historical_bytes(roadmap.MASTER_PATH, old_dprofile),
+        "sprofile_old": lambda: sprofile.historical_bytes(roadmap.MASTER_PATH, old_sprofile),
         "wprofile_old": lambda: wprofile.historical_bytes(roadmap.MASTER_PATH, old_wprofile),
         "rprofile_old": lambda: rprofile.historical_bytes(roadmap.MASTER_PATH, old_rprofile),
         "gprofile_old": lambda: gprofile.historical_bytes(roadmap.MASTER_PATH, old_gprofile),
@@ -238,12 +319,12 @@ def test_newest_authority_is_freshly_checked_on_every_route(monkeypatch, route):
         return value + b" " if relative == profile.AUTHORITY_PATH else value
 
     monkeypatch.setattr(profile, "regular_bytes", changed_reader)
-    with pytest.raises(ValueError, match="selinux matrix history authority digest"):
+    with pytest.raises(ValueError, match="license amendment history authority digest"):
         calls[route]()
 
 
 def test_catalog_uses_only_pinned_parsed_data_and_checks_each_input_again(monkeypatch):
-    current = layer_packets()
+    current = packets()
     profile._packet_rules()
 
     def unexpected_yaml(_raw):
@@ -264,7 +345,7 @@ def test_historical_catalog_reuses_frozen_packet_pins_but_rechecks_authority(mon
 
     monkeypatch.setattr(profile, "authority", unexpected)
     monkeypatch.setattr(profile, "safe_load", unexpected)
-    assert len(profile.historical_catalog(current)) == 205
+    assert len(profile.historical_catalog(current)) == 222
 
 
 def test_historical_catalog_does_not_initialize_predecessor_packet_rules(monkeypatch):
@@ -279,7 +360,7 @@ def test_historical_catalog_does_not_initialize_predecessor_packet_rules(monkeyp
         return original(path)
 
     monkeypatch.setattr(profile, "regular_bytes", counted)
-    assert len(profile.historical_catalog(current)) == 205
+    assert len(profile.historical_catalog(current)) == 222
     assert packet_reads == ["task-packets/" + profile.NEW_PACKET + ".yaml"]
     assert profile._packet_rules_for.cache_info().currsize == 0
 
@@ -295,14 +376,14 @@ def test_full_packet_expectations_initialize_once_and_remain_immutable(monkeypat
 
     monkeypatch.setattr(profile, "safe_load", counted)
     rules = profile._packet_rules()
-    assert len(rules) == 206 and len(parsed) == 205
-    assert profile._packet_rules() is rules and len(parsed) == 205
+    assert len(rules) == 223 and len(parsed) == 222
+    assert profile._packet_rules() is rules and len(parsed) == 222
     with pytest.raises(TypeError):
         rules["MET-001"] = ("0" * 64, "0" * 64)
 
 
 def test_first_full_packet_check_refuses_changed_old_yaml(monkeypatch):
-    current = layer_packets()
+    current = packets()
     profile._packet_rules_for.cache_clear()
     original = profile.regular_bytes
 
@@ -317,7 +398,7 @@ def test_first_full_packet_check_refuses_changed_old_yaml(monkeypatch):
 
 
 def test_cached_expected_rules_do_not_cache_payload_or_authority_verdict(monkeypatch):
-    current = layer_packets()
+    current = packets()
     profile.validate_packet_payloads(current)
     current["MET-001"]["objective"] += " unreviewed"
     with pytest.raises(ValueError, match="changed packet payload: MET-001"):
@@ -329,16 +410,16 @@ def test_cached_expected_rules_do_not_cache_payload_or_authority_verdict(monkeyp
         return raw + b" " if path == profile.AUTHORITY_PATH else raw
 
     monkeypatch.setattr(profile, "regular_bytes", changed_reader)
-    with pytest.raises(ValueError, match="selinux matrix history authority digest"):
+    with pytest.raises(ValueError, match="license amendment history authority digest"):
         profile.validate_packet_payloads(current)
 
 
 def test_cached_expected_rules_are_bound_to_source_root(tmp_path, monkeypatch):
-    current = layer_packets()
+    current = packets()
     profile.validate_packet_payloads(current)
     authority_dir = tmp_path / "architecture"
     authority_dir.mkdir()
-    (authority_dir / "selinux-matrix-authority.json").write_bytes(
+    (authority_dir / "license-amendment-authority.json").write_bytes(
         profile.regular_bytes(profile.AUTHORITY_PATH))
     (tmp_path / "task-packets").mkdir()
     monkeypatch.setattr(profile, "ROOT", tmp_path)
@@ -360,7 +441,7 @@ def test_historical_traversal_leaves_predecessor_refusal_to_its_owner(fault):
     previous = profile.historical_catalog(current)
     assert previous["MET-001"] is current["MET-001"]
     with pytest.raises(ValueError, match="changed packet payload"):
-        profile.validate_packet_payloads(profile.successor.historical_catalog(current))
+        profile.validate_packet_payloads(current)
 
 
 @pytest.mark.parametrize("fault", ["payload", "yaml"])
@@ -404,8 +485,7 @@ def test_normalized_validator_pin_rejects_source_mutation(monkeypatch, mutation)
         return raw
 
     monkeypatch.setattr(profile, "regular_bytes", changed_reader)
-    # The newer MET-SECTOR-001 layer refuses a mutated validator before this layer.
-    with pytest.raises(ValueError, match="unreviewed current source: scripts/validate_selinux_matrix.py"):
+    with pytest.raises(ValueError, match="license amendment validator drift"):
         profile.validate()
 
 
@@ -544,14 +624,12 @@ def test_new_projection_has_no_predecessor_validator_import():
         if isinstance(node, ast.ImportFrom):
             assert "validate_" not in (node.module or "")
         elif isinstance(node, ast.Import):
-            # Only the newer successor layer may be imported, never a predecessor.
-            assert all("validate_" not in alias.name or alias.name == "validate_sector_direction"
-                       for alias in node.names)
+            assert all("validate_" not in alias.name for alias in node.names)
 
 
 def _count_authority_reads(monkeypatch):
     counts = {}
-    for module in (profile.successor, profile, wprofile, rprofile, gprofile, iprofile, nprofile, resolution, account, canary, isolated, portable, proof, recheck, verifier, linux, performance, runner):
+    for module in (profile, fprofile, oprofile, uprofile, jprofile, kprofile, tprofile, zprofile, yprofile, xprofile, pprofile, aprofile, vprofile, cprofile, qprofile, hprofile, dprofile, sprofile, wprofile, rprofile, gprofile, iprofile, nprofile, resolution, account, canary, isolated, portable, proof, recheck, verifier, linux, performance, runner):
         original = module.regular_bytes
 
         def counted(relative, _module=module, _original=original):
@@ -578,7 +656,7 @@ def test_every_newer_authority_is_read_exactly_once_per_route(monkeypatch, route
         "current_test": lambda: runner.current_test_bytes(before),
     }
     calls[route]()
-    expected = {module.__name__: 1 for module in (profile.successor, profile, wprofile, rprofile, gprofile, iprofile, nprofile, resolution, account, canary, isolated, portable, proof, recheck, verifier, linux, performance, runner)}
+    expected = {module.__name__: 1 for module in (profile, fprofile, oprofile, uprofile, jprofile, kprofile, tprofile, zprofile, yprofile, xprofile, pprofile, aprofile, vprofile, cprofile, qprofile, hprofile, dprofile, sprofile, wprofile, rprofile, gprofile, iprofile, nprofile, resolution, account, canary, isolated, portable, proof, recheck, verifier, linux, performance, runner)}
     if route == "current_test":
         # The forward route reads this layer's newest bytes and then projects them forward once more.
         assert all(counts[name] >= 1 for name in expected) and set(counts) == set(expected)
@@ -586,121 +664,234 @@ def test_every_newer_authority_is_read_exactly_once_per_route(monkeypatch, route
         assert counts == expected
 
 
-def _contract():
-    load = lambda name: profile._json_file(profile.SUBJECT_PATHS[name])
-    return load("matrix.json"), load("vectors.json")
+def _rebind(monkeypatch, path, changed):
+    """Serve changed bytes for path and re-pin its digest, so the checks behind the digest binding are exercised."""
+    original = profile.reviewed_bytes
+    pins = dict(profile.ERA_SHA256)
+    if path in pins:
+        pins[path] = profile.digest(changed)
+    monkeypatch.setattr(profile, "ERA_SHA256", MappingProxyType(pins))
+    monkeypatch.setattr(profile, "reviewed_bytes", lambda target: changed if target == path else original(target))
 
 
-def test_every_vector_replays_and_every_assertion_holds():
-    # PERF-SEL (name kept for test identity): the full replay of every vector runs inside validate()
-    # (test_exact_current_source_and_complete_history_chain; test_matrix_weakening_is_refused case 0 also reaches it),
-    # and test_vector_refusal_reaches_the_contract_route drives a refusal through it; here the route and the cheap
-    # inventory are pinned.
-    matrix, vectors = _contract()
-    tree = ast.parse(profile.regular_bytes(profile.VALIDATOR_PATH))
-    calls = lambda name: [n.func.id for n in ast.walk(next(f for f in tree.body if isinstance(f, ast.FunctionDef) and f.name == name))
-                          if isinstance(n, ast.Call) and isinstance(n.func, ast.Name)]
-    assert "validate_selinux_contract" in calls("validate") and "validate_vectors" in calls("validate_selinux_contract")
-    assert calls("validate_vectors") == ["replay_vectors"]
-    profile.check_vector_keys(vectors)
-    profile.check_vector_inventory(matrix, vectors)
+def _rebind_json(monkeypatch, path, mutate):
+    value = json.loads(profile.reviewed_bytes(path))
+    mutate(value)
+    _rebind(monkeypatch, path, (json.dumps(value, indent=1, ensure_ascii=False) + "\n").encode("utf-8"))
 
 
-# PERF-SEL: each weakened row is refused by exactly the per-row conjunct that checks it, with the same message as the full
-# replay, which is exactly the conjunction of those conjuncts (pinned below).
-WEAKENINGS = [("accessChecks", 0, "expect", False), ("accessChecks", -1, "expect", True),
-              ("mutationChecks", 0, "expect", {"failedAssertions": []}), ("mutationChecks", -1, "expect", {"matrixError": "other"})]
+def test_the_amendment_holds_for_this_era():
+    assert profile.validate_license_amendment() is None
 
 
-@pytest.mark.parametrize("key,index,field,value", WEAKENINGS)
-def test_vectors_cannot_be_weakened(key, index, field, value):
-    matrix, vectors = _contract()
-    check = {"accessChecks": profile.check_access_row, "mutationChecks": profile.check_mutation_row}[key]
-    row = vectors[key][index]
-    check(matrix, row)
-    row[field] = value
-    with pytest.raises(ValueError, match=("access check " if key == "accessChecks" else "mutation check ") + row["id"] + "$"):
-        check(matrix, row)
+def test_every_reviewed_file_is_pinned():
+    pinned = set(profile.ERA_SHA256)
+    assert {profile.STATUS_PATH, profile.MODEL, profile.SAFE_YAML, profile.BASE_POLICY} <= pinned
+    assert {profile.AMEND_DIR + "review-round%d.json" % number for number in range(1, 5)} <= pinned
+    assert {profile.AMEND_DIR + name for name in ("amendment.json", "vectors.json", "README.md", "REVIEW_BRIEF.md")} <= pinned
+    for number in range(1, 4):
+        assert any(path.startswith(profile.AMEND_DIR + "round%d/" % number) for path in pinned)
+    for path, expected in profile.ERA_SHA256.items():
+        assert profile.digest(profile.regular_bytes(path)) == expected
 
 
-def test_full_replay_is_exactly_the_conjunction_of_the_helpers():
-    tree = ast.parse(profile.regular_bytes(profile.VALIDATOR_PATH))
-    body = next(node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "replay_vectors").body
-    source = [ast.unparse(node) for node in body if not (isinstance(node, ast.Expr) and isinstance(node.value, ast.Constant))]
-    assert source == ["check_vector_keys(vectors)",
-                      "for row in vectors['accessChecks']:\n    check_access_row(matrix, row)",
-                      "for row in vectors['mutationChecks']:\n    check_mutation_row(matrix, row)",
-                      "check_vector_inventory(matrix, vectors)",
-                      "return len(vectors['accessChecks']) + len(vectors['mutationChecks']) + 1"]
+def test_the_base_policy_stays_byte_identical(monkeypatch):
+    assert profile.BASE_POLICY not in profile._PROJECTION_RULES
+    monkeypatch.setattr(profile, "_PROJECTION_RULES", MappingProxyType({**profile._PROJECTION_RULES, profile.BASE_POLICY: {}}))
+    with pytest.raises(ValueError, match="base license policy must stay byte-identical"):
+        profile.validate_license_amendment()
 
 
-@pytest.mark.parametrize("cases", [WEAKENINGS, [case for case in WEAKENINGS if case[0] == "mutationChecks"]])
-def test_full_replay_refuses_with_the_first_weakened_rows_message(cases):
-    # The full replay with every weakening applied at once refuses with the message of the first weakened row in replay
-    # order, which is that row's per-row message; the mutation-only set reaches the mutation conjuncts.
-    matrix, vectors = _contract()
-    for key, index, field, value in cases:
-        vectors[key][index][field] = value
-    order = [row["id"] for key in ("accessChecks", "mutationChecks") for row in vectors[key]]
-    first_key, first_index = min(((key, index) for key, index, _, _ in cases), key=lambda c: order.index(vectors[c[0]][c[1]]["id"]))
-    prefix = "access check " if first_key == "accessChecks" else "mutation check "
-    with pytest.raises(ValueError, match=prefix + vectors[first_key][first_index]["id"] + "$"):
-        profile.replay_vectors(matrix, vectors)
+@pytest.mark.parametrize("path,old,new", [
+    ("scripts/license_amendment.py", b"def _check(read) -> tuple:\n", b"def _check(read) -> tuple:\n    return {}, None\n"),
+    ("legal/license-policy-amendment/review-round3.json", b'"severity": "MAJOR"', b'"severity": "NOTE"'),
+    ("legal/license-policy-amendment/status.json", b'"No artifact is released."', b'"released"'),
+    ("legal/license-policy-amendment/round2/amendment.json", b'"L2-a"', b'"L2-b"'),
+    ("legal/license-policy-amendment/vectors.json", b'"OUT_OF_SCOPE"', b'"HOST_OS_SYSTEM_LIBRARY"'),
+    ("scripts/safe_yaml.py", b"import yaml\n", b"import yaml\nyaml = None\n"),
+    ("legal/third-party-license-policy.yaml", b"MPL-2.0", b"MPL-1.1"),
+])
+def test_a_changed_reviewed_byte_is_refused_before_anything_runs(monkeypatch, path, old, new):
+    original = profile.reviewed_bytes
+    executed = []
 
-
-def _changed_json(monkeypatch, target, change):
-    original = profile.regular_bytes
-
-    def changed_reader(path):
-        raw = original(path)
-        if path != target:
+    def changed(target):
+        raw = original(target)
+        if target != path:
             return raw
-        value = profile.parse(raw)
-        change(value)
-        return profile.canonical(value)
+        assert old in raw
+        return raw.replace(old, new, 1)
 
-    monkeypatch.setattr(profile, "regular_bytes", changed_reader)
+    monkeypatch.setattr(profile, "reviewed_bytes", changed)
+    monkeypatch.setattr(profile, "_era_model", lambda *args: executed.append(args[0]))
+    with pytest.raises(ValueError, match="LIC-HOST reviewed bytes are bound: " + path):
+        profile.validate_license_amendment()
+    assert executed == []
 
 
-@pytest.mark.parametrize("change", [
-    lambda m: m["ports"][0]["connect"].append({"domain": "planeon_admin_t"}),
-    lambda m: m["capabilities"]["planeon_admin_t"].append({"class": "capability", "capability": "dac_read_search"}),
-    lambda m: m["bpf"]["map_create"].append({"domain": "qualk8s_runtime_t"}),
-    lambda m: m["domains"][0].update(label="system_u:system_r:planeon_other_t:s0"),
-    lambda m: m["assertions"].pop(),
+@pytest.mark.parametrize("path", ["scripts/license_amendment.py", "scripts/safe_yaml.py"])
+def test_the_era_modules_are_executed_from_reviewed_bytes(monkeypatch, path):
+    _rebind(monkeypatch, path, profile.reviewed_bytes(path) + b"\nraise ValueError('era module executed')\n")
+    with pytest.raises(ValueError, match="era module executed"):
+        profile.validate_license_amendment()
+
+
+def test_the_current_safe_yaml_module_is_not_used(monkeypatch):
+    from scripts import safe_yaml
+
+    class Broken:
+        def __init__(self, *args, **kwargs):
+            raise AssertionError("current safe_yaml used")
+
+    monkeypatch.setattr(safe_yaml, "SafeLoader", Broken)
+    assert profile.validate_license_amendment() is None
+
+
+def test_an_early_return_model_is_refused_by_the_decision_binding(monkeypatch):
+    raw = profile.reviewed_bytes(profile.MODEL)
+    _rebind(monkeypatch, profile.MODEL, raw.replace(b"def _check(read) -> tuple:\n",
+                                                    b"def _check(read) -> tuple:\n    return {}, None\n", 1))
+    with pytest.raises(ValueError, match="carries the owner's decisions"):
+        profile.validate_license_amendment()
+
+
+def _round(number):
+    return lambda value: value["rounds"][number - 1]
+
+
+@pytest.mark.parametrize("mutate,message", [
+    (lambda value: value.update(nonClaims=[]), "adopted LIC-HOST status"),
+    (lambda value: value.update(carried=[]), "adopted LIC-HOST status"),
+    (lambda value: value.update(installed=True), "adopted LIC-HOST status"),
+    (lambda value: value.update(status="CANDIDATE"), "adopted LIC-HOST status"),
+    (lambda value: value.update(amendmentId="LIC-HOST-A2"), "adopted LIC-HOST status"),
+    (lambda value: value["rounds"].append("round 5"), "four review rounds in order"),
+    (lambda value: value["rounds"].pop(), "four review rounds in order"),
+    (lambda value: _round(1)(value).update(severities=["NOTE"]), "review round 1 severities"),
+    (lambda value: _round(3)(value).update(snapshot=None), "review round 3 row"),
+    (lambda value: _round(4)(value).update(snapshot="legal/license-policy-amendment/round4/"), "review round 4 row"),
+    (lambda value: _round(2)(value).update(record="legal/license-policy-amendment/review-round3.json"), "review round 2 row"),
+    (lambda value: _round(3)(value).update(subject="0" * 40), "review round 3 identity"),
 ])
-def test_matrix_weakening_is_refused(monkeypatch, change):
-    _changed_json(monkeypatch, profile.SUBJECT_PATHS["matrix.json"], change)
-    with pytest.raises((ValueError, KeyError)):
-        profile.validate_selinux_contract()
+def test_the_status_record_is_closed(monkeypatch, mutate, message):
+    _rebind_json(monkeypatch, profile.STATUS_PATH, mutate)
+    with pytest.raises(ValueError, match=message):
+        profile.validate_license_amendment()
 
 
-def test_w01_w02a_w02g_w02b_and_w02c_bytes_are_unchanged():
-    for path in profile.FROZEN_PATHS:
-        raw = profile.regular_bytes(path)
-        assert profile.historical_bytes(path, raw) == raw and path not in profile._PROJECTION_RULES
-
-
-@pytest.mark.parametrize("change", [
-    lambda s: s.update(contractState="CONTRACT_CANDIDATE" if s["contractState"] == "ADOPTED_DATA_CONTRACT" else "ADOPTED_DATA_CONTRACT"),
-    lambda s: s["obligations"].update(E04="CLOSED"),
-    lambda s: s.update(policyLoaded=True),
-    lambda s: s.update(f2="OPEN" if s["f2"] == "CLOSED_DESIGN" else "CLOSED_DESIGN"),
-    lambda s: s.update(ownerDecisions=[]),
-    lambda s: s["reviewRounds"][-1].update(recordSha256="0" * 64),
-    lambda s: s.update(independentReviewer="AUTHOR"),
-    lambda s: s.update(carriedFindings={"UNREVIEWED": "nowhere"}),
+@pytest.mark.parametrize("number,mutate,message", [
+    (3, lambda value: value["findings"][0].update(severity="NOTE"), "review round 3 severities"),
+    (4, lambda value: value["actions"].update(filesEdited=True), "review round 4 edited nothing"),
+    (4, lambda value: value["actions"].update(personalDataSent=True), "review round 4 edited nothing"),
+    (4, lambda value: value.update(schemaVersion="other"), "review round 4 identity"),
+    (4, lambda value: value["findings"].append({"id": "L99", "severity": "MINOR"}), "review round 4 severities"),
+    (2, lambda value: value.update(verdict="PASS_FOR_SOURCE_PUBLICATION"), "review round 2 identity"),
 ])
-def test_contract_status_cannot_overclaim(monkeypatch, change):
-    _changed_json(monkeypatch, profile.STATUS_PATH, change)
+def test_each_review_record_is_bound(monkeypatch, number, mutate, message):
+    _rebind_json(monkeypatch, profile.AMEND_DIR + "review-round%d.json" % number, mutate)
+    with pytest.raises(ValueError, match=message):
+        profile.validate_license_amendment()
+
+
+def _decision(question, selected):
+    def change(value):
+        for row in value["ownerDecisions"]:
+            if row["id"] == question:
+                row["selected"] = selected
+        return value
+    return change
+
+
+def _drop_component(value):
+    value["hostOsSystemLibraryClass"]["components"].pop("libseccomp")
+    return value
+
+
+def _elect(value):
+    value["ownerElections"][0]["elects"] = "LGPL-3.0-or-later"
+    return value
+
+
+def _base(value):
+    value["base"]["sha256"] = "0" * 64
+    return value
+
+
+@pytest.mark.parametrize("change", [_decision("Q-L3", "PENDING"), _decision("Q-L", "L-b"), _drop_component, _elect, _base,
+                                    lambda value: None])
+def test_the_module_result_carries_the_owner_decisions(monkeypatch, change):
+    original = profile._era_model
+
+    def patched(path, name, imports=None):
+        module = original(path, name, imports)
+        if path == profile.MODEL:
+            check = module.check
+            module.check = lambda read: change(deepcopy(check(read)))
+        return module
+
+    monkeypatch.setattr(profile, "_era_model", patched)
+    with pytest.raises(ValueError, match="carries the owner's decisions"):
+        profile.validate_license_amendment()
+
+
+def test_the_review_binding_is_checked_before_any_model_runs(monkeypatch):
+    _rebind_json(monkeypatch, profile.STATUS_PATH, lambda value: value.update(status="CANDIDATE"))
+    executed = []
+    monkeypatch.setattr(profile, "_era_model", lambda *args: executed.append(args[0]))
+    with pytest.raises(ValueError, match="adopted LIC-HOST status"):
+        profile.validate_license_amendment()
+    assert executed == []
+
+
+@pytest.mark.parametrize("path,old,new", [
+    ("legal/license-policy-amendment/status.json", b'"c12fa44ccdc07b3ed1df5f0611359d49f2fa2f9f"',
+     b'"6c4cba4000000000000000000000000000000000"'),
+    ("legal/license-policy-amendment/review-round4.json", b'"PASS_FOR_SOURCE_PUBLICATION"', b'"CHANGES_REQUIRED"'),
+    ("legal/license-policy-amendment/review-round3.json", b'"CHANGES_REQUIRED"', b'"PASS_FOR_SOURCE_PUBLICATION"'),
+    ("legal/license-policy-amendment/amendment.json", b'"selected": "L-a"', b'"selected": "L-b"'),
+    ("legal/license-policy-amendment/amendment.json", b'"binaries": [\n     "runc"\n    ]', b'"binaries": [\n     "containerd",\n     "runc"\n    ]'),
+])
+def test_the_adoption_and_decision_records_bind(monkeypatch, path, old, new):
+    raw = profile.reviewed_bytes(path)
+    assert old in raw, (path, old)
+    for rebound in (False, True):
+        with monkeypatch.context() as patch:
+            if rebound:
+                _rebind(patch, path, raw.replace(old, new, 1))
+            else:
+                original = profile.reviewed_bytes
+                patch.setattr(profile, "reviewed_bytes",
+                              lambda target: raw.replace(old, new, 1) if target == path else original(target))
+            with pytest.raises(ValueError):
+                profile.validate_license_amendment()
+
+
+def test_a_later_successor_leaves_this_era_valid_through_projection(monkeypatch):
+    original = profile.regular_bytes
+    era = {path: original(path) for path in ("legal/license-policy-amendment/amendment.json", "scripts/safe_yaml.py",
+                                             "scripts/license_amendment.py")}
+    later = {"legal/license-policy-amendment/amendment.json":
+             era["legal/license-policy-amendment/amendment.json"].replace(b'"LIC-HOST-A1"', b'"LIC-HOST-A2"', 1),
+             "scripts/safe_yaml.py": era["scripts/safe_yaml.py"] + b"\nraise ValueError('later safe_yaml')\n",
+             "scripts/license_amendment.py": era["scripts/license_amendment.py"] + b"\nraise ValueError('later model')\n"}
+    # The later tree on disk: a revised amendment, a changed safe_yaml and a changed reference module.
+    monkeypatch.setattr(profile, "regular_bytes", lambda path: later.get(path) or original(path))
     with pytest.raises(ValueError):
-        profile.validate_selinux_status()
+        profile.validate_license_amendment()
+    # A bridged successor projects its own edits away first.
+    monkeypatch.setattr(profile, "reviewed_bytes", lambda path: era[path] if path in later else original(path))
+    assert profile.validate_license_amendment() is None
 
 
-def test_vector_refusal_reaches_the_contract_route(monkeypatch):
-    # PERF-SEL: a weakened vector read through the contract route is refused by the replay inside that route.
-    def flip(vectors):
-        vectors["accessChecks"][0]["expect"] = not vectors["accessChecks"][0]["expect"]
-    _changed_json(monkeypatch, profile.SUBJECT_PATHS["vectors.json"], flip)
-    with pytest.raises(ValueError, match="access check C001$"):
-        profile.validate_selinux_contract()
+def test_reviewed_bytes_is_the_only_semantic_read():
+    tree = ast.parse(profile.regular_bytes(profile.VALIDATOR_PATH))
+    names = {"_json", "_bound", "_era_import", "_era_model", "validate_era_bytes", "validate_license_amendment_status",
+             "validate_license_amendment"}
+    seen = set()
+    for node in tree.body:
+        if isinstance(node, ast.FunctionDef) and node.name in names:
+            seen.add(node.name)
+            used = {name.id for name in ast.walk(node) if isinstance(name, ast.Name)}
+            attributes = {attribute.attr for attribute in ast.walk(node) if isinstance(attribute, ast.Attribute)}
+            assert not used & {"regular_bytes", "open"} and not attributes & {"read_bytes", "read_text", "open"}
+    assert seen == names

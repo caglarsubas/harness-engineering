@@ -1,0 +1,193 @@
+{
+ "schemaVersion": "planeon.internal.license-policy-amendment-vectors/v1",
+ "cases": [
+  {
+   "expression": "LGPL-2.1-or-later",
+   "crateField": false,
+   "outcome": "HOST_OS_SYSTEM_LIBRARY",
+   "elections": [],
+   "note": "glibc, libmnl"
+  },
+  {
+   "expression": "LGPL-2.1-only",
+   "crateField": false,
+   "outcome": "HOST_OS_SYSTEM_LIBRARY",
+   "elections": [],
+   "note": "libseccomp"
+  },
+  {
+   "expression": "GPL-3.0-or-later WITH GCC-exception-3.1",
+   "crateField": false,
+   "outcome": "HOST_OS_SYSTEM_LIBRARY",
+   "elections": [],
+   "note": "the GCC runtime"
+  },
+  {
+   "expression": "GPL-2.0-or-later",
+   "crateField": false,
+   "outcome": "HOST_OS_SYSTEM_LIBRARY",
+   "elections": [],
+   "note": "libnftnl"
+  },
+  {
+   "expression": "GPL-2.0-only",
+   "crateField": false,
+   "outcome": "APPROVED_EXPLICIT_REVIEW",
+   "elections": [],
+   "note": "nft, libnftables (decision record)"
+  },
+  {
+   "expression": "GPL-3.0-only",
+   "crateField": false,
+   "outcome": "OPTIONAL_EXPLICIT_REVIEW",
+   "elections": [],
+   "note": "no decision record: still review-required"
+  },
+  {
+   "expression": "SSPL-1.0",
+   "crateField": false,
+   "outcome": "DENIED",
+   "elections": [],
+   "note": "denied, never overridden"
+  },
+  {
+   "expression": "WTFPL",
+   "crateField": false,
+   "outcome": "UNKNOWN",
+   "elections": [],
+   "note": "unclassified stays unknown"
+  },
+  {
+   "expression": "NOASSERTION",
+   "crateField": false,
+   "outcome": "PLANNED_UNRESOLVED",
+   "elections": [],
+   "note": "base placeholder"
+  },
+  {
+   "expression": "MIT OR Apache-2.0",
+   "crateField": false,
+   "outcome": "ACCEPTED_OR",
+   "elections": [
+    "Apache-2.0"
+   ],
+   "note": "Rust core and std, many crates: elects the core license"
+  },
+  {
+   "expression": "Unlicense OR MIT",
+   "crateField": false,
+   "outcome": "ACCEPTED_OR",
+   "elections": [
+    "MIT"
+   ],
+   "note": "memchr"
+  },
+  {
+   "expression": "Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT",
+   "crateField": false,
+   "outcome": "ACCEPTED_OR",
+   "elections": [
+    "Apache-2.0"
+   ],
+   "note": "rustix, linux-raw-sys"
+  },
+  {
+   "expression": "MPL-2.0 OR LGPL-3.0-or-later",
+   "crateField": false,
+   "outcome": "ACCEPTED_OR",
+   "elections": [
+    "MPL-2.0"
+   ],
+   "note": "libpathrs"
+  },
+  {
+   "expression": "LGPL-3.0-or-later OR GPL-2.0-or-later",
+   "crateField": false,
+   "outcome": "ACCEPTED_OR",
+   "elections": [
+    "LGPL-3.0-or-later"
+   ],
+   "note": "gmp: the owner's election"
+  },
+  {
+   "expression": "0BSD OR MIT OR Apache-2.0",
+   "crateField": false,
+   "outcome": "ACCEPTED_OR",
+   "elections": [
+    "Apache-2.0"
+   ],
+   "note": "adler2"
+  },
+  {
+   "expression": "MIT OR Zlib OR Apache-2.0",
+   "crateField": false,
+   "outcome": "ACCEPTED_OR",
+   "elections": [
+    "Apache-2.0"
+   ],
+   "note": "miniz_oxide"
+  },
+  {
+   "expression": "MIT AND Apache-2.0 WITH LLVM-exception AND (MIT OR Apache-2.0)",
+   "crateField": false,
+   "outcome": "ACCEPTED_AND",
+   "elections": [
+    "Apache-2.0"
+   ],
+   "note": "compiler_builtins"
+  },
+  {
+   "expression": "MIT/Apache-2.0",
+   "crateField": true,
+   "outcome": "ACCEPTED_OR",
+   "elections": [
+    "Apache-2.0"
+   ],
+   "note": "rustc-demangle's legacy field, read as MIT OR Apache-2.0"
+  },
+  {
+   "expression": "MIT AND SSPL-1.0",
+   "crateField": false,
+   "outcome": "DENIED",
+   "elections": [],
+   "note": "a denied AND term blocks"
+  },
+  {
+   "expression": "MIT AND WTFPL",
+   "crateField": false,
+   "outcome": "UNKNOWN",
+   "elections": [],
+   "note": "an unknown AND term blocks"
+  },
+  {
+   "expression": "MIT OR SSPL-1.0",
+   "crateField": false,
+   "outcome": "ACCEPTED_OR",
+   "elections": [
+    "MIT"
+   ],
+   "note": "accepted only by electing MIT"
+  },
+  {
+   "expression": "GPL-3.0-only OR WTFPL",
+   "crateField": false,
+   "outcome": "OPTIONAL_EXPLICIT_REVIEW",
+   "elections": [],
+   "note": "no accepted alternative"
+  },
+  {
+   "expression": "Apache-2.0 OR BSD-2-Clause",
+   "crateField": false,
+   "outcome": "ALLOWED_EXCEPTION_EXPRESSION",
+   "elections": [],
+   "note": "exact base exception keeps its outcome"
+  },
+  {
+   "expression": "Apache-2.0 AND LGPL-3.0-or-later",
+   "crateField": false,
+   "outcome": "OPTIONAL_EXPLICIT_REVIEW",
+   "elections": [],
+   "note": "exact base entry keeps its base outcome"
+  }
+ ]
+}

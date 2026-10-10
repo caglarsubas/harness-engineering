@@ -1,0 +1,114 @@
+{
+ "schemaVersion": "harness.planeon.ai/license-amendment-review/v1",
+ "round": 1,
+ "reviewDate": "2026-10-10",
+ "subjectCommit": "0082017d9014494ea46faea75e57c77ea6b4ddf6",
+ "subjectTree": "03d5e1cc5fd2289084192d40d373e854e441e064",
+ "verdict": "CHANGES_REQUIRED",
+ "findings": [
+  {
+   "id": "L1",
+   "severity": "MAJOR",
+   "location": "scripts/license_amendment.py Policy.leaf/resolve/classify; amendment.json hostOsSystemLibraryClass.allowedKinds/allowedCustody/neverFor, explicitReviewDecisions[].subjects, rules.andTerms",
+   "finding": "The amendment sets scopes but classify never enforces them. classify(policy, expression, crate_field) takes no component, kind, custody or subject. Policy keeps only the class expressions and the approved review expressions, as flat sets. As a result: (a) the GPL-2.0-only approval, which the record limits to nft and libnftables, approves GPL-2.0-only for any component. Likewise the LGPL-3.0-or-later approval, limited to gmp, approves LGPL-3.0-or-later anywhere, including the Phase-0 CODE_DEPENDENCY expression 'LGPL-3.0-or-later' in docs/phase-0/dependency-license-inventory.json, which the base marks DENY_RELEASE_WITHOUT_APPROVED_DECISION. (b) Inside a compound, a class term, an approved review term or an open-content term disappears behind ACCEPTED_AND or ACCEPTED_OR, with no trace. Probes: 'MIT AND GPL-2.0-or-later', 'MIT AND LGPL-2.1-only', 'MIT AND GPL-2.0-only' and 'MIT AND CC-BY-4.0' all give ACCEPTED_AND with elections []. 'CC-BY-4.0 OR GPL-3.0-only' gives ACCEPTED_OR electing CC-BY-4.0, although the base limits CC-BY-4.0 to non-code ARTIFACTs. So a consumer cannot apply allowedKinds/allowedCustody/neverFor or the decision subjects even if it wanted to. The andTerms rule says 'the obligations are the union of the terms' obligations', but classify returns no per-term category or obligation. This is broader than the decisions. Q-L limits the class to host-OS and statically linked system libraries. The two review approvals are tied to named components. Q-L2 says 'an allowed alternative' and Q-L3 says 'allowed, an allowed exception, reviewed or OR-resolved'; neither names open content or the class for arbitrary components.",
+   "requiredChange": "classify must take the component's identity, kind and custody, and refuse a class term, an approved explicit-review term or an open-content term outside its allowedKinds/allowedCustody/subjects/allowedUse. This applies inside AND and OR compounds too. classify should also return, per leaf, its category and obligations (release outcome), so the union of obligations can be computed. Bind the decision subjects (and decidedBy) into decisionDigest. Add vectors for a crate or planeon component carrying a class, review or open-content term, alone and inside compounds."
+  },
+  {
+   "id": "L2",
+   "severity": "MAJOR",
+   "location": "scripts/license_amendment.py classify (exact path: normalised in _all_exact(policy)); base optionalExplicitReview 'Apache-2.0 AND LGPL-3.0-or-later' and 'Apache-2.0 AND LGPL-3.0-or-later AND MIT'",
+   "finding": "Base exact entries keep their outcome only when spelled byte for byte. The exact check compares the raw input string, so an equivalent spelling skips it and goes to the AND-term rule, where the gmp-scoped LGPL-3.0-or-later approval accepts it. Exact 'Apache-2.0 AND LGPL-3.0-or-later' gives OPTIONAL_EXPLICIT_REVIEW. But each of these gives ACCEPTED_AND: 'LGPL-3.0-or-later AND Apache-2.0'; '(Apache-2.0 AND LGPL-3.0-or-later)'; the same with a double space, a tab or a no-break space; 'MIT AND Apache-2.0 AND LGPL-3.0-or-later'; and 'Apache-2.0 AND (LGPL-3.0-or-later AND MIT)'. The base lists these compounds (the Phase-0 CODE_DEPENDENCY expressions that validate_reuse requires on the review list) as needing their own explicit-review decision. Under base exact matching the variants are UNKNOWN (deny). The amendment accepts them with no review. This weakens the base.",
+   "requiredChange": "Before the exact lookup, canonicalise both the input and the base entries: drop redundant parentheses, use single ASCII spaces, and sort and flatten AND and OR operands. A compound equal to a base exact entry must keep its base outcome, and its terms must not be resolved one by one against approvals scoped to another subject (see L1). Add vectors for each variant above."
+  },
+  {
+   "id": "L3",
+   "severity": "MAJOR",
+   "location": "scripts/license_amendment.py Policy.resolve (AND: first blocking term in textual order; OR with no accepted alternative: results[0][0])",
+   "finding": "The blocking outcome depends on term order and ignores base evaluation.precedence (DENIED > UNKNOWN > PLANNED_UNRESOLVED > OPTIONAL_EXPLICIT_REVIEW). Probes: 'GPL-3.0-only AND SSPL-1.0' gives OPTIONAL_EXPLICIT_REVIEW, while 'SSPL-1.0 AND GPL-3.0-only' gives DENIED. 'NOASSERTION AND SSPL-1.0' gives PLANNED_UNRESOLVED; the base's catalog outcome for that is ACCEPT_PLANNED_PLACEHOLDER_ONLY for PLANNED modules, so a denied term is masked as a placeholder. 'WTFPL AND SSPL-1.0' gives UNKNOWN. 'NOASSERTION AND WTFPL' gives PLANNED_UNRESOLVED. With no accepted alternative, OR is also order-dependent: 'SSPL-1.0 OR WTFPL' gives DENIED but 'WTFPL OR SSPL-1.0' gives UNKNOWN, and 'GPL-3.0-only OR SSPL-1.0' gives OPTIONAL_EXPLICIT_REVIEW. This breaks the base mixedLicenseSetRule ('apply the highest-precedence outcome present') and the amendment's own claim that 'no rule weakens the base deniedRule'. A DENIED term (overrideAllowed false) can be reported as reviewable or as a planned placeholder.",
+   "requiredChange": "An AND compound must return its highest-precedence blocking outcome under base evaluation.precedence. For an OR with no accepted alternative, define one order-independent outcome (for example the most restrictive) and state it in rules.precedence. Add vectors for both term orders of 'GPL-3.0-only AND SSPL-1.0', 'NOASSERTION AND SSPL-1.0', 'NOASSERTION AND WTFPL' and 'SSPL-1.0 OR WTFPL'."
+  },
+  {
+   "id": "L4",
+   "severity": "MAJOR",
+   "location": "scripts/license_amendment.py Policy.resolve election; amendment.json rules.orChoice; ownerDecisions Q-L (libpathrs electing MPL-2.0) and Q-L2 (gmp elects LGPL-3.0-or-later)",
+   "finding": "When Apache-2.0 is absent, the election takes the first accepted alternative. It treats the host-OS class, approved review terms and open content as no worse than default-allowed licenses. Probes: 'GPL-2.0-or-later OR MIT' elects GPL-2.0-or-later. 'LGPL-3.0-or-later OR MIT' elects LGPL-3.0-or-later. 'CC-BY-4.0 OR MIT' elects CC-BY-4.0. Crate field 'GPL-2.0-or-later/MIT' elects GPL-2.0-or-later. So a restricted, copyleft or host-only license can be elected over an allowed one, against Q-L2's 'electing it', meaning the allowed alternative. The owner's named elections only hold because of term order. 'LGPL-3.0-or-later OR MPL-2.0', the libpathrs expression reversed, elects LGPL-3.0-or-later, contradicting Q-L's MPL-2.0 election. 'GPL-2.0-or-later OR LGPL-3.0-or-later', the gmp expression reversed (a likely order from sorting SBOM tools), elects GPL-2.0-or-later, contradicting Q-L2. Q-L asks for an exact entry for libpathrs electing MPL-2.0, and Q-L2 fixes gmp's election; neither is pinned as data, so this part of the decisions is missing. Elections also come back as a flat string list ('(MIT OR Apache-2.0) AND (Apache-2.0 OR Unlicense)' gives ['Apache-2.0','Apache-2.0']), which does not say which OR group each election resolves.",
+   "requiredChange": "Rank the alternatives: Apache-2.0 first, then DEFAULT_ALLOWED, then ALLOWED_EXCEPTION_EXPRESSION. Elect a class or approved-review alternative only when no allowed alternative exists, and only for an in-scope component (L1). Record the owner-named elections as data: libpathrs 'MPL-2.0 OR LGPL-3.0-or-later' elects MPL-2.0, and gmp 'LGPL-3.0-or-later OR GPL-2.0-or-later' elects LGPL-3.0-or-later. Check them independent of term order. Return elections in a structured form (the alternatives and the elected one). Add reversed-order vectors for libpathrs and gmp, plus restricted-versus-allowed OR vectors."
+  },
+  {
+   "id": "L5",
+   "severity": "MINOR",
+   "location": "scripts/license_amendment.py record()/_check()",
+   "finding": "check() does not pin the decided content, so changes broader than the decisions still pass. Mutation probes that check() accepted: adding 'AGPL-3.0-or-later' or 'GPL-3.0-or-later' to the host-OS class; adding a new explicit-review decision for 'AGPL-3.0-only' with a recomputed digest; changing a decision's subjects (they sit outside the digest); duplicating a decision record; switching GPL-2.0-only's decidedBy to Q-L2; setting approvingAuthority to 'x' (digest recomputed); setting class allowedCustody to REPOSITORY_BUILT; rewriting neverFor; rewriting the owner-decision summaries; rewriting the orChoice and precedence rule texts. Nothing pins amendment.json's own digest either. decisionDigest is a self-computed hash of the fields, not an authority binding.",
+   "requiredChange": "Pin the decided content in the checker. That means the class expression set exactly; each decision's expression, subjects and decidedBy (Q-L for GPL-2.0-only/nft+libnftables, Q-L2 for LGPL-3.0-or-later/gmp); allowedKinds and allowedCustody; and unique decision expressions. Alternatively pin amendment.json by digest in an authority record, following the repository's *-authority.json convention."
+  },
+  {
+   "id": "L6",
+   "severity": "MINOR",
+   "location": "scripts/license_amendment.py TOKEN/LICENSE_ID/_tokens/parse",
+   "finding": "The parser accepts input that is not valid SPDX. LICENSE_ID allows '+' anywhere and accepts a lone '+', '.' or '-' as an id. Lowercase operator words are taken as license ids. Any Unicode whitespace (\\s: tab, no-break space and so on) works as a separator. Inside an OR these malformed alternatives are silently ignored: 'MIT OR +', 'MIT OR .', 'MIT OR -', 'MIT OR and' and 'MIT OR with' all give ACCEPTED_OR electing MIT. Whitespace variants feed L2. Deep nesting (400 parentheses) raises RecursionError, which is not a ValueError refusal. Correct cases checked: WITH binds tightest, AND before OR, 'A WITH B OR C', nested parentheses, compound-WITH refusal, trailing or leading operators, 'MIT or Apache-2.0' refused, empty input, unbalanced parentheses, DocumentRef refused, legacy-slash edge cases.",
+   "requiredChange": "Tokenise to the SPDX 2.3 Annex D grammar: idstring = 1*(ALPHA/DIGIT/'-'/'.'), an optional trailing '+' only, LicenseRef- forms. Refuse operator words in any case as ids. Accept only ASCII space as the separator (or canonicalise before matching, per L2). Bound the input length and nesting depth, refusing with ValueError. Extend the vectors schema with an expected-refusal outcome and add malformed vectors."
+  },
+  {
+   "id": "L7",
+   "severity": "MINOR",
+   "location": "legal/license-policy-amendment/vectors.json; scripts/license_amendment.py coverage check; README 'the vectors cover every kind of outcome'",
+   "finding": "The 24 vectors cover every W03-0 selection expression: glibc and libmnl, libseccomp, libpathrs, nft, libgcc, the three crate OR forms, libnftnl, gmp, compiler_builtins and the rustc-demangle legacy field. Gaps remain. There are no DEFAULT_ALLOWED or OPEN_CONTENT vectors, so the README claim is false. There is no bare 'LGPL-3.0-or-later' approved vector, no unparenthesised AND-over-OR or nested-parenthesis vector, no multi-blocker AND, and no reversed elections (L3, L4). There are no refusal vectors, and the schema cannot express one. The coverage check requires only DENIED, UNKNOWN, OPTIONAL_EXPLICIT_REVIEW, ACCEPTED_AND, ACCEPTED_OR and the class. Removing every PLANNED_UNRESOLVED, APPROVED_EXPLICIT_REVIEW, ALLOWED_EXCEPTION_EXPRESSION or crateField vector still passes. Duplicate vectors and a non-bool crateField (1) are accepted.",
+   "requiredChange": "Add the missing vectors listed here and in L1 to L4 and L6. Make the coverage check require every outcome the classifier can return, including DEFAULT_ALLOWED, OPEN_CONTENT, APPROVED_EXPLICIT_REVIEW, PLANNED_UNRESOLVED and ALLOWED_EXCEPTION_EXPRESSION, plus at least one crateField and one refusal vector. Require crateField to be a bool, and require unique vectors."
+  },
+  {
+   "id": "L8",
+   "severity": "MINOR",
+   "location": "scripts/license_amendment.py ACCEPTED/outcomes; base statusRules.releaseAdmission",
+   "finding": "The amendment names approved review outcomes 'APPROVED_EXPLICIT_REVIEW', but the base release-admission list uses 'OPTIONAL_EXPLICIT_REVIEW_APPROVED'. Its new outcomes HOST_OS_SYSTEM_LIBRARY, ACCEPTED_AND and ACCEPTED_OR are in neither the base allowedFinalClassifications nor the forbidden list. Only the class states a releaseOutcome, so the W03 gate has no defined release admission for compound outcomes.",
+   "requiredChange": "Use the base name OPTIONAL_EXPLICIT_REVIEW_APPROVED, or map it explicitly. State the release admission and evidence obligations for HOST_OS_SYSTEM_LIBRARY, ACCEPTED_AND and ACCEPTED_OR (derived from the per-term obligations, L1)."
+  },
+  {
+   "id": "L9",
+   "severity": "MINOR",
+   "location": "legal/license-policy-amendment/README.md 'Why an overlay'",
+   "finding": "The README says the base policy 'is pinned by digest in 35 architecture records'. At 0082017, git grep finds the sha256 fa3a4398... in 32 architecture files: 36 matching lines, 47 occurrences. It also appears in legal/license-policy-amendment/amendment.json and scripts/license_amendment.py, which is 34 files in total. On base 195c4c9 the count is also 32 architecture files. 11 further architecture files cite the path without the digest. The rationale itself holds: the digest pin is widespread, and scripts/validate_reuse.py:_validate_license_policy (lines 905-910) pins schemaVersion, policyVersion 0.3.0 and coreLicense Apache-2.0, plus the exact category content and the non-overlap check.",
+   "requiredChange": "Correct the count to 32 architecture files, or state what is counted and how to reproduce it (for example the git grep command)."
+  },
+  {
+   "id": "L10",
+   "severity": "NOTE",
+   "location": "amendment.json explicitReviewDecisions[0]; W03-0 openItems D-POLICY-AMEND",
+   "finding": "D-POLICY-AMEND lists GPL-2.0-only (nft, libnftables) among the host-OS class entries. The amendment records it as an explicit-review decision instead. That is correct: GPL-2.0-only is a base OPTIONAL_EXPLICIT_REVIEW expression and the class must not overlap a base category. But the README does not say it departs from the W03-0 wording. libnftables' expression, like those of libnftnl and libmnl, should be confirmed against the shipped package in the host-image packet. Both decision records carry all seven base requiredDecisionFields, and both decisionDigest values recompute independently over the six non-digest fields as canonical JSON. The class shares no expression with any base category (checked and probed), and the base file is byte-identical with its sha256 matching. The OR-choice acceptance of 'MIT OR SSPL-1.0' by electing MIT is within Q-L2.",
+   "requiredChange": "None required. Optionally add one README sentence explaining why GPL-2.0-only is a decision record rather than a class entry, and add libnftables to the host-image packet's shipped-package license check."
+  }
+ ],
+ "checksRun": [
+  "git rev-parse HEAD and tree: 0082017d / 03d5e1cc confirmed; diff 195c4c9..HEAD is the 5 subject files only; base policy diff empty",
+  "python3 scripts/license_amendment.py (system python3 with PyYAML 6.0.3; no uv needed): valid",
+  "shasum -a 256 legal/third-party-license-policy.yaml = fa3a4398...a40d0 (matches pin)",
+  "Independent recomputation of both decisionDigest values over canonical JSON of the six non-digest required fields: both match",
+  "Required decision fields compared with base optionalExplicitReviewRule.requiredDecisionFields: all 7 present in both records",
+  "Class/base overlap: none of the 4 class expressions is in any of the 6 base categories",
+  "Comparison of ownerDecisions and class/rules/decisions with the caller-stated Q-L/Q-L2/Q-L3 texts and the W03-0 selection.json ownerDecisions, licenseReviews (11) and openItems D-POLICY-AMEND/D-LIC-CLOSURE",
+  "Vector coverage against all 11 W03-0 licenseReviews expressions plus compiler_builtins and rustc-demangle",
+  "Scratch classification probes (about 95 expressions) under /private/tmp/claude-501/lichost-review-r1/probe.py: scope leakage, exact-entry bypass, blocking-order dependence, election order, parser precedence/parentheses/malformed/lowercase/'+'/whitespace, legacy-slash edges",
+  "Scratch mutation probes (32) of check() through a fake read() under /private/tmp/claude-501/lichost-review-r1/mutate.py",
+  "Deep-nesting probe (200/400/2000 parentheses): RecursionError from 400",
+  "git grep count of the base sha256 at HEAD and 195c4c9 (32 architecture files, 36 lines, 47 occurrences) and path-only references",
+  "Read of scripts/validate_reuse.py _validate_license_policy (policyVersion 0.3.0 pin, category checks) and docs/phase-0/dependency-license-inventory.json review expressions",
+  "Worktree clean after review (git status --ignored empty; no __pycache__ written)"
+ ],
+ "sourcesRead": [
+  "legal/license-policy-amendment/REVIEW_BRIEF.md",
+  "legal/license-policy-amendment/README.md",
+  "legal/license-policy-amendment/amendment.json",
+  "legal/license-policy-amendment/vectors.json",
+  "scripts/license_amendment.py",
+  "legal/third-party-license-policy.yaml",
+  "scripts/validate_reuse.py (lines 150-185, 895-1000)",
+  "docs/phase-0/dependency-license-inventory.json",
+  "architecture/providers.yaml (license lines)",
+  "git show codex/w03-0-backend-distribution:architecture/backend-distribution/selection.json (ownerDecisions, licenseReviews, openItems, policySource)",
+  "git log of codex/w03-0-backend-distribution (add1b45)"
+ ],
+ "actions": {
+  "filesEdited": false,
+  "networkAccessed": "none",
+  "personalDataSent": false
+ }
+}

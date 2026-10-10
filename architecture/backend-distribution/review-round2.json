@@ -1,0 +1,155 @@
+{
+ "schemaVersion": "harness.planeon.ai/w03-selection-review/v1",
+ "round": 2,
+ "reviewDate": "2026-10-10",
+ "subjectCommit": "b4f958f27fd68ab119952be658e8c0620f3c9d55",
+ "subjectTree": "baa81ea9d822b2203bc75356500234956d1b5ae0",
+ "verdict": "CHANGES_REQUIRED",
+ "roundOneFindings": {
+  "F1": {
+   "status": "ADDRESSED",
+   "reason": "SC01 and D-SC01-PEER now describe the real etcd mechanism, and the unsafe 'empty list starts' option is gone. Most v3.7.2 citations check out: config.go:87 and :608-609, etcd.go:576 and :750-753, and pkg/flags/unique_urls.go, which is byte-identical to v3.6.15. One claim is stale at v3.7.2: that the advertise URLs must be host:port (new F4)."
+  },
+  "F2": {
+   "status": "ADDRESSED",
+   "reason": "Q-L was re-posed covering glibc, libseccomp and libpathrs; the owner chose L-a; there is one review entry per expression, and each is checked against the policy. The Rust crate closure statically linked through libpathrs is still outside the approved exact entries (new F2)."
+  },
+  "F3": {
+   "status": "ADDRESSED",
+   "reason": "D-LIC-GLIBC is attached to containerd, runc and the sandbox image. The 'Apache-2.0 only' claim is removed, and I06 SC13 is carried forward as D-I06-LICENSE. The GCC runtime that gcc adds to the same static links is not covered (new F2)."
+  },
+  "F4": {
+   "status": "FIXED",
+   "reason": "The sealed containerd config disables NRI, and the agent runs with --disable-nri. SC11 now covers the gRPC socket, its .ttrpc companion, NRI and the unset debug socket, at the positive vector's path."
+  },
+  "F5": {
+   "status": "FIXED",
+   "reason": "SC11 uses the vector's socket path. SC12 names all 15 sealed files, including ENCRYPTION_CONFIG, plus the conditional files. SC06 names the vector's 34 controllers."
+  },
+  "F6": {
+   "status": "FIXED",
+   "reason": "SC08 rewritten (shim reparenting, helpers, digest scope); D-HELPER-TYPES added; nft recorded as a host dependency with minimum version 1.0.1 (knftables nftables.go:152,162-163 verified). nft's library closure goes to new F2."
+  },
+  "F7": {
+   "status": "FIXED",
+   "reason": "containerd-stress is excluded alongside ctr in the part, the exclusion row and SC11."
+  },
+  "F8": {
+   "status": "FIXED",
+   "reason": "The agent's sealed flags are recorded: --fail-open=false, --disable-nri, loopback metrics, --kubeconfig and --hostname-override."
+  },
+  "F9": {
+   "status": "FIXED",
+   "reason": "kine's real reasons are recorded. The owner chose etcd v3.7.2 (Q-E); tag and SHA256SUMS verified."
+  },
+  "F10": {
+   "status": "ADDRESSED",
+   "reason": "Most round-1 probes are now refused: malformed review licenses, SSPL, review state versus Q-L, the Kubernetes repo and baseline, source builds outside the agent, duplicate digests, the sandbox reference, executables that are also excluded, dates, duplicate or unattached open items, and type confusion. Remaining gaps are in new F6."
+  },
+  "F11": {
+   "status": "ADDRESSED",
+   "reason": "No change was needed. The unchanged pins stand, and the new etcd v3.7.2 pins match."
+  },
+  "F12": {
+   "status": "ADDRESSED",
+   "reason": "Loopback binds adopted for the controller-manager, scheduler and kube-proxy (SC02). The kubelet's listener is not named (new F7)."
+  }
+ },
+ "findings": [
+  {
+   "id": "F1",
+   "severity": "MAJOR",
+   "location": "architecture/w03-plan/README.md 'Threads and W02d' ('No W02d change is needed'); plan.json:63 (threads.w02d), :65-82 (startupRecheck, startupConstraints)",
+   "finding": "The start-up re-check is accurate, but the claim that Rust plus musl fits NATIVE_STATIC with no W02d change misses two syscalls that are certain in steady state. (1) musl 1.2.5's mallocng realloc calls mremap(MREMAP_MAYMOVE) whenever the old and new sizes are both at or above MMAP_THRESHOLD (src/malloc/mallocng/realloc.c, branch 'use mremap if old and new size are both mmap-worthy'). Rust's default allocator on musl is musl malloc, so any Vec or String growing past about 128 KiB issues mremap. mremap is outside NATIVE_STATIC; only BROKER's filter has it, through the inherited worker superset (duty 23). EFFECT_GATE, OBSERVER, POLICY_WRITER and HOST_CONTAINMENT would be killed. (2) Naming a thread calls prctl(PR_SET_NAME=15): Rust 1.99 does so in sys/thread/unix.rs:412-425, reached from thread/lifecycle.rs:144-145, and musl's pthread_setname_np does the same for the current thread. NATIVE_STATIC has no prctl; BROKER allows only prctl(38). Common runtimes name threads by default; tokio, for example, names every worker and blocking-pool thread. Also, musl's abort and raise use tkill, not tgkill, so an abort becomes a SIGSYS kill rather than SIGABRT.",
+   "requiredChange": "Do not state 'No W02d change is needed' without qualification. Either add constraints the modules must keep: a global allocator that never calls mremap (or no reallocs above the mmap threshold), and unnamed threads only, with no runtime that names its threads. Or put a W02d reopening to the owner under W02d-Q2. Register the result as an obligation on HE-001 and T04."
+  },
+  {
+   "id": "F2",
+   "severity": "MAJOR",
+   "location": "selection.json licenseReviews (D-LIC-LIBPATHRS), openItems D-POLICY-AMEND; architecture/w03-plan/plan.json:110-113 (LIC-HOST), :83 (crates), :620-626 (LIC-1)",
+   "finding": "Q-L approved four exact policy entries, but more of the closure is still unclassified under EXACT_SPDX_EXPRESSION. Exact expressions are also pinned in validate_reuse EXPECTED_DEPENDENCY_EXPRESSIONS, and allowedExceptionExpressions lists only 'Apache-2.0 WITH LLVM-exception', 'Apache-2.0 OR BSD-2-Clause' and 'Apache-2.0 OR BSD-3-Clause'. (a) Rust std and core are 'MIT OR Apache-2.0' (library/std/Cargo.toml and library/core/Cargo.toml at b940084d) and are statically linked into every planned RUST_MUSL_STATIC module, so HE-001's license gate cannot pass. (b) libpathrs 0.2.6's crates, statically linked into runc: bitflags, itertools, libc, once_cell, thiserror and static_assertions ('MIT OR Apache-2.0'), memchr ('Unlicense OR MIT'), and rustix ('Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT'). D-LIC-LIBPATHRS names the crate closure but reviews only libpathrs' own expression. (c) The GCC runtime (libgcc/libgcc_eh, GPL-3.0-or-later WITH GCC-exception-3.1) that gcc adds to static links (containerd static, runc static-pie, pause), as far as objects are pulled in. (d) nft's shared-library closure: libnftables, libnftnl, libmnl, gmp, and jansson, which kube-proxy needs because knftables runs `nft --json` (nftables.go:410,474).",
+   "requiredChange": "Put the additional expressions, or a reviewed OR-choice evaluation rule, to the owner, and widen D-POLICY-AMEND and LIC-HOST to match. Make D-LIC-LIBPATHRS list its crate expressions. Add an obligation that LIC-HOST, in its widened form, precedes HE-001's license gate."
+  },
+  {
+   "id": "F3",
+   "severity": "MINOR",
+   "location": "architecture/w03-plan/plan.json:65-76 (startupRecheck), :51-58 (musl), :180-626 (obligations)",
+   "finding": "(a) The re-check depends on W02d v2 (MET-ENFORCE-018), which is not merged. The NATIVE_STATIC in this tree (architecture/seccomp-allowlists/allowlists.json) has ppoll but no poll. On x86_64, musl's poll() (src/select/poll.c) and __libc_start_main's AT_SECURE check (:47-48) both issue SYS_poll, which would be killed today. The register has no obligation for W02d v2 to merge first, and w03_plan.py checks against the pre-v2 allowlists. (b) The gettid citation points at library/std/src/sys/thread/mod.rs, which only re-exports. current_os_id is at library/std/src/sys/thread/unix.rs:330-347 and is called from library/std/src/sys/pal/unix/stack_overflow/thread_info.rs:112-113. The rest of the re-check holds: the init order is unchanged; poll and the 1.99 dup are as stated; install_main_guard_linux_musl returns None; gettid is new in 1.99 on spawned threads only; cleanup is removed. (c) The musl 'patches' list names two CVEs, but musl.sh:36-59 at b940084d also applies the CVE-2025-26519 patches, and musl-toolchain.sh adds its patches as 0003/0004 after musl-cross-make's own.",
+   "requiredChange": "Register 'W02d v2 merged with poll in NATIVE_STATIC' as a precondition of HE-001 and T04, and have w03_plan.py check for poll once v2 is merged. Correct the current_os_id citation and the musl patch list."
+  },
+  {
+   "id": "F4",
+   "severity": "MINOR",
+   "location": "selection.json SC01 'how', openItems D-SC01-PEER; README.md 'SC01 (D-SC01-PEER)'",
+   "finding": "The claim that --initial-advertise-peer-urls and --advertise-client-urls 'must be host:port forms (checkHostURLs, config.go:961-965)' was true at v3.6.15 but is stale at v3.7.2 (68c065e5). checkHostURLs now skips the unix and unixs schemes (server/embed/config.go:1340-1344), and the error text at :967 names 'unix:/path/to/socket'. So --advertise-client-urls can be unix:///run/qualification-k8s/datastore.sock, and the advertised peer URL can be a unix URL. The peer listener still uses only u.Host (etcd.go:576), so a relative unix://<name>[:<port>] socket in etcd's working directory remains the correct form, but the :<port> is no longer required.",
+   "requiredChange": "Correct the SC01 row, the README and D-SC01-PEER to the v3.7.2 behaviour, with :1340-1344 as the citation."
+  },
+  {
+   "id": "F5",
+   "severity": "MINOR",
+   "location": "architecture/w03-plan/plan.json packets (W02A-F2, W02G-F2, HE-008, VERIFIER-EXT), toolchains; selection.json openItems D-I06-LICENSE",
+   "finding": "The plan is not fully consistent with the selection and the owner decisions. (a) Of the selection's open items, only D-POLICY-AMEND (LIC-1) is in the obligation register. D-W02A-F2, D-SC01-PEER, D-HELPER-TYPES, D-I06-LICENSE, D-LIC-CLOSURE, D-NETPOL-BUILD, D-SANDBOX and D-RUNTIME-BPF have no packet mapping, and W02G-F2's summary names only D-SC01-PEER. (b) Q-N N-a needs a pinned Go toolchain and an offline module cache: go.mod at a145b01c says go 1.26.0, and the upstream Dockerfile uses golang:1.27. Neither the plan's toolchains nor the VERIFIER-EXT toolchain inventories name it. (c) D-I06-LICENSE still says 'once owner question Q-L is decided'. Q-L is decided.",
+   "requiredChange": "Register each selection open item with its packet. Add the Go toolchain and module cache to the toolchain record and to VERIFIER-EXT. Update the D-I06-LICENSE text."
+  },
+  {
+   "id": "F6",
+   "severity": "MINOR",
+   "location": "scripts/backend_distribution.py:181-185,108-111,81-92; scripts/w03_plan.py:73-80,121-123",
+   "finding": "Probes still accepted by backend_distribution.py: Q-L 'L-b' with approved official-binary reviews, because the binding only tests != PENDING; Q-E 'E-b' with etcd v3.7.2; etcd reset to v3.6.15 under Q-E E-a; a DATASTORE part from k3s-io/kine; an arm64 source that is the amd64 URL plus ' arm64', because the architecture check is a substring match; and every license review and host dependency removed. The policy is parsed with plain SafeLoader, so duplicate keys silently take the last value, and YAML errors raise yaml.YAMLError rather than the ValueError the README promises. The policy is also not pinned by digest. Probes accepted by w03_plan.py: thread flags are a recorded string not tied to musl, so 0x7d4f00 (which adds CLONE_VFORK) and 0x10900 both pass; the Rust commit is not tied to the version, so 1.90.0's 1159e78c passes as 1.99.0; musl patches and source are unchecked; result W02D_CHANGE_NEEDED passes while the README says no change; line numbers and anchors are unchecked (README.md:99999 and selection.json:D-NOPE pass); sources outside architecture/ are never checked; '..' in a source path reads outside the repository, failing with FileNotFoundError; integer flags raise TypeError; and a W03 obligation can be assigned to R12.",
+   "requiredChange": "Bind the owner decisions to the selected parts. Make the architecture check use the URL's path component. Load the policy with a duplicate-key-refusing constructor and map YAML errors to ValueError. In w03_plan.py, tie the thread flags to musl's documented set, check line ranges and anchors, refuse '..', and convert all errors to ValueError. Otherwise, narrow the README and docstring claims to what is checked."
+  },
+  {
+   "id": "F7",
+   "severity": "NOTE",
+   "location": "selection.json SC02; README.md 'Sealed process facts'",
+   "finding": "The kubelet's server listener (--address, default 0.0.0.0:10250) is not named in SC02, although the README says 'the other components' bind loopback. Binding it to loopback also needs the node address handled (--node-ip) so the apiserver can still reach the kubelet. This is advisory; SC07 already covers kubelet authentication.",
+   "requiredChange": "Optional: state the kubelet --address and --node-ip choice."
+  },
+  {
+   "id": "F8",
+   "severity": "NOTE",
+   "location": "selection.json, architecture/w03-plan/plan.json",
+   "finding": "Verified as written: the etcd v3.7.2 tag and archives; Rust 1.99.0 resolves to b940084d and 1.90.0 to 1159e78c; musl v1.2.5 pthread_create.c:243-245 flags (0x7d0f00) and :355 __clone, clone.s SYS_clone 56 (x86_64) and 220 (aarch64); 0x7d0f00 & 0x7e030900 == 0x10900, which matches W02d's clone rule (eq 67840, mask 2114128128); musl never uses clone3; posix_spawn uses CLONE_VM|CLONE_VFORK; __libc_start_main.c:43-54 AT_SECURE poll; Rust's unix init order; the musl guard returns None; gettid is new in 1.99 on spawned threads; the rest of the obligation register's cited lines match their texts (spot-checked all 48 architecture/ citations). Both check modules pass and read only their declared inputs; backend_distribution reads exactly 4 files. The round-1 bytes in round1/ equal the 5cdb1fb blobs, and review-round1.json is the round-1 verdict.",
+   "requiredChange": "None."
+  }
+ ],
+ "pinsVerified": {
+  "etcd-v3.7.2": {
+   "tag": "v3.7.2 annotated tag cb9b1aa2 -> commit 68c065e562994b89e333e77b039ad066f933c586 MATCH (tagged 2026-09-22)",
+   "amd64": "3a3679bc51a4ee9d30bccea1da7cd4fe62c6fc1d2ca1255068d2c53bf3026135 MATCH SHA256SUMS",
+   "arm64": "5e3ff99d428fabfcefdc95348f6560d1efe835f7b2d1ab3334fe0831076966b7 MATCH SHA256SUMS"
+  },
+  "unchangedPins": "Kubernetes x10, containerd-static x2, runc x2, CNI x2, pause index and 5 other tags are unchanged since round 1 (verified there)",
+  "rust-1.99.0": "tag daa8d75b -> b940084d7eb6a299eb4bfeb8e34901bc051e7ac4 MATCH",
+  "rust-1.90.0": "tag d8401009 -> 1159e78c4747b02ef996e55082b704c09b970588 MATCH",
+  "rustBundledMusl": "musl.sh:30 MUSL=musl-1.2.5; musl-toolchain.sh:54-55 CVE-2026-6042 and CVE-2026-40200 patches confirmed; musl.sh:36-59 also applies CVE-2025-26519 patches",
+  "i05Recheck": "unchanged; 5/5 files matched at f78e7223 in round 1"
+ },
+ "checksRun": [
+  "git diff 5cdb1fb b4f958f",
+  "python3 scripts/backend_distribution.py (passes)",
+  "python3 scripts/w03_plan.py (passes)",
+  "mutation probe /private/tmp/claude-501/w03-review-r2/probe/probe_bd.py (53 cases; read log = 4 inputs)",
+  "mutation probe /private/tmp/claude-501/w03-review-r2/probe/probe_plan.py (24 cases; 51 reads)",
+  "round1/ bytes compared with 5cdb1fb blobs (cmp)",
+  "etcd v3.7.2 tag resolution and SHA256SUMS",
+  "Rust 1.99.0/1.90.0 tag resolution; diff of library/std/src/sys/pal/unix/mod.rs and stack_overflow.rs; thread_info.rs set_current_info at both commits",
+  "clone-flag arithmetic against allowlists.json NATIVE_STATIC clone rule",
+  "NATIVE_STATIC and per-role rule census for poll, mremap, prctl, dup, openat",
+  "obligation register: printed and read every cited architecture/ line range"
+ ],
+ "sourcesRead": [
+  "etcd 68c065e5: server/embed/config.go, server/embed/etcd.go, server/etcdmain/config.go, server/etcdmain/etcd.go, pkg/flags/unique_urls.go, client/pkg/transport/unix_listener.go, client/pkg/transport/listener.go, client/pkg/types/urls.go",
+  "rust b940084d: library/std/src/sys/pal/unix/mod.rs, stack_overflow.rs, stack_overflow/thread_info.rs, library/std/src/sys/thread/mod.rs, library/std/src/sys/thread/unix.rs, library/std/src/thread/lifecycle.rs, library/std/Cargo.toml, library/core/Cargo.toml, library/Cargo.lock (compiler_builtins), src/ci/docker/scripts/musl.sh, musl-toolchain.sh",
+  "rust 1159e78c: library/std/src/sys/pal/unix/mod.rs, stack_overflow.rs, stack_overflow/thread_info.rs, library/std/src/sys/pal/unix/thread.rs",
+  "musl v1.2.5: src/thread/pthread_create.c, src/env/__libc_start_main.c, src/thread/x86_64/clone.s, src/thread/aarch64/clone.s, src/select/poll.c, src/signal/sigaction.c, src/malloc/mallocng/realloc.c, src/thread/pthread_setname_np.c",
+  "libpathrs v0.2.6 Cargo.toml dependencies",
+  "kubernetes f78e7223 vendor/sigs.k8s.io/knftables/nftables.go (round-1 copy)",
+  "repo: architecture/backend-distribution/{README.md,REVIEW_BRIEF.md,selection.json,review-round1.json,round1/}, scripts/backend_distribution.py, scripts/safe_yaml.py, architecture/w03-plan/{README.md,plan.json}, scripts/w03_plan.py, architecture/seccomp-allowlists/allowlists.json, status files and READMEs of native-profile-v3, i05-gate-channel-v3, i06-backend-profile{,-v2}, i07-policy-write-v3, admission-semantics-v3, selinux-matrix-v2, seccomp-allowlists, HOST_INTERFACE_SPEC.md, scripts/validate_reuse.py (license expression pins), legal/third-party-license-policy.yaml"
+ ],
+ "actions": {
+  "filesEdited": false,
+  "networkAccessed": "public release metadata and sources only",
+  "largeDownloads": []
+ }
+}

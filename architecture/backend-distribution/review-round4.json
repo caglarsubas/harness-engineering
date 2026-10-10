@@ -1,0 +1,97 @@
+{
+ "schemaVersion": "harness.planeon.ai/w03-selection-review/v1",
+ "round": 4,
+ "reviewDate": "2026-10-10",
+ "subjectCommit": "add1b45f062c85b6b0a618f5e3388b0f920d13ae",
+ "subjectTree": "590a11ce60eee5ff8d10dc68d98a4efb24527994",
+ "verdict": "CHANGES_REQUIRED",
+ "roundThreeFindings": {
+  "F1": {
+   "status": "ADDRESSED",
+   "reason": "Owner decision Q-L3 (L3-a) is recorded in both records. D-POLICY-AMEND now carries the AND-term rule and the legacy 'A/B' normalisation. LIC-RUST-STD lists the Rust std closure (including compiler_builtins and rustc-demangle), and LIC-GATE assigns the full crate list and elections to HE-001 and HE-008. either and linux-raw-sys are added to runc's crate reviews. Remaining gap: w03_plan.py does not require LIC-GATE to be present (new F3)."
+  },
+  "F2": {
+   "status": "FIXED",
+   "reason": "Q-L2 and Q-L3 are recorded in selection.json and Q-L3 and Q-S in plan.json, all bound by the checks. The Q-L2 reviews are attributed to Q-L2. SC13 and the LIC-HOST summary now name the full closure, VERIFIER-EXT names Go 1.26.7 and the module cache, and gmp's explicit-review decision record is stated. Per-review attribution is not bound by the check (new F3)."
+  },
+  "F3": {
+   "status": "ADDRESSED",
+   "reason": "plan.json TR-SETXID is restated correctly (setxid.c:32, synccall.c:59, the parent's copied libc state). architecture/w03-plan/README.md:26-27 still gives the old tkill reason (new F2)."
+  },
+  "F4": {
+   "status": "ADDRESSED",
+   "reason": "Round-3 probes now refused: unclassified or unapproved elections, a host dependency whose license differs from its review's, a missing selection open item, a missing LIC-RUST-STD, self-citation of plan.json, reversed ranges, an inexact Go version, unused packets, result W02D_CHANGE_NEEDED, and any text after the W01-AMEND prefix. Remaining gaps are in new F3."
+  },
+  "F5": {
+   "status": "FIXED",
+   "reason": "The host dependency list is labelled as the minimum, extended from the shipped packages (readline, libedit, linenoise, libxtables). Versions are deferred to the host-OS choice. crun's exclusion reason is reworded and also cites OWNER-Q4."
+  },
+  "F6": {
+   "status": "ADDRESSED",
+   "reason": "No change was needed. The W01-AMEND citations now point at the merged architecture/host-interface-amendment-w02d/ records; all four quoted amendment.json anchors and the status.json R4-1 entry exist."
+  }
+ },
+ "findings": [
+  {
+   "id": "F1",
+   "severity": "MINOR",
+   "location": "architecture/w03-plan/plan.json SEC-1..SEC-6 sources; scripts/w03_plan.py:16,132-141 (ALLOWLISTS_PATH), :25-26 (W01_AMEND, W01_AMEND_ITEMS)",
+   "finding": "After the rebase, the plan still points at the W02d v1 record, which W02d v2 replaces. architecture/seccomp-allowlists-v2/status.json:8-11 says it supersedes v1, and it is an ADOPTED_DATA_CONTRACT. Yet SEC-1, SEC-3, SEC-4 and SEC-5 cite architecture/seccomp-allowlists/status.json:79-85, SEC-2 and SEC-6 cite the v1 README, and w03_plan.py checks the toolchain partition against the v1 allowlists. v2's carriedToW03 (status.json:92-102) has nine items, including two that are new: (a) 'pin musl 1.2.5 and Rust 1.90.0 for the native roles, or re-check the NATIVE_STATIC base and the clone3 rule against W02d for the pinned versions (W01-AMEND-QW4)'; (b) 'trace the Rust/musl native roles against NATIVE_STATIC, including review note R4-1's paths'. Item (a) has no obligation of its own: W03-0's start-up re-check covers start-up, and steady state is left to W02D-V3 and T04. Item (b) is only partly covered by TR-*. v2 also lists O-SERVER-MEMFD under carriedToW03, while the plan scopes it OUTSIDE_W03; the amendment's own owner field ('today the R12 live backend', amendment.json obligations) supports the plan, but the register does not say so. In w03_plan.py, W01_AMEND (which still says 'pending merge') and W01_AMEND_ITEMS are unused.",
+   "requiredChange": "Cite v2's carriedToW03 lines for the SEC items. Add an obligation for the QW4 pin-or-re-check item (W03-0 for start-up, W02D-V3 and T04 for steady state). Check the toolchain partition against the v2 allowlists. Record why O-SERVER-MEMFD is outside W03, citing the amendment's owner field. Remove the dead constants."
+  },
+  {
+   "id": "F2",
+   "severity": "MINOR",
+   "location": "architecture/w03-plan/README.md:26-27",
+   "finding": "The plan README still says 'musl's setresuid and setresgid go through __synccall, which signals other threads with tkill, so the broker's W4 child makes the raw syscalls (TR-SETXID)'. In the W4 child, synccall.c:67 takes the single-threaded path, so the child never issues tkill. plan.json's TR-SETXID and the backend README's round-3 F3 disposition ('restated') have both been corrected; this README sentence has not.",
+   "requiredChange": "Restate the sentence as in plan.json TR-SETXID: the clone3 child makes only async-signal-safe raw syscalls, because __synccall takes __tl_lock (synccall.c:59) and the child runs on the parent's copied libc state."
+  },
+  {
+   "id": "F3",
+   "severity": "MINOR",
+   "location": "scripts/backend_distribution.py:280-287,246-252; scripts/w03_plan.py:63-82,176-186",
+   "finding": "Round-3 and round-4 probes still accepted by backend_distribution.py: elections are not tied to the owner's recorded elections, so libpathrs electing LGPL-3.0-or-later instead of Q-L's MPL-2.0 passes, as do the MIT OR Apache-2.0 crates electing MIT; and a review's decision attribution is not tied to the review, so glibc attributed to Q-L2 or libgcc to Q-L passes. Gaps in w03_plan.py: an anchor may be any substring of the cited file, so 'the' in amendment.json or in a README passes and a quoted-key anchor proves little; the plan's own README can be cited, as VX-1 does (architecture/w03-plan/README.md:VERIFIER-EXT), even though plan.json cannot; LIC-GATE and TR-SETXID can be dropped without refusal, although Q-L3 and W01-AMEND R4-1 require them.",
+   "requiredChange": "Tie the owner-named elections (libpathrs MPL-2.0, gmp LGPL-3.0-or-later, compiler_builtins Apache-2.0) and each review's decision to the owner records. Require anchors to be identifiers or quoted JSON keys, or line ranges. Refuse the plan README as a source. Require LIC-GATE and the TR-* obligations to be registered."
+  },
+  {
+   "id": "F4",
+   "severity": "NOTE",
+   "location": "architecture/w03-plan/plan.json SEC-7, SEC-8, TR-SETXID, LIC-RUST-STD, LIC-GATE sources; selection.json D-POLICY-AMEND",
+   "finding": "Several obligations cite the reviewer's own records (review-round2.json, review-round3.json) as their source. SEC-7 cites the round-2 phrase 'MET-ENFORCE-018), which is not merged', which is no longer true now that W02d v2 is merged. Primary sources are available: seccomp-allowlists-v2/status.json:46 (the W01-AMEND-QW4 decision) and README.md:12 for poll, and selection.json's recorded Q-L3 for the licence obligations. Separately, D-POLICY-AMEND words the OR rule as accepting 'an allowed or reviewed alternative', while Q-L2's summary says 'an allowed alternative' and approves gmp's explicit-review election as a specific case. The check enforces the narrower meaning: an explicit-review election only with owner approval.",
+   "requiredChange": "Optional: cite the primary records instead, and word D-POLICY-AMEND's OR rule as 'allowed or an allowed exception; an explicit-review alternative only with an owner-approved decision record'."
+  },
+  {
+   "id": "F5",
+   "severity": "NOTE",
+   "location": "verification",
+   "finding": "Verified: the rebase preserved the subject (no diff between af8892c and 1f33988 on the subject paths); the round3/ bytes equal af8892c; review-round3.json is the round-3 verdict and includes its disclosure. seccomp-allowlists-v2 NATIVE_STATIC grants poll with the same clone rule (eq 0x10900, mask 0x7E030900) and the same arch_prctl rule as v1. W01-AMEND-QW4 names musl 1.2.5 with Rust 1.90.0 as the analysed reference (v2 README:12, status.json:46). The amendment.json anchors O-W03-GROUPS, O-W03-WORKER-EXEC, O-SERVER-MEMFD and O-T04-AMEND exist; host-interface-amendment-w02d/status.json R4-1 names prctl(PR_SET_NAME), tkill in setresuid, setresgid and abort, available_parallelism, and stdio /dev/null. R10's tools.lock pins /opt/planeon/go/1.26.7 with gomodcache op-001. W02D-V2 is merged; W02D-V3 is not in the tree and remains a precondition. The plan has 70 obligations and 17 packets. Both check modules pass; backend_distribution reads its 4 inputs, and w03_plan reads 74 cited files.",
+   "requiredChange": "None."
+  }
+ ],
+ "pinsVerified": {
+  "unchangedPins": "Artifact digests, tags, the pause index and the policy digest (fa3a4398...) are unchanged since round 3",
+  "goPin": "R10 tools.lock: go 1.26.7 at /opt/planeon/go/1.26.7/bin/go; gomodcache /opt/planeon/gomodcache/op-001",
+  "round3Bytes": "round3/ README, REVIEW_BRIEF, selection.json, both scripts and both plan files equal af8892c; rebased 1f33988 is identical on the subject paths"
+ },
+ "checksRun": [
+  "git diff 1f33988 add1b45; git diff af8892c 1f33988 on subject paths (empty)",
+  "cmp of round3/ against af8892c blobs",
+  "python3 scripts/backend_distribution.py (passes)",
+  "python3 scripts/w03_plan.py (passes)",
+  "probe_bd.py: round-3 probes plus 7 new ones (/private/tmp/claude-501/w03-review-r4/probe/)",
+  "probe_plan.py: round-3 probes plus 7 new ones",
+  "v1 and v2 NATIVE_STATIC rule comparison; v2 and amendment status carry lists; amendment.json obligation anchors",
+  "R10 tree listing and tools.lock read (gh api)"
+ ],
+ "sourcesRead": [
+  "repo: architecture/backend-distribution/{README.md,REVIEW_BRIEF.md,selection.json,review-round3.json,round3/}, architecture/w03-plan/{README.md,plan.json}, scripts/backend_distribution.py, scripts/w03_plan.py",
+  "merged main 195c4c9: architecture/seccomp-allowlists-v2/{README.md,status.json,allowlists.json}, architecture/host-interface-amendment-w02d/{amendment.json,status.json,README.md}",
+  "github caglarsubas/mas-harness-operator: tree listing and tools.lock",
+  "musl v1.2.5 setxid.c and synccall.c (round-3 copies)"
+ ],
+ "actions": {
+  "filesEdited": false,
+  "networkAccessed": "public release metadata and sources only (this round: GitHub API through the existing gh session); no personal data in any request, and no other services contacted",
+  "largeDownloads": []
+ }
+}

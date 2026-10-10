@@ -1,0 +1,846 @@
+{
+ "schemaVersion": "planeon.internal.w03-plan/v1",
+ "ownerDecisions": [
+  {
+   "id": "Q1",
+   "selected": "a",
+   "summary": "R10 mas-harness-operator host-enforcement/; the owner extends the verifier policy from a reviewed package."
+  },
+  {
+   "id": "Q2",
+   "selected": "a",
+   "summary": "Rust for the five native roles."
+  },
+  {
+   "id": "Q3",
+   "selected": "a",
+   "summary": "musl, fully static; W02d's glibc rationale scoped to the CPython roles."
+  },
+  {
+   "id": "Q5",
+   "selected": "a",
+   "summary": "Five modules (with the writer), plus host-image/ and enrollment/ with an off-host signer."
+  }
+ ],
+ "toolchains": {
+  "CPYTHON_3_12": {
+   "roles": [
+    "SERVER",
+    "WORKER"
+   ],
+   "python": "3.12.14",
+   "libc": "glibc 2.34 or later, no CET or shadow-stack arch_prctl at start-up (W02d)"
+  },
+  "RUST_MUSL_STATIC": {
+   "roles": [
+    "BROKER",
+    "EFFECT_GATE",
+    "HOST_CONTAINMENT",
+    "OBSERVER",
+    "POLICY_WRITER"
+   ],
+   "rust": {
+    "version": "1.99.0",
+    "commit": "b940084d7eb6a299eb4bfeb8e34901bc051e7ac4"
+   },
+   "targets": [
+    "aarch64-unknown-linux-musl",
+    "x86_64-unknown-linux-musl"
+   ],
+   "linking": "static (crt-static, the musl targets' default), self-contained rust-lld",
+   "musl": {
+    "version": "1.2.5",
+    "patches": [
+     "CVE-2025-26519",
+     "CVE-2026-40200",
+     "CVE-2026-6042"
+    ],
+    "source": "rust-lang/rust src/ci/docker/scripts/musl.sh:30 and :36-59, musl-toolchain.sh:54-55 at b940084d"
+   },
+   "threads": {
+    "syscall": "clone",
+    "flags": "0x7d0f00",
+    "source": "musl v1.2.5 src/thread/pthread_create.c:243-245 and :355; src/thread/x86_64/clone.s (SYS_clone 56); src/thread/aarch64/clone.s (SYS_clone 220)",
+    "w02d": "admitted by NATIVE_STATIC's thread rule (flags & 0x7e030900 == 0x10900); musl never issues clone3, so W02d-QB's clone3 -> ENOSYS rule needs no fallback; musl's posix_spawn (CLONE_VM | CLONE_VFORK) is refused, and only the broker spawns, through its own clone3 (W2). Steady state needs W02d v3 (owner decision Q-S, S-b): musl's mallocng realloc uses mremap(MREMAP_MAYMOVE) above the mmap threshold, thread naming uses prctl(PR_SET_NAME), and musl's abort and raise use tkill"
+   },
+   "startupRecheck": {
+    "reference": "W02d v2 (MET-ENFORCE-018, pending merge) analysed musl 1.2.5 with Rust 1.90.0 (1159e78c4747b02ef996e55082b704c09b970588) and added poll to NATIVE_STATIC",
+    "pinned": "Rust 1.99.0 (b940084d)",
+    "result": "SAME_STARTUP_SYSCALLS",
+    "findings": [
+     "std's unix init keeps its order (library/std/src/sys/pal/unix/mod.rs init): sanitize_standard_fds, reset_sigpipe, stack_overflow::init, args::init.",
+     "sanitize_standard_fds issues one poll on fds 0-2 (musl: SYS_poll on x86_64, ppoll on aarch64, src/select/poll.c); it opens /dev/null only for a closed fd, and 1.99 adds a dup for a further closed fd. open and dup are outside NATIVE_STATIC, so units supply fds 0-2.",
+     "reset_sigpipe: one rt_sigaction (SIGPIPE ignored).",
+     "stack_overflow::init: the page size comes from the auxiliary vector; on musl install_main_guard_linux_musl returns None without pthread_getattr_np, so no mremap probe runs; rt_sigaction queries and installs SIGSEGV and SIGBUS handlers; mmap and mprotect build the alternate stack; sigaltstack installs it.",
+     "New in 1.99: set_current_info records each spawned thread's OS id through the gettid syscall (current_os_id, library/std/src/sys/thread/unix.rs:330-347, called from library/std/src/sys/pal/unix/stack_overflow/thread_info.rs:112-113); gettid is in NATIVE_STATIC. On musl the main thread records no guard range, so the main thread issues no gettid at start. cleanup no longer unmaps the main alternate stack at exit.",
+     "musl's __libc_start_main polls fds 0-2 when AT_SECURE is set (src/env/__libc_start_main.c:43-54), which a confined domain transition can set; that is the same poll or ppoll syscall."
+    ]
+   },
+   "startupConstraints": [
+    "No std::thread::available_parallelism or similar cgroup and /proc reads: NATIVE_STATIC grants no file access, so worker-thread counts are configuration.",
+    "Units supply fds 0-2, so neither musl's AT_SECURE start-up check nor Rust std's fd sanitising opens /dev/null or calls dup.",
+    "No current_exe, environment-driven paths or locale files; T04 traces the start-up and steady state of each built module on both architectures (SEC-1)."
+   ],
+   "crates": "vendored with cargo vendor; builds use --locked --offline --frozen; licenses checked against legal/third-party-license-policy.yaml as amended by LIC-HOST (Rust std and core are MIT OR Apache-2.0, accepted by its OR-choice rule); CycloneDX SBOM per artifact"
+  }
+ },
+ "buildToolchains": {
+  "GO_AGENT_BUILD": {
+   "for": "kube-network-policies v1.1.2 (a145b01c), owner decision Q-N (N-a)",
+   "go": "1.26.7, R10's pinned Go (the module requires go 1.26.0; upstream's Dockerfile uses golang:1.27)",
+   "moduleCache": "an offline module cache for a145b01c, inventoried like R10's gomodcache",
+   "build": "GOOS=linux, GOARCH amd64 and arm64, CGO_ENABLED=0, static; digests recorded (D-NETPOL-BUILD)"
+  }
+ },
+ "scope": {
+  "repository": "caglarsubas/mas-harness-operator",
+  "root": "host-enforcement/",
+  "modules": [
+   "containment",
+   "broker",
+   "observer",
+   "gate",
+   "writer"
+  ],
+  "support": [
+   "host-image",
+   "enrollment"
+  ],
+  "signer": "off-host (W01 P4); the host carries only public trust material",
+  "amends": "docs/adr/0009-host-enforcement-ownership.md and docs/alpha-2/ENFORCEMENT_INTEGRATION.md, which name four modules"
+ },
+ "packets": [
+  {
+   "id": "W03-0",
+   "where": "meta",
+   "summary": "Backend distribution selection, toolchain decision, R10 scope and this plan (this packet)."
+  },
+  {
+   "id": "W02D-V2",
+   "where": "meta",
+   "summary": "Parallel lane's packet 220 (MET-ENFORCE-018, W01-AMEND) with seccomp-allowlists-v2, which adds poll to NATIVE_STATIC; it must be merged before HE-001 and T04."
+  },
+  {
+   "id": "W02D-V3",
+   "where": "meta",
+   "summary": "Parallel lane's W02d v3 (owner decision Q-S, S-b): NATIVE_STATIC adds mremap with flags == MREMAP_MAYMOVE, prctl with PR_SET_NAME and tkill; a precondition for the native roles in steady state."
+  },
+  {
+   "id": "LIC-HOST",
+   "where": "meta",
+   "summary": "License policy amendment (owner decision Q-L, L-a): a reviewed class for host-OS and statically linked system libraries, with history projection for the validators that pin the policy identity."
+  },
+  {
+   "id": "W02A-F2",
+   "where": "meta",
+   "summary": "Production W02a backend profile naming the selected components (paths, confined types, verity digests)."
+  },
+  {
+   "id": "W02G-F2",
+   "where": "meta",
+   "summary": "I06 successor bound to the production profile; resolves D-SC01-PEER."
+  },
+  {
+   "id": "VERIFIER-EXT",
+   "where": "owner-root",
+   "summary": "Verifier policy gains mas-harness-operator and a host-enforcement toolchain profile; toolchain inventories under /opt/planeon; App access and branch protection on R10."
+  },
+  {
+   "id": "HE-001",
+   "where": "R10",
+   "summary": "host-enforcement scaffold: Cargo workspace, toolchain and lock pins, vendored closure, license and SBOM gate, cross-builds for both architectures."
+  },
+  {
+   "id": "HE-002",
+   "where": "R10",
+   "summary": "Effect gate framing: I05 and I07 channels, journal and failure marker, against the v3 vectors."
+  },
+  {
+   "id": "HE-003",
+   "where": "R10",
+   "summary": "Effect gate I04 substrate: TLS and HTTP, connection stamping C1-C7, the 900 s upstream bound."
+  },
+  {
+   "id": "HE-004",
+   "where": "R10",
+   "summary": "Policy observer: I06 snapshots and closure checks, manifest hash before ACTIVE, inspector policy."
+  },
+  {
+   "id": "HE-005",
+   "where": "R10",
+   "summary": "Capacity broker: W1-W6, I02 and I03, embedding the exact worker filter."
+  },
+  {
+   "id": "HE-006",
+   "where": "R10",
+   "summary": "Host containment: S2-S5, cgroup labelling, helper-free BPF programs, MULTI attach, pins, seal."
+  },
+  {
+   "id": "HE-007",
+   "where": "R10",
+   "summary": "Policy writer: the I07 client artifact."
+  },
+  {
+   "id": "HE-008",
+   "where": "R10",
+   "summary": "Host image and enrollment: units, boot entry, SELinux modules, sysctls and seal configuration, kernel module list, backend artifacts, CPython build, manifest signer and enrollment ledger."
+  },
+  {
+   "id": "T04",
+   "where": "native",
+   "summary": "Native kernel and policy facts on the enrolled host (parallel lane's W04 tests consume released artifacts)."
+  },
+  {
+   "id": "R12",
+   "where": "other",
+   "summary": "Outside W03: the R12 live backend."
+  }
+ ],
+ "obligations": [
+  {
+   "id": "NP-1",
+   "source": "architecture/native-profile-v3/README.md:65",
+   "text": "No production profile exists until a reviewed schema revision adds one.",
+   "packets": [
+    "W02A-F2"
+   ],
+   "scope": "W03"
+  },
+  {
+   "id": "NP-2",
+   "source": "architecture/native-profile-v3/README.md:45-46",
+   "text": "The enrollment ledger keeps the complete v1/v2 history.",
+   "packets": [
+    "HE-008"
+   ],
+   "scope": "W03"
+  },
+  {
+   "id": "NP-3",
+   "source": "architecture/native-profile-v3/status.json:59",
+   "text": "Inspection freezes through an ancestor and never writes the broker leaf's cgroup.freeze.",
+   "packets": [
+    "HE-004"
+   ],
+   "scope": "W03"
+  },
+  {
+   "id": "NP-4",
+   "source": "architecture/native-profile-v3/status.json:63",
+   "text": "E1-CENSUS: no role receives a socket created outside its role cgroup.",
+   "packets": [
+    "HE-008"
+   ],
+   "scope": "W03"
+  },
+  {
+   "id": "NP-5",
+   "source": "architecture/native-profile-v3/status.json:50",
+   "text": "R6-1: kernel image or UKI, embedded initrd, cmdline and addons, systemd-stub sidecars, sysext and confext, network roots.",
+   "packets": [
+    "HE-008"
+   ],
+   "scope": "W03"
+  },
+  {
+   "id": "NP-6",
+   "source": "architecture/native-profile-v3/README.md:84-93",
+   "text": "K1 installed state: default.target, generators, init binary, initramfs, the SystemdOptions EFI variable, SMBIOS and fw_cfg credentials.",
+   "packets": [
+    "HE-008"
+   ],
+   "scope": "W03"
+  },
+  {
+   "id": "NP-7",
+   "source": "architecture/native-profile-v3/README.md:59",
+   "text": "Python is linked against shared copies outside the tree; native roles share no bytes with /opt/planeon/python/.",
+   "packets": [
+    "HE-008"
+   ],
+   "scope": "W03"
+  },
+  {
+   "id": "NP-8",
+   "source": "architecture/native-profile-v3/README.md:66",
+   "text": "The qualk8s_* types are confined.",
+   "packets": [
+    "HE-008"
+   ],
+   "scope": "W03"
+  },
+  {
+   "id": "I05-1",
+   "source": "architecture/i05-gate-channel-v3/outcome-mapping.json:167",
+   "text": "Re-check the mapping rows and DELETE bodies against the selected distribution.",
+   "packets": [
+    "W03-0"
+   ],
+   "scope": "W03"
+  },
+  {
+   "id": "I05-2",
+   "source": "architecture/i05-gate-channel-v3/README.md:325",
+   "text": "The gate's substrate enforces the 900-second upstream bound.",
+   "packets": [
+    "HE-003"
+   ],
+   "scope": "W03"
+  },
+  {
+   "id": "I05-3",
+   "source": "architecture/i05-gate-channel-v3/README.md:329-330",
+   "text": "HTTP/TLS substrate, stamping and exact rendering; journal and failure-marker storage formats.",
+   "packets": [
+    "HE-002",
+    "HE-003"
+   ],
+   "scope": "W03"
+  },
+  {
+   "id": "I05-4",
+   "source": "architecture/i05-gate-channel-v3/status.json:58",
+   "text": "AF2-I05-1: a vector that a second STORAGE_FAIL_AFTER replaces the first.",
+   "packets": [
+    "HE-002"
+   ],
+   "scope": "W03"
+  },
+  {
+   "id": "I06-1",
+   "source": "architecture/i06-backend-profile-v2/status.json:49",
+   "text": "R1-4: production evidence needs a production W02a profile and an I06 successor bound to it.",
+   "packets": [
+    "W02A-F2",
+    "W02G-F2"
+   ],
+   "scope": "W03"
+  },
+  {
+   "id": "I06-2",
+   "source": "architecture/i06-backend-profile-v2/status.json:50",
+   "text": "R1-5: compose check_evidence with check_qualification per record; keep W02a caller obligations 1 and 4.",
+   "packets": [
+    "HE-004"
+   ],
+   "scope": "W03"
+  },
+  {
+   "id": "I06-3",
+   "source": "architecture/i06-backend-profile-v2/status.json:51",
+   "text": "R1-7: refuse a snapshot when a non-resource-URL rule is bound to system:apiserver.",
+   "packets": [
+    "HE-004"
+   ],
+   "scope": "W03"
+  },
+  {
+   "id": "I06-4",
+   "source": "architecture/i06-backend-profile-v2/status.json:47",
+   "text": "R2-4: distinct verityDigest values for backend executables, or rely on the captures.",
+   "packets": [
+    "HE-008"
+   ],
+   "scope": "W03"
+  },
+  {
+   "id": "I06-5",
+   "source": "architecture/i06-backend-profile/status.json:24",
+   "text": "N4: a file-level sealing map and --kubelet-certificate-authority.",
+   "packets": [
+    "HE-008"
+   ],
+   "scope": "W03"
+  },
+  {
+   "id": "I06-6",
+   "source": "architecture/i06-backend-profile/status.json:25",
+   "text": "N5: kubernetesVersion is the gitVersion every component reports, with no vendor suffix.",
+   "packets": [
+    "W03-0"
+   ],
+   "scope": "W03"
+  },
+  {
+   "id": "I06-7",
+   "source": "architecture/i06-backend-profile/README.md:217-219",
+   "text": "Issue each profile identity's credential from the off-host CA with its fixed name; bind apiIdentities.",
+   "packets": [
+    "HE-008"
+   ],
+   "scope": "W03"
+  },
+  {
+   "id": "I07-1",
+   "source": "architecture/i07-policy-write-v3/README.md:144",
+   "text": "R4: enrollment refuses a successor generation while a write is unterminated or an ambiguous write unreconciled.",
+   "packets": [
+    "HE-008"
+   ],
+   "scope": "W03"
+  },
+  {
+   "id": "I07-2",
+   "source": "architecture/i07-policy-write-v3/README.md:145",
+   "text": "The writer artifact, socket and substrate; journal and marker formats.",
+   "packets": [
+    "HE-007"
+   ],
+   "scope": "W03"
+  },
+  {
+   "id": "ADM-1",
+   "source": "architecture/admission-semantics-v3/status.json:61-62",
+   "text": "AF2-ADM-1 lifecycle-hook httpGet defaults disposition; AF2-ADM-2 MC39 cell wording.",
+   "packets": [
+    "HE-008"
+   ],
+   "scope": "W03"
+  },
+  {
+   "id": "ADM-2",
+   "source": "architecture/admission-semantics-v3/README.md:85,140-143,262",
+   "text": "Build the signer and manifest enrollment; the signer refuses fields of disabled gates (C27).",
+   "packets": [
+    "HE-008"
+   ],
+   "scope": "W03"
+  },
+  {
+   "id": "ADM-3",
+   "source": "architecture/admission-semantics-v3/README.md:189,256-257",
+   "text": "Sealed values (namespace, service family and CIDR, toleration seconds) and staticManifestsDir.",
+   "packets": [
+    "HE-008"
+   ],
+   "scope": "W03"
+  },
+  {
+   "id": "ADM-4",
+   "source": "architecture/admission-semantics-v3/README.md:258",
+   "text": "The observer checks the loaded manifest hash before ACTIVE.",
+   "packets": [
+    "HE-004"
+   ],
+   "scope": "W03"
+  },
+  {
+   "id": "ADM-5",
+   "source": "architecture/admission-semantics-v3/README.md:250,254-255",
+   "text": "Native A2 test against a real apiserver of the selected distribution, including CEL compilation.",
+   "packets": [
+    "T04"
+   ],
+   "scope": "W03"
+  },
+  {
+   "id": "SEL-1",
+   "source": "architecture/selinux-matrix-v2/status.json:37",
+   "text": "K5: DelegateSubgroup=broker (systemd 254+); the maintenance unit writes booleans in init_t; portcon for the server port.",
+   "packets": [
+    "HE-008"
+   ],
+   "scope": "W03"
+  },
+  {
+   "id": "SEL-2",
+   "source": "architecture/selinux-matrix-v2/status.json:44",
+   "text": "E1: a runtime that loads only cgroup-device programs, under the cgroupfs driver.",
+   "packets": [
+    "W03-0",
+    "T04"
+   ],
+   "scope": "W03"
+  },
+  {
+   "id": "SEL-3",
+   "source": "architecture/selinux-matrix-v2/README.md:295-305",
+   "text": "Backend policy module; network-policy agent and proxy on iptables or nftables, not BPF.",
+   "packets": [
+    "W03-0",
+    "HE-008"
+   ],
+   "scope": "W03"
+  },
+  {
+   "id": "SEL-4",
+   "source": "architecture/selinux-matrix-v2/README.md:130-202",
+   "text": "Labelled ports outside the ephemeral range; no fscreate for planeon cgroups; socket-file rules; no BPF-backed unit directives; sealed unit types on every unit search path; no NoNewPrivileges, nosuid entrypoint mounts or per-Pod labels.",
+   "packets": [
+    "HE-006",
+    "HE-008"
+   ],
+   "scope": "W03"
+  },
+  {
+   "id": "SEL-5",
+   "source": "architecture/selinux-matrix-v2/README.md:341-342",
+   "text": "The gate uses setsockcreate.",
+   "packets": [
+    "HE-003"
+   ],
+   "scope": "W03"
+  },
+  {
+   "id": "SEL-6",
+   "source": "architecture/selinux-matrix-v2/README.md:361-363",
+   "text": "Confirm backend capability sets against the distribution.",
+   "packets": [
+    "W02A-F2",
+    "HE-008"
+   ],
+   "scope": "W03"
+  },
+  {
+   "id": "SEC-1",
+   "source": "architecture/seccomp-allowlists/status.json:79-85",
+   "text": "Runtime bases are closed; trace the selected build at start-up and steady state on both architectures.",
+   "packets": [
+    "HE-001",
+    "T04"
+   ],
+   "scope": "W03"
+  },
+  {
+   "id": "SEC-2",
+   "source": "architecture/seccomp-allowlists/README.md:117-119",
+   "text": "glibc 2.34+ without CET or shadow-stack arch_prctl at start-up, for the CPython roles.",
+   "packets": [
+    "HE-008"
+   ],
+   "scope": "W03"
+  },
+  {
+   "id": "SEC-3",
+   "source": "architecture/seccomp-allowlists/status.json:79-85",
+   "text": "No systemd seccomp options on planeon units.",
+   "packets": [
+    "HE-008"
+   ],
+   "scope": "W03"
+  },
+  {
+   "id": "SEC-4",
+   "source": "architecture/seccomp-allowlists/status.json:79-85",
+   "text": "Install exactly the compiled programs.",
+   "packets": [
+    "HE-002",
+    "HE-004",
+    "HE-005",
+    "HE-006",
+    "HE-007"
+   ],
+   "scope": "W03"
+  },
+  {
+   "id": "SEC-5",
+   "source": "architecture/seccomp-allowlists/status.json:79-85",
+   "text": "The broker runs with no supplementary groups.",
+   "packets": [
+    "HE-005",
+    "HE-008"
+   ],
+   "scope": "W03"
+  },
+  {
+   "id": "SEC-6",
+   "source": "architecture/seccomp-allowlists/README.md:153",
+   "text": "Re-check a distribution kernel or stable patch release against the pinned v6.12 tables.",
+   "packets": [
+    "HE-008",
+    "T04"
+   ],
+   "scope": "W03"
+  },
+  {
+   "id": "HI-1",
+   "source": "architecture/host-interface-inputs/resolved/HOST_INTERFACE_SPEC.md:46-92",
+   "text": "The backend meets P1-P10 under license and offline closure.",
+   "packets": [
+    "W03-0",
+    "HE-008"
+   ],
+   "scope": "W03"
+  },
+  {
+   "id": "HI-2",
+   "source": "architecture/host-interface-inputs/resolved/HOST_INTERFACE_SPEC.md:131,170-171",
+   "text": "Any custom resource or controller the distribution adds is listed or disabled.",
+   "packets": [
+    "W03-0"
+   ],
+   "scope": "W03"
+  },
+  {
+   "id": "HI-3",
+   "source": "architecture/host-interface-inputs/resolved/HOST_INTERFACE_SPEC.md:140-154",
+   "text": "The writer is an enrolled artifact.",
+   "packets": [
+    "HE-007",
+    "HE-008"
+   ],
+   "scope": "W03"
+  },
+  {
+   "id": "HI-4",
+   "source": "architecture/host-interface-inputs/resolved/HOST_INTERFACE_SPEC.md:282-290",
+   "text": "The three artifacts and their signed manifests.",
+   "packets": [
+    "HE-008"
+   ],
+   "scope": "W03"
+  },
+  {
+   "id": "HI-5",
+   "source": "architecture/host-interface-inputs/resolved/HOST_INTERFACE_SPEC.md:337-363",
+   "text": "BPF programs helper-free and map-free, attached with BPF_F_ALLOW_MULTI; bpf_jit_harden 0 or 1.",
+   "packets": [
+    "HE-006"
+   ],
+   "scope": "W03"
+  },
+  {
+   "id": "HI-6",
+   "source": "architecture/host-interface-inputs/resolved/HOST_INTERFACE_SPEC.md:367-392",
+   "text": "Boot steps S1-S6, including the S5 kernel module list.",
+   "packets": [
+    "HE-006",
+    "HE-008"
+   ],
+   "scope": "W03"
+  },
+  {
+   "id": "HI-7",
+   "source": "architecture/host-interface-inputs/resolved/HOST_INTERFACE_SPEC.md:400-422",
+   "text": "Per-role uid, capabilities, seccomp and SELinux.",
+   "packets": [
+    "HE-002",
+    "HE-004",
+    "HE-005",
+    "HE-006",
+    "HE-007",
+    "HE-008"
+   ],
+   "scope": "W03"
+  },
+  {
+   "id": "HI-8",
+   "source": "architecture/host-interface-inputs/resolved/HOST_INTERFACE_SPEC.md:426-447",
+   "text": "Worker lifecycle W1-W6.",
+   "packets": [
+    "HE-005"
+   ],
+   "scope": "W03"
+  },
+  {
+   "id": "HI-9",
+   "source": "architecture/host-interface-inputs/resolved/HOST_INTERFACE_SPEC.md:451-473",
+   "text": "Maintenance M1-M5, including off-host CA issuance.",
+   "packets": [
+    "HE-008"
+   ],
+   "scope": "W03"
+  },
+  {
+   "id": "HI-10",
+   "source": "architecture/host-interface-inputs/resolved/HOST_INTERFACE_SPEC.md:479-503",
+   "text": "Connection stamping C1-C7.",
+   "packets": [
+    "HE-003"
+   ],
+   "scope": "W03"
+  },
+  {
+   "id": "A1-GROUPS",
+   "source": "W01-AMEND (MET-ENFORCE-018, pending merge) O-W03-GROUPS",
+   "text": "The broker runs with no supplementary groups; W3 checks an empty Groups: line.",
+   "packets": [
+    "HE-005",
+    "HE-008"
+   ],
+   "scope": "W03"
+  },
+  {
+   "id": "A1-WORKER-EXEC",
+   "source": "W01-AMEND (MET-ENFORCE-018, pending merge) O-W03-WORKER-EXEC",
+   "text": "The host policy gives planeon_worker_t no transition or nnp_transition into any domain, host-policy domains included.",
+   "packets": [
+    "HE-008"
+   ],
+   "scope": "W03"
+  },
+  {
+   "id": "A1-SERVER-MEMFD",
+   "source": "W01-AMEND (MET-ENFORCE-018, pending merge) O-SERVER-MEMFD",
+   "text": "The live backend passes MFD_CLOEXEC | MFD_NOEXEC_SEAL before running under the v2 filters.",
+   "packets": [
+    "R12"
+   ],
+   "scope": "OUTSIDE_W03"
+  },
+  {
+   "id": "A1-T04",
+   "source": "W01-AMEND (MET-ENFORCE-018, pending merge) O-T04-AMEND",
+   "text": "Native confirmations of the amendment's kernel facts.",
+   "packets": [
+    "T04"
+   ],
+   "scope": "W03"
+  },
+  {
+   "id": "SEL-POLICY-AMEND",
+   "source": "architecture/backend-distribution/selection.json:D-POLICY-AMEND",
+   "text": "Amend the license policy per owner decision Q-L before any artifact is released or HE-001's license gate runs.",
+   "packets": [
+    "LIC-HOST"
+   ],
+   "scope": "W03"
+  },
+  {
+   "id": "SEL-W02A-F2",
+   "source": "architecture/backend-distribution/selection.json:D-W02A-F2",
+   "text": "Production W02a backend profile and the I06 successor bound to it.",
+   "packets": [
+    "W02A-F2",
+    "W02G-F2"
+   ],
+   "scope": "W03"
+  },
+  {
+   "id": "SEL-SC01-PEER",
+   "source": "architecture/backend-distribution/selection.json:D-SC01-PEER",
+   "text": "Accept exactly one AF_UNIX etcd peer listener and no TCP listener.",
+   "packets": [
+    "W02G-F2"
+   ],
+   "scope": "W03"
+  },
+  {
+   "id": "SEL-HELPER-TYPES",
+   "source": "architecture/backend-distribution/selection.json:D-HELPER-TYPES",
+   "text": "Confined types for the shim, runc, the CNI plugins and the host's nft.",
+   "packets": [
+    "W02A-F2",
+    "W02G-F2"
+   ],
+   "scope": "W03"
+  },
+  {
+   "id": "SEL-I06-LICENSE",
+   "source": "architecture/backend-distribution/selection.json:D-I06-LICENSE",
+   "text": "Replace SC13's single-license check with the reviewed closure.",
+   "packets": [
+    "W02G-F2"
+   ],
+   "scope": "W03"
+  },
+  {
+   "id": "SEL-LIC-CLOSURE",
+   "source": "architecture/backend-distribution/selection.json:D-LIC-CLOSURE",
+   "text": "Full license closure and SBOM of every artifact.",
+   "packets": [
+    "HE-008"
+   ],
+   "scope": "W03"
+  },
+  {
+   "id": "SEL-NETPOL-BUILD",
+   "source": "architecture/backend-distribution/selection.json:D-NETPOL-BUILD",
+   "text": "Build the agent from its tag with GO_AGENT_BUILD.",
+   "packets": [
+    "HE-008"
+   ],
+   "scope": "W03"
+  },
+  {
+   "id": "SEL-SANDBOX",
+   "source": "architecture/backend-distribution/selection.json:D-SANDBOX",
+   "text": "Pin and import the sandbox image.",
+   "packets": [
+    "HE-008"
+   ],
+   "scope": "W03"
+  },
+  {
+   "id": "SEL-KUBELET-LISTENER",
+   "source": "architecture/backend-distribution/selection.json:D-KUBELET-LISTENER",
+   "text": "Fix the kubelet's --address and --node-ip.",
+   "packets": [
+    "HE-008"
+   ],
+   "scope": "W03"
+  },
+  {
+   "id": "SEL-RUNTIME-BPF",
+   "source": "architecture/backend-distribution/selection.json:D-RUNTIME-BPF",
+   "text": "containerd and runc load only cgroup-device programs.",
+   "packets": [
+    "T04"
+   ],
+   "scope": "W03"
+  },
+  {
+   "id": "SEC-7",
+   "source": "architecture/w03-plan/plan.json:W02D-V2",
+   "text": "W02d v2, with poll in NATIVE_STATIC, is merged before HE-001 and T04.",
+   "packets": [
+    "W02D-V2"
+   ],
+   "scope": "W03"
+  },
+  {
+   "id": "SEC-8",
+   "source": "architecture/w03-plan/plan.json:mremap",
+   "text": "Steady-state calls outside NATIVE_STATIC v2: musl realloc's mremap, thread naming's prctl(PR_SET_NAME), abort's and raise's tkill; owner decision Q-S (S-b) adds them in W02d v3, and T04 still traces.",
+   "packets": [
+    "W02D-V3",
+    "T04"
+   ],
+   "scope": "W03"
+  },
+  {
+   "id": "TR-SETXID",
+   "source": "architecture/w03-plan/plan.json:__synccall",
+   "text": "musl's setresuid and setresgid go through __synccall (src/unistd/setxid.c:32), which signals other threads with SYS_tkill (src/thread/synccall.c:67, :82); the broker's W4 child therefore makes the raw setresgid and setresuid syscalls (W01-AMEND review R4-1).",
+   "packets": [
+    "HE-005",
+    "T04"
+   ],
+   "scope": "W03"
+  },
+  {
+   "id": "TR-PARALLELISM",
+   "source": "architecture/w03-plan/plan.json:available_parallelism",
+   "text": "std::thread::available_parallelism opens cgroup and /proc files; native modules take thread counts from configuration (W01-AMEND review R4-1).",
+   "packets": [
+    "HE-001",
+    "T04"
+   ],
+   "scope": "W03"
+  },
+  {
+   "id": "TR-FDS",
+   "source": "architecture/w03-plan/plan.json:fds 0-2",
+   "text": "Units start every role with fds 0-2 open, so neither musl's AT_SECURE start-up nor Rust std opens /dev/null (W01-AMEND review R4-1).",
+   "packets": [
+    "HE-008",
+    "T04"
+   ],
+   "scope": "W03"
+  },
+  {
+   "id": "LIC-RUST-STD",
+   "source": "architecture/w03-plan/plan.json:MIT OR Apache-2.0",
+   "text": "Rust std and core (MIT OR Apache-2.0) are statically linked into every native module; LIC-HOST's OR-choice rule (owner decision Q-L2) precedes HE-001's license gate.",
+   "packets": [
+    "LIC-HOST"
+   ],
+   "scope": "W03"
+  }
+ ],
+ "notClaimed": [
+  "No module source exists.",
+  "No toolchain is installed.",
+  "E01-E12 stay OPEN_UNPROVEN."
+ ]
+}

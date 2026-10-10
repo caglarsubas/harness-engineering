@@ -1,0 +1,117 @@
+{
+ "schemaVersion": "harness.planeon.ai/w03-selection-review/v1",
+ "round": 3,
+ "reviewDate": "2026-10-10",
+ "subjectCommit": "af8892c0a1fe58b1b15f83bccd1ecd88dd3f2d0b",
+ "subjectTree": "210d97ce30845d0fcaff5a9a8c583e163009cc4f",
+ "verdict": "CHANGES_REQUIRED",
+ "roundTwoFindings": {
+  "F1": {
+   "status": "ADDRESSED",
+   "reason": "Owner decision Q-S (S-b) puts mremap (MREMAP_MAYMOVE), prctl(PR_SET_NAME) and tkill into W02d v3. The plan registers W02D-V3 as a precondition (SEC-8, enforced by w03_plan.py), and T04 still traces. Verified in musl: realloc passes exactly MREMAP_MAYMOVE, and raise.c and abort.c:22 use SYS_tkill. Q-S itself is not recorded among the plan's owner decisions (new F2)."
+  },
+  "F2": {
+   "status": "ADDRESSED",
+   "reason": "Q-L2 adds an OR-choice rule and exact entries. The selection now has one review per expression with its election, for libgcc, libpathrs' direct crates and nft's libraries, and the plan records Rust std and core (LIC-RUST-STD). Still outside: compiler_builtins' AND expression, rustc-demangle's non-SPDX license string, the rest of the Rust std closure, and libpathrs' transitive crates (new F1)."
+  },
+  "F3": {
+   "status": "FIXED",
+   "reason": "W02D-V2 is a precondition (SEC-7), enforced by w03_plan.py until seccomp-allowlists-v2 exists. The current_os_id citation is correct (unix.rs:330-347 via thread_info.rs:112-113), and the musl patch list includes CVE-2025-26519."
+  },
+  "F4": {
+   "status": "FIXED",
+   "reason": "SC01, the README and D-SC01-PEER now say that at v3.7.2 unix advertise URLs are allowed (config.go:1340-1344) and the :<port> is optional."
+  },
+  "F5": {
+   "status": "ADDRESSED",
+   "reason": "All 10 selection open items are registered (SEL-*), GO_AGENT_BUILD is recorded, and D-I06-LICENSE is updated. However, the VERIFIER-EXT packet summary does not mention the Go toolchain, although the README says it does (new F2)."
+  },
+  "F6": {
+   "status": "ADDRESSED",
+   "reason": "All round-2 probes are now refused except two that are accepted by design: a sandbox digest change (digest values are checked by review) and dropping containerd-stress. Fixed: owner-decision binding, role repositories, URL-path architecture check, policy digest pin, duplicate-key and tag-safe YAML, required static-closure reviews, exact musl flags and patches, the Rust commit, cited line ranges, refusal of '..', R12 scoping. New residual gaps are in new F4."
+  },
+  "F7": {
+   "status": "FIXED",
+   "reason": "D-KUBELET-LISTENER is added to SC02 and registered in the plan (SEL-KUBELET-LISTENER, HE-008)."
+  },
+  "F8": {
+   "status": "ADDRESSED",
+   "reason": "No change was needed."
+  }
+ },
+ "findings": [
+  {
+   "id": "F1",
+   "severity": "MAJOR",
+   "location": "selection.json licenseReviews D-LIC-CRATES-* (subjects), D-POLICY-AMEND; architecture/w03-plan/plan.json LIC-RUST-STD; scripts/backend_distribution.py EXPRESSION",
+   "finding": "The Rust std closure is still not covered by Q-L or Q-L2. (1) compiler_builtins, statically linked into every Rust binary, declares 'MIT AND Apache-2.0 WITH LLVM-exception AND (MIT OR Apache-2.0)' (library/compiler-builtins/compiler-builtins/Cargo.toml:18 at b940084d). That is an AND compound, not an 'A OR B' expression, and the policy matches exact expressions. It already lists compound expressions such as 'Apache-2.0 AND LGPL-3.0-or-later' one by one. The check's EXPRESSION pattern cannot even record the parentheses: a probe adding it as a review was refused. (2) rustc-demangle 0.1.28, a std dependency (library/std/Cargo.toml:29), declares 'MIT/Apache-2.0', which is not a valid SPDX expression. (3) Other std dependencies are plain OR expressions the new rule covers, but each still needs its election recorded per component: hashbrown and cfg-if ('MIT OR Apache-2.0'), miniz_oxide ('MIT OR Zlib OR Apache-2.0'), adler2 ('0BSD OR MIT OR Apache-2.0'), object, libc. All of these are in every RUST_MUSL_STATIC module, yet LIC-RUST-STD names only std and core. They are also in runc, through libpathrs.a built against Debian's libstd-rust (runc Dockerfile:37-43). There, libpathrs' transitive crates `either` ('MIT OR Apache-2.0') and linux-raw-sys ('Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT') are missing from the D-LIC-CRATES-* subjects, which list direct dependencies only.",
+   "requiredChange": "Get an owner decision for compiler_builtins' AND expression (an exact entry, or a reviewed rule that splits AND terms) and for normalising legacy 'MIT/Apache-2.0'. Widen D-POLICY-AMEND and LIC-HOST to match. List the Rust std closure under LIC-RUST-STD and in runc's review subjects, and allow parenthesised expressions in the check."
+  },
+  {
+   "id": "F2",
+   "severity": "MINOR",
+   "location": "selection.json ownerDecisions, licenseReviews[].decision, criteria SC13; architecture/w03-plan/plan.json ownerDecisions, packets LIC-HOST and VERIFIER-EXT; README.md 'Round-2 findings' F5 row",
+   "finding": "Q-L2 and Q-S appear only in README text. selection.json records Q4, Q-L, Q-E and Q-N, and backend_distribution.py fixes that list. plan.json records Q1, Q2, Q3 and Q5, and w03_plan.py fixes that list. The reviews approved under Q-L2 all carry decision 'Q-L', whose summary covers only glibc, libseccomp, libpathrs and nft: D-LIC-LIBGCC (whose own reason text says Q-L2), the three crate reviews, LIBNFTNL, LIBMNL, GMP, and D-LIC-NFT widened to cover libnftables. SC13's 'how' still names only glibc, libseccomp, libpathrs and nft. The LIC-HOST packet summary names only Q-L. VERIFIER-EXT's summary does not mention the Go toolchain, although the README's F5 disposition says it does. D-POLICY-AMEND states the OR rule as accepting 'an allowed or reviewed alternative', but the README's Q-L2 row says 'an allowed alternative'. gmp's election of LGPL-3.0-or-later, which is on the explicit-review list, relies on the wider wording, and the policy's optionalExplicitReviewRule decision fields are not mentioned.",
+   "requiredChange": "Record Q-L2 in selection.json and Q-S in plan.json as owner decisions with date and via, and point the checkers at them. Attribute the Q-L2 reviews to Q-L2. Update SC13, LIC-HOST and VERIFIER-EXT. State the approved OR-rule wording and that gmp's election needs an explicit-review decision record."
+  },
+  {
+   "id": "F3",
+   "severity": "MINOR",
+   "location": "architecture/w03-plan/plan.json TR-SETXID; architecture/w03-plan/README.md 'Threads and W02d'",
+   "finding": "The TR-SETXID conclusion is right, but its reason is wrong. musl's setresuid and setresgid do go through __synccall (setxid.c:32), and __synccall signals threads with SYS_tkill (synccall.c:82). However, synccall.c:67 jumps to the single-threaded path when gettid() differs from self->tid. That is exactly the W4 child: a clone3 child without CLONE_VM, whose inherited self->tid belongs to the parent thread. So the child never issues tkill. The actual reasons the child must use raw syscalls are different. __synccall first takes __tl_lock (:59), which another broker thread may have held at clone time, so the child could deadlock. musl's state in the child is the parent's. And it adds rt_sigprocmask and gettid calls.",
+   "requiredChange": "Restate TR-SETXID's reason: the clone3 child may call only async-signal-safe raw syscalls, because of the inherited lock and libc state. Cite synccall.c:59 and :67."
+  },
+  {
+   "id": "F4",
+   "severity": "MINOR",
+   "location": "scripts/backend_distribution.py:238-246,276-281,313-327; scripts/w03_plan.py:59-77,138-141,158-170",
+   "finding": "Probes now accepted by backend_distribution.py: an elected alternative that is neither allowed, reviewed nor the owner's choice (gmp electing GPL-2.0-or-later, libpathrs electing LGPL-3.0-or-later); and a host dependency whose license differs from its review's (libnftnl recorded as MIT while still carrying D-LIC-LIBNFTNL). Gaps in w03_plan.py: nothing checks that the selection's open items or LIC-RUST-STD are registered, so dropping SEL-SANDBOX or LIC-RUST-STD passes, although the README says every open item is registered. An anchor may be any text in the cited file, including the plan itself: SEC-8 (plan.json:mremap), TR-* (plan.json:__synccall and similar) and LIC-RUST-STD (plan.json:MIT OR Apache-2.0) cite the plan's own obligation text, so they satisfy themselves, and 'plan.json:Steady-state calls' passes. The Go pin is a prefix test, so '1.26.70' passes. A reversed range '70-65' passes. Any text after the W01-AMEND prefix passes. result W02D_CHANGE_NEEDED passes. Unused packets pass.",
+   "requiredChange": "Check that the elected alternative is allowed, reviewed or the recorded owner election, and that a host dependency's license equals its review's. Require each selection open item and LIC-RUST-STD to be registered. Make SEC-8, TR-* and LIC-RUST-STD cite their real sources (the owner-decision record, musl and Rust source paths) and refuse self-citation. Match the Go version exactly and refuse reversed ranges."
+  },
+  {
+   "id": "F5",
+   "severity": "NOTE",
+   "location": "selection.json hostDependencies; scripts/backend_distribution.py REQUIRED_HOST_DEPENDENCIES",
+   "finding": "nft's library closure depends on the distribution. Upstream nftables can also link readline, libedit or linenoise (for the CLI) and libxtables (xt compatibility), and common distribution builds enable some of these. The checker enforces six entries (nft, libnftables, libnftnl, libmnl, gmp, jansson). The minimumVersion of libnftnl, libmnl, gmp and jansson is prose ('the nftables release's requirement') that W04 cannot test. crun's exclusion reason ('GPL-2.0-or-later is not in the ... lists') will need rewording once LIC-HOST adds GPL-2.0-or-later to the host-OS class.",
+   "requiredChange": "Label the list as the minimum, to be extended from the shipped packages in D-LIC-CLOSURE. Give real versions once the host OS is chosen. Reword crun's reason to say the class covers host-OS libraries, not runtimes."
+  },
+  {
+   "id": "F6",
+   "severity": "NOTE",
+   "location": "verification",
+   "finding": "Verified: the SC01 and v3.7.2 text and citations. musl v1.2.5: setxid.c:32, synccall.c:67 and :82, raise.c SYS_tkill, abort.c:22 SYS_tkill, and mallocng realloc mremap with exactly MREMAP_MAYMOVE, which matches Q-S's argument rule. policySource sha256 fa3a4398... equals legal/third-party-license-policy.yaml. The round-2 bytes in round2/ equal the b4f958f blobs, and review-round2.json is the round-2 verdict. Crate licenses (crates.io): rustc-demangle 0.1.28 'MIT/Apache-2.0', miniz_oxide 0.9.0, adler2 2.0.1, either 1.15.0, linux-raw-sys 0.11.0, hashbrown 0.17.1. Go tag go1.26.7 exists, and go1.26.8 also exists (from around 2026-09-01). R10's public go.mod says 'go 1.26.0' with no toolchain line, so 'R10's pinned Go 1.26.7' cannot be confirmed from the public repository; the pin presumably lives in the verifier toolchain inventory. Both check modules pass and read only their declared or cited inputs.",
+   "requiredChange": "None."
+  }
+ ],
+ "pinsVerified": {
+  "unchangedPins": "Artifact digests, tags and the pause index are unchanged since round 2 (verified in rounds 1 and 2, etcd v3.7.2 in round 2)",
+  "policySource": "sha256 fa3a4398acafc3960eaaae9f5396d4e96d91e6ff252b83f6c53e1f5f0d8a40d0 MATCH",
+  "rust-1.99.0": "b940084d (verified round 2); compiler_builtins license read at this commit",
+  "go1.26.7": "tag exists (e3336a22); go1.26.8 also exists",
+  "round2Bytes": "README, REVIEW_BRIEF, selection.json, both scripts and both plan files in round2/ identical to b4f958f"
+ },
+ "checksRun": [
+  "git diff b4f958f af8892c",
+  "python3 scripts/backend_distribution.py (passes)",
+  "python3 scripts/w03_plan.py (passes)",
+  "probe_bd.py: all round-2 probes plus 14 new ones, under /private/tmp/claude-501/w03-review-r3/probe/",
+  "direct _policy probes: duplicate key, python tag, bad UTF-8, merge key",
+  "probe_plan.py: all round-2 probes plus 15 new ones",
+  "sha256 of the license policy; cmp of round2/ bytes against b4f958f",
+  "gh api tags for go1.26.7 and go1.26.8; R10 go.mod and tree listing",
+  "crates.io license fields for 6 crates"
+ ],
+ "sourcesRead": [
+  "musl v1.2.5: src/unistd/setxid.c, src/thread/synccall.c, src/signal/raise.c, src/exit/abort.c (plus round-2 copies of pthread_create.c and mallocng/realloc.c)",
+  "rust b940084d: library/compiler-builtins/compiler-builtins/Cargo.toml, library/std/Cargo.toml",
+  "crates.io API: rustc-demangle 0.1.28, miniz_oxide 0.9.0, adler2 2.0.1, either 1.15.0, linux-raw-sys 0.11.0, hashbrown 0.17.1",
+  "github caglarsubas/mas-harness-operator go.mod and tree listing; golang/go tags",
+  "repo: architecture/backend-distribution/{README.md,REVIEW_BRIEF.md,selection.json,review-round2.json,round2/}, architecture/w03-plan/{README.md,plan.json}, scripts/backend_distribution.py, scripts/w03_plan.py, legal/third-party-license-policy.yaml"
+ ],
+ "actions": {
+  "filesEdited": false,
+  "networkAccessed": "public release metadata and sources only",
+  "largeDownloads": [],
+  "disclosure": "In error, the crates.io API requests (6 crate-metadata GETs) carried the user's email address in the User-Agent header as a contact string. No other data was sent. The user should be told; this was not authorised."
+ }
+}

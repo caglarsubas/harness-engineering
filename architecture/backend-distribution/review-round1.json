@@ -1,0 +1,169 @@
+{
+ "schemaVersion": "harness.planeon.ai/w03-selection-review/v1",
+ "round": 1,
+ "reviewDate": "2026-10-10",
+ "subjectCommit": "5cdb1fb10658e3bea79d0ff4bb95d4ced9ed7999",
+ "subjectTree": "056556bfdc5c7b36e5b78cfddb4d2bb8dcfd9663",
+ "verdict": "CHANGES_REQUIRED",
+ "findings": [
+  {
+   "id": "F1",
+   "severity": "MAJOR",
+   "location": "architecture/backend-distribution/selection.json:435 (SC01), :915-919 (D-SC01-PEER); README.md:63-68",
+   "finding": "The selection explains the SC01 peer problem wrongly, and the open item's second option is unsafe. The etcd executable cannot run with an empty peer listener list. In pkg/flags/unique_urls.go, Set(\"\") hits the Allowed[\"\"] exception, which adds \"\" to Values but leaves uss at the flag default. The flag is defined at server/embed/config.go:755 with DefaultListenPeerURLs = http://localhost:2380 (:87). The config file path (:1036-1043) skips an empty listen-peer-urls and keeps the NewConfig default (:643, :675). So --listen-peer-urls=\"\" quietly starts a TCP peer listener on localhost:2380. The empty-slice index at config.go:1573 (called from etcdmain/etcd.go:83) can only be reached through the embed API. As a result, D-SC01-PEER's option to 'show on the enrolled host that an empty peer listener list starts' would succeed while a TCP peer port is open, which breaks P1/SC01. The unix peer URL form is also constrained. configurePeerListeners passes only u.Host to NewUnixListener (server/embed/etcd.go:580; client/pkg/transport/unix_listener.go), so unix:///dir/peer.sock gives an empty socket name: on Linux that is an autobound abstract socket, not a file in the datastore's private directory. checkHostURLs (config.go:1212-1219, :1617-1627) requires host:port for --initial-advertise-peer-urls. It also applies to --advertise-client-urls, which becomes mandatory once --listen-client-urls is set (etcdmain/config.go:339-342; embed/config.go:1278). Neither can be the unix:///run/qualification-k8s/datastore.sock form.",
+   "requiredChange": "Correct the mechanism in the SC01 row and the README. Replace option 2 of D-SC01-PEER: etcd cannot run without a peer listener, so W02g-F2 must accept exactly one AF_UNIX peer listener. Record the exact etcd URL forms: client listen unix:///<absolute path>; advertise-client in host:port form; peer listen and advertise as unix://<name>:<port>, a path relative to etcd's working directory, which must be the datastore's private directory. Record that native proof must show no TCP listener. Note that I06's unix:/// absolute-path convention cannot express etcd's peer socket."
+  },
+  {
+   "id": "F2",
+   "severity": "MAJOR",
+   "location": "selection.json:21-26 (Q-R), :115-120, :870-879 (D-LIC-RUNC); README.md:17,72-75",
+   "finding": "The owner question about runc's license is too narrow. runc v1.5.2's release binaries come from `make static`. Makefile:14 sets BUILDTAGS to 'seccomp urfave_cli_no_docs libpathrs'; :51-65 make it static-pie with -linkmode external; script/release_build.sh:49-86 builds it. The build links libseccomp 2.6.1 and libpathrs 0.2.6 (Dockerfile:3-4) using a Debian trixie glibc cross toolchain (Dockerfile:6,36-43). The release ships libpathrs-0.2.6.tar.xz and libseccomp-2.6.1.tar.gz as assets for compliance. The binary therefore statically includes glibc (LGPL-2.1-or-later), libseccomp (LGPL-2.1-only) and libpathrs (MPL-2.0 OR LGPL-3.0-or-later, plus its Rust std and crate closure). None of these exact expressions is default-allowed or an allowed exception under EXACT_SPDX_EXPRESSION matching. Q-R and D-LIC-RUNC name only libseccomp, so an owner approval of R-a would not cover the rest.",
+   "requiredChange": "Re-pose Q-R to the owner with the full static closure: glibc, libseccomp, libpathrs and its Rust closure. Include options, for example the official binary with one reviewed policy entry per expression, or runc built from the tag and linked dynamically against host-image libraries. Make D-LIC-RUNC list each expression, and add a matching open item."
+  },
+  {
+   "id": "F3",
+   "severity": "MAJOR",
+   "location": "selection.json:82-85 (containerd license), :411-417 (sandboxImage); README.md:41,72",
+   "finding": "The containerd static archive and the pause binary also statically link glibc, yet the record lists both as plain Apache-2.0 with no review entries. containerd's release image builds with CGO_ENABLED=1 on an Ubuntu 22.04 glibc cross gcc (.github/workflows/release/Dockerfile:15-33,51-52). STATIC=1 adds -extldflags \"-static\" (Makefile:96-108,332-336), so containerd (and ctr, containerd-stress) include glibc. Only the shim is built with cgo off (Makefile:38,273-275). The pause binary is compiled '-Os -Wall -Werror -static' with the kube-cross gcc (kubernetes build/pause/Makefile:49,108-113 at f78e7223). README's 'Every upstream is Apache-2.0' treats these artifacts differently from runc. In addition, I06 SC13 admits only distribution.license == 'Apache-2.0' (scripts/i06_backend_profile.py:65,455), so an I06 v2 evidence record cannot truthfully describe a set that contains LGPL parts.",
+   "requiredChange": "Add license review entries for static glibc in containerd-static and pause, pending the owner, or show the owner the dynamic containerd-2.4.1-linux-* archive, which links the host image's glibc. Stop stating Apache-2.0-only for these artifacts. Carry I06 SC13's single-license limit to W02g-F2."
+  },
+  {
+   "id": "F4",
+   "severity": "MAJOR",
+   "location": "selection.json:562 (SC11), :311-334 (NETWORK_POLICY_AGENT)",
+   "finding": "The SC11 row covers only the CRI socket and misses containerd's NRI socket. containerd 2.4.1 enables NRI by default (internal/nri/config.go:48-58: Disable false, /var/run/nri/nri.sock, external connections allowed). kube-network-policies' standard command connects to it by default (pkg/cmd/cmd.go:44 --disable-nri=false; cmd/kube-network-policies/standard/main.go:134-141). NRI plugins can change containers at creation (mounts, devices, hooks). That is runtime control outside the CRI socket, and W01 P9 requires the runtime's control socket to be reachable only from the kubelet's domain.",
+   "requiredChange": "In the sealed containerd config, disable NRI ([plugins.\"io.containerd.nri.v1.nri\"] disable = true), and run the agent with --disable-nri. Make the SC11 row cover every containerd listener: the gRPC socket, its .ttrpc socket, the NRI socket, and the debug socket, which must stay unset."
+  },
+  {
+   "id": "F5",
+   "severity": "MINOR",
+   "location": "README.md:51-52; selection.json:562 (SC11), :574 (SC12), :493 (SC06)",
+   "finding": "The README says SEALED_CONFIGURATION targets are the I06 v2 positive-evidence values, but several rows differ: (a) SC11 uses /run/containerd/containerd.sock where the vector has /run/qualification-k8s/containerd.sock. (b) SC12 adds admission manifests and an audit policy, which are null in the vector, and leaves out ENCRYPTION_CONFIG. That file is mandatory in I06 SEALED_FILES (scripts/i06_backend_profile.py:66-68), and no --encryption-provider-config appears anywhere in the selection. (c) SC06 says '--controllers naming exactly the inventory controllers', but the inventory has 49 controllers, 10 of them required-disabled; the vector names 34.",
+   "requiredChange": "Align the rows with the vector, or correct the README statement. Name the encryption configuration. State that ADMISSION_MANIFESTS and AUDIT_CONFIG are conditional files. Say that --controllers names the positive vector's 34 controllers, a subset of the inventory."
+  },
+  {
+   "id": "F6",
+   "severity": "MINOR",
+   "location": "selection.json:516 (SC08), :592 (SC13)",
+   "finding": "The SC08 row says containerd runs containerd-shim-runc-v2 and runc 'as children'. That is wrong: the shim daemonizes and is reparented away from containerd, and runc and the container processes are the shim's children. CONTAINER_RUNTIME actually spans containerd, the shim, runc and three CNI plugins. kube-proxy in nftables mode also execs the host's `nft` binary (vendor/sigs.k8s.io/knftables/nftables.go:152,276 at f78e7223). 'Distinct published digests per architecture' holds only for the five Kubernetes binaries: the etcd and containerd digests cover archives, and the agent has none. I06's 'one entry type per confined domain' rule has to account for these helper executables. `nft` (nftables userspace, GPL-2.0-only, on the review list) is an undeclared runtime dependency for SC13 offline and license closure.",
+   "requiredChange": "Correct the process description. Add an open item for mapping the helper executables to confined types (W02a-F2/W02g-F2). Record the host runtime dependencies (nft, with knftables' minimum version) under D-LIC-CLOSURE."
+  },
+  {
+   "id": "F7",
+   "severity": "MINOR",
+   "location": "selection.json:104-106, :562, :861-868",
+   "finding": "The containerd static archive also ships bin/containerd-stress (Makefile:87 COMMANDS=ctr containerd containerd-stress; pack_release :315-319). It is another containerd API client, but only ctr is excluded, and SC11 says only ctr is left out.",
+   "requiredChange": "Add containerd-stress to excludedMembers, to the exclusion row and to the SC11 text."
+  },
+  {
+   "id": "F8",
+   "severity": "MINOR",
+   "location": "selection.json:311-334 (kube-network-policies)",
+   "finding": "Two insecure kube-network-policies defaults are not pinned: --fail-open defaults to true, so policy is not enforced while the agent is down (pkg/cmd/cmd.go:39); and --metrics-bind-address defaults to ':9080', an unauthenticated TCP listener on all interfaces (:41).",
+   "requiredChange": "Record the agent's sealed flags: --fail-open=false, a loopback metrics address, --disable-nri (F4), --kubeconfig and --hostname-override."
+  },
+  {
+   "id": "F9",
+   "severity": "MINOR",
+   "location": "selection.json:808-815 (kine), :253-255; README.md:44-45,89",
+   "finding": "The kine exclusion reason, 'not a separate AF_UNIX datastore process', is wrong for standalone kine: it runs as its own process, can listen on AF_UNIX, and has no peer listener at all, so it meets SC01 literally. Separately, the owner was not shown that Kubernetes v1.37.1 builds and tests against etcd 3.7.0 (build/dependencies.yaml:66-67; kubeadm DefaultEtcdVersion '3.7.0-0' at cmd/kubeadm/app/constants/constants.go:330), and that v3.7.2 is the current release (2026-09-22). 3.6 is supported (MinExternalEtcdVersion 3.5.24-0) but is not the line this release was tested with.",
+   "requiredChange": "Give kine's real exclusion reasons: emulated etcd API not tested upstream, SQLite 'blessing' license unclassified, CGO. Record the etcd 3.7 facts, or confirm that the owner chose 3.6 knowing them."
+  },
+  {
+   "id": "F10",
+   "severity": "MINOR",
+   "location": "scripts/backend_distribution.py:102-115,149-158,183-185,193,240,249; README.md:25",
+   "finding": "Mutation probes over a fake read() found these accepted: (1) a license review whose license is None, '', [], 0, false or {}, because of `row['license'] or '-'` at :153. (2) A review marked OWNER_APPROVED while Q-R is PENDING, a review with decision 'Q4', and an approved 'SSPL-1.0' review, although the policy's deniedRule sets overrideAllowed: false. Reviews are never checked against the policy, contrary to README:25. (3) The Kubernetes baseline check matches the repository string exactly (:183), so a kubelet from the k3s repo, or an apiserver with a '.git' suffix, tag v1.36.0 and an all-zero commit, passes; roles are not tied to parts at all. (4) Any artifact, even every one, may be SOURCE_BUILD with a null digest, and the script still prints 'artifacts pinned' (:111-112, :249). (5) Identical digests across architectures or parts, an arm64 source that points at the amd64 URL, an arbitrary sandbox reference, an executable that is also an excluded member, duplicate criterion openItems, and the date 2026-13-45. (6) :240 is a tautology, so unreferenced open items pass; D-RUNTIME-BPF is referenced by no row. (7) Some type confusions raise TypeError instead of ValueError: a license list, a dict in openItems, a list as the sandbox license. The module reads exactly its four inputs and nothing else.",
+   "requiredChange": "Close these gaps: bind reviews to the policy and to the owner-decision state, bind the Kubernetes roles to kubernetes/kubernetes at the baseline, restrict SOURCE_BUILD to the agent, require distinct digests, pin the sandbox reference, and refuse type confusion with ValueError. Otherwise, narrow the README, docstring and success message to what is actually checked."
+  },
+  {
+   "id": "F11",
+   "severity": "NOTE",
+   "location": "selection.json (all artifacts, tags, sandboxImage)",
+   "finding": "Every pin checks out. All 18 published digests match. All six tags resolve to the recorded commits. The pause:3.10.2 manifest-list digest matches. containerd's RELEASES.md at f2551031 lists 2.4.0+ and 2.3.0+ for Kubernetes 1.37 (CRI v1). pause 3.10.2 is containerd's DefaultSandboxImage (internal/cri/config/config.go:75) and Kubernetes' pause TAG. etcd 3.6.15, containerd 2.4.1, runc 1.5.2 and CNI 1.9.1 are the newest patches of their lines.",
+   "requiredChange": "None."
+  },
+  {
+   "id": "F12",
+   "severity": "NOTE",
+   "location": "selection.json SC03/SC05/SC09; rechecks.i05OutcomeMapping",
+   "finding": "These parts hold as written. SC03 and SC05 match the upstream facts and the positive vector: the 25 default-on plugins, minus the webhook plugins and MutatingAdmissionPolicy, plus NodeRestriction, give the vector's 23. The 10 required-disabled controllers match REQUIRED_DISABLED_CONTROLLERS. SC09 holds: the standard command uses only Namespace, Pod and NetworkPolicy informers, while npa-v1alpha1/2 use network-policy-api CRDs. All five I05 source files match at f78e7223, and they are the only files the mapping cites. Advisory: the kube-scheduler and kube-controller-manager secure ports and kube-proxy's healthz port default to all interfaces; pin them to loopback in the sealed config. A possible owner option N-b for Q-N is to take /bin/netpol from the upstream image pinned by digest. The Calico/Cilium/Antrea exclusion's BPF reason belongs to W02e/T04 rather than SC08.",
+   "requiredChange": "None required; the listener binds are advisory."
+  }
+ ],
+ "pinsVerified": {
+  "kube-apiserver": {
+   "amd64": "MATCH dl.k8s.io .sha256",
+   "arm64": "MATCH"
+  },
+  "kube-controller-manager": {
+   "amd64": "MATCH",
+   "arm64": "MATCH"
+  },
+  "kube-scheduler": {
+   "amd64": "MATCH",
+   "arm64": "MATCH"
+  },
+  "kubelet": {
+   "amd64": "MATCH",
+   "arm64": "MATCH"
+  },
+  "kube-proxy": {
+   "amd64": "MATCH",
+   "arm64": "MATCH"
+  },
+  "etcd-v3.6.15": {
+   "amd64": "MATCH SHA256SUMS",
+   "arm64": "MATCH"
+  },
+  "containerd-static-2.4.1": {
+   "amd64": "MATCH .sha256sum",
+   "arm64": "MATCH"
+  },
+  "runc-v1.5.2": {
+   "amd64": "MATCH runc.sha256sum (PGP-signed file; signature not verified)",
+   "arm64": "MATCH"
+  },
+  "cni-plugins-v1.9.1": {
+   "amd64": "MATCH .sha256",
+   "arm64": "MATCH"
+  },
+  "kube-network-policies": "SOURCE_BUILD, no digest; release v1.1.2 has zero assets (confirmed)",
+  "tags": {
+   "kubernetes v1.37.1": "tag d2b770f4 -> f78e722310e50bcaca9276be22276d9e91d91308 MATCH",
+   "etcd v3.6.15": "tag 50689f3a -> a3346427fbe6e456e9b6d6e429346481c6be7c71 MATCH",
+   "containerd v2.4.1": "tag e24870ce -> f2551031d7276a770f65f98c9b52e57e7dad07e8 MATCH",
+   "runc v1.5.2": "tag b622a599 -> 29dd3dc2b13b4123162e5fe132504bb4b15569f1 MATCH",
+   "cni plugins v1.9.1": "lightweight -> adc3e6b5b581638afbd194cf2e9319ecbb0151a1 MATCH",
+   "kube-network-policies v1.1.2": "lightweight -> a145b01caf668ce509766b0a48ff4e153a5e50f8 MATCH"
+  },
+  "sandboxImage": "registry.k8s.io/pause:3.10.2 Docker-Content-Digest sha256:f548e0e8e3dc1896ca956272154dde3314e8cc4fde0a57577ee9fa1c63f5baf4 MATCH (manifest list v2; body sha256 identical)",
+  "criteriaSource": "026206c5... MATCH",
+  "i05Mapping": "4466f379... MATCH; 5/5 upstream files MATCH at f78e7223",
+  "containerdK8s137Support": "RELEASES.md at f2551031: 1.37 -> 2.4.0+, 2.3.0+, CRI v1 (CONFIRMED)"
+ },
+ "checksRun": [
+  "python3 scripts/backend_distribution.py (passes)",
+  "mutation probe in /private/tmp/claude-501/w03-review-r1/probe/probe.py: 35 mutations, read log shows exactly 4 inputs",
+  "sha256 comparison of 18 artifacts against published checksum files",
+  "gh api tag-to-commit resolution for 6 repositories",
+  "registry.k8s.io manifest HEAD/GET for pause:3.10.2 with OCI index and Docker manifest-list Accept headers",
+  "sha256 of 5 Kubernetes source files at f78e7223 against the I05 mapping",
+  "I06 v2 positive vector compared with the SC rows (admission set, controllers, socket path, sealed files)",
+  "release listings for etcd, runc, containerd, CNI plugins, kube-network-policies"
+ ],
+ "sourcesRead": [
+  "etcd a3346427: server/embed/config.go, server/embed/etcd.go, server/etcdmain/etcd.go, server/etcdmain/config.go, pkg/flags/unique_urls.go, client/pkg/types/urls.go, client/pkg/transport/listener.go, client/pkg/transport/unix_listener.go",
+  "kube-network-policies a145b01c: cmd/kube-network-policies/standard/main.go, npa-v1alpha1/main.go, pkg/cmd/cmd.go, go.mod, Makefile, Dockerfile, install.yaml, git tree",
+  "containerd f2551031: Makefile, Makefile.linux, .github/workflows/release.yml, .github/workflows/release/Dockerfile, RELEASES.md, internal/nri/config.go, plugins/nri/plugin.go, internal/cri/config/config.go, vendor nri pkg/api/plugin.go",
+  "runc 29dd3dc2: Makefile, Dockerfile, script/release_build.sh, script/build-libpathrs.sh, release asset list, runc.sha256sum",
+  "libpathrs v0.2.6: Cargo.toml, README license section",
+  "kubernetes f78e7223: build/pause/Makefile, build/pause/Dockerfile, build/dependencies.yaml, cmd/kubeadm/app/constants/constants.go, vendor/sigs.k8s.io/knftables/nftables.go, the 5 I05 source files",
+  "repo: architecture/backend-distribution/*, scripts/backend_distribution.py, architecture/i06-backend-profile{,-v2}/ (criteria, vectors, upstream facts, identity closure, writer inventory), scripts/i06_backend_profile{,_v2}.py, legal/third-party-license-policy.yaml, architecture/i05-gate-channel-v3/outcome-mapping.json, HOST_INTERFACE_SPEC.md §2.1"
+ ],
+ "actions": {
+  "filesEdited": false,
+  "networkAccessed": "public release metadata and sources only",
+  "largeDownloads": []
+ }
+}

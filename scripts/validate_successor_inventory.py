@@ -241,7 +241,7 @@ def validate_successor_inventory(packets, record, inputs):
         errors.extend(validate_proxy_additions(packets))
         pins = {**record["protectedFiles"], **record["inputFiles"], **record["packetDigests"]}
         old_ids = {Path(p).stem for p in record["protectedFiles"] if p.startswith("task-packets/")}
-        if len(old_ids) != 132 or len(record["protectedFiles"]) != 170 or set(packets) != old_ids | set(ADDITIONS) | set(PROXY_ADDITIONS) | {"MET-UNIFY-005", "MET-RUNNER-001", "MET-PERF-028", "MET-LINUX-005", "MET-VERIFY-001", "MET-PERF-029", "MET-PERF-030", "MET-LINUX-006", "MET-VERIFY-002", "MET-VERIFY-003", "MET-VERIFY-004", "MET-ENFORCE-004", "MET-ENFORCE-005", "MET-ENFORCE-006", "MET-ENFORCE-007", "MET-PERF-031", "MET-ENFORCE-008", "MET-ENFORCE-009", "MET-SECTOR-001", "MET-PERF-032", "MET-ENFORCE-010", "MET-ENFORCE-011", "MET-ENFORCE-012", "MET-ENFORCE-013", "MET-ENFORCE-014", "MET-ENFORCE-015", "MET-ENFORCE-016", "MET-PERF-035", "MET-PERF-036", "MET-SECTOR-002", "MET-ENFORCE-017", "MET-ENFORCE-018"}:
+        if len(old_ids) != 132 or len(record["protectedFiles"]) != 170 or set(packets) != old_ids | set(ADDITIONS) | set(PROXY_ADDITIONS) | {"MET-UNIFY-005", "MET-RUNNER-001", "MET-PERF-028", "MET-LINUX-005", "MET-VERIFY-001", "MET-PERF-029", "MET-PERF-030", "MET-LINUX-006", "MET-VERIFY-002", "MET-VERIFY-003", "MET-VERIFY-004", "MET-ENFORCE-004", "MET-ENFORCE-005", "MET-ENFORCE-006", "MET-ENFORCE-007", "MET-PERF-031", "MET-ENFORCE-008", "MET-ENFORCE-009", "MET-SECTOR-001", "MET-PERF-032", "MET-ENFORCE-010", "MET-ENFORCE-011", "MET-ENFORCE-012", "MET-ENFORCE-013", "MET-ENFORCE-014", "MET-ENFORCE-015", "MET-ENFORCE-016", "MET-PERF-035", "MET-PERF-036", "MET-SECTOR-002", "MET-ENFORCE-017", "MET-ENFORCE-018", "MET-ENFORCE-019"}:
             errors.append("exact historical 132 plus two inventory and one proxy prerequisite packets required")
         if set(inputs) != set(pins):
             errors.append("exact 188 authority inputs required")
@@ -276,7 +276,7 @@ def main():
     for error in errors:
         print("ERROR: " + error)
     if not errors:
-        print("Successor inventory authority valid: 220 packets; 188 predecessor files unchanged; product correction NOT_RUN; native gate closed.")
+        print("Successor inventory authority valid: 221 packets; 188 predecessor files unchanged; product correction NOT_RUN; native gate closed.")
     return int(bool(errors))
 
 

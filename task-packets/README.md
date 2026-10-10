@@ -1,6 +1,11 @@
 # Sol-High Task Packet Catalog
 
-## Current source preparation — MET-ENFORCE-018
+## Current source preparation — MET-ENFORCE-019
+
+W03-0 (MET-ENFORCE-019): the W03 backend distribution selection (upstream v1.37.1 component set) and the W03 plan;
+DATA_CHECK_ONLY. Alpha2 OPEN; 220 accepted plus ENFORCE-019 only.
+
+## Historical W01-AMEND source preparation — MET-ENFORCE-018
 
 W01-AMEND (MET-ENFORCE-018): W01 amendment W02D (W02d's carried items) and the W02d successor seccomp-allowlists-v2;
 DATA_CHECK_ONLY. Alpha2 OPEN; 219 accepted plus ENFORCE-018 only.
@@ -1267,3 +1272,4 @@ acceptance is claimed. Alpha2 ONGOING; model-effort transition NOT_DUE.
 | 218 | `MET-SECTOR-002` | `Harness-Engineering` | CATALOG-BANK: the SECTOR-D1 catalog follow-ups as a reviewed overlay; catalogs byte-identical |
 | 219 | `MET-ENFORCE-017` | `Harness-Engineering` | W02d: per-role, per-architecture seccomp allowlists and filter digests; DATA_CHECK_ONLY |
 | 220 | `MET-ENFORCE-018` | `Harness-Engineering` | W01-AMEND: W01 amendment W02D and the W02d successor seccomp-allowlists-v2; DATA_CHECK_ONLY |
+| 221 | `MET-ENFORCE-019` | `Harness-Engineering` | W03-0: backend distribution selection (upstream v1.37.1 component set) and the W03 plan; DATA_CHECK_ONLY |

@@ -1,0 +1,112 @@
+{
+ "schemaVersion": "planeon.internal.backend-distribution-status/v1",
+ "workItem": "W03-0",
+ "status": "ADOPTED_FOR_SOURCE_PUBLICATION",
+ "reviewedSubject": {
+  "commit": "104b11529b6448a2c208450e5fbbd677e5dd8069",
+  "tree": "a73a213b495910117d58cdf600a107c9e53a1b8f"
+ },
+ "rebase": "Rounds 1-3 reviewed pre-rebase commits; the branch was rebased onto main 195c4c9 before round 4. Their bytes are in round1/-round3/.",
+ "rounds": [
+  {
+   "round": 1,
+   "subject": "5cdb1fb10658e3bea79d0ff4bb95d4ced9ed7999",
+   "subjectTree": "056556bfdc5c7b36e5b78cfddb4d2bb8dcfd9663",
+   "verdict": "CHANGES_REQUIRED",
+   "record": "architecture/backend-distribution/review-round1.json",
+   "snapshot": "architecture/backend-distribution/round1/",
+   "severities": [
+    "MAJOR",
+    "MINOR",
+    "NOTE"
+   ]
+  },
+  {
+   "round": 2,
+   "subject": "b4f958f27fd68ab119952be658e8c0620f3c9d55",
+   "subjectTree": "baa81ea9d822b2203bc75356500234956d1b5ae0",
+   "verdict": "CHANGES_REQUIRED",
+   "record": "architecture/backend-distribution/review-round2.json",
+   "snapshot": "architecture/backend-distribution/round2/",
+   "severities": [
+    "MAJOR",
+    "MINOR",
+    "NOTE"
+   ]
+  },
+  {
+   "round": 3,
+   "subject": "af8892c0a1fe58b1b15f83bccd1ecd88dd3f2d0b",
+   "subjectTree": "210d97ce30845d0fcaff5a9a8c583e163009cc4f",
+   "verdict": "CHANGES_REQUIRED",
+   "record": "architecture/backend-distribution/review-round3.json",
+   "snapshot": "architecture/backend-distribution/round3/",
+   "severities": [
+    "MAJOR",
+    "MINOR",
+    "NOTE"
+   ]
+  },
+  {
+   "round": 4,
+   "subject": "add1b45f062c85b6b0a618f5e3388b0f920d13ae",
+   "subjectTree": "590a11ce60eee5ff8d10dc68d98a4efb24527994",
+   "verdict": "CHANGES_REQUIRED",
+   "record": "architecture/backend-distribution/review-round4.json",
+   "snapshot": "architecture/backend-distribution/round4/",
+   "severities": [
+    "MINOR",
+    "NOTE"
+   ]
+  },
+  {
+   "round": 5,
+   "subject": "104b11529b6448a2c208450e5fbbd677e5dd8069",
+   "subjectTree": "a73a213b495910117d58cdf600a107c9e53a1b8f",
+   "verdict": "PASS_FOR_SOURCE_PUBLICATION",
+   "record": "architecture/backend-distribution/review-round5.json",
+   "snapshot": null,
+   "severities": [
+    "NOTE"
+   ]
+  }
+ ],
+ "carried": [
+  {
+   "item": "R5 F1 (NOTE)",
+   "to": "W03 plan successor",
+   "action": "optionally pin the sources and packets of the required obligations and bind anchors to obligation identifiers"
+  },
+  {
+   "item": "D-W02A-F2, D-SC01-PEER, D-HELPER-TYPES, D-I06-LICENSE",
+   "to": "W02A-F2, W02G-F2",
+   "action": "production backend profile and the I06 successor"
+  },
+  {
+   "item": "D-POLICY-AMEND",
+   "to": "LIC-HOST",
+   "action": "license-policy amendment (owner decisions Q-L, Q-L2, Q-L3)"
+  },
+  {
+   "item": "D-LIC-CLOSURE, D-NETPOL-BUILD, D-SANDBOX, D-KUBELET-LISTENER",
+   "to": "HE-008",
+   "action": "host-image packet"
+  },
+  {
+   "item": "D-RUNTIME-BPF",
+   "to": "T04",
+   "action": "native confirmation"
+  },
+  {
+   "item": "SEC-8",
+   "to": "W02D-V3",
+   "action": "steady-state syscalls (owner decision Q-S)"
+  }
+ ],
+ "nonClaims": [
+  "No artifact is installed or executed.",
+  "No I06 evidence record exists.",
+  "E01-E12 stay OPEN_UNPROVEN.",
+  "Not native or tenant acceptance."
+ ]
+}
